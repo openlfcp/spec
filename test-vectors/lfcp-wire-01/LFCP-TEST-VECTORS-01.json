@@ -1357,6 +1357,80 @@
       }
     },
     {
+      "id": "key_epoch_frontier_unsorted",
+      "type": "validation",
+      "kind": "control_record",
+      "description": "C6 with a final frontier of entries CAROL, BOB",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e5a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101060258201189b7d19ac6d09a8128d3967a4fdd80ea2a6180efaa8a9f15bf2ee5c32cda4603040458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c505a4000101582027df3173462d19512f2224f54bdc894a8c7e81c212301ed1f2bb8ccee0ce71510282a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102030358408517d08d033f91a1e5104bdf8171744f12fe02c7e6a514faf377012b80f19276713ece6447f78196d0ffd31d81775aa8989a2a96354af41472b59d061659ac08"
+        }
+      },
+      "context": {
+        "previous_record": {
+          "case": "C5_route_update",
+          "field": "record_id"
+        }
+      },
+      "derivation": {
+        "base_case": "C6_key_epoch_1",
+        "mutation": {
+          "field": "body field 2: final frontier entries",
+          "from": "BOB",
+          "to": "CAROL, BOB"
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §19; §28.2",
+          "text": "Field `2` is a canonical frontier (Sections 28.1 and 28.2): canonical `actor-have` entries sorted by raw Principal ID, with at most one entry per Principal. A Key Epoch Record whose final frontier is not canonical MUST be rejected with `MALFORMED_MESSAGE`."
+        },
+        "why": "Replicas compute the cutoff from the same frontier bytes; an unsorted frontier would be a second encoding of one cutoff."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE"
+        }
+      }
+    },
+    {
+      "id": "key_epoch_frontier_duplicate",
+      "type": "validation",
+      "kind": "control_record",
+      "description": "C6 with a final frontier of entries BOB, BOB",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e5a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101060258201189b7d19ac6d09a8128d3967a4fdd80ea2a6180efaa8a9f15bf2ee5c32cda4603040458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c505a4000101582027df3173462d19512f2224f54bdc894a8c7e81c212301ed1f2bb8ccee0ce71510282a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102030358401bfc53bac8eaf855d776e0536dad5d6ac486092ed662c2f9f9fc36563f5f07848e73ac4b88542fffacd02e607e77f06da272f195ac1a822b695fca0fe47c8c06"
+        }
+      },
+      "context": {
+        "previous_record": {
+          "case": "C5_route_update",
+          "field": "record_id"
+        }
+      },
+      "derivation": {
+        "base_case": "C6_key_epoch_1",
+        "mutation": {
+          "field": "body field 2: final frontier entries",
+          "from": "BOB",
+          "to": "BOB, BOB"
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §19; §28.2",
+          "text": "Field `2` is a canonical frontier (Sections 28.1 and 28.2): canonical `actor-have` entries sorted by raw Principal ID, with at most one entry per Principal. A Key Epoch Record whose final frontier is not canonical MUST be rejected with `MALFORMED_MESSAGE`."
+        },
+        "why": "Two entries for one Principal would make the cutoff ambiguous."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE"
+        }
+      }
+    },
+    {
       "id": "actor_seq_zero_D1",
       "type": "validation",
       "kind": "data_unit",

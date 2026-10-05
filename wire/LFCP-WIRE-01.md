@@ -825,10 +825,12 @@ A Data Epoch rotation creates a new DEK and deterministically closes the previou
 key-epoch-body = {
   0 => uint,                  ; new epoch number
   1 => hash32,                ; new DEK commitment
-  2 => [* actor-have],        ; accepted final frontier of previous epoch
+  2 => canonical-frontier,    ; accepted final frontier of previous epoch
   3 => uint                   ; reason code
 }
 ```
+
+Field `2` is a canonical frontier (Sections 28.1 and 28.2): canonical `actor-have` entries sorted by raw Principal ID, with at most one entry per Principal. A Key Epoch Record whose final frontier is not canonical MUST be rejected with `MALFORMED_MESSAGE`. A writer emits the frontier in canonical form.
 
 Reason codes:
 
@@ -1265,7 +1267,7 @@ Any Snapshot publisher MUST canonicalize the frontier before encrypting or signi
 
 A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical, with `MALFORMED_MESSAGE`.
 
-This sorting rule applies to the Snapshot frontier. It does not require live `DATA_HAVE` messages to be transmitted in that order unless another LFCP section explicitly requires it.
+This sorting rule applies to the Snapshot frontier and to the final frontier of a Key Epoch Record (Section 19). It does not require live `DATA_HAVE` messages to be transmitted in that order unless another LFCP section explicitly requires it.
 
 ---
 

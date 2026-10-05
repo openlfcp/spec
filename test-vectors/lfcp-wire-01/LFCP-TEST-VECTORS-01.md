@@ -1623,7 +1623,49 @@ record_id:
 82de4f8844a91a1a84e6d19ddc94092a153dbd3c96ccd1064c6c3c0559d1d5a4
 ```
 
-#### 17.10.8 actor_seq_zero_D1: D1 re-issued with actor sequence 0
+#### 17.10.8 key_epoch_frontier_unsorted: C6 with a final frontier of entries CAROL, BOB
+
+- Base case: `C6_key_epoch_1`
+- Mutation: body field 2: final frontier entries: `"BOB"` → `"CAROL, BOB"`
+- Rule (LFCP-WIRE-01 §19; §28.2): Field `2` is a canonical frontier (Sections 28.1 and 28.2): canonical `actor-have` entries sorted by raw Principal ID, with at most one entry per Principal. A Key Epoch Record whose final frontier is not canonical MUST be rejected with `MALFORMED_MESSAGE`.
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
+- Why: Replicas compute the cutoff from the same frontier bytes; an unsorted frontier would be a second encoding of one cutoff.
+
+cose_sign1:
+
+```text
+845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e5a6005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101060258201189b7d19ac6d09a8128d3
+967a4fdd80ea2a6180efaa8a9f15bf2ee5c32cda4603040458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95f
+f8e9cedbeb788bf0a9c505a4000101582027df3173462d19512f2224f54bdc894a8c7e81c212301ed1f2bb8ccee0ce71
+510282a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101a20058203ddf22
+ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102030358408517d08d033f91a1e5104bdf81
+71744f12fe02c7e6a514faf377012b80f19276713ece6447f78196d0ffd31d81775aa8989a2a96354af41472b59d0616
+59ac08
+```
+
+#### 17.10.9 key_epoch_frontier_duplicate: C6 with a final frontier of entries BOB, BOB
+
+- Base case: `C6_key_epoch_1`
+- Mutation: body field 2: final frontier entries: `"BOB"` → `"BOB, BOB"`
+- Rule (LFCP-WIRE-01 §19; §28.2): Field `2` is a canonical frontier (Sections 28.1 and 28.2): canonical `actor-have` entries sorted by raw Principal ID, with at most one entry per Principal. A Key Epoch Record whose final frontier is not canonical MUST be rejected with `MALFORMED_MESSAGE`.
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
+- Why: Two entries for one Principal would make the cutoff ambiguous.
+
+cose_sign1:
+
+```text
+845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e5a6005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101060258201189b7d19ac6d09a8128d3
+967a4fdd80ea2a6180efaa8a9f15bf2ee5c32cda4603040458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95f
+f8e9cedbeb788bf0a9c505a4000101582027df3173462d19512f2224f54bdc894a8c7e81c212301ed1f2bb8ccee0ce71
+510282a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102a20058203ddf22
+ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102030358401bfc53bac8eaf855d776e0536d
+ad5d6ac486092ed662c2f9f9fc36563f5f07848e73ac4b88542fffacd02e607e77f06da272f195ac1a822b695fca0fe4
+7c8c06
+```
+
+#### 17.10.10 actor_seq_zero_D1: D1 re-issued with actor sequence 0
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: actor sequence (payload field 3): `1` → `0`
@@ -1642,7 +1684,7 @@ f0687ed06a036656e41594b8065826aeaeda7927384999a4de8d68689695ee07c6f89482faed18c8
 dc90959e0a0c1dde00b5d61c9559b183a8f389b18e9904
 ```
 
-#### 17.10.9 actor_seq1_prev_not_null_D1: D1 with a previous-unit reference although it is sequence 1
+#### 17.10.11 actor_seq1_prev_not_null_D1: D1 with a previous-unit reference although it is sequence 1
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: previous Data Unit (payload field 4): `null` → `7745a3beb83838797591a1121e932799a5fb28b83890a3a9377f6c0d5cc34cd1`
@@ -1662,7 +1704,7 @@ a219b447656a69cd313e1eacbecd2e52bad5b1f0188c8b2c2e24d79c0eb07866c67a6b249e6a845c
 1449c7fdc85bcb04
 ```
 
-#### 17.10.10 hpke_recipient_mismatch_KP0: KP0 payload names CAROL as recipient but is sealed to BOB
+#### 17.10.12 hpke_recipient_mismatch_KP0: KP0 payload names CAROL as recipient but is sealed to BOB
 
 - Base case: `KP0_bob_epoch0`
 - Mutation: recipient (payload field 2): `3ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5` → `a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48`
@@ -1683,7 +1725,7 @@ aabdace14b42d179d3768648c535b3abed0ca41207be0e7157c31d6c073106e03758408802ca1c0b
 99c003
 ```
 
-#### 17.10.11 have_empty_extra_list: SNAPSHOT-01 with a frontier that violates §28.1 rule 2
+#### 17.10.13 have_empty_extra_list: SNAPSHOT-01 with a frontier that violates §28.1 rule 2
 
 - Base case: `SNAPSHOT-01`
 - Mutation: CAROL entry key 2: `"absent"` → `"[] (present and empty)"`
@@ -1704,7 +1746,7 @@ f4f6208b1daa2c8f0589916e0e7c68103ca43327922202cada2e6d19bb677f9ace7f5840c39f6693
 9543e804
 ```
 
-#### 17.10.12 have_range_reversed: SNAPSHOT-02 with a frontier that violates §28.1 rule 4
+#### 17.10.14 have_range_reversed: SNAPSHOT-02 with a frontier that violates §28.1 rule 4
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra range: `[[105, 107]]` → `[[107, 105]]`
@@ -1725,7 +1767,7 @@ ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfead
 c655677cb30e1b573901
 ```
 
-#### 17.10.13 have_range_not_above_contiguous: SNAPSHOT-02 with a frontier that violates §28.1 rule 5
+#### 17.10.15 have_range_not_above_contiguous: SNAPSHOT-02 with a frontier that violates §28.1 rule 5
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra range: `[[105, 107]]` → `[[95, 107]]`
@@ -1746,7 +1788,7 @@ ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfead
 a33b9c6cc820d07e0705
 ```
 
-#### 17.10.14 have_range_at_contiguous_plus_one: SNAPSHOT-02 with a frontier that violates §28.1 rule 5
+#### 17.10.16 have_range_at_contiguous_plus_one: SNAPSHOT-02 with a frontier that violates §28.1 rule 5
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra range: `[[105, 107]]` → `[[101, 107]]`
@@ -1767,7 +1809,7 @@ e2656ada3ffa5fd2a9dcf9da05e8ce1b5d863b6221a6b2ec6684cc35ba5505e778006a32f73d0587
 bb542e45e5b4ce4b8e06
 ```
 
-#### 17.10.15 have_ranges_unsorted: SNAPSHOT-02 with a frontier that violates §28.1 rule 6
+#### 17.10.17 have_ranges_unsorted: SNAPSHOT-02 with a frontier that violates §28.1 rule 6
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra ranges: `[[105, 107]]` → `[[110, 112], [105, 107]]`
@@ -1788,7 +1830,7 @@ aebf4ca511cb59476bc4fd9eb253e20037b2dbb9938a69ee5abf0a527ba44b2dafe326d7b1b1f77a
 7c74dd4e873586c032de197f36c502
 ```
 
-#### 17.10.16 have_ranges_overlapping: SNAPSHOT-02 with a frontier that violates §28.1 rule 7
+#### 17.10.18 have_ranges_overlapping: SNAPSHOT-02 with a frontier that violates §28.1 rule 7
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra ranges: `[[105, 107]]` → `[[105, 107], [106, 110]]`
@@ -1809,7 +1851,7 @@ deb4c1fba57b7a45baab536c503d402384fdc308d03187d6d4a4bd5f8b64c425a389bea6642e4604
 6fc47ab6eb65793a7a1ad8e2d9340a
 ```
 
-#### 17.10.17 have_ranges_adjacent: SNAPSHOT-02 with a frontier that violates §28.1 rule 8
+#### 17.10.19 have_ranges_adjacent: SNAPSHOT-02 with a frontier that violates §28.1 rule 8
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra ranges: `[[105, 107]]` → `[[105, 107], [108, 110]]`
@@ -1830,7 +1872,7 @@ fb9cfc983227edf07424b793252c2734b5a29b8ed43beaec78df2013f6d59bcf5467443a2126dd77
 ad913da8fe178f8710eb70ac104209
 ```
 
-#### 17.10.18 frontier_duplicate_principal: SNAPSHOT-01 with a frontier that violates §28.1 rule 9
+#### 17.10.20 frontier_duplicate_principal: SNAPSHOT-01 with a frontier that violates §28.1 rule 9
 
 - Base case: `SNAPSHOT-01`
 - Mutation: BOB entries in the frontier: `1` → `2`
@@ -1851,7 +1893,7 @@ c50102a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c501
 f670bfde1440c720608227c380d2a5283876991f6fb5ecdc791619400db9201a2175b6f654cea15e0e
 ```
 
-#### 17.10.19 frontier_unsorted: SNAPSHOT-01 with CAROL listed before BOB
+#### 17.10.21 frontier_unsorted: SNAPSHOT-01 with CAROL listed before BOB
 
 - Base case: `SNAPSHOT-01`
 - Mutation: frontier entry order: `"BOB, CAROL"` → `"CAROL, BOB"`
@@ -1872,7 +1914,7 @@ f02562f989f3df39c026b58d2403a61a96305a9cd69d48e65ffb71ea7317884f8680f732fa65bb75
 c50d
 ```
 
-#### 17.10.20 stale_epoch_absent_actor: CAROL Data Unit in closed epoch 0, where C6 records no CAROL entry
+#### 17.10.22 stale_epoch_absent_actor: CAROL Data Unit in closed epoch 0, where C6 records no CAROL entry
 
 - Base case: `D4_carol_epoch1_seq1`
 - Mutation: Data Epoch (payload field 1): `1` → `0`
@@ -1891,7 +1933,7 @@ c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820a6e402
 2107385908a18154b908b383efd0341d9c959f92161e468633724abc0b
 ```
 
-#### 17.10.21 noncanonical_payload_D1: D1 payload with a non-shortest integer encoding, re-signed
+#### 17.10.23 noncanonical_payload_D1: D1 payload with a non-shortest integer encoding, re-signed
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: payload encoding of the data epoch (0): `00` → `1800`
@@ -1910,7 +1952,7 @@ f8376ef326715840c61e8713b42895fc0f64fc0e7573e7dbd2770dc5235b911a6c08a8c19668eb4e
 228151836168012f2d970f6c0fb45d725d7ffc7b8b782106
 ```
 
-#### 17.10.22 descriptor_extra_field: BOB Principal Descriptor with an additional field 3
+#### 17.10.24 descriptor_extra_field: BOB Principal Descriptor with an additional field 3
 
 - Base case: `principal_bob`
 - Mutation: descriptor fields: `"0, 1, 2"` → `"0, 1, 2, 3 (empty bstr)"`
@@ -1926,7 +1968,7 @@ a40058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c501582019
 ca7528fdd5eefb94f26c0340
 ```
 
-#### 17.10.23 small_order_r_signature_D1: D1 signed with a small-order R that cofactored (ZIP-215) verification accepts
+#### 17.10.25 small_order_r_signature_D1: D1 signed with a small-order R that cofactored (ZIP-215) verification accepts
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: signature R (first 32 bytes): `8adb5052b4f93358a1d5397fd05f591b47b20724afd186d42368caba11bd1f7e` → `0100000000000000000000000000000000000000000000000000000000000000`
@@ -1945,7 +1987,7 @@ f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca3
 751ac3391a14c8e56ce49382f409343d2f5dc2941f2d08
 ```
 
-#### 17.10.24 descriptor_small_order_key: Principal Descriptor whose Ed25519 key is a point of small order
+#### 17.10.26 descriptor_small_order_key: Principal Descriptor whose Ed25519 key is a point of small order
 
 - Base case: `principal_bob`
 - Mutation: Ed25519 public key (field 1), with the ID recomputed: `1953f4ada1cb4e0f8662108152c82e7e074cbf4859c487461cbe41e5d623e3c2` → `0000000000000000000000000000000000000000000000000000000000000000`

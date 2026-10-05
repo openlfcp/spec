@@ -1336,6 +1336,26 @@
       },
       "expect": "pass",
       "note": "Structurally valid: the violated rule (LFCP-WIRE-01 \u00a728.1 rule 5; \u00a728.2) is semantic."
+    },
+    {
+      "rule": "control-record",
+      "source": {
+        "case": "key_epoch_frontier_unsorted",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: frontier order (LFCP-WIRE-01 \u00a719, \u00a728.2) is semantic."
+    },
+    {
+      "rule": "control-record",
+      "source": {
+        "case": "key_epoch_frontier_duplicate",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: one entry per Principal (LFCP-WIRE-01 \u00a719, \u00a728.1 rule 9) is semantic."
     }
   ]
 }

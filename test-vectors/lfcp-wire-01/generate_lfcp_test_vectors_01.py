@@ -840,6 +840,28 @@ def generate():
         context={'previous_record': ref('C5_route_update', 'record_id'), 'competing_record': ref('C6_key_epoch_1', 'record_id')},
         cddl=('control-record', 'pass'))
 
+    # 7b. Non-canonical Key Epoch final frontier (SPEC-PATCH-03 / G-CP1): C6
+    #     with its field-2 frontier unsorted or with a duplicate Principal,
+    #     re-signed by BOB on top of C5.
+    for cid, frontier, field_from, field_to, why in [
+        ('key_epoch_frontier_unsorted', [{0: CAROL.pid, 1: 1}, actor_have_bob2], 'BOB', 'CAROL, BOB',
+         'Replicas compute the cutoff from the same frontier bytes; an unsorted frontier would be a second encoding of one cutoff.'),
+        ('key_epoch_frontier_duplicate', [actor_have_bob2, actor_have_bob2], 'BOB', 'BOB, BOB',
+         'Two entries for one Principal would make the cutoff ambiguous.'),
+    ]:
+        bad = control_record(6, C5['id'], 4, BOB, {**key_epoch_body, 2: frontier})
+        neg(cid, 'control_record', f'C6 with a final frontier of entries {field_to}',
+            'C6_key_epoch_1', 'body field 2: final frontier entries', field_from, field_to,
+            'LFCP-WIRE-01 §19; §28.2',
+            'Field `2` is a canonical frontier (Sections 28.1 and 28.2): canonical `actor-have` entries sorted by raw '
+            'Principal ID, with at most one entry per Principal. A Key Epoch Record whose final frontier is not canonical '
+            'MUST be rejected with `MALFORMED_MESSAGE`.',
+            why,
+            {'cose_sign1': hexv(bad['cose'])},
+            {'valid': False, 'disposition': 'reject', 'error': {'code': 'MALFORMED_MESSAGE'}},
+            context={'previous_record': ref('C5_route_update', 'record_id')},
+            cddl=('control-record', 'pass'))
+
     # 8. Bad actor sequence.
     D_SEQ0 = data_unit(BOB, 0, 0, None, C3['id'], D1_plain, DEK0)
     neg('actor_seq_zero_D1', 'data_unit', 'D1 re-issued with actor sequence 0',
