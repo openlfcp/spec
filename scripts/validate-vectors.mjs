@@ -24,6 +24,7 @@ import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv2020 from "ajv/dist/2020.js";
 import { duplicateKeys, semanticProblems, HASH_RULES, NOT_VERIFIED, ENCODING_RULES } from "./lib/vector-checks.mjs";
+import { relevant, schemaReason } from "./lib/ajv-errors.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const schemaPath = join(root, "schemas", "lfcp-vector-format-1.schema.json");
@@ -40,26 +41,6 @@ const listJson = (dir, pattern) =>
     .filter((name) => pattern.test(name))
     .sort()
     .map((name) => join(dir, name));
-
-// Keeps the errors that explain a failure: drops combinator summaries and
-// any error whose location is an ancestor of a more specific error.
-function relevant(errors) {
-  const kept = errors.filter((e) => !["anyOf", "oneOf", "if"].includes(e.keyword));
-  const paths = kept.map((e) => e.instancePath);
-  const leafy = kept.filter((e) => !paths.some((p) => p !== e.instancePath && p.startsWith(`${e.instancePath}/`)));
-  const seen = new Set();
-  return leafy.filter((e) => {
-    const key = `${e.instancePath} ${e.keyword} ${e.message}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
-function schemaReason(e) {
-  const extra = e.params?.unevaluatedProperty ?? e.params?.additionalProperty;
-  return `schema/${e.keyword}: ${e.message}${extra ? ` (${extra})` : ""}`;
-}
 
 function schemaProblems(doc) {
   if (validate(doc)) return [];
