@@ -1,0 +1,181 @@
+; LFCP-WIRE-01 CDDL supplement (hand-maintained).
+;
+; Minimal complements that let wire/LFCP-WIRE-01.cddl (extracted from the
+; prose) compile and validate as one schema. Every rule here encodes a
+; sentence of LFCP-WIRE-01.md, cited by section; nothing here adds protocol
+; requirements. If a rule cannot be grounded in the prose it does not belong
+; here; it is a specification gap.
+
+; ---------------------------------------------------------------------------
+; Names used but not defined by the extracted blocks
+; ---------------------------------------------------------------------------
+
+; §5.3 Hash: "`hash32` means SHA-256 and is encoded as a 32-byte CBOR byte
+; string." (Also stated as a rule in Part XXVIII.)
+hash32 = bstr .size 32
+
+; ---------------------------------------------------------------------------
+; Unnamed blocks in the prose, given names
+; ---------------------------------------------------------------------------
+
+; §10.2 Unprotected header: "The unprotected header MUST be the empty CBOR map".
+lfcp-unprotected-header = {}
+
+; §10.5 Signature input: the standard Sig_structure with "exact protected-header
+; bstr from the object", "empty external AAD" and "exact payload bstr from the
+; object".
+sig-structure = [
+  "Signature1",
+  protected: bstr,
+  external-aad: h'',
+  payload: bstr
+]
+
+; §25.1 HPKE info: "The HPKE `info` value is deterministic CBOR encoding of"
+; this array.
+key-package-hpke-info = [
+  "LFCP-KEY-v1",
+  resource-id,
+  uint,          ; data epoch
+  principal-id   ; recipient
+]
+
+; §25.1: "The HPKE AAD is deterministic CBOR encoding of" this array.
+key-package-hpke-aad = [
+  resource-id,
+  uint,          ; data epoch
+  hash32         ; Control Head
+]
+
+; §26.1 AAD: "The ChaCha20-Poly1305 AAD is deterministic CBOR encoding of"
+; this array.
+data-unit-aad = [
+  "LFCP-DATA-v1",
+  resource-id,
+  uint,                  ; data epoch
+  principal-id,
+  uint,                  ; actor sequence
+  (hash32 / null),       ; previous actor unit
+  hash32                 ; Control Head
+]
+
+; ---------------------------------------------------------------------------
+; Signed objects with their byte-string contents typed
+; ---------------------------------------------------------------------------
+
+; §10.1: "The protected header is a CBOR byte string containing the
+; deterministic CBOR encoding of exactly this map" (lfcp-protected-header).
+; §10.3: "For LFCP records whose payload is an LFCP CBOR structure, the byte
+; string MUST contain the deterministic CBOR encoding of that structure."
+; Same shape as lfcp-cose-sign1 (§10), with protected and payload decoded.
+; CDDL cannot check that the encoding is deterministic, nor the signature.
+lfcp-signed<payload-type> = [
+  protected   : bstr .cbor lfcp-protected-header,
+  unprotected : lfcp-unprotected-header,
+  payload     : bstr .cbor payload-type,
+  signature   : bstr .size 64
+]
+
+; §13: "The payload is signed with COSE_Sign1."
+control-record = lfcp-signed<typed-control-record-payload>
+
+; §23.1: "The current owner creates a standalone signed object";
+; §23.2: "The proposed new owner signs" the accept payload.
+owner-transfer-offer = lfcp-signed<owner-transfer-offer-payload>
+owner-transfer-accept = lfcp-signed<owner-transfer-accept-payload>
+
+; §25: "The payload is signed with COSE_Sign1."
+key-package = lfcp-signed<key-package-payload>
+
+; §26: "The payload is signed by the actor using COSE_Sign1."
+data-unit = lfcp-signed<data-unit-payload>
+
+; §29: "The Snapshot is signed by the publisher using the canonical untagged
+; COSE_Sign1 representation defined by Section 10."
+snapshot = lfcp-signed<snapshot-payload>
+
+; §36: "The signed transcript payload is deterministic CBOR encoding of"
+; auth-transcript.
+auth-proof = lfcp-signed<auth-transcript>
+
+; ---------------------------------------------------------------------------
+; Control Record payloads by type (§13, §14 registry)
+; ---------------------------------------------------------------------------
+
+; control-record-payload (§13) with field 3 fixed to a §14 registry code and
+; field 5 typed by the body rule of the section that defines that type.
+typed-control-record<control-type, body> = {
+  0 => resource-id,
+  1 => uint,                  ; control_seq
+  2 => (hash32 / null),       ; prev_control_id
+  3 => control-type,
+  4 => principal-id,          ; issuer
+  5 => body
+}
+
+; §13.1: "Genesis has: control_seq = 0, prev_control_id = null".
+genesis-record-payload = {
+  0 => resource-id,
+  1 => 0,
+  2 => null,
+  3 => 0,                     ; GENESIS (§14)
+  4 => principal-id,
+  5 => genesis-body
+}
+
+typed-control-record-payload =
+    genesis-record-payload
+  / typed-control-record<1, capability-grant-body>       ; CAPABILITY_GRANT, §17.2
+  / typed-control-record<2, capability-revoke-body>      ; CAPABILITY_REVOKE, §17.3
+  / typed-control-record<3, capability-claim-body>       ; CAPABILITY_CLAIM, §18.1
+  / typed-control-record<4, key-epoch-body>              ; KEY_EPOCH, §19
+  / typed-control-record<5, route-update-body>           ; ROUTE_UPDATE, §20
+  / typed-control-record<6, owner-transfer-commit-body>  ; OWNER_TRANSFER_COMMIT, §23.3
+  / typed-control-record<7, coordinator-recovery-body>   ; COORDINATOR_RECOVERY, §22
+  / typed-control-record<8, resource-tombstone-body>     ; RESOURCE_TOMBSTONE, §24
+
+; ---------------------------------------------------------------------------
+; Messages by type (§32 envelope, §33 registry)
+; ---------------------------------------------------------------------------
+
+; lfcp-message (§32) with field 0 fixed to a §33 registry code and field 4
+; typed by the body rule of the section that defines that message.
+typed-message<message-type, body> = {
+  0 => message-type,
+  1 => bstr .size 16,         ; message id
+  ? 2 => bstr .size 16,       ; correlation id
+  ? 3 => uint,                ; flags
+  4 => body
+}
+
+typed-lfcp-message =
+    typed-message<0, hello-body>              ; HELLO, §34
+  / typed-message<1, challenge-body>          ; CHALLENGE, §35
+  / typed-message<2, auth-body>               ; AUTH, §36
+  / typed-message<3, ready-body>              ; READY, §37
+  / typed-message<4, error-body>              ; ERROR, §61
+  / typed-message<5, ping-body>               ; PING, §38
+  / typed-message<6, pong-body>               ; PONG, §38
+  / typed-message<10, resource-host-body>     ; RESOURCE_HOST, §39
+  / typed-message<11, resource-hosted-body>   ; RESOURCE_HOSTED, §40
+  / typed-message<12, resource-open-body>     ; RESOURCE_OPEN, §41
+  / typed-message<13, resource-opened-body>   ; RESOURCE_OPENED, §42
+  / typed-message<14, resource-close-body>    ; RESOURCE_CLOSE, §43
+  / typed-message<20, control-have-body>      ; CONTROL_HAVE, §44
+  / typed-message<21, control-get-body>       ; CONTROL_GET, §45
+  / typed-message<22, control-batch-body>     ; CONTROL_BATCH, §46
+  / typed-message<23, control-put-body>       ; CONTROL_PUT, §47
+  / typed-message<30, data-have-body>         ; DATA_HAVE, §48
+  / typed-message<31, data-get-body>          ; DATA_GET, §49
+  / typed-message<32, data-batch-body>        ; DATA_BATCH, §50
+  / typed-message<33, data-put-body>          ; DATA_PUT, §51
+  / typed-message<40, key-package-get-body>   ; KEY_PACKAGE_GET, §52
+  / typed-message<41, key-package-batch-body> ; KEY_PACKAGE_BATCH, §53
+  / typed-message<42, key-package-put-body>   ; KEY_PACKAGE_PUT, §54
+  / typed-message<50, snapshot-get-body>      ; SNAPSHOT_GET, §55
+  / typed-message<51, snapshot-body>          ; SNAPSHOT, §56
+  / typed-message<52, snapshot-put-body>      ; SNAPSHOT_PUT, §57
+  / typed-message<60, presence-body>          ; PRESENCE, §58.1
+  / typed-message<61, presence-leave-body>    ; PRESENCE_LEAVE, §58.2
+  / typed-message<90, ack-body>               ; ACK, §59
+  / typed-message<91, nack-body>              ; NACK, §60

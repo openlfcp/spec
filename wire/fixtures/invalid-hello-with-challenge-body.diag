@@ -1,0 +1,13 @@
+/ NON-NORMATIVE structural fixture for LFCP-005. MUST FAIL against
+  typed-lfcp-message: message type 0 (HELLO, §33.1) carrying a CHALLENGE body
+  (§35). Synthetic bytes. /
+{
+  0: 0,
+  1: h'88888888888888888888888888888888',
+  4: {
+    0: "LFCP-WIRE-01",
+    1: h'99999999999999999999999999999999',
+    2: h'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    3: h'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+  }
+}
