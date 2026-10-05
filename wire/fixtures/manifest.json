@@ -1080,6 +1080,196 @@
         "diag": "invalid-hello-with-challenge-body.diag"
       },
       "expect": "fail"
+    },
+    {
+      "rule": "data-unit",
+      "source": {
+        "case": "noncanonical_aad_D1",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the violated rule (LFCP-WIRE-01 \u00a75.2; \u00a726.3) is semantic."
+    },
+    {
+      "rule": "data-unit",
+      "source": {
+        "case": "tagged_cose_D1",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "fail",
+      "note": "Tag 18 is visible to CDDL: \u00a710 requires the untagged array."
+    },
+    {
+      "rule": "data-unit",
+      "source": {
+        "case": "invalid_signature_D1",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the violated rule (LFCP-WIRE-01 \u00a726.3, \u00a710.5) is semantic."
+    },
+    {
+      "rule": "data-unit",
+      "source": {
+        "case": "wrong_kid_D1",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the violated rule (LFCP-WIRE-01 \u00a710.1, \u00a726) is semantic."
+    },
+    {
+      "rule": "data-unit",
+      "source": {
+        "case": "aead_failure_D1",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the violated rule (LFCP-WIRE-01 \u00a726.1, \u00a726.3) is semantic."
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "stale_control_head_put",
+        "field": "message_cbor",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the violated rule (LFCP-WIRE-01 \u00a747) is semantic."
+    },
+    {
+      "rule": "control-record",
+      "source": {
+        "case": "control_fork_C6",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the violated rule (LFCP-WIRE-01 \u00a713.2) is semantic."
+    },
+    {
+      "rule": "data-unit",
+      "source": {
+        "case": "actor_seq_zero_D1",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the violated rule (LFCP-WIRE-01 \u00a78) is semantic."
+    },
+    {
+      "rule": "data-unit",
+      "source": {
+        "case": "actor_seq1_prev_not_null_D1",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the violated rule (LFCP-WIRE-01 \u00a726.2) is semantic."
+    },
+    {
+      "rule": "key-package",
+      "source": {
+        "case": "hpke_recipient_mismatch_KP0",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the violated rule (LFCP-WIRE-01 \u00a725.1, \u00a725.2) is semantic."
+    },
+    {
+      "rule": "snapshot",
+      "source": {
+        "case": "have_empty_extra_list",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the violated rule (LFCP-WIRE-01 \u00a728.1 rule 2; \u00a728.2) is semantic."
+    },
+    {
+      "rule": "snapshot",
+      "source": {
+        "case": "have_range_reversed",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the violated rule (LFCP-WIRE-01 \u00a728.1 rule 4; \u00a728.2) is semantic."
+    },
+    {
+      "rule": "snapshot",
+      "source": {
+        "case": "have_range_not_above_contiguous",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the violated rule (LFCP-WIRE-01 \u00a728.1 rule 5; \u00a728.2) is semantic."
+    },
+    {
+      "rule": "snapshot",
+      "source": {
+        "case": "have_ranges_unsorted",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the violated rule (LFCP-WIRE-01 \u00a728.1 rule 6; \u00a728.2) is semantic."
+    },
+    {
+      "rule": "snapshot",
+      "source": {
+        "case": "have_ranges_overlapping",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the violated rule (LFCP-WIRE-01 \u00a728.1 rule 7; \u00a728.2) is semantic."
+    },
+    {
+      "rule": "snapshot",
+      "source": {
+        "case": "have_ranges_adjacent",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the violated rule (LFCP-WIRE-01 \u00a728.1 rule 8; \u00a728.2) is semantic."
+    },
+    {
+      "rule": "snapshot",
+      "source": {
+        "case": "frontier_duplicate_principal",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the violated rule (LFCP-WIRE-01 \u00a728.1 rule 9; \u00a728.2) is semantic."
+    },
+    {
+      "rule": "snapshot",
+      "source": {
+        "case": "frontier_unsorted",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the violated rule (LFCP-WIRE-01 \u00a728.2) is semantic."
+    },
+    {
+      "rule": "data-unit",
+      "source": {
+        "case": "stale_epoch_absent_actor",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the violated rule (LFCP-WIRE-01 \u00a719.1; \u00a788 step 7; \u00a775) is semantic."
     }
   ]
 }
