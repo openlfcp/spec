@@ -42,7 +42,10 @@
   ],
   "changed": [
     { "path": "deterministic_vectors[id=D07-uuid-invalid-uppercase].error", "from": "INVALID_OBJECT_ID", "to": "PROFILE_INVALID", "rule": "SPEC-PATCH-01 / G3: profile failures use code PROFILE_INVALID; INVALID_OBJECT_ID moves to the diagnostic." },
-    { "path": "deterministic_vectors[id=D08-uuid-invalid-version].error", "from": "INVALID_OBJECT_ID", "to": "PROFILE_INVALID", "rule": "SPEC-PATCH-01 / G3: profile failures use code PROFILE_INVALID; INVALID_OBJECT_ID moves to the diagnostic." }
+    { "path": "deterministic_vectors[id=D08-uuid-invalid-version].error", "from": "INVALID_OBJECT_ID", "to": "PROFILE_INVALID", "rule": "SPEC-PATCH-01 / G3: profile failures use code PROFILE_INVALID; INVALID_OBJECT_ID moves to the diagnostic." },
+    { "path": "behavioral_scenarios[id=S04].branches[0].intent", "from": "task.resolve_status_conflict", "to": "task.resolve_field_conflict", "rule": "SPEC-PATCH-04 / G-SC5 (approved by the project owner, 2026-10-05): the vectors' intent names follow SHARED-OBJECTS-PROFILE-01 §59." },
+    { "path": "behavioral_scenarios[id=S08].branches[0].intent", "from": "task.unassign", "to": "task.remove_assignee", "rule": "SPEC-PATCH-04 / G-SC5 (approved by the project owner, 2026-10-05): the vectors' intent names follow SHARED-OBJECTS-PROFILE-01 §59." },
+    { "path": "behavioral_scenarios[id=S08].branches[1].intent", "from": "task.assign", "to": "task.add_assignee", "rule": "SPEC-PATCH-04 / G-SC5 (approved by the project owner, 2026-10-05): the vectors' intent names follow SHARED-OBJECTS-PROFILE-01 §59." }
   ],
   "structural": [
     { "path": "deterministic_vectors[id=*].deterministic_bytes", "value": true, "rule": "Encoded by the case type: bytes for D01-D05; validation (exact accept/reject) for D06-D08." }

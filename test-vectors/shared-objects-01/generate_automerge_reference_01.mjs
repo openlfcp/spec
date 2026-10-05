@@ -10,7 +10,8 @@
 // SHARED-OBJECTS-TEST-VECTORS-01.json it records the exact Automerge changes
 // that build the scenario, in an order in which each change's dependencies
 // precede it, the full-save image of the converged document, its logical
-// state and its scalar conflict sets.
+// state and its scalar conflict sets. `negatives` holds changes a receiver
+// must not merge (SPEC-PATCH-04 / SO-SEC1).
 //
 // The corpus is supplementary: conformance does NOT require independently
 // generated changes or save images to be byte-identical (SHARED-OBJECTS-
@@ -169,13 +170,13 @@ function applyBranch(history, doc, branch, label) {
       return write((d) => {
         delete d.objects[objectId].tags[branch.tag];
       });
-    case "task.assign": // §68 (task.add_assignee)
+    case "task.add_assignee": // §68
       return write((d) => {
         const assignees = d.objects[objectId].assignees;
         if (branch.fresh_write) delete assignees[branch.principal];
         assignees[branch.principal] = true;
       });
-    case "task.unassign": // §68 (task.remove_assignee)
+    case "task.remove_assignee": // §68
       return write((d) => {
         delete d.objects[objectId].assignees[branch.principal];
       });
@@ -313,6 +314,48 @@ for (const id of scenarios.keys()) {
   }
   corpus.scenarios.push(entry);
 }
+
+// Negative cases (SPEC-PATCH-04). SO-SEC1 (SHARED-OBJECTS-PROFILE-01 §8,
+// §11): a Data Unit signed by andrey whose framed plaintext carries a real
+// change by pavel's actor, on top of S01's state. A receiver does not merge
+// it: PROFILE_INVALID with the diagnostic CHANGE_ACTOR_MISMATCH.
+
+/** Deterministic CBOR of [1, bstr] (§11 framing). */
+function frame(bytes) {
+  const n = bytes.length;
+  const head =
+    n < 24 ? [0x40 + n] : n < 256 ? [0x58, n] : n < 65536 ? [0x59, n >> 8, n & 0xff] : null;
+  if (head === null) throw new Error("change too large for this test framing");
+  return Uint8Array.from([0x82, 0x01, ...head, ...bytes]);
+}
+
+const s01 = run("S01").doc;
+const foreign = new History();
+const asPavel = A.clone(s01, { actor: actorOf("pavel") });
+foreign.change(asPavel, "SO-SEC1.foreign", "pavel", (d) => {
+  d.objects[fixtures.objects.task_1].title = new A.ImmutableString("Written into another actor's history");
+});
+const [foreignChange] = foreign.changes;
+if (foreignChange.actor_hex === actorOf("andrey")) throw new Error("SO-SEC1: the change must not be andrey's");
+corpus.negatives = [
+  {
+    id: "SO-SEC1-change-actor-mismatch",
+    description:
+      "A Data Unit signed by andrey whose plaintext carries a change by pavel's Automerge actor, on top of S01",
+    rule: "SHARED-OBJECTS-PROFILE-01 §8, §11: the change's actor MUST be the §8 actor of the Data Unit's signer; " +
+      "a receiver MUST NOT merge a change of any other actor.",
+    base_scenario: "S01",
+    signer: "andrey",
+    signer_actor_hex: actorOf("andrey"),
+    change: foreignChange,
+    plaintext_hex: hex(frame(Buffer.from(foreignChange.change_hex, "hex"))),
+    expected: {
+      valid: false,
+      disposition: "reject",
+      error: { code: "PROFILE_INVALID", diagnostic: "CHANGE_ACTOR_MISMATCH" },
+    },
+  },
+];
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
 fs.writeFileSync(path.join(OUT_DIR, OUT_NAME), JSON.stringify(corpus, null, 2) + "\n");

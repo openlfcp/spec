@@ -354,7 +354,7 @@
           {
             "actor": "masha",
             "from": "merged",
-            "intent": "task.resolve_status_conflict",
+            "intent": "task.resolve_field_conflict",
             "writes": {
               "status": "done"
             }
@@ -540,13 +540,13 @@
           {
             "actor": "andrey",
             "from": "base",
-            "intent": "task.unassign",
+            "intent": "task.remove_assignee",
             "principal": "p:66ZYp_TRzK3S0uRmWMhToLGf5YfzVeiEXxcNJIrCu-o"
           },
           {
             "actor": "masha",
             "from": "base",
-            "intent": "task.assign",
+            "intent": "task.add_assignee",
             "principal": "p:66ZYp_TRzK3S0uRmWMhToLGf5YfzVeiEXxcNJIrCu-o",
             "fresh_write": true
           }

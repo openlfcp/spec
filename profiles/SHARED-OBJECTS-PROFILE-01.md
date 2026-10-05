@@ -223,6 +223,8 @@ The resulting 32 bytes are used as the Automerge actor identifier.
 
 This mapping ensures that the same operational Principal editing two different LFCP Resources receives different Automerge actor IDs.
 
+It also binds Automerge history to LFCP signatures: the Automerge change carried by a Data Unit MUST be a change of the actor that this mapping gives for the Data Unit's signer (its LFCP actor Principal) in that Resource. A receiver does not merge a change of any other actor (Section 11), so no Principal can write into another Principal's Automerge history.
+
 ---
 
 ## 9. Actor state safety
@@ -290,7 +292,11 @@ A receiver MUST reject profile plaintext that:
 - uses an unsupported framing version;
 - contains invalid Automerge change bytes.
 
-The LFCP server does not perform this validation.
+The second element MUST be an Automerge change chunk: a storage chunk whose chunk type is a change (an uncompressed or a compressed change), not a document chunk (a full save belongs in a Snapshot, Section 13). A receiver MUST verify the chunk checksum (the first four bytes of the chunk's hash, which the chunk header carries) and MUST reject a chunk whose checksum does not match, even when its Automerge library would parse it. These are "invalid Automerge change bytes".
+
+The change's Automerge actor MUST be the actor of the Data Unit's signer for this Resource (Section 8). A receiver MUST NOT merge a change of any other actor; it rejects the plaintext with `PROFILE_INVALID` and the diagnostic `CHANGE_ACTOR_MISMATCH` (Section 74.1).
+
+A rejected plaintext is not merged. The LFCP server does not perform this validation.
 
 ---
 
@@ -327,6 +333,8 @@ shared-objects-snapshot = [
 ]
 ```
 
+The second element MUST be an Automerge document chunk (a full save), not a change chunk; a receiver MUST verify the chunk checksum as for Data Units (Section 11) and MUST reject a Snapshot plaintext that fails either check, or that its Automerge library cannot load.
+
 A client loads the second element using the corresponding Automerge full-document load operation.
 
 After loading a Snapshot, the client applies all LFCP Data Units beyond the Snapshot frontier.
@@ -340,6 +348,17 @@ Two conforming implementations are not required to produce byte-identical Autome
 LFCP Snapshot identity is therefore about the exact encrypted Snapshot object published by a Principal, not a universal content hash of logical Shared Objects state.
 
 Interoperability requires that a conforming implementation can successfully load another implementation's valid Snapshot and continue applying changes.
+
+### 14.1 Replica state is a function of the accepted changes
+
+A replica's Shared Objects state is a deterministic function of the set of LFCP Data Units it has accepted (LFCP-WIRE-01 §19.1): the Automerge changes those units carry, applied in any order their dependencies allow. Two replicas that accepted the same units have the same logical state and the same conflicts.
+
+When a unit that a replica has already merged leaves the accepted set, the replica rebuilds its document without that unit's change and without every change that depends on it, then surfaces the excluded units to the application. Two LFCP events cause this:
+
+- a newly known Key Epoch Record places the unit beyond its epoch's cutoff (LFCP-WIRE-01 §19.1);
+- the unit turns out to be one of an equivocating pair, of which neither stays merged (LFCP-WIRE-01 §26.2).
+
+A rebuild starts from the profile's initial document (Section 16), or from a Snapshot whose frontier excludes the removed units, and applies the remaining accepted changes.
 
 ---
 
@@ -715,6 +734,8 @@ type TaskObject = {
 ```
 
 The actual Automerge representation uses maps and scalar registers with the concurrency semantics specified below.
+
+Every string value of the profile (`id`, `type`, `lifecycle`, `created_by`, `created_at`, `title`, `status`, dates, `priority`, and string values in object maps) is an Automerge scalar string, never collaborative Automerge Text. A string field held as Text is profile-invalid with the diagnostic `INVALID_FIELD_TYPE` (Section 74.1).
 
 ---
 
@@ -1365,6 +1386,8 @@ Version 1 does NOT require intents themselves to be persisted or transmitted.
 
 Only resulting Automerge changes are part of the profile's durable synchronization format.
 
+Every intent MUST produce a real Automerge operation for each field it writes, even when the new value equals the current one. Where an Automerge library skips an assignment of the value already present, the implementation first deletes the property and then puts the value, in the same change. This keeps an intent visible to concurrency: for example, a restore of an active Task still conflicts with a concurrent delete (Section 52).
+
 Implementations MAY record semantic events in an extension namespace, but such history is not required for profile conformance.
 
 ---
@@ -1680,6 +1703,7 @@ Every profile validation failure is reported with the code `PROFILE_INVALID` and
 | `INVALID_COLLECTION_REPRESENTATION` | `tags` or `assignees` is not a map, or a member's value is not `true` | §39, §42 |
 | `INVALID_TAG` | a tag is empty or starts with `#` | §40 |
 | `IMMUTABLE_FIELD_MUTATED` | `id`, `type` or `created_by` changed | §75 |
+| `CHANGE_ACTOR_MISMATCH` | a Data Unit carries an Automerge change whose actor is not the §8 actor of the unit's signer; the change is not merged | §8, §11 |
 
 These are profile-level codes reported to the application. They are not LFCP Wire error codes.
 

@@ -81,7 +81,26 @@
     },
     {
       "suite_file": "test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.json",
-      "changed": []
+      "changed": [
+        {
+          "path": "cases[id=S04].inputs.branches[0].intent",
+          "from": "task.resolve_status_conflict",
+          "to": "task.resolve_field_conflict",
+          "rule": "SPEC-PATCH-04 / G-SC5 (approved by the project owner, 2026-10-05): the vectors' intent names follow SHARED-OBJECTS-PROFILE-01 §59."
+        },
+        {
+          "path": "cases[id=S08].inputs.branches[0].intent",
+          "from": "task.unassign",
+          "to": "task.remove_assignee",
+          "rule": "SPEC-PATCH-04 / G-SC5 (approved by the project owner, 2026-10-05): the vectors' intent names follow SHARED-OBJECTS-PROFILE-01 §59."
+        },
+        {
+          "path": "cases[id=S08].inputs.branches[1].intent",
+          "from": "task.assign",
+          "to": "task.add_assignee",
+          "rule": "SPEC-PATCH-04 / G-SC5 (approved by the project owner, 2026-10-05): the vectors' intent names follow SHARED-OBJECTS-PROFILE-01 §59."
+        }
+      ]
     },
     {
       "suite_file": "test-vectors/shared-objects-01/SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json",

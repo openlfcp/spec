@@ -1108,5 +1108,36 @@
         ]
       }
     }
+  ],
+  "negatives": [
+    {
+      "id": "SO-SEC1-change-actor-mismatch",
+      "description": "A Data Unit signed by andrey whose plaintext carries a change by pavel's Automerge actor, on top of S01",
+      "rule": "SHARED-OBJECTS-PROFILE-01 §8, §11: the change's actor MUST be the §8 actor of the Data Unit's signer; a receiver MUST NOT merge a change of any other actor.",
+      "base_scenario": "S01",
+      "signer": "andrey",
+      "signer_actor_hex": "6c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583",
+      "change": {
+        "label": "SO-SEC1.foreign",
+        "actor": "pavel",
+        "actor_hex": "7957aa8e06acc46c224685a07625acb31d6a60cee94b4c6847e74772757f1025",
+        "seq": 1,
+        "hash": "a3408589fa63388b7cd20ae07fe34cce0a53247d70c104e13508fc1026f6dc1c",
+        "deps": [
+          "0f737136bdf197d0613ebaf03c0b332f5d7338f74ee15d1aa2b7432f65a4615c"
+        ],
+        "change_hex": "856f4a83a340858901c701010f737136bdf197d0613ebaf03c0b332f5d7338f74ee15d1aa2b7432f65a4615c207957aa8e06acc46c224685a07625acb31d6a60cee94b4c6847e74772757f10250110000f534f2d534543312e666f726569676e01206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830a01020202150734014202560357247002710273027f017f047f057469746c65017f017fc6045772697474656e20696e746f20616e6f74686572206163746f72277320686973746f72797f017f017f0e",
+        "change_sha256": "d4b188d30f832b07fd67e2dd542b355d003b022ad3c486085a01d5a39bd1f48d"
+      },
+      "plaintext_hex": "820158d2856f4a83a340858901c701010f737136bdf197d0613ebaf03c0b332f5d7338f74ee15d1aa2b7432f65a4615c207957aa8e06acc46c224685a07625acb31d6a60cee94b4c6847e74772757f10250110000f534f2d534543312e666f726569676e01206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830a01020202150734014202560357247002710273027f017f047f057469746c65017f017fc6045772697474656e20696e746f20616e6f74686572206163746f72277320686973746f72797f017f017f0e",
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "CHANGE_ACTOR_MISMATCH"
+        }
+      }
+    }
   ]
 }
