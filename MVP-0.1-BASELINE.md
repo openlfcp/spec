@@ -100,7 +100,7 @@ directory).
 
 ## Project documents in `openlfcp/.github`
 
-These belong to the baseline at commit `.github@d468d4d` (tag
+These belong to the baseline at commit `.github@6ae515a` (tag
 `mvp-0.1-baseline.6` in that repository; `mvp-0.1-baseline.5` there marks
 `125c4e6`, `mvp-0.1-baseline.4` marks `1a8ab67`, `mvp-0.1-baseline.3` marks
 `0cfa217`, `mvp-0.1-baseline.2` marks `174e6e4` and `mvp-0.1-baseline`
