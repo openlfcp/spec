@@ -706,6 +706,8 @@ def generate():
          wire_msg(6, mid('PONG'), {0: ping_payload}, correlation=mid('PING'))),
         ('ACK_DATA_PUT_D1_D2', 'message type 90; acknowledges DATA_PUT_D1_D2: field 0 = 33 (DATA_PUT), the accepted D1 and D2 IDs, durable (§59)',
          wire_msg(90, mid('ACK'), {0: 33, 1: [D1['id'], D2['id']], 2: True}, correlation=dp_mid)),
+        ('NACK_CONTROL_HEAD_MISMATCH', 'message type 91; error code 10 CONTROL_HEAD_MISMATCH with the current head C5 as details, answering the CONTROL_PUT of stale_control_head_put (§47, §60)',
+         wire_msg(91, mid('NACK-CONTROL-HEAD-MISMATCH'), {0: 10, 2: C5['id']}, correlation=mid('CONTROL-PUT'))),
     ]
 
     # Negative: actor equivocation, same tuple Bob seq 2 but different plaintext and valid signature.
@@ -850,6 +852,33 @@ def generate():
         {'message_cbor': hexv(stale_put)},
         {'valid': False, 'disposition': 'reject', 'error': {'code': 'CONTROL_HEAD_MISMATCH'}},
         context={'current_control_head': ref('C5_route_update', 'record_id')},
+        cddl=('typed-lfcp-message', 'pass'))
+
+    # 6b. Message-level decisions (SPEC-PATCH-03 / G-MSG1, G-MSG5, G-HV1).
+    neg('unknown_message_type', 'wire_message', 'PING sent with the unassigned message type 7',
+        'PING', 'message type (envelope field 0)', 5, 7,
+        'LFCP-WIRE-01 §33',
+        'A message whose type is not assigned in this registry, or is an extension type that was not negotiated for the '
+        'session, is rejected with `PROTOCOL_UNSUPPORTED`.',
+        'A receiver cannot know the body of an unassigned type, so it cannot process the message.',
+        {'message_cbor': hexv(wire_msg(7, msgid('PING'), {0: ping_payload}))},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'PROTOCOL_UNSUPPORTED'}},
+        cddl=('typed-lfcp-message', 'fail'))
+    neg('control_put_null_expected_head', 'control_put', 'CONTROL_PUT of C6 with a null expected head',
+        'CONTROL_PUT', 'expected current Control Head (body field 1)', hexv(C5['id']), None,
+        'LFCP-WIRE-01 §47',
+        'A `CONTROL_PUT` always names an expected head; a null expected head is invalid, because Genesis uses `RESOURCE_HOST`.',
+        'Compare-and-swap needs a head to compare against; null would bypass it.',
+        {'message_cbor': hexv(wire_msg(23, msgid('CONTROL-PUT'), {0: RESOURCE, 1: None, 2: C6['cose']}))},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'MALFORMED_MESSAGE'}},
+        cddl=('typed-lfcp-message', 'fail'))
+    neg('data_have_reversed_range', 'wire_message', 'DATA_HAVE_with_hole with the extra range written 107..105',
+        'DATA_HAVE_with_hole', 'BOB extra range', [[105, 107]], [[107, 105]],
+        'LFCP-WIRE-01 §48',
+        'A range with `start > end`, or one that includes sequence `0`, is rejected with `MALFORMED_MESSAGE`.',
+        'Unnormalized live Haves are merged, but a reversed range describes no set of sequences at all.',
+        {'message_cbor': hexv(wire_msg(30, dh_mid, {0: RESOURCE, 1: [{0: BOB.pid, 1: 100, 2: [[107, 105]]}]}))},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'MALFORMED_MESSAGE'}},
         cddl=('typed-lfcp-message', 'pass'))
 
     # 7. Control fork: a second validly signed record at seq 6 after C5,

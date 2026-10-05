@@ -247,7 +247,7 @@ lfcp-message = {
   * (uint .gt 15) => any      ; future fields, ignored if unknown
 }
 
-; --- wire/LFCP-WIRE-01.md:1647 (34. HELLO) ---
+; --- wire/LFCP-WIRE-01.md:1651 (34. HELLO) ---
 hello-body = {
   0 => [1* tstr],             ; supported wire profiles
   1 => principal-descriptor,  ; session Principal
@@ -255,7 +255,7 @@ hello-body = {
   ? 3 => [* tstr]             ; supported application Data Profiles
 }
 
-; --- wire/LFCP-WIRE-01.md:1670 (35. CHALLENGE) ---
+; --- wire/LFCP-WIRE-01.md:1676 (35. CHALLENGE) ---
 challenge-body = {
   0 => tstr,                  ; selected wire profile
   1 => bstr .size 16,         ; server nonce
@@ -263,7 +263,7 @@ challenge-body = {
   3 => bstr .size 32          ; stable server id
 }
 
-; --- wire/LFCP-WIRE-01.md:1689 (36. AUTH) ---
+; --- wire/LFCP-WIRE-01.md:1695 (36. AUTH) ---
 auth-transcript = [
   "LFCP-AUTH-v1",
   bstr .size 16,       ; session id
@@ -273,13 +273,13 @@ auth-transcript = [
   principal-id
 ]
 
-; --- wire/LFCP-WIRE-01.md:1702 (36. AUTH) ---
+; --- wire/LFCP-WIRE-01.md:1708 (36. AUTH) ---
 auth-body = {
   0 => bstr,                  ; COSE_Sign1 auth proof
   ? 1 => bstr                 ; opaque hosting/account credential
 }
 
-; --- wire/LFCP-WIRE-01.md:1717 (37. READY) ---
+; --- wire/LFCP-WIRE-01.md:1725 (37. READY) ---
 ready-body = {
   0 => tstr,                  ; selected wire profile
   1 => bstr .size 32,         ; server id
@@ -289,7 +289,7 @@ ready-body = {
   ? 5 => [* tstr]             ; supported server extensions
 }
 
-; --- wire/LFCP-WIRE-01.md:1743 (38. PING and PONG) ---
+; --- wire/LFCP-WIRE-01.md:1751 (38. PING and PONG) ---
 ping-body = {
   0 => bstr .size 8
 }
@@ -298,19 +298,19 @@ pong-body = {
   0 => bstr .size 8
 }
 
-; --- wire/LFCP-WIRE-01.md:1765 (39. RESOURCE_HOST) ---
+; --- wire/LFCP-WIRE-01.md:1773 (39. RESOURCE_HOST) ---
 resource-host-body = {
   0 => bstr,                  ; exact Genesis COSE bytes
   ? 1 => bstr                 ; server-specific hosting credential
 }
 
-; --- wire/LFCP-WIRE-01.md:1786 (40. RESOURCE_HOSTED) ---
+; --- wire/LFCP-WIRE-01.md:1794 (40. RESOURCE_HOSTED) ---
 resource-hosted-body = {
   0 => resource-id,
   1 => uint                   ; durability level applied
 }
 
-; --- wire/LFCP-WIRE-01.md:1799 (41. RESOURCE_OPEN) ---
+; --- wire/LFCP-WIRE-01.md:1807 (41. RESOURCE_OPEN) ---
 control-head = {
   0 => uint,                  ; control sequence
   1 => hash32                 ; Control Record ID
@@ -324,7 +324,7 @@ resource-open-body = {
   ? 4 => uint                 ; flags
 }
 
-; --- wire/LFCP-WIRE-01.md:1828 (42. RESOURCE_OPENED) ---
+; --- wire/LFCP-WIRE-01.md:1836 (42. RESOURCE_OPENED) ---
 snapshot-summary = {
   0 => hash32,                ; Snapshot ID
   1 => uint,                  ; Data Epoch
@@ -340,44 +340,44 @@ resource-opened-body = {
   ? 5 => tstr                 ; current Control Coordinator URL
 }
 
-; --- wire/LFCP-WIRE-01.md:1853 (43. RESOURCE_CLOSE) ---
+; --- wire/LFCP-WIRE-01.md:1861 (43. RESOURCE_CLOSE) ---
 resource-close-body = {
   0 => resource-id
 }
 
-; --- wire/LFCP-WIRE-01.md:1869 (44. CONTROL_HAVE) ---
+; --- wire/LFCP-WIRE-01.md:1877 (44. CONTROL_HAVE) ---
 control-have-body = {
   0 => resource-id,
   1 => [* control-head]
 }
 
-; --- wire/LFCP-WIRE-01.md:1884 (45. CONTROL_GET) ---
+; --- wire/LFCP-WIRE-01.md:1892 (45. CONTROL_GET) ---
 control-get-body = {
   0 => resource-id,
   1 => uint,          ; inclusive start sequence
   2 => uint           ; inclusive end sequence
 }
 
-; --- wire/LFCP-WIRE-01.md:1898 (46. CONTROL_BATCH) ---
+; --- wire/LFCP-WIRE-01.md:1906 (46. CONTROL_BATCH) ---
 control-batch-body = {
   0 => resource-id,
   1 => [* bstr]       ; exact signed Control Record COSE bytes
 }
 
-; --- wire/LFCP-WIRE-01.md:1919 (47. CONTROL_PUT) ---
+; --- wire/LFCP-WIRE-01.md:1927 (47. CONTROL_PUT) ---
 control-put-body = {
   0 => resource-id,
-  1 => (hash32 / null),       ; expected current Control Head
+  1 => hash32,               ; expected current Control Head
   2 => bstr                   ; exact signed Control Record COSE bytes
 }
 
-; --- wire/LFCP-WIRE-01.md:1951 (48. DATA_HAVE) ---
+; --- wire/LFCP-WIRE-01.md:1961 (48. DATA_HAVE) ---
 data-have-body = {
   0 => resource-id,
   1 => [* actor-have]
 }
 
-; --- wire/LFCP-WIRE-01.md:1964 (49. DATA_GET) ---
+; --- wire/LFCP-WIRE-01.md:1976 (49. DATA_GET) ---
 data-range = {
   0 => principal-id,
   1 => uint,                  ; inclusive start
@@ -389,56 +389,56 @@ data-get-body = {
   1 => [1* data-range]
 }
 
-; --- wire/LFCP-WIRE-01.md:1985 (50. DATA_BATCH) ---
+; --- wire/LFCP-WIRE-01.md:1997 (50. DATA_BATCH) ---
 data-batch-body = {
   0 => resource-id,
   1 => [* bstr]               ; exact Data Unit COSE bytes
 }
 
-; --- wire/LFCP-WIRE-01.md:2002 (51. DATA_PUT) ---
+; --- wire/LFCP-WIRE-01.md:2014 (51. DATA_PUT) ---
 data-put-body = {
   0 => resource-id,
   1 => [1* bstr]              ; exact Data Unit COSE bytes
 }
 
-; --- wire/LFCP-WIRE-01.md:2031 (52. KEY_PACKAGE_GET) ---
+; --- wire/LFCP-WIRE-01.md:2043 (52. KEY_PACKAGE_GET) ---
 key-package-get-body = {
   0 => resource-id,
   1 => principal-id,
   2 => [1* uint]              ; requested Data Epochs
 }
 
-; --- wire/LFCP-WIRE-01.md:2045 (53. KEY_PACKAGE_BATCH) ---
+; --- wire/LFCP-WIRE-01.md:2057 (53. KEY_PACKAGE_BATCH) ---
 key-package-batch-body = {
   0 => resource-id,
   1 => [* bstr]               ; exact signed Key Package COSE bytes
 }
 
-; --- wire/LFCP-WIRE-01.md:2056 (54. KEY_PACKAGE_PUT) ---
+; --- wire/LFCP-WIRE-01.md:2068 (54. KEY_PACKAGE_PUT) ---
 key-package-put-body = {
   0 => resource-id,
   1 => [1* bstr]              ; exact signed Key Package COSE bytes
 }
 
-; --- wire/LFCP-WIRE-01.md:2071 (55. SNAPSHOT_GET) ---
+; --- wire/LFCP-WIRE-01.md:2083 (55. SNAPSHOT_GET) ---
 snapshot-get-body = {
   0 => resource-id,
   ? 1 => hash32               ; exact Snapshot ID if known
 }
 
-; --- wire/LFCP-WIRE-01.md:2084 (56. SNAPSHOT) ---
+; --- wire/LFCP-WIRE-01.md:2096 (56. SNAPSHOT) ---
 snapshot-body = {
   0 => resource-id,
   1 => bstr                   ; exact signed Snapshot COSE bytes
 }
 
-; --- wire/LFCP-WIRE-01.md:2095 (57. SNAPSHOT_PUT) ---
+; --- wire/LFCP-WIRE-01.md:2107 (57. SNAPSHOT_PUT) ---
 snapshot-put-body = {
   0 => resource-id,
   1 => bstr                   ; exact signed Snapshot COSE bytes
 }
 
-; --- wire/LFCP-WIRE-01.md:2125 (58.1 PRESENCE) ---
+; --- wire/LFCP-WIRE-01.md:2137 (58.1 PRESENCE) ---
 presence-body = {
   0 => resource-id,
   1 => principal-id,
@@ -446,27 +446,27 @@ presence-body = {
   3 => bstr           ; application-defined opaque payload
 }
 
-; --- wire/LFCP-WIRE-01.md:2140 (58.2 PRESENCE_LEAVE) ---
+; --- wire/LFCP-WIRE-01.md:2152 (58.2 PRESENCE_LEAVE) ---
 presence-leave-body = {
   0 => resource-id,
   1 => principal-id
 }
 
-; --- wire/LFCP-WIRE-01.md:2153 (59. ACK) ---
+; --- wire/LFCP-WIRE-01.md:2165 (59. ACK) ---
 ack-body = {
   0 => uint,                  ; §33 message type code of the acknowledged request
   ? 1 => [* hash32],          ; object IDs committed
   ? 2 => bool                 ; durable under advertised server policy
 }
 
-; --- wire/LFCP-WIRE-01.md:2173 (60. NACK) ---
+; --- wire/LFCP-WIRE-01.md:2185 (60. NACK) ---
 nack-body = {
   0 => uint,                  ; error code
   ? 1 => tstr,                ; human-readable diagnostic
   ? 2 => any                  ; machine-readable details
 }
 
-; --- wire/LFCP-WIRE-01.md:2189 (61. ERROR) ---
+; --- wire/LFCP-WIRE-01.md:2201 (61. ERROR) ---
 error-body = {
   0 => uint,
   ? 1 => tstr,

@@ -1150,6 +1150,16 @@
       }
     },
     {
+      "id": "NACK_CONTROL_HEAD_MISMATCH",
+      "type": "bytes",
+      "kind": "wire_message",
+      "expected": {
+        "message_cbor": {
+          "hex": "a400185b01507307771e00ca39b14fe5085d9ded6c840250aacf67fb06babec5ab13782022cbf69c04a2000a0258201189b7d19ac6d09a8128d3967a4fdd80ea2a6180efaa8a9f15bf2ee5c32cda46"
+        }
+      }
+    },
+    {
       "id": "actor_equivocation",
       "type": "validation",
       "kind": "data_unit",
@@ -1418,6 +1428,111 @@
         "disposition": "reject",
         "error": {
           "code": "CONTROL_HEAD_MISMATCH"
+        }
+      }
+    },
+    {
+      "id": "unknown_message_type",
+      "type": "validation",
+      "kind": "wire_message",
+      "description": "PING sent with the unassigned message type 7",
+      "inputs": {
+        "message_cbor": {
+          "hex": "a300070150d857a31e2d9b308199d996caa1c8d58a04a1004850a9c6073731578c"
+        }
+      },
+      "derivation": {
+        "base_case": "PING",
+        "mutation": {
+          "field": "message type (envelope field 0)",
+          "from": 5,
+          "to": 7
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §33",
+          "text": "A message whose type is not assigned in this registry, or is an extension type that was not negotiated for the session, is rejected with `PROTOCOL_UNSUPPORTED`."
+        },
+        "why": "A receiver cannot know the body of an unassigned type, so it cannot process the message."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "PROTOCOL_UNSUPPORTED"
+        }
+      }
+    },
+    {
+      "id": "control_put_null_expected_head",
+      "type": "validation",
+      "kind": "control_put",
+      "description": "CONTROL_PUT of C6 with a null expected head",
+      "inputs": {
+        "message_cbor": {
+          "hex": "a300170150aacf67fb06babec5ab13782022cbf69c04a3005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101f60259012d845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058bfa6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101060258201189b7d19ac6d09a8128d3967a4fdd80ea2a6180efaa8a9f15bf2ee5c32cda4603040458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c505a4000101582027df3173462d19512f2224f54bdc894a8c7e81c212301ed1f2bb8ccee0ce71510281a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c501020303584071b309518143fd640aff64033ba76503c985f1509398202ff6dfa1e4315ed29f06e305774d467adb142a8fbeec0a10eae2b390eac527d92b7849a60e85cf520f"
+        }
+      },
+      "derivation": {
+        "base_case": "CONTROL_PUT",
+        "mutation": {
+          "field": "expected current Control Head (body field 1)",
+          "from": {
+            "hex": "1189b7d19ac6d09a8128d3967a4fdd80ea2a6180efaa8a9f15bf2ee5c32cda46"
+          },
+          "to": null
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §47",
+          "text": "A `CONTROL_PUT` always names an expected head; a null expected head is invalid, because Genesis uses `RESOURCE_HOST`."
+        },
+        "why": "Compare-and-swap needs a head to compare against; null would bypass it."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE"
+        }
+      }
+    },
+    {
+      "id": "data_have_reversed_range",
+      "type": "validation",
+      "kind": "wire_message",
+      "description": "DATA_HAVE_with_hole with the extra range written 107..105",
+      "inputs": {
+        "message_cbor": {
+          "hex": "a300181e015092985663eed880a2af812c636192490504a2005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410181a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5011864028182186b1869"
+        }
+      },
+      "derivation": {
+        "base_case": "DATA_HAVE_with_hole",
+        "mutation": {
+          "field": "BOB extra range",
+          "from": [
+            [
+              105,
+              107
+            ]
+          ],
+          "to": [
+            [
+              107,
+              105
+            ]
+          ]
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §48",
+          "text": "A range with `start > end`, or one that includes sequence `0`, is rejected with `MALFORMED_MESSAGE`."
+        },
+        "why": "Unnormalized live Haves are merged, but a reversed range describes no set of sequences at all."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE"
         }
       }
     },

@@ -1552,6 +1552,52 @@
       },
       "expect": "pass",
       "note": "Structurally valid: the lower bound of the Snapshot Sequence (LFCP-WIRE-01 \u00a729) is semantic."
+    },
+    {
+      "rule": "lfcp-message",
+      "source": {
+        "case": "NACK_CONTROL_HEAD_MISMATCH",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "NACK_CONTROL_HEAD_MISMATCH",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "unknown_message_type",
+        "field": "message_cbor",
+        "from": "inputs"
+      },
+      "expect": "fail",
+      "note": "Type 7 is not in the \u00a733 registry, so no typed-message alternative matches (SPEC-PATCH-03 / G-MSG1)."
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "control_put_null_expected_head",
+        "field": "message_cbor",
+        "from": "inputs"
+      },
+      "expect": "fail",
+      "note": "control-put-body field 1 is hash32; null is not allowed (LFCP-WIRE-01 \u00a747, SPEC-PATCH-03 / G-MSG5)."
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "data_have_reversed_range",
+        "field": "message_cbor",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: range order (LFCP-WIRE-01 \u00a748) is semantic."
     }
   ]
 }

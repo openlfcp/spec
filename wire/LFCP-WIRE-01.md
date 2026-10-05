@@ -1523,7 +1523,7 @@ Servers MUST reject a session if no supported LFCP subprotocol is negotiated.
 - LFCP uses binary WebSocket messages only.
 - One complete LFCP message is carried in one WebSocket message.
 - WebSocket fragmentation MAY be used by the transport implementation.
-- A receiver MUST treat a text WebSocket message as a protocol error.
+- A receiver MUST treat a text WebSocket message as a protocol error: it sends `ERROR(MALFORMED_MESSAGE)` and closes the connection.
 - A receiver MUST reject malformed CBOR.
 - A receiver MUST enforce its advertised maximum message size.
 
@@ -1554,7 +1554,9 @@ A response SHOULD set `correlation id` to the request's Message ID.
 
 Message IDs are transport correlation values and are not security identifiers.
 
-Unknown envelope fields with integer keys greater than `15` MAY be ignored.
+Unknown envelope fields with integer keys greater than `15` MAY be ignored. A receiver need not preserve them: when it re-encodes or relays a message, it MAY drop them.
+
+A sender sets `flags` to `0` or omits it; a receiver ignores the value.
 
 Unknown envelope fields from `0` through `15` MUST cause `MALFORMED_MESSAGE` unless a later negotiated version defines them.
 
@@ -1636,6 +1638,8 @@ Codes `92..127` are reserved for LFCP core.
 
 Codes `128+` are extension message types and MUST be negotiated before use.
 
+A message whose type is not assigned in this registry, or is an extension type that was not negotiated for the session, is rejected with `PROTOCOL_UNSUPPORTED`.
+
 ---
 
 # Part VIII. Session Handshake
@@ -1660,6 +1664,8 @@ LFCP-WIRE-01
 ```
 
 The server MUST verify the Principal ID from its descriptor.
+
+If the server supports none of the offered wire profiles, it sends `ERROR(PROTOCOL_UNSUPPORTED)` and closes the connection.
 
 ---
 
@@ -1707,6 +1713,8 @@ auth-body = {
 ```
 
 The optional hosting credential is server policy. It is not LFCP Resource authorization.
+
+The server verifies the auth proof as a Section 10 signed object whose `kid` is the session Principal from `HELLO`, whose payload is exactly this session's transcript, and whose signature verifies (Section 10.5.1). Any failure, including a malformed proof, is `AUTH_FAILED`.
 
 ---
 
@@ -1873,7 +1881,7 @@ control-have-body = {
 }
 ```
 
-A normal, unforked Resource has exactly one head.
+A normal, unforked Resource has exactly one head. An empty list means the sender has no Control Records for the Resource.
 
 ---
 
@@ -1919,7 +1927,7 @@ Submit one Control Record with compare-and-swap semantics.
 ```cddl
 control-put-body = {
   0 => resource-id,
-  1 => (hash32 / null),       ; expected current Control Head
+  1 => hash32,               ; expected current Control Head
   2 => bstr                   ; exact signed Control Record COSE bytes
 }
 ```
@@ -1937,6 +1945,8 @@ expected_head == current_head
 before committing the new record.
 
 If not equal, it MUST return `NACK(CONTROL_HEAD_MISMATCH)` with the current head.
+
+The `NACK` carries the current head's Control Record ID as its details (field `2`, a 32-byte byte string). A `CONTROL_PUT` always names an expected head; a null expected head is invalid, because Genesis uses `RESOURCE_HOST`.
 
 The coordinator MUST NOT ACK before the record has reached the durability level promised by that ACK.
 
@@ -1956,6 +1966,8 @@ data-have-body = {
 ```
 
 Peers SHOULD periodically exchange updated Have Vectors while a Resource is open.
+
+Live Have Vectors (`DATA_HAVE`, `RESOURCE_OPEN`, `RESOURCE_OPENED` and Snapshot summaries) are not persistent objects, so Section 28.1 does not apply to them. A receiver accepts a live entry whose ranges are unsorted, overlapping, adjacent to each other or to `contiguous`, or split across several entries for one Principal, and normalizes it without losing any sequence. A range with `start > end`, or one that includes sequence `0`, is rejected with `MALFORMED_MESSAGE`. A sender always emits normalized entries (Section 28).
 
 ---
 
@@ -2238,6 +2250,7 @@ stateDiagram-v2
     [*] --> DISCONNECTED
     DISCONNECTED --> CONNECTING: open WebSocket
     CONNECTING --> NEGOTIATING: WebSocket + lfcp-1 accepted
+    CONNECTING --> DISCONNECTED: connection failed or lfcp-1 not accepted
     NEGOTIATING --> AUTHENTICATING: HELLO / CHALLENGE
     AUTHENTICATING --> READY: AUTH / READY
     READY --> READY: open/close resources
@@ -2264,7 +2277,9 @@ stateDiagram-v2
     READY --> CLOSED: fatal error or socket close
 ```
 
-Before `READY`, a server MUST reject Resource, Control, Data, Key and Snapshot messages.
+Before `READY`, a server MUST reject Resource, Control, Data, Key and Snapshot messages. It rejects them with `AUTHORIZATION_FAILED`.
+
+`PING`, `PONG` and `ERROR` are allowed in every state, before `READY` as well.
 
 ---
 
@@ -2285,7 +2300,15 @@ stateDiagram-v2
     LIVE --> CONTROL_SYNC: new Control Record received
     LIVE --> CLOSED: RESOURCE_CLOSE / connection lost
     CONTROL_CONFLICT --> CLOSED: manual close
+    OPENING --> CLOSED: RESOURCE_CLOSE / connection lost
+    CONTROL_SYNC --> CLOSED: RESOURCE_CLOSE / connection lost
+    CONTROL_CONFLICT --> CLOSED: RESOURCE_CLOSE / connection lost
+    KEY_SYNC --> CLOSED: RESOURCE_CLOSE / connection lost
+    KEY_BLOCKED --> CLOSED: RESOURCE_CLOSE / connection lost
+    DATA_SYNC --> CLOSED: RESOURCE_CLOSE / connection lost
 ```
+
+Every state moves to `CLOSED` on `RESOURCE_CLOSE` or when the connection is lost.
 
 A local Resource replica remains available to the application even if network sync is not `LIVE`.
 
