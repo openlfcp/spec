@@ -976,7 +976,8 @@ def generate():
         'If `parent grant id` is present: [...] every granted ability MUST be included in the parent\'s delegable abilities;',
         'Delegation can only narrow authority; a child granting more than its parent may delegate would escalate it.',
         {'cose_sign1': hexv(escalated['cose'])},
-        {'valid': False, 'disposition': 'reject'},
+        # SPEC-PATCH-04 / general code rule: an authority failure is AUTHORIZATION_FAILED.
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'AUTHORIZATION_FAILED'}},
         context={'previous_record': ref('C8_grant_owner_delegated', 'record_id')},
         cddl=('control-record', 'pass'))
     revoke_received = control_record(10, C9['id'], 2, CAROL, {0: C7['id']})
@@ -988,7 +989,7 @@ def generate():
         'received is not covered unless the revoker also issued one of its ancestors.',
         'Holding capability/revoke lets a member undo what it delegated, not the grants others gave it.',
         {'cose_sign1': hexv(revoke_received['cose'])},
-        {'valid': False, 'disposition': 'reject'},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'AUTHORIZATION_FAILED'}},
         context={'previous_record': ref('C9_grant_invite_grandchild', 'record_id')},
         cddl=('control-record', 'pass'))
     revoke_again = control_record(11, C10['id'], 2, CAROL, revoke_c9_body)
@@ -1000,6 +1001,33 @@ def generate():
         {'cose_sign1': hexv(revoke_again['cose'])},
         {'valid': False, 'disposition': 'reject', 'error': {'code': 'AUTHORIZATION_FAILED'}},
         context={'previous_record': ref('C10_revoke_grandchild', 'record_id')},
+        cddl=('control-record', 'pass'))
+
+    # 7c'. Codes for authority failures (SPEC-PATCH-04 / general code rule):
+    #      a revocation of a grant that does not exist, and a Route Update that
+    #      does not advance the route version (Genesis implies version 0).
+    revoke_unknown = control_record(10, C9['id'], 2, CAROL, {0: h('LFCP-TV-NO-SUCH-GRANT')})
+    neg('revoke_unknown_grant', 'control_record', 'CAROL revokes a grant ID that names no grant of the chain, instead of C9',
+        'C10_revoke_grandchild', 'body field 0: revoked grant', hexv(C9['id']), hexv(h('LFCP-TV-NO-SUCH-GRANT')),
+        'LFCP-WIRE-01 §17.3',
+        'A revocation is checked in this order, and each failure is rejected with `AUTHORIZATION_FAILED`: 1. the target '
+        'grant ID MUST name a grant of this Control Chain; revoking a grant that does not exist fails;',
+        'A revocation of nothing has no authority to check against; accepting it would put a meaningless record in the chain.',
+        {'cose_sign1': hexv(revoke_unknown['cose'])},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'AUTHORIZATION_FAILED'}},
+        context={'previous_record': ref('C9_grant_invite_grandchild', 'record_id')},
+        cddl=('control-record', 'pass'))
+    route_v0 = control_record(5, C4['id'], 5, BOB, {**route_body, 0: 0})
+    neg('route_version_not_increasing_C5', 'control_record', 'C5 with route version 0, the version Genesis already implies',
+        'C5_route_update', 'body field 0: route version', 1, 0,
+        'LFCP-WIRE-01 §20',
+        'Each Route Update MUST carry a route version strictly greater than the current one: `0` after Genesis (Section 15), '
+        'otherwise the version of the last committed Route Update. A Route Update whose issuer lacks `route/update`, or whose '
+        'route version is not greater, is rejected with `AUTHORIZATION_FAILED`.',
+        'A route version that does not advance could replace the current route with an older one.',
+        {'cose_sign1': hexv(route_v0['cose'])},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'AUTHORIZATION_FAILED'}},
+        context={'previous_record': ref('C4_owner_transfer_commit', 'record_id')},
         cddl=('control-record', 'pass'))
 
     # 7d. Genesis and chain-structure codes (SPEC-PATCH-03 / S2, G-CP5,
@@ -1055,11 +1083,11 @@ def generate():
         'Extension records share the chain with core records; letting a non-owner append them would let any member '
         'fork or extend the chain with records other replicas cannot evaluate.',
         {'cose_sign1': hexv(extension_record['cose'])},
-        {'valid': False, 'disposition': 'reject'},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'AUTHORIZATION_FAILED'}},
         context={'previous_record': ref('C0_genesis', 'record_id')},
         cddl=('control-record', 'pass'),
         note='Structurally valid: the typed CDDL admits extension types 32 and above (SPEC-PATCH-03 / W2). '
-             'No error code is named for this rejection.')
+             'The owner-authority failure is AUTHORIZATION_FAILED (SPEC-PATCH-04 / general code rule).')
 
     # 8. Bad actor sequence.
     D_SEQ0 = data_unit(BOB, 0, 0, None, C3['id'], D1_plain, DEK0)
@@ -1188,7 +1216,8 @@ def generate():
         'Snapshot Sequences begin at `1`.',
         'Sequence 0 is outside the publisher sequence space, as for actor sequences (§8).',
         {'cose_sign1': hexv(cose)},
-        {'valid': False, 'disposition': 'reject'},
+        # SPEC-PATCH-04 / general code rule: a structural failure is MALFORMED_MESSAGE.
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'MALFORMED_MESSAGE'}},
         cddl=('snapshot', 'pass'))
 
     # 11c. Snapshot beyond a closed epoch's cutoff (SPEC-PATCH-04 / G-EP4):

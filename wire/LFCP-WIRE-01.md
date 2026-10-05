@@ -392,6 +392,8 @@ The signature is the 64-byte Ed25519 signature over the encoded `Sig_structure`.
 
 A receiver MUST reject a signed object whose signature does not verify under the public key of the Principal named by `kid`, or whose `kid` does not identify the Principal the object requires as signer (for example, the actor of a Data Unit). It reports `INVALID_SIGNATURE`.
 
+The receiver resolves the required signer to a Principal Descriptor from the Control Chain (a descriptor carried by a Genesis, grant, claim or transfer). An object whose required signer it cannot resolve, such as a Data Unit, Key Package or Snapshot by an actor no Control Record describes, is rejected with `MISSING_DEPENDENCY`, as Section 13.1 states for Control Record issuers.
+
 #### 10.5.1 Strict Ed25519 verification
 
 Every LFCP implementation verifies Ed25519 signatures with the same strict rules, so that a signature valid for one implementation is valid for all.
@@ -605,7 +607,7 @@ Unknown core Control Record types MUST cause validation failure, with `INVALID_C
 
 Unknown extension types MAY be retained but MUST NOT be interpreted unless the implementation declares support for the extension.
 
-A Control Record of an extension type (`32` or above) requires owner authority: its issuer MUST be the Resource owner at the record's position in the chain, whether or not the receiver supports the extension.
+A Control Record of an extension type (`32` or above) requires owner authority: its issuer MUST be the Resource owner at the record's position in the chain, whether or not the receiver supports the extension. A record that fails this is rejected with `AUTHORIZATION_FAILED`.
 
 ---
 
@@ -717,6 +719,8 @@ If `parent grant id` is present:
 - every granted ability MUST be included in the parent's delegable abilities;
 - every delegable ability of the new grant MUST also be included in the parent's delegable abilities.
 
+A grant that fails any of these rules is rejected with `AUTHORIZATION_FAILED`.
+
 A capability grant is identified by the Control Record ID that created it.
 
 A grant is **active** while it has not been revoked and, when it has a parent grant, while that parent is active. Revoking a grant therefore also deactivates every grant delegated from it, directly or through further delegations.
@@ -736,7 +740,11 @@ The issuer MUST either:
 
 The owner may revoke any grant. Otherwise, revoke authority **covers** a grant when the revoker issued it, or when it was delegated, directly or through further delegations, from a grant the revoker issued. A grant the revoker received is not covered unless the revoker also issued one of its ancestors.
 
-Revoking a grant that is already revoked is rejected with `AUTHORIZATION_FAILED`.
+A revocation is checked in this order, and each failure is rejected with `AUTHORIZATION_FAILED`:
+
+1. the target grant ID MUST name a grant of this Control Chain; revoking a grant that does not exist fails;
+2. the issuer MUST have the authority above: be the owner, or hold `capability/revoke` that covers the target;
+3. the target MUST NOT already be revoked: revoking a grant that is already revoked fails.
 
 Revocation does not make recipients forget data they already decrypted.
 
@@ -914,7 +922,7 @@ The Control Coordinator URL SHOULD name one of the listed endpoints.
 
 The issuer MUST possess `route/update`.
 
-Each Route Update MUST carry a route version strictly greater than the current one: `0` after Genesis (Section 15), otherwise the version of the last committed Route Update.
+Each Route Update MUST carry a route version strictly greater than the current one: `0` after Genesis (Section 15), otherwise the version of the last committed Route Update. A Route Update whose issuer lacks `route/update`, or whose route version is not greater, is rejected with `AUTHORIZATION_FAILED`.
 
 The update becomes authoritative only after it is committed to the Control Chain.
 
@@ -1359,7 +1367,7 @@ The Snapshot ID is:
 snapshot_id = SHA-256(exact_COSE_Sign1_bytes)
 ```
 
-Snapshot Sequences begin at `1`.
+Snapshot Sequences begin at `1`. A Snapshot with Snapshot Sequence `0` is rejected with `MALFORMED_MESSAGE`.
 
 The publisher Snapshot Sequence MUST NOT be reused for the same `(resource, data_epoch, publisher)` tuple.
 
@@ -2227,6 +2235,11 @@ After a fatal `ERROR`, the server MAY immediately close the WebSocket.
 ---
 
 ## 62. Error code registry
+
+Where a rule rejects a record or message without naming a code, the code follows from what failed:
+
+- an authority failure (the issuer or sender lacks the ownership, ability, delegation or coverage the rule requires, or the state it acts on does not allow the change) is `AUTHORIZATION_FAILED`;
+- a structural failure (a value outside its type, size, range or required form, decidable from the object alone) is `MALFORMED_MESSAGE`.
 
 | Code | Name |
 |---:|---|

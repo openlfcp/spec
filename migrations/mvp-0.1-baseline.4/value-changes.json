@@ -4,7 +4,38 @@
   "suites": [
     {
       "suite_file": "test-vectors/lfcp-wire-01/LFCP-TEST-VECTORS-01.json",
-      "changed": []
+      "changed": [
+        {
+          "path": "cases[id=grant_escalation_C9].expected.error.code",
+          "from": null,
+          "to": "AUTHORIZATION_FAILED",
+          "rule": "SPEC-PATCH-04 / general code rule (approved by the project owner, 2026-10-05): an authority failure is AUTHORIZATION_FAILED, a structural failure MALFORMED_MESSAGE; codeless negatives now name their code."
+        },
+        {
+          "path": "cases[id=revoke_received_grant].expected.error.code",
+          "from": null,
+          "to": "AUTHORIZATION_FAILED",
+          "rule": "SPEC-PATCH-04 / general code rule (approved by the project owner, 2026-10-05): an authority failure is AUTHORIZATION_FAILED, a structural failure MALFORMED_MESSAGE; codeless negatives now name their code."
+        },
+        {
+          "path": "cases[id=extension_type_non_owner_C1].expected.error.code",
+          "from": null,
+          "to": "AUTHORIZATION_FAILED",
+          "rule": "SPEC-PATCH-04 / general code rule (approved by the project owner, 2026-10-05): an authority failure is AUTHORIZATION_FAILED, a structural failure MALFORMED_MESSAGE; codeless negatives now name their code."
+        },
+        {
+          "path": "cases[id=snapshot_sequence_zero].expected.error.code",
+          "from": null,
+          "to": "MALFORMED_MESSAGE",
+          "rule": "SPEC-PATCH-04 / general code rule (approved by the project owner, 2026-10-05): an authority failure is AUTHORIZATION_FAILED, a structural failure MALFORMED_MESSAGE; codeless negatives now name their code."
+        },
+        {
+          "path": "cases[id=extension_type_non_owner_C1].note",
+          "from": "Structurally valid: the typed CDDL admits extension types 32 and above (SPEC-PATCH-03 / W2). No error code is named for this rejection.",
+          "to": "Structurally valid: the typed CDDL admits extension types 32 and above (SPEC-PATCH-03 / W2). The owner-authority failure is AUTHORIZATION_FAILED (SPEC-PATCH-04 / general code rule).",
+          "rule": "SPEC-PATCH-04 / general code rule (approved by the project owner, 2026-10-05): an authority failure is AUTHORIZATION_FAILED, a structural failure MALFORMED_MESSAGE; codeless negatives now name their code."
+        }
+      ]
     },
     {
       "suite_file": "test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.json",

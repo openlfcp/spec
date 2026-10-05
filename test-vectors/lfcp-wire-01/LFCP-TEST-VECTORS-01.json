@@ -1775,7 +1775,10 @@
       },
       "expected": {
         "valid": false,
-        "disposition": "reject"
+        "disposition": "reject",
+        "error": {
+          "code": "AUTHORIZATION_FAILED"
+        }
       }
     },
     {
@@ -1814,7 +1817,10 @@
       },
       "expected": {
         "valid": false,
-        "disposition": "reject"
+        "disposition": "reject",
+        "error": {
+          "code": "AUTHORIZATION_FAILED"
+        }
       }
     },
     {
@@ -1846,6 +1852,86 @@
           "text": "Revoking a grant that is already revoked is rejected with `AUTHORIZATION_FAILED`."
         },
         "why": "A second revocation has no effect to apply; rejecting it keeps every committed record meaningful."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "AUTHORIZATION_FAILED"
+        }
+      }
+    },
+    {
+      "id": "revoke_unknown_grant",
+      "type": "validation",
+      "kind": "control_record",
+      "description": "CAROL revokes a grant ID that names no grant of the chain, instead of C9",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a05893a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc241010a025820bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce20475ef4d6599684a70302045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4805a100582012c45dd166d802686a1c3d5ff7f12c0d681cc08dbaf0a31714d22b02e8aa20a95840a161bfdb33a82e0a551b357a967569ec2822ea8fafea214bc7a86e00c0c2a6121faee306f34e149c66c0b20cef56895143a355b2b2682ad2f60e3c894383000c"
+        },
+        "signer": "CAROL"
+      },
+      "context": {
+        "previous_record": {
+          "case": "C9_grant_invite_grandchild",
+          "field": "record_id"
+        }
+      },
+      "derivation": {
+        "base_case": "C10_revoke_grandchild",
+        "mutation": {
+          "field": "body field 0: revoked grant",
+          "from": {
+            "hex": "bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce20475ef4d6599684a7"
+          },
+          "to": {
+            "hex": "12c45dd166d802686a1c3d5ff7f12c0d681cc08dbaf0a31714d22b02e8aa20a9"
+          }
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §17.3",
+          "text": "A revocation is checked in this order, and each failure is rejected with `AUTHORIZATION_FAILED`: 1. the target grant ID MUST name a grant of this Control Chain; revoking a grant that does not exist fails;"
+        },
+        "why": "A revocation of nothing has no authority to check against; accepting it would put a meaningless record in the chain."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "AUTHORIZATION_FAILED"
+        }
+      }
+    },
+    {
+      "id": "route_version_not_increasing_C5",
+      "type": "validation",
+      "kind": "control_record",
+      "description": "C5 with route version 0, the version Genesis already implies",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e5a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410105025820be67407af4130b61d2df1da9ad2a59daa24eaab1387529a7eaa14c27e1a1487903050458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c505a300000182a300781f7773733a2f2f73796e632d622e6578616d706c652e746573742f76312f7773010a0217a300781f7773733a2f2f73796e632d612e6578616d706c652e746573742f76312f7773010002183f02781f7773733a2f2f73796e632d622e6578616d706c652e746573742f76312f777358409663393717dd20a6cd6f3b8a917cc42e424afee9ea82af12ca2029e6311f67d748bc490e3bf8b63e87d9ff65346037d79e9e114328acbea9d45527d403100600"
+        },
+        "signer": "BOB"
+      },
+      "context": {
+        "previous_record": {
+          "case": "C4_owner_transfer_commit",
+          "field": "record_id"
+        }
+      },
+      "derivation": {
+        "base_case": "C5_route_update",
+        "mutation": {
+          "field": "body field 0: route version",
+          "from": 1,
+          "to": 0
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §20",
+          "text": "Each Route Update MUST carry a route version strictly greater than the current one: `0` after Genesis (Section 15), otherwise the version of the last committed Route Update. A Route Update whose issuer lacks `route/update`, or whose route version is not greater, is rejected with `AUTHORIZATION_FAILED`."
+        },
+        "why": "A route version that does not advance could replace the current route with an older one."
       },
       "expected": {
         "valid": false,
@@ -2003,7 +2089,7 @@
       "type": "validation",
       "kind": "control_record",
       "description": "C1 replaced by an extension-type (32) record issued by BOB",
-      "note": "Structurally valid: the typed CDDL admits extension types 32 and above (SPEC-PATCH-03 / W2). No error code is named for this rejection.",
+      "note": "Structurally valid: the typed CDDL admits extension types 32 and above (SPEC-PATCH-03 / W2). The owner-authority failure is AUTHORIZATION_FAILED (SPEC-PATCH-04 / general code rule).",
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a05884a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203b141a9d660b274f73a042dbe47dcb1fe5b9f1d8d96f782cc8e4728695704adc0318200458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c505a100514c4643502d54562d455854454e53494f4e5840537002017064558b55c48aa1a5af6dc200711aca4ebb09c78961ccb4498119a0bee160a909fbc7c6434b9090684fd25c3507391fa1bd41def3274b6c0d008408"
@@ -2031,7 +2117,10 @@
       },
       "expected": {
         "valid": false,
-        "disposition": "reject"
+        "disposition": "reject",
+        "error": {
+          "code": "AUTHORIZATION_FAILED"
+        }
       }
     },
     {
@@ -2568,7 +2657,10 @@
       },
       "expected": {
         "valid": false,
-        "disposition": "reject"
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE"
+        }
       }
     },
     {

@@ -1618,6 +1618,26 @@
       },
       "expect": "pass",
       "note": "Structurally valid: the closed-epoch cutoff for Snapshots (LFCP-WIRE-01 \u00a729, SPEC-PATCH-04 / G-EP4) is semantic."
+    },
+    {
+      "rule": "control-record",
+      "source": {
+        "case": "revoke_unknown_grant",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: whether the revoked grant exists is semantic (LFCP-WIRE-01 \u00a717.3, SPEC-PATCH-04)."
+    },
+    {
+      "rule": "control-record",
+      "source": {
+        "case": "route_version_not_increasing_C5",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: route version monotonicity is semantic (LFCP-WIRE-01 \u00a720, SPEC-PATCH-04)."
     }
   ]
 }

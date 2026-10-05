@@ -1924,7 +1924,7 @@ e668b5a410a02378423c2257ee08d3eb4b76b36fae20d5a658550ae74968f7e0e236986cf528cd6a
 - Base case: `C9_grant_invite_grandchild`
 - Mutation: body field 1: abilities: `[1]` → `[2]`
 - Rule (LFCP-WIRE-01 §17.2): If `parent grant id` is present: [...] every granted ability MUST be included in the parent's delegable abilities;
-- Expected: invalid, reject, no error code specified
+- Expected: invalid, reject, error code `AUTHORIZATION_FAILED`
 - Why: Delegation can only narrow authority; a child granting more than its parent may delegate would escalate it.
 
 cose_sign1:
@@ -1945,7 +1945,7 @@ c71323d3731fb5e1b95580c3c9937704fdc98e48336eed6b03984dad5b98f43e350f
 - Base case: `C10_revoke_grandchild`
 - Mutation: body field 0: revoked grant: `bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce20475ef4d6599684a7` → `f83d37d02a85b9a624d0b50af3ea201f2fbb77c739fccbf1f039e2689d15f2a6`
 - Rule (LFCP-WIRE-01 §17.3): The owner may revoke any grant. Otherwise, revoke authority **covers** a grant when the revoker issued it, or when it was delegated, directly or through further delegations, from a grant the revoker issued. A grant the revoker received is not covered unless the revoker also issued one of its ancestors.
-- Expected: invalid, reject, no error code specified
+- Expected: invalid, reject, error code `AUTHORIZATION_FAILED`
 - Why: Holding capability/revoke lets a member undo what it delegated, not the grants others gave it.
 
 cose_sign1:
@@ -1978,7 +1978,47 @@ abd48efe943c1282da4805a1005820bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce2047
 55a2ef7f55cf70ef7c78ef17d806799e03
 ```
 
-#### 17.10.17 genesis_signer_not_owner: C0 issued and signed by BOB while its body names OWNER as owner
+#### 17.10.17 revoke_unknown_grant: CAROL revokes a grant ID that names no grant of the chain, instead of C9
+
+- Base case: `C10_revoke_grandchild`
+- Mutation: body field 0: revoked grant: `bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce20475ef4d6599684a7` → `12c45dd166d802686a1c3d5ff7f12c0d681cc08dbaf0a31714d22b02e8aa20a9`
+- Rule (LFCP-WIRE-01 §17.3): A revocation is checked in this order, and each failure is rejected with `AUTHORIZATION_FAILED`: 1. the target grant ID MUST name a grant of this Control Chain; revoking a grant that does not exist fails;
+- Expected: invalid, reject, error code `AUTHORIZATION_FAILED`
+- Why: A revocation of nothing has no authority to check against; accepting it would put a meaningless record in the chain.
+
+cose_sign1:
+
+```text
+845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a05893a6005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc241010a025820bad796e7efe2e15c1a7921
+52b39dfaf21ede4a480e55ce20475ef4d6599684a70302045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251
+abd48efe943c1282da4805a100582012c45dd166d802686a1c3d5ff7f12c0d681cc08dbaf0a31714d22b02e8aa20a958
+40a161bfdb33a82e0a551b357a967569ec2822ea8fafea214bc7a86e00c0c2a6121faee306f34e149c66c0b20cef5689
+5143a355b2b2682ad2f60e3c894383000c
+```
+
+#### 17.10.18 route_version_not_increasing_C5: C5 with route version 0, the version Genesis already implies
+
+- Base case: `C5_route_update`
+- Mutation: body field 0: route version: `1` → `0`
+- Rule (LFCP-WIRE-01 §20): Each Route Update MUST carry a route version strictly greater than the current one: `0` after Genesis (Section 15), otherwise the version of the last committed Route Update. A Route Update whose issuer lacks `route/update`, or whose route version is not greater, is rejected with `AUTHORIZATION_FAILED`.
+- Expected: invalid, reject, error code `AUTHORIZATION_FAILED`
+- Why: A route version that does not advance could replace the current route with an older one.
+
+cose_sign1:
+
+```text
+845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e5a6005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410105025820be67407af4130b61d2df1d
+a9ad2a59daa24eaab1387529a7eaa14c27e1a1487903050458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95f
+f8e9cedbeb788bf0a9c505a300000182a300781f7773733a2f2f73796e632d622e6578616d706c652e746573742f7631
+2f7773010a0217a300781f7773733a2f2f73796e632d612e6578616d706c652e746573742f76312f7773010002183f02
+781f7773733a2f2f73796e632d622e6578616d706c652e746573742f76312f777358409663393717dd20a6cd6f3b8a91
+7cc42e424afee9ea82af12ca2029e6311f67d748bc490e3bf8b63e87d9ff65346037d79e9e114328acbea9d45527d403
+100600
+```
+
+#### 17.10.19 genesis_signer_not_owner: C0 issued and signed by BOB while its body names OWNER as owner
 
 - Base case: `C0_genesis`
 - Mutation: issuer (payload field 4) and signer: `"OWNER"` → `"BOB"`
@@ -2000,7 +2040,7 @@ cose_sign1:
 b40a92014fd28ad13ee1f7c49216b78641915862553d023a77dc8814b6c972e7c39f51feb68756d6a9b228f6da08
 ```
 
-#### 17.10.18 genesis_competing_root: A second, different Genesis for the same Resource ID
+#### 17.10.20 genesis_competing_root: A second, different Genesis for the same Resource ID
 
 - Base case: `C0_genesis`
 - Mutation: body field 0: data profile: `"org.lfcp.test.raw.v1"` → `"org.lfcp.test.raw.v2"`
@@ -2028,7 +2068,7 @@ record_id:
 adf02fa177ebd51f651d5b955b8ebcf942b51148a6048dfaa5bb352f3aabba48
 ```
 
-#### 17.10.19 genesis_http_endpoint: C0 with an http:// sync endpoint
+#### 17.10.21 genesis_http_endpoint: C0 with an http:// sync endpoint
 
 - Base case: `C0_genesis`
 - Mutation: body field 3: endpoint URL scheme: `"wss"` → `"http"`
@@ -2050,7 +2090,7 @@ cose_sign1:
 cc7ca9ec319266192821f84aff68170fd3dd50e8fd9984df42c90eea3cf2e83611eee5c01184908ffbb113bda76408
 ```
 
-#### 17.10.20 unknown_core_type_C1: C1 with the reserved core Control Record type 9
+#### 17.10.22 unknown_core_type_C1: C1 with the reserved core Control Record type 9
 
 - Base case: `C1_grant_bob`
 - Mutation: payload field 3: Control Record type: `1` → `9`
@@ -2070,12 +2110,12 @@ c50158201953f4ada1cb4e0f8662108152c82e7e074cbf4859c487461cbe41e5d623e3c2025820b5
 e890cf63410725d9a73caa326b39224ec2d926fbb9ea7ec8496c67d215aaa3cacb0eeb91c7d3ffef3d73607f16409c0e
 ```
 
-#### 17.10.21 extension_type_non_owner_C1: C1 replaced by an extension-type (32) record issued by BOB
+#### 17.10.23 extension_type_non_owner_C1: C1 replaced by an extension-type (32) record issued by BOB
 
 - Base case: `C1_grant_bob`
 - Mutation: payload field 3 and issuer: `"type 1 issued by OWNER"` → `"type 32 issued and signed by BOB"`
 - Rule (LFCP-WIRE-01 §14): A Control Record of an extension type (`32` or above) requires owner authority: its issuer MUST be the Resource owner at the record's position in the chain, whether or not the receiver supports the extension.
-- Expected: invalid, reject, no error code specified
+- Expected: invalid, reject, error code `AUTHORIZATION_FAILED`
 - Why: Extension records share the chain with core records; letting a non-owner append them would let any member fork or extend the chain with records other replicas cannot evaluate.
 
 cose_sign1:
@@ -2089,7 +2129,7 @@ dbe47dcb1fe5b9f1d8d96f782cc8e4728695704adc0318200458203ddf22ff145274bcc59c56ffdd
 8408
 ```
 
-#### 17.10.22 actor_seq_zero_D1: D1 re-issued with actor sequence 0
+#### 17.10.24 actor_seq_zero_D1: D1 re-issued with actor sequence 0
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: actor sequence (payload field 3): `1` → `0`
@@ -2108,7 +2148,7 @@ f0687ed06a036656e41594b8065826aeaeda7927384999a4de8d68689695ee07c6f89482faed18c8
 dc90959e0a0c1dde00b5d61c9559b183a8f389b18e9904
 ```
 
-#### 17.10.23 actor_seq1_prev_not_null_D1: D1 with a previous-unit reference although it is sequence 1
+#### 17.10.25 actor_seq1_prev_not_null_D1: D1 with a previous-unit reference although it is sequence 1
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: previous Data Unit (payload field 4): `null` → `7745a3beb83838797591a1121e932799a5fb28b83890a3a9377f6c0d5cc34cd1`
@@ -2128,7 +2168,7 @@ a219b447656a69cd313e1eacbecd2e52bad5b1f0188c8b2c2e24d79c0eb07866c67a6b249e6a845c
 1449c7fdc85bcb04
 ```
 
-#### 17.10.24 hpke_recipient_mismatch_KP0: KP0 payload names CAROL as recipient but is sealed to BOB
+#### 17.10.26 hpke_recipient_mismatch_KP0: KP0 payload names CAROL as recipient but is sealed to BOB
 
 - Base case: `KP0_bob_epoch0`
 - Mutation: recipient (payload field 2): `3ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5` → `a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48`
@@ -2149,7 +2189,7 @@ d7c02370983a342861c610aaf228f512ee439d8a44c806c6917b27daeeff585a3cd0c3d11a819ff8
 e53c07
 ```
 
-#### 17.10.25 kp_enc_wrong_size_KP0: KP0 with a 31-byte HPKE enc
+#### 17.10.27 kp_enc_wrong_size_KP0: KP0 with a 31-byte HPKE enc
 
 - Base case: `KP0_bob_epoch0`
 - Mutation: HPKE enc length (payload field 5): `32` → `31`
@@ -2170,7 +2210,7 @@ ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50358200b5dc558b8104686d5d6b0063629f1cf
 9a03
 ```
 
-#### 17.10.26 have_empty_extra_list: SNAPSHOT-01 with a frontier that violates §28.1 rule 2
+#### 17.10.28 have_empty_extra_list: SNAPSHOT-01 with a frontier that violates §28.1 rule 2
 
 - Base case: `SNAPSHOT-01`
 - Mutation: CAROL entry key 2: `"absent"` → `"[] (present and empty)"`
@@ -2191,7 +2231,7 @@ f4f6208b1daa2c8f0589916e0e7c68103ca43327922202cada2e6d19bb677f9ace7f5840c39f6693
 9543e804
 ```
 
-#### 17.10.27 have_range_reversed: SNAPSHOT-02 with a frontier that violates §28.1 rule 4
+#### 17.10.29 have_range_reversed: SNAPSHOT-02 with a frontier that violates §28.1 rule 4
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra range: `[[105, 107]]` → `[[107, 105]]`
@@ -2212,7 +2252,7 @@ ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfead
 c655677cb30e1b573901
 ```
 
-#### 17.10.28 have_range_not_above_contiguous: SNAPSHOT-02 with a frontier that violates §28.1 rule 5
+#### 17.10.30 have_range_not_above_contiguous: SNAPSHOT-02 with a frontier that violates §28.1 rule 5
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra range: `[[105, 107]]` → `[[95, 107]]`
@@ -2233,7 +2273,7 @@ ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfead
 a33b9c6cc820d07e0705
 ```
 
-#### 17.10.29 have_range_at_contiguous_plus_one: SNAPSHOT-02 with a frontier that violates §28.1 rule 5
+#### 17.10.31 have_range_at_contiguous_plus_one: SNAPSHOT-02 with a frontier that violates §28.1 rule 5
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra range: `[[105, 107]]` → `[[101, 107]]`
@@ -2254,7 +2294,7 @@ e2656ada3ffa5fd2a9dcf9da05e8ce1b5d863b6221a6b2ec6684cc35ba5505e778006a32f73d0587
 bb542e45e5b4ce4b8e06
 ```
 
-#### 17.10.30 have_ranges_unsorted: SNAPSHOT-02 with a frontier that violates §28.1 rule 6
+#### 17.10.32 have_ranges_unsorted: SNAPSHOT-02 with a frontier that violates §28.1 rule 6
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra ranges: `[[105, 107]]` → `[[110, 112], [105, 107]]`
@@ -2275,7 +2315,7 @@ aebf4ca511cb59476bc4fd9eb253e20037b2dbb9938a69ee5abf0a527ba44b2dafe326d7b1b1f77a
 7c74dd4e873586c032de197f36c502
 ```
 
-#### 17.10.31 have_ranges_overlapping: SNAPSHOT-02 with a frontier that violates §28.1 rule 7
+#### 17.10.33 have_ranges_overlapping: SNAPSHOT-02 with a frontier that violates §28.1 rule 7
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra ranges: `[[105, 107]]` → `[[105, 107], [106, 110]]`
@@ -2296,7 +2336,7 @@ deb4c1fba57b7a45baab536c503d402384fdc308d03187d6d4a4bd5f8b64c425a389bea6642e4604
 6fc47ab6eb65793a7a1ad8e2d9340a
 ```
 
-#### 17.10.32 have_ranges_adjacent: SNAPSHOT-02 with a frontier that violates §28.1 rule 8
+#### 17.10.34 have_ranges_adjacent: SNAPSHOT-02 with a frontier that violates §28.1 rule 8
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra ranges: `[[105, 107]]` → `[[105, 107], [108, 110]]`
@@ -2317,7 +2357,7 @@ fb9cfc983227edf07424b793252c2734b5a29b8ed43beaec78df2013f6d59bcf5467443a2126dd77
 ad913da8fe178f8710eb70ac104209
 ```
 
-#### 17.10.33 frontier_duplicate_principal: SNAPSHOT-01 with a frontier that violates §28.1 rule 9
+#### 17.10.35 frontier_duplicate_principal: SNAPSHOT-01 with a frontier that violates §28.1 rule 9
 
 - Base case: `SNAPSHOT-01`
 - Mutation: BOB entries in the frontier: `1` → `2`
@@ -2338,7 +2378,7 @@ c50102a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c501
 f670bfde1440c720608227c380d2a5283876991f6fb5ecdc791619400db9201a2175b6f654cea15e0e
 ```
 
-#### 17.10.34 frontier_unsorted: SNAPSHOT-01 with CAROL listed before BOB
+#### 17.10.36 frontier_unsorted: SNAPSHOT-01 with CAROL listed before BOB
 
 - Base case: `SNAPSHOT-01`
 - Mutation: frontier entry order: `"BOB, CAROL"` → `"CAROL, BOB"`
@@ -2359,12 +2399,12 @@ f02562f989f3df39c026b58d2403a61a96305a9cd69d48e65ffb71ea7317884f8680f732fa65bb75
 c50d
 ```
 
-#### 17.10.35 snapshot_sequence_zero: SNAPSHOT-01 with Snapshot Sequence 0
+#### 17.10.37 snapshot_sequence_zero: SNAPSHOT-01 with Snapshot Sequence 0
 
 - Base case: `SNAPSHOT-01`
 - Mutation: Snapshot Sequence (payload field 3): `1` → `0`
 - Rule (LFCP-WIRE-01 §29): Snapshot Sequences begin at `1`.
-- Expected: invalid, reject, no error code specified
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
 - Why: Sequence 0 is outside the publisher sequence space, as for actor sequences (§8).
 
 cose_sign1:
@@ -2380,7 +2420,7 @@ e1022e460bcce5cfb7b40cd6a28b63a4a683bf91b13991fc6b893bfa61d6f17a3fde19cfa48c1079
 8709
 ```
 
-#### 17.10.36 snapshot_beyond_cutoff: A Snapshot of epoch 0 whose frontier covers BOB 1..3, beyond the C6 cutoff (BOB 2)
+#### 17.10.38 snapshot_beyond_cutoff: A Snapshot of epoch 0 whose frontier covers BOB 1..3, beyond the C6 cutoff (BOB 2)
 
 - Base case: `SNAPSHOT-01`
 - Mutation: Data Epoch, Control Head and frontier: `"epoch 1 at C6: BOB 1..2, CAROL 1"` → `"epoch 0 at C5: BOB 1..3"`
@@ -2400,7 +2440,7 @@ e642bc8edba191b55ea8962058404303f8af058dac3e39b7e755d91fbe0d37742853c610ee6288b9
 818626bb9e5023c2f571a15d6b326ba60845c300a05911827929fc2eb50e
 ```
 
-#### 17.10.37 stale_epoch_absent_actor: CAROL Data Unit in closed epoch 0, where C6 records no CAROL entry
+#### 17.10.39 stale_epoch_absent_actor: CAROL Data Unit in closed epoch 0, where C6 records no CAROL entry
 
 - Base case: `D4_carol_epoch1_seq1`
 - Mutation: Data Epoch (payload field 1): `1` → `0`
@@ -2419,7 +2459,7 @@ c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820a6e402
 2107385908a18154b908b383efd0341d9c959f92161e468633724abc0b
 ```
 
-#### 17.10.38 noncanonical_payload_D1: D1 payload with a non-shortest integer encoding, re-signed
+#### 17.10.40 noncanonical_payload_D1: D1 payload with a non-shortest integer encoding, re-signed
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: payload encoding of the data epoch (0): `00` → `1800`
@@ -2438,7 +2478,7 @@ f8376ef326715840c61e8713b42895fc0f64fc0e7573e7dbd2770dc5235b911a6c08a8c19668eb4e
 228151836168012f2d970f6c0fb45d725d7ffc7b8b782106
 ```
 
-#### 17.10.39 descriptor_extra_field: BOB Principal Descriptor with an additional field 3
+#### 17.10.41 descriptor_extra_field: BOB Principal Descriptor with an additional field 3
 
 - Base case: `principal_bob`
 - Mutation: descriptor fields: `"0, 1, 2"` → `"0, 1, 2, 3 (empty bstr)"`
@@ -2454,7 +2494,7 @@ a40058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c501582019
 ca7528fdd5eefb94f26c0340
 ```
 
-#### 17.10.40 small_order_r_signature_D1: D1 signed with a small-order R that cofactored (ZIP-215) verification accepts
+#### 17.10.42 small_order_r_signature_D1: D1 signed with a small-order R that cofactored (ZIP-215) verification accepts
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: signature R (first 32 bytes): `8adb5052b4f93358a1d5397fd05f591b47b20724afd186d42368caba11bd1f7e` → `0100000000000000000000000000000000000000000000000000000000000000`
@@ -2473,7 +2513,7 @@ f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca3
 751ac3391a14c8e56ce49382f409343d2f5dc2941f2d08
 ```
 
-#### 17.10.41 descriptor_small_order_key: Principal Descriptor whose Ed25519 key is a point of small order
+#### 17.10.43 descriptor_small_order_key: Principal Descriptor whose Ed25519 key is a point of small order
 
 - Base case: `principal_bob`
 - Mutation: Ed25519 public key (field 1), with the ID recomputed: `1953f4ada1cb4e0f8662108152c82e7e074cbf4859c487461cbe41e5d623e3c2` → `0000000000000000000000000000000000000000000000000000000000000000`
