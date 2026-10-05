@@ -937,6 +937,50 @@ def generate():
         context={'previous_record': ref('C10_revoke_grandchild', 'record_id')},
         cddl=('control-record', 'pass'))
 
+    # 7d. Genesis and chain-structure codes (SPEC-PATCH-03 / S2, G-CP5,
+    #     G-CP4, W1).
+    genesis_by_bob = cose_sign1({**C0['payload_obj'], 4: BOB.pid}, BOB)[0]
+    neg('genesis_signer_not_owner', 'control_record', 'C0 issued and signed by BOB while its body names OWNER as owner',
+        'C0_genesis', 'issuer (payload field 4) and signer', 'OWNER', 'BOB',
+        'LFCP-WIRE-01 §15',
+        'The Genesis Record MUST be signed by the owner Principal contained in the body. A Genesis Record whose issuer or '
+        '`kid` is not that owner is rejected with `INVALID_SIGNATURE`.',
+        'Genesis establishes the owner; a Genesis signed by anyone else would let them claim a Resource in another name.',
+        {'cose_sign1': hexv(genesis_by_bob)},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'INVALID_SIGNATURE'}},
+        cddl=('control-record', 'pass'))
+    second_genesis = control_record(0, None, 0, OWNER, {**genesis_body, 0: 'org.lfcp.test.raw.v2'})
+    neg('genesis_competing_root', 'control_record', 'A second, different Genesis for the same Resource ID',
+        'C0_genesis', 'body field 0: data profile', DATA_PROFILE, 'org.lfcp.test.raw.v2',
+        'LFCP-WIRE-01 §13.2',
+        'Two different validly signed Genesis Records for one Resource ID are a fork at the root, handled the same way: '
+        'neither is accepted, and the Resource is in `CONTROL_CONFLICT`.',
+        'Genesis has no previous record, so without this rule two roots would not count as a fork.',
+        {'cose_sign1': hexv(second_genesis['cose']), 'record_id': hexv(second_genesis['id'])},
+        {'valid': False, 'disposition': 'conflict', 'error': {'code': 'CONTROL_CONFLICT'}},
+        context={'competing_record': ref('C0_genesis', 'record_id')},
+        cddl=('control-record', 'pass'))
+    http_endpoint = {**ENDPOINT_A, 0: 'http://sync-a.example.test/v1/ws'}
+    genesis_http = control_record(0, None, 0, OWNER, {**genesis_body, 3: [http_endpoint]})
+    neg('genesis_http_endpoint', 'control_record', 'C0 with an http:// sync endpoint',
+        'C0_genesis', 'body field 3: endpoint URL scheme', 'wss', 'http',
+        'LFCP-WIRE-01 §16',
+        'A receiver MUST reject a record carrying such a URL with any scheme other than `ws` or `wss` with `MALFORMED_MESSAGE`.',
+        'Endpoints carry LFCP over WebSocket; any other scheme cannot be reached as an LFCP endpoint.',
+        {'cose_sign1': hexv(genesis_http['cose'])},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'MALFORMED_MESSAGE'}},
+        cddl=('control-record', 'pass'))
+    unknown_type = control_record(1, C0['id'], 9, OWNER, grant_bob_body)
+    neg('unknown_core_type_C1', 'control_record', 'C1 with the reserved core Control Record type 9',
+        'C1_grant_bob', 'payload field 3: Control Record type', 1, 9,
+        'LFCP-WIRE-01 §14',
+        'Unknown core Control Record types MUST cause validation failure, with `INVALID_CONTROL_CHAIN`.',
+        'A core type the receiver does not know may carry authority it cannot evaluate; accepting it would let replicas disagree on the chain.',
+        {'cose_sign1': hexv(unknown_type['cose'])},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'INVALID_CONTROL_CHAIN'}},
+        context={'previous_record': ref('C0_genesis', 'record_id')},
+        cddl=('control-record', 'fail'))
+
     # 8. Bad actor sequence.
     D_SEQ0 = data_unit(BOB, 0, 0, None, C3['id'], D1_plain, DEK0)
     neg('actor_seq_zero_D1', 'data_unit', 'D1 re-issued with actor sequence 0',
@@ -1053,6 +1097,18 @@ def generate():
         'Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one entry order.',
         {'cose_sign1': hexv(cose)},
         {'valid': False, 'disposition': 'reject', 'error': {'code': 'MALFORMED_MESSAGE'}},
+        cddl=('snapshot', 'pass'))
+
+    # 11b. Snapshot sequence 0 (SPEC-PATCH-03 / W5): SNAPSHOT-01 re-sealed
+    #      and re-signed with Snapshot Sequence 0.
+    cose = raw_snapshot([bob(2), carol], 0, S1['plaintext'])
+    neg('snapshot_sequence_zero', 'snapshot', 'SNAPSHOT-01 with Snapshot Sequence 0', 'SNAPSHOT-01',
+        'Snapshot Sequence (payload field 3)', 1, 0,
+        'LFCP-WIRE-01 §29',
+        'Snapshot Sequences begin at `1`.',
+        'Sequence 0 is outside the publisher sequence space, as for actor sequences (§8).',
+        {'cose_sign1': hexv(cose)},
+        {'valid': False, 'disposition': 'reject'},
         cddl=('snapshot', 'pass'))
 
     # 12. Stale-epoch cutoff for an actor absent from the cutoff frontier:

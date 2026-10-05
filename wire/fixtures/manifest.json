@@ -1502,6 +1502,56 @@
         "field": "cose_sign1"
       },
       "expect": "pass"
+    },
+    {
+      "rule": "control-record",
+      "source": {
+        "case": "genesis_signer_not_owner",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: who signs Genesis (LFCP-WIRE-01 \u00a715) is semantic."
+    },
+    {
+      "rule": "control-record",
+      "source": {
+        "case": "genesis_competing_root",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: a competing root (LFCP-WIRE-01 \u00a713.2) is a chain-level conflict."
+    },
+    {
+      "rule": "control-record",
+      "source": {
+        "case": "genesis_http_endpoint",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the CDDL types endpoint URLs as tstr; the scheme rule (LFCP-WIRE-01 \u00a716) is semantic."
+    },
+    {
+      "rule": "control-record",
+      "source": {
+        "case": "unknown_core_type_C1",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "fail",
+      "note": "Type 9 is not a \u00a714 core type, so no typed-control-record alternative matches."
+    },
+    {
+      "rule": "snapshot",
+      "source": {
+        "case": "snapshot_sequence_zero",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the lower bound of the Snapshot Sequence (LFCP-WIRE-01 \u00a729) is semantic."
     }
   ]
 }

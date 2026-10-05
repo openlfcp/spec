@@ -275,6 +275,8 @@ A Principal MUST NOT create two different Data Units with the same `(resource_id
 
 If an implementation loses its sequence state and cannot safely reconstruct it, it MUST generate a new Principal for future writes to that Resource.
 
+The same applies when the sequence is exhausted: a Principal whose last Data Unit for a Resource used sequence `2^64 - 1` MUST use a new Principal for further writes to that Resource.
+
 ---
 
 # Part II. Cryptographic Profile
@@ -559,6 +561,10 @@ control_seq = previous.control_seq + 1
 prev_control_id = previous.record_id
 ```
 
+A record that breaks the chain structure (a Genesis that is not at `control_seq = 0` with a null `prev_control_id`, a Genesis after the first record, a gap in `control_seq`, a `prev_control_id` other than the previous record ID, or another Resource ID) is rejected with `INVALID_CONTROL_CHAIN`.
+
+A record whose issuer the receiver cannot resolve to a Principal Descriptor, or an object that references a Control Head the receiver does not have, is rejected with `MISSING_DEPENDENCY`; the receiver may fetch the missing records and try again.
+
 ### 13.2 Forks
 
 Two different validly signed records referencing the same previous Control Record create a Control Fork.
@@ -572,6 +578,8 @@ Two different validly signed records referencing the same previous Control Recor
 A client MUST NOT silently choose a branch.
 
 Neither record is accepted as the Control Head; a receiver that refuses a competing record reports `CONTROL_CONFLICT`. The Resource enters `CONTROL_CONFLICT` until the owner explicitly resolves the fork using a future recovery procedure or an implementation-specific administrative procedure.
+
+Two different validly signed Genesis Records for one Resource ID are a fork at the root, handled the same way: neither is accepted, and the Resource is in `CONTROL_CONFLICT`.
 
 Normal operation uses a Control Coordinator to prevent accidental forks.
 
@@ -593,7 +601,7 @@ Normal operation uses a Control Coordinator to prevent accidental forks.
 | 9-31 | Reserved for LFCP core |
 | 32+ | Extension space |
 
-Unknown core Control Record types MUST cause validation failure.
+Unknown core Control Record types MUST cause validation failure, with `INVALID_CONTROL_CHAIN`.
 
 Unknown extension types MAY be retained but MUST NOT be interpreted unless the implementation declares support for the extension.
 
@@ -623,7 +631,7 @@ genesis-body = {
 }
 ```
 
-The Genesis Record MUST be signed by the owner Principal contained in the body.
+The Genesis Record MUST be signed by the owner Principal contained in the body. A Genesis Record whose issuer or `kid` is not that owner is rejected with `INVALID_SIGNATURE`.
 
 The owner Principal has implicit authority over the Resource and does not require an explicit Capability Grant.
 
@@ -652,11 +660,13 @@ LFCP-WIRE-01 defines these endpoint flags:
 | 4 | Preferred for reads |
 | 5 | Preferred for writes |
 
-All other bits are reserved.
+All other bits are reserved. A writer sets reserved bits to `0`; a receiver ignores them.
 
 For non-loopback network communication, endpoints MUST use `wss://`.
 
 `ws://` MAY be used for local development or loopback-only deployments.
+
+These rules apply to every endpoint URL and Control Coordinator URL in a Control Record (Sections 15, 20 and 22). A sender uses `wss://`, except `ws://` for a loopback address. A receiver MUST reject a record carrying such a URL with any scheme other than `ws` or `wss` with `MALFORMED_MESSAGE`.
 
 ---
 
@@ -795,7 +805,7 @@ For `claim_limit = 1`, only one claimant can win at the Control Coordinator.
 
 WIRE-01 defines a portable custom URI for invitation handoff.
 
-Resource IDs and Control Record IDs are encoded using unpadded Base64url when placed in a URI. Endpoint values use ordinary URI percent-encoding.
+Resource IDs and Control Record IDs are encoded using unpadded Base64url when placed in a URI. Endpoint values use ordinary URI percent-encoding: every character outside the RFC 3986 unreserved set (`A-Z`, `a-z`, `0-9`, `-`, `.`, `_`, `~`) is percent-encoded as UTF-8 bytes with upper-case hexadecimal digits.
 
 A targeted invitation has the form:
 
@@ -953,9 +963,11 @@ coordinator-recovery-body = {
   0 => uint,          ; new route version
   1 => [1* endpoint],
   2 => tstr,          ; new coordinator URL
-  3 => tstr           ; human-readable reason; max 256 UTF-8 bytes
+  3 => tstr           ; human-readable reason; max 256 UTF-8 bytes (writer-side)
 }
 ```
+
+The 256-byte limit on the reason is writer-side: a writer MUST NOT exceed it, and a receiver does not reject a record for a longer text.
 
 A non-coordinator server MAY accept this record if:
 
@@ -1040,9 +1052,11 @@ A Resource may be logically deleted through `RESOURCE_TOMBSTONE`.
 ```cddl
 resource-tombstone-body = {
   0 => uint,          ; reason code
-  ? 1 => tstr         ; optional note; max 256 UTF-8 bytes
+  ? 1 => tstr         ; optional note; max 256 UTF-8 bytes (writer-side)
 }
 ```
+
+The 256-byte limit on the note is writer-side, as in Section 22.
 
 The issuer MUST possess `resource/tombstone`.
 
@@ -1171,9 +1185,13 @@ For sequence `1`, it MUST be `null`.
 
 A gap or mismatch MUST be reported to the sync engine.
 
+A reported Data Unit is held, not merged, until the report is resolved: the unit at sequence `N-1` arrives and links, or the actor turns out to have equivocated. A unit is reported when the receiver lacks the actor's unit at sequence `N-1` (a gap), when `previous` names a unit other than that one, when `previous` is not `null` at sequence `1`, or when it is `null` at a sequence `N > 1`.
+
 If two differently hashed valid signatures exist for the same `(resource, actor, seq)`, the actor has equivocated.
 
 The client MUST NOT silently choose one.
+
+Valid here means signature-valid: two Data Units with the same `(resource, actor, seq)`, different Data Unit IDs and signatures that verify under the actor's key are equivocation, whatever their authorization or decryptability. Servers and clients both detect it; a server reports `ACTOR_EQUIVOCATION`.
 
 ### 26.3 Authorization
 
@@ -1326,6 +1344,8 @@ The Snapshot ID is:
 ```text
 snapshot_id = SHA-256(exact_COSE_Sign1_bytes)
 ```
+
+Snapshot Sequences begin at `1`.
 
 The publisher Snapshot Sequence MUST NOT be reused for the same `(resource, data_epoch, publisher)` tuple.
 
