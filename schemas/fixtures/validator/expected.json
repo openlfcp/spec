@@ -1,0 +1,59 @@
+{
+  "description": "Expected problem lines for each validator self-test fixture in this directory. These fixtures are deliberately invalid and are NOT part of the normative vector corpus. scripts/validate-vectors.mjs requires the exact set of lines.",
+  "cases": {
+    "malformed-hex.json": {
+      "covers": "malformed hex",
+      "problems": [
+        "SELFTEST-MALFORMED-HEX C0_genesis /cases/1/expected/record_id/hex schema/pattern: must match pattern \"^([0-9a-f]{2})*$\""
+      ]
+    },
+    "malformed-fixture-hex.json": {
+      "covers": "malformed hex outside {\"hex\"} wrappers",
+      "problems": [
+        "SELFTEST-MALFORMED-FIXTURE-HEX - /fixtures/resource_a_hex bad-hex: not lowercase even-length hex"
+      ]
+    },
+    "malformed-b64url.json": {
+      "covers": "malformed Base64url",
+      "problems": [
+        "SELFTEST-MALFORMED-B64URL token /cases/0/expected/token/b64url bad-b64url: not canonical unpadded base64url"
+      ]
+    },
+    "missing-field.json": {
+      "covers": "missing required field",
+      "problems": [
+        "SELFTEST-MISSING-FIELD C0_genesis /cases/1 schema/required: must have required property 'expected'"
+      ]
+    },
+    "duplicate-id.json": {
+      "covers": "duplicate vector ID",
+      "problems": [
+        "SELFTEST-DUPLICATE-ID principal_owner /cases/1/id duplicate-id: also used by /cases/0"
+      ]
+    },
+    "wrong-hash.json": {
+      "covers": "invalid expected hash",
+      "problems": [
+        "SELFTEST-WRONG-HASH C0_genesis /cases/1/expected/record_id/hex hash-mismatch: recomputed 3b141a9d660b274f73a042dbe47dcb1fe5b9f1d8d96f782cc8e4728695704adc (LFCP-WIRE-01 §13 and §10.6: SHA-256(exact COSE_Sign1 bytes))"
+      ]
+    },
+    "bad-type.json": {
+      "covers": "malformed vector type/category",
+      "problems": [
+        "SELFTEST-BAD-TYPE principal_owner /cases/0/type schema/enum: must be equal to one of the allowed values"
+      ]
+    },
+    "duplicate-key.json": {
+      "covers": "duplicate fixture key",
+      "problems": [
+        "SELFTEST-DUPLICATE-KEY - /fixtures/session/server_id duplicate-key: \"server_id\" appears twice in one object"
+      ]
+    },
+    "unresolved-ref.json": {
+      "covers": "unresolved cross-reference",
+      "problems": [
+        "SELFTEST-UNRESOLVED-REF C0_genesis /cases/0/inputs/signer unresolved-ref: no case principal_owner"
+      ]
+    }
+  }
+}

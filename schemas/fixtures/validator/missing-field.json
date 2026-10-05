@@ -1,0 +1,49 @@
+{
+  "format": "lfcp-vector-format/1",
+  "suite": {
+    "id": "SELFTEST-MISSING-FIELD",
+    "version": "1",
+    "specification": {
+      "id": "LFCP-WIRE-01",
+      "revision": "working-draft"
+    },
+    "description": "Validator self-test (NOT a normative vector): a bytes case without expected values."
+  },
+  "cases": [
+    {
+      "id": "principal_owner",
+      "type": "bytes",
+      "kind": "principal",
+      "inputs": {
+        "ed25519_seed": {
+          "hex": "3df1a3457c0fc0d78c89cb4cdcd3c5912322cdc199f7a35a843e0e82ea9aa38b"
+        },
+        "x25519_private": {
+          "hex": "792bb0d4a2752e97583e603235b07ece323d2f65f1285907fc20c95da91ed874"
+        }
+      },
+      "expected": {
+        "ed25519_public": {
+          "hex": "f6fb6b8184ca17efdf2ca12486d3ba89fd4253efe9e1ae746fe0f93817c8851a"
+        },
+        "x25519_public": {
+          "hex": "53e766cd910b4dbc67f0d850bdcf235402f5e708e85b5223a307f65cb92e4f0a"
+        },
+        "principal_id": {
+          "hex": "172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d"
+        },
+        "descriptor_cbor": {
+          "hex": "a3005820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d015820f6fb6b8184ca17efdf2ca12486d3ba89fd4253efe9e1ae746fe0f93817c8851a02582053e766cd910b4dbc67f0d850bdcf235402f5e708e85b5223a307f65cb92e4f0a"
+        }
+      }
+    },
+    {
+      "id": "C0_genesis",
+      "type": "bytes",
+      "kind": "control_record",
+      "inputs": {
+        "signer": "OWNER"
+      }
+    }
+  ]
+}

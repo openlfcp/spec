@@ -1,0 +1,24 @@
+{
+  "format": "lfcp-vector-format/1",
+  "suite": {
+    "id": "SELFTEST-MALFORMED-B64URL",
+    "version": "1",
+    "specification": {
+      "id": "LFCP-WIRE-01",
+      "revision": "working-draft"
+    },
+    "description": "Validator self-test (NOT a normative vector): \"AB\" decodes to one byte but has non-zero trailing bits, so it is not canonical."
+  },
+  "cases": [
+    {
+      "id": "token",
+      "type": "bytes",
+      "kind": "example",
+      "expected": {
+        "token": {
+          "b64url": "AB"
+        }
+      }
+    }
+  ]
+}
