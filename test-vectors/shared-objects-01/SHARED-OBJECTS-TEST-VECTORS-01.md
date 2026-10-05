@@ -847,6 +847,8 @@ The corpus also lists `negatives`: inputs a receiver MUST NOT merge. `SO-SEC1-ch
 
 The corpus also lists `validations` (SPEC-PATCH-06): save images built on S01 whose strings are collaborative Text somewhere, each with every problem a validator reports. `SO-STRINGS-text-anywhere` puts Text inside `extensions` (a map value and a list item), in an unknown field, in `status` and in `due`: five `INVALID_FIELD_TYPE` problems, each at the Text value's own pointer, before the field's own rule (§30, §74.1). `SO-STRINGS-text-tag-member` has a Text tags member: `INVALID_FIELD_TYPE`, not `INVALID_COLLECTION_REPRESENTATION`. `SO-STRINGS-text-root-profile` has the root `profile` as Text: `INVALID_ROOT`. JSON state fixtures cannot carry Text, so these cases live in the corpus.
 
+Two more `validations` (SPEC-PATCH-07) bound nesting (§30): `SO-DEPTH-64` nests maps under `extensions` exactly 64 levels deep (the field's own map is depth 1) and has no problem; `SO-DEPTH-65` nests one level more and has one `INVALID_FIELD_TYPE` at the depth-65 map's pointer, with nothing below it examined.
+
 ---
 
 # Part VI. Implementation-neutral test runner contract

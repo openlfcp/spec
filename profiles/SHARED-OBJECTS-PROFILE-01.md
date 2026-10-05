@@ -743,6 +743,8 @@ The actual Automerge representation uses maps and scalar registers with the conc
 
 Every string value the profile writes is an Automerge scalar string, never collaborative Automerge Text: the root `profile` and every string in any object, including `id`, `type`, `lifecycle`, `created_by`, `created_at`, `title`, `status`, dates, `priority`, and the string values inside object maps and `extensions`. A string field held as Text is profile-invalid with the diagnostic `INVALID_FIELD_TYPE` (Section 74.1).
 
+An object's maps and lists nest at most 64 levels. The value of an object's field, when it is a map or a list, is at depth 1; a map or list inside a map or list at depth `d` is at depth `d + 1`. A map or list at depth 65 or more is profile-invalid with the diagnostic `INVALID_FIELD_TYPE` at its own pointer, and a receiver does not examine anything below it: it reports no other problem from inside it. The bound keeps every walk over received values (validation, reading a value, the scalar-string check) within a fixed depth, so a deeply nested `extensions` value cannot exhaust a receiver's stack. A writer MUST NOT nest deeper.
+
 ---
 
 ## 31. Required Task fields
@@ -1700,7 +1702,7 @@ Every profile validation failure is reported with the code `PROFILE_INVALID` and
 | `INVALID_OBJECT_ID` | an Object ID or `objects` key is not a canonical UUIDv7 | §19 |
 | `OBJECT_ID_MISMATCH` | an object's `id` differs from its `objects` key | §20, §24 |
 | `MISSING_REQUIRED_FIELD` | a required base or Task field is absent | §23, §31 |
-| `INVALID_FIELD_TYPE` | a field has the wrong type, e.g. a non-text `title`, a string held as Automerge Text (§30), an `objects` entry that is not a map, or an object's `extensions` that is not a map | §15, §29, §30, §32, §76 |
+| `INVALID_FIELD_TYPE` | a field has the wrong type, e.g. a non-text `title`, a string held as Automerge Text (§30), a map or list nested deeper than 64 levels in an object (§30), an `objects` entry that is not a map, or an object's `extensions` that is not a map | §15, §29, §30, §32, §76 |
 | `INVALID_ENUM_VALUE` | `lifecycle`, `status` or `priority` is not a string, or is neither a standard value nor a valid `x/<reverse-domain>/<value>` extension value (for `lifecycle`, extension values are not allowed) | §26, §33, §38 |
 | `INVALID_EXTENSION_NAMESPACE` | an `extensions` key does not match `reverse-domain` | §18 |
 | `INVALID_PRINCIPAL_REF` | a Principal reference is not `p:` + base64url of 32 bytes | §27, §42 |

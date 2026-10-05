@@ -466,6 +466,43 @@ corpus.validations = [
   },
 ];
 
+// SPEC-PATCH-07 (SHARED-OBJECTS-PROFILE-01 §30): an object's maps and lists
+// nest at most 64 levels; the field's own map is depth 1. The first map
+// at depth 65 is INVALID_FIELD_TYPE at its pointer, and nothing below it
+// is examined. Mirrors sdk-rs bb43a78.
+/** `levels` nested maps (the outermost first), the innermost holding one int. */
+const nest = (levels) => {
+  let v = { leaf: 1 };
+  for (let i = 1; i < levels; i++) v = { d: v };
+  return v;
+};
+// extensions is depth 1 and "org.example.app" depth 2, so its value's
+// innermost map is at depth `levels + 1`.
+const deep = (levels) =>
+  textEdit(`SO-DEPTH.${levels + 1}`, (d) => {
+    d.objects[K].extensions = { "org.example.app": nest(levels) };
+  });
+corpus.validations.push(
+  {
+    id: "SO-DEPTH-64",
+    description: "The S01 Task whose extensions nest maps exactly 64 levels deep",
+    rule: "SHARED-OBJECTS-PROFILE-01 §30: maps and lists nest at most 64 levels in an object (the field's own map is depth 1).",
+    base_scenario: "S01",
+    save_hex: hex(deep(63)),
+    expected_problems: [],
+  },
+  {
+    id: "SO-DEPTH-65",
+    description: "The S01 Task whose extensions nest maps 65 levels deep",
+    rule: "SHARED-OBJECTS-PROFILE-01 §30, §74.1: the map at depth 65 is INVALID_FIELD_TYPE at its own pointer; nothing below it is examined.",
+    base_scenario: "S01",
+    save_hex: hex(deep(64)),
+    expected_problems: [
+      invalid(`/objects/${K}/extensions/org.example.app${"/d".repeat(63)}`, "INVALID_FIELD_TYPE"),
+    ],
+  },
+);
+
 fs.mkdirSync(OUT_DIR, { recursive: true });
 fs.writeFileSync(path.join(OUT_DIR, OUT_NAME), JSON.stringify(corpus, null, 2) + "\n");
 console.log(`wrote ${path.join(OUT_DIR, OUT_NAME)}`);
