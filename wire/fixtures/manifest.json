@@ -1306,6 +1306,26 @@
       },
       "expect": "fail",
       "note": "The \u00a77 descriptor map is closed: field 3 is not allowed (SPEC-PATCH-02 / P1)."
+    },
+    {
+      "rule": "data-unit",
+      "source": {
+        "case": "small_order_r_signature_D1",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the violated rule (LFCP-WIRE-01 \u00a710.5.1) concerns the signature value."
+    },
+    {
+      "rule": "principal-descriptor",
+      "source": {
+        "case": "descriptor_small_order_key",
+        "field": "descriptor_cbor",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the small-order key check (LFCP-WIRE-01 \u00a77, \u00a710.5.1) is semantic."
     }
   ]
 }

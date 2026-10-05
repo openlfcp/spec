@@ -197,6 +197,65 @@ def cose_sign1(payload_obj: Any, signer: Principal) -> tuple[bytes, bytes, bytes
     return cose, payload, protected, sig_structure
 
 # -----------------------------------------------------------------------------
+# Minimal Ed25519 group arithmetic (RFC 8032 §5.1), used only to build and
+# self-check the strict-verification negatives of LFCP-WIRE-01 §10.5.1.
+# -----------------------------------------------------------------------------
+
+ED_P = 2**255 - 19
+ED_L = 2**252 + 27742317777372353535851937790883648493
+ED_D = -121665 * pow(121666, ED_P - 2, ED_P) % ED_P
+ED_SQRT_M1 = pow(2, (ED_P - 1) // 4, ED_P)
+ED_IDENTITY = (0, 1)
+
+
+def ed_add(P, Q):
+    (x1, y1), (x2, y2) = P, Q
+    t = ED_D * x1 * x2 * y1 * y2 % ED_P
+    x3 = (x1 * y2 + y1 * x2) * pow(1 + t, ED_P - 2, ED_P) % ED_P
+    y3 = (y1 * y2 + x1 * x2) * pow(1 - t, ED_P - 2, ED_P) % ED_P
+    return (x3, y3)
+
+
+def ed_mul(k: int, P):
+    Q = ED_IDENTITY
+    while k:
+        if k & 1:
+            Q = ed_add(Q, P)
+        P = ed_add(P, P)
+        k >>= 1
+    return Q
+
+
+def ed_decode(b: bytes):
+    """RFC 8032 §5.1.3 point decoding; only canonical encodings are accepted."""
+    y = int.from_bytes(b, 'little')
+    sign = y >> 255
+    y &= (1 << 255) - 1
+    assert y < ED_P, 'non-canonical y'
+    u, v = (y * y - 1) % ED_P, (ED_D * y * y + 1) % ED_P
+    x = u * pow(v, 3, ED_P) * pow(u * pow(v, 7, ED_P), (ED_P - 5) // 8, ED_P) % ED_P
+    if v * x * x % ED_P != u:
+        x = x * ED_SQRT_M1 % ED_P
+    assert v * x * x % ED_P == u, 'not a curve point'
+    assert not (x == 0 and sign), 'x = 0 with the sign bit set'
+    if x & 1 != sign:
+        x = ED_P - x
+    return (x, y)
+
+
+ED_B = ed_decode(bytes.fromhex('5866666666666666666666666666666666666666666666666666666666666666'))
+
+
+def ed_small_order(P) -> bool:
+    return ed_mul(8, P) == ED_IDENTITY
+
+
+def ed_secret_scalar(seed: bytes) -> int:
+    a = int.from_bytes(hashlib.sha512(seed).digest()[:32], 'little')
+    a &= (1 << 254) - 8
+    return a | (1 << 254)
+
+# -----------------------------------------------------------------------------
 # HPKE RFC 9180 Base mode, suite X25519/HKDF-SHA256/ChaCha20Poly1305.
 # -----------------------------------------------------------------------------
 
@@ -930,6 +989,54 @@ def generate():
         {'descriptor_cbor': hexv(extra_descriptor)},
         {'valid': False, 'disposition': 'reject'},
         cddl=('principal-descriptor', 'fail'))
+
+    # 15. Signature with a small-order R (SPEC-PATCH-03 / G-RS2): D1's exact
+    #     payload and protected header, with R = the neutral element and
+    #     S = k * a mod L for BOB's secret scalar a. Then [S]B = [k]A =
+    #     R + [k]A, so the cofactorless equation holds and the cofactored
+    #     (ZIP-215) equation holds too; only the small-order check of
+    #     §10.5.1 rule 3 rejects it.
+    r_small = bytes([1]) + bytes(31)
+    assert ed_decode(r_small) == ED_IDENTITY and ed_small_order(ed_decode(r_small))
+    so_message = cbor(['Signature1', protected_bob, b'', D1['payload']])
+    so_k = int.from_bytes(hashlib.sha512(r_small + BOB.ed_pk + so_message).digest(), 'little') % ED_L
+    so_s = so_k * ed_secret_scalar(BOB.ed_seed) % ED_L
+    A_bob = ed_decode(BOB.ed_pk)
+    assert ed_mul(so_s, ED_B) == ed_add(ed_decode(r_small), ed_mul(so_k, A_bob))  # cofactorless holds
+    assert ed_mul(8, ed_mul(so_s, ED_B)) == ed_mul(8, ed_add(ed_decode(r_small), ed_mul(so_k, A_bob)))  # ZIP-215 holds
+    du_small_r = cbor([protected_bob, {}, D1['payload'], r_small + so_s.to_bytes(32, 'little')])
+    neg('small_order_r_signature_D1', 'data_unit', 'D1 signed with a small-order R that cofactored (ZIP-215) verification accepts',
+        'D1_bob_epoch0_seq1', 'signature R (first 32 bytes)', hexv(D1['cose'][-64:-32]), hexv(r_small),
+        'LFCP-WIRE-01 §10.5.1',
+        'A verifier MUST reject the signature, with `INVALID_SIGNATURE`, when any of the following holds: [...] '
+        '3. `A` or `R` is a point of small order;',
+        'R is the neutral element and S = k·a, so both the cofactorless and the cofactored equations hold; '
+        'only the small-order rule makes every implementation reject it alike.',
+        {'cose_sign1': hexv(du_small_r)},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'INVALID_SIGNATURE'}},
+        cddl=('data-unit', 'pass'))
+
+    # 16. Principal Descriptor with a small-order Ed25519 key (SPEC-PATCH-03 /
+    #     G-RS2, P3): the all-zero encoding is y = 0, a canonical point of
+    #     order 4. The ID is recomputed over that key, so only the key check
+    #     of §7 fails.
+    small_key = bytes(32)
+    P4 = ed_decode(small_key)
+    assert P4 != ED_IDENTITY and ed_mul(4, P4) == ED_IDENTITY and ed_small_order(P4)
+    small_pid = sha256(b'LFCP-PRINCIPAL-v1' + small_key + BOB.x_pk)
+    neg('descriptor_small_order_key', 'principal', 'Principal Descriptor whose Ed25519 key is a point of small order',
+        'principal_bob', 'Ed25519 public key (field 1), with the ID recomputed', hexv(BOB.ed_pk), hexv(small_key),
+        'LFCP-WIRE-01 §7, §10.5.1',
+        'A receiver MUST also validate the Ed25519 public key in field `1` whenever a descriptor is received: it MUST be a '
+        'canonical point encoding and MUST NOT be a point of small order, as defined in Section 10.5.1. A descriptor whose '
+        'key fails this check is invalid.',
+        'A small-order key admits signatures that verify for many messages; rejecting it at receipt keeps such a Principal '
+        'out of every authorization decision.',
+        {'descriptor_cbor': hexv(cbor({0: small_pid, 1: small_key, 2: BOB.x_pk}))},
+        {'valid': False, 'disposition': 'reject', 'error': {
+            'code': 'MALFORMED_MESSAGE',
+            'detail': 'AUTH_FAILED when received in HELLO or AUTH (LFCP-WIRE-01 §7)'}},
+        cddl=('principal-descriptor', 'pass'))
 
     fixtures = {
         'meta': {

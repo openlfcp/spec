@@ -1867,6 +1867,77 @@
         "valid": false,
         "disposition": "reject"
       }
+    },
+    {
+      "id": "small_order_r_signature_D1",
+      "type": "validation",
+      "kind": "data_unit",
+      "description": "D1 signed with a small-order R that cofactored (ZIP-215) verification accepts",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a05899a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030104f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca31e51d9b62a572bf8376ef3267158400100000000000000000000000000000000000000000000000000000000000000d1e120123c2d2e5b98751ac3391a14c8e56ce49382f409343d2f5dc2941f2d08"
+        }
+      },
+      "derivation": {
+        "base_case": "D1_bob_epoch0_seq1",
+        "mutation": {
+          "field": "signature R (first 32 bytes)",
+          "from": {
+            "hex": "8adb5052b4f93358a1d5397fd05f591b47b20724afd186d42368caba11bd1f7e"
+          },
+          "to": {
+            "hex": "0100000000000000000000000000000000000000000000000000000000000000"
+          }
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §10.5.1",
+          "text": "A verifier MUST reject the signature, with `INVALID_SIGNATURE`, when any of the following holds: [...] 3. `A` or `R` is a point of small order;"
+        },
+        "why": "R is the neutral element and S = k·a, so both the cofactorless and the cofactored equations hold; only the small-order rule makes every implementation reject it alike."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "INVALID_SIGNATURE"
+        }
+      }
+    },
+    {
+      "id": "descriptor_small_order_key",
+      "type": "validation",
+      "kind": "principal",
+      "description": "Principal Descriptor whose Ed25519 key is a point of small order",
+      "inputs": {
+        "descriptor_cbor": {
+          "hex": "a3005820e7e0dcffbc581b52a548f8113efbcb3f96458217a57ab55019dafe9ab02f74b30158200000000000000000000000000000000000000000000000000000000000000000025820b5a22f5f5cbdc3a6f8742ec8b2bc9665d0170478bf5aca7528fdd5eefb94f26c"
+        }
+      },
+      "derivation": {
+        "base_case": "principal_bob",
+        "mutation": {
+          "field": "Ed25519 public key (field 1), with the ID recomputed",
+          "from": {
+            "hex": "1953f4ada1cb4e0f8662108152c82e7e074cbf4859c487461cbe41e5d623e3c2"
+          },
+          "to": {
+            "hex": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §7, §10.5.1",
+          "text": "A receiver MUST also validate the Ed25519 public key in field `1` whenever a descriptor is received: it MUST be a canonical point encoding and MUST NOT be a point of small order, as defined in Section 10.5.1. A descriptor whose key fails this check is invalid."
+        },
+        "why": "A small-order key admits signatures that verify for many messages; rejecting it at receipt keeps such a Principal out of every authorization decision."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE",
+          "detail": "AUTH_FAILED when received in HELLO or AUTH (LFCP-WIRE-01 §7)"
+        }
+      }
     }
   ]
 }

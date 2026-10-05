@@ -237,6 +237,10 @@ A verifier MUST recompute the ID whenever a descriptor is received.
 
 A Principal Descriptor with any field other than `0`, `1` and `2` is invalid; the map is closed, as the CDDL above defines it. A descriptor whose Principal ID does not equal the recomputed ID is rejected with `AUTH_FAILED` when it is received in `HELLO` or `AUTH` (session context) and with `MALFORMED_MESSAGE` in every other context.
 
+A receiver MUST also validate the Ed25519 public key in field `1` whenever a descriptor is received: it MUST be a canonical point encoding and MUST NOT be a point of small order, as defined in Section 10.5.1. A descriptor whose key fails this check is invalid.
+
+An invalid descriptor (a field other than `0`, `1` and `2`, a field of the wrong type or size, or an Ed25519 key that fails Section 10.5.1) is rejected with the same codes as an ID mismatch: `AUTH_FAILED` in `HELLO` or `AUTH`, and `MALFORMED_MESSAGE` in every other context.
+
 ### 7.1 Principal and human identity
 
 LFCP-WIRE-01 deliberately does not require a global human identity system.
@@ -384,6 +388,25 @@ The `Sig_structure` itself MUST be encoded using the deterministic CBOR rules in
 The signature is the 64-byte Ed25519 signature over the encoded `Sig_structure`.
 
 A receiver MUST reject a signed object whose signature does not verify under the public key of the Principal named by `kid`, or whose `kid` does not identify the Principal the object requires as signer (for example, the actor of a Data Unit). It reports `INVALID_SIGNATURE`.
+
+#### 10.5.1 Strict Ed25519 verification
+
+Every LFCP implementation verifies Ed25519 signatures with the same strict rules, so that a signature valid for one implementation is valid for all.
+
+Write the signature as `R || S` (32 bytes each), the public key as `A`, the base point as `B`, the group order as `L` and the field prime as `p = 2^255 - 19`, and let `k = SHA-512(R || A || M) mod L` for the message `M` (the encoded `Sig_structure`), as in RFC 8032 §5.1.7.
+
+A point encoding is **canonical** when it decodes as in RFC 8032 §5.1.3 and its 255-bit `y` value is less than `p`. An encoding with `y >= p`, an encoding that does not decode to a curve point, and an encoding of `x = 0` with the sign bit set are not canonical.
+
+A point is of **small order** when `[8]P` is the neutral element.
+
+A verifier MUST reject the signature, with `INVALID_SIGNATURE`, when any of the following holds:
+
+1. `S` interpreted as a little-endian integer is not less than `L`;
+2. `A` or `R` is not a canonical point encoding;
+3. `A` or `R` is a point of small order;
+4. `[S]B` is not equal to `R + [k]A`.
+
+Rule 4 is the cofactorless equation. Implementations MUST NOT use the cofactored equation `[8][S]B = [8]R + [8][k]A` (as ZIP-215 does), which accepts signatures that rule 4 rejects.
 
 ### 10.6 Exact bytes and object IDs
 

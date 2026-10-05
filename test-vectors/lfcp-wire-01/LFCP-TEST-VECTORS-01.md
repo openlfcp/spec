@@ -1905,6 +1905,41 @@ a40058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c501582019
 ca7528fdd5eefb94f26c0340
 ```
 
+#### 17.10.22 small_order_r_signature_D1: D1 signed with a small-order R that cofactored (ZIP-215) verification accepts
+
+- Base case: `D1_bob_epoch0_seq1`
+- Mutation: signature R (first 32 bytes): `8adb5052b4f93358a1d5397fd05f591b47b20724afd186d42368caba11bd1f7e` → `0100000000000000000000000000000000000000000000000000000000000000`
+- Rule (LFCP-WIRE-01 §10.5.1): A verifier MUST reject the signature, with `INVALID_SIGNATURE`, when any of the following holds: [...] 3. `A` or `R` is a point of small order;
+- Expected: invalid, reject, error code `INVALID_SIGNATURE`
+- Why: R is the neutral element and S = k·a, so both the cofactorless and the cofactored equations hold; only the small-order rule makes every implementation reject it alike.
+
+cose_sign1:
+
+```text
+845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a05899a7005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56
+ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030104f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1
+f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca31e51d9b62a572bf8
+376ef3267158400100000000000000000000000000000000000000000000000000000000000000d1e120123c2d2e5b98
+751ac3391a14c8e56ce49382f409343d2f5dc2941f2d08
+```
+
+#### 17.10.23 descriptor_small_order_key: Principal Descriptor whose Ed25519 key is a point of small order
+
+- Base case: `principal_bob`
+- Mutation: Ed25519 public key (field 1), with the ID recomputed: `1953f4ada1cb4e0f8662108152c82e7e074cbf4859c487461cbe41e5d623e3c2` → `0000000000000000000000000000000000000000000000000000000000000000`
+- Rule (LFCP-WIRE-01 §7, §10.5.1): A receiver MUST also validate the Ed25519 public key in field `1` whenever a descriptor is received: it MUST be a canonical point encoding and MUST NOT be a point of small order, as defined in Section 10.5.1. A descriptor whose key fails this check is invalid.
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
+- Why: A small-order key admits signatures that verify for many messages; rejecting it at receipt keeps such a Principal out of every authorization decision.
+
+descriptor_cbor:
+
+```text
+a3005820e7e0dcffbc581b52a548f8113efbcb3f96458217a57ab55019dafe9ab02f74b3015820000000000000000000
+0000000000000000000000000000000000000000000000025820b5a22f5f5cbdc3a6f8742ec8b2bc9665d0170478bf5a
+ca7528fdd5eefb94f26c
+```
+
 ## 18. Snapshot vectors
 
 `SNAPSHOT-01` and `SNAPSHOT-02` are byte-exact Snapshots under the consolidated `LFCP-WIRE-01` rules. Both are published by BOB, who owns the Resource after C4 and therefore holds `snapshot/publish` (§29.2), in Data Epoch 1 at Control Head C6, using DEK1. The plaintext is opaque test bytes: Snapshot plaintext framing belongs to the application profile, not to the Wire suite.
