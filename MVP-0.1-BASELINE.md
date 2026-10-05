@@ -5,12 +5,12 @@ full WIRE-01 conformance, documents remain Working Drafts.**
 
 This file answers one question: *what exactly do I implement against for
 MVP 0.1?* The answer is every file listed below, at the Git tag
-`mvp-0.1-baseline.3` of this repository.
+`mvp-0.1-baseline.4` of this repository.
 
 | Tag | Status |
 | --- | --- |
-| mvp-0.1-baseline.4 | **In preparation, not tagged.** Adds the Automerge reference corpus (SPEC-CORPUS); further approved decisions will join it. No published vector value has changed (`migrations/mvp-0.1-baseline.4/value-changes.json`). |
-| mvp-0.1-baseline.3 | **Current.** Applies the second batch of project-owner decisions (SPEC-PATCH-03, ADR 0002): strict Ed25519, capability authority and revocation rules, named error codes, message and state-machine edges. The Key Package vectors are regenerated from published `ikmE` (G-KP2) and `descriptor_extra_field` now names `MALFORMED_MESSAGE` (V2); every changed value is listed in `migrations/mvp-0.1-baseline.3/value-changes.json`. New positive and negative vectors are added. |
+| mvp-0.1-baseline.4 | **Current.** Applies the third batch of project-owner decisions (SPEC-PATCH-04, ADR 0003): the Data Epoch rules G-EP1 to G-EP7, the general error-code rule, connection limits, Shared Objects validation (SO-SEC1, SOG-1, SOG-2) and the Markdown reference grammar. Adds the Automerge reference corpus (SPEC-CORPUS) and shared strict-Ed25519 vectors. `hpke_recipient_mismatch_KP0` is rebuilt (KP-1), four negatives now name a code and the Shared Objects intent names follow §59 (G-SC5); every changed value is listed in `migrations/mvp-0.1-baseline.4/value-changes.json`. |
+| mvp-0.1-baseline.3 | Superseded by `mvp-0.1-baseline.4`, because the approved SPEC-PATCH-04 decisions change normative rules and vector values. Never moved. Applied the second batch of project-owner decisions (SPEC-PATCH-03, ADR 0002): strict Ed25519, capability authority and revocation rules, named error codes, message and state-machine edges. The Key Package vectors are regenerated from published `ikmE` (G-KP2) and `descriptor_extra_field` now names `MALFORMED_MESSAGE` (V2); every changed value is listed in `migrations/mvp-0.1-baseline.3/value-changes.json`. New positive and negative vectors are added. |
 | mvp-0.1-baseline.2 | Superseded by `mvp-0.1-baseline.3`, because the approved SPEC-PATCH-03 decisions change normative rules and the Key Package vector values. Never moved. |
 | mvp-0.1-baseline | Superseded by `mvp-0.1-baseline.2`. Never moved. |
 
@@ -21,17 +21,18 @@ MVP 0.1?* The answer is every file listed below, at the Git tag
   subset of LFCP-WIRE-01". It must not claim full LFCP-WIRE-01 conformance
   (`.github: docs/MVP-0.1-PROTOCOL-SCOPE.md` §5).
 - The protocol decisions applied for this baseline are recorded in
-  [ADR 0001](adr/0001-mvp-0.1-protocol-decisions.md) and
-  [ADR 0002](adr/0002-mvp-0.1-protocol-decisions-2.md).
+  [ADR 0001](adr/0001-mvp-0.1-protocol-decisions.md),
+  [ADR 0002](adr/0002-mvp-0.1-protocol-decisions-2.md) and
+  [ADR 0003](adr/0003-mvp-0.1-protocol-decisions-3.md).
 
 ## Pinning
 
-Implementations pin the current tag, `mvp-0.1-baseline.3`, of
+Implementations pin the current tag, `mvp-0.1-baseline.4`, of
 `openlfcp/spec`, never a branch. sdk-ts consumes the vectors at this tag (LFCP-017); other
 implementations do the same.
 
 A later approved Working Draft correction does not move the tag. It
-produces a new tag, such as `mvp-0.1-baseline.4`, with an updated copy of
+produces a new tag, such as `mvp-0.1-baseline.5`, with an updated copy of
 this file. Implementations move to it deliberately.
 
 ## Canonical files
@@ -93,9 +94,10 @@ directory).
 
 ## Project documents in `openlfcp/.github`
 
-These belong to the baseline at commit `.github@0cfa217` (tag
-`mvp-0.1-baseline.3` in that repository; `mvp-0.1-baseline.2` there marks
-`174e6e4` and `mvp-0.1-baseline` marks `89c0b01`):
+These belong to the baseline at commit `.github@1a8ab67` (tag
+`mvp-0.1-baseline.4` in that repository; `mvp-0.1-baseline.3` there marks
+`0cfa217`, `mvp-0.1-baseline.2` marks `174e6e4` and `mvp-0.1-baseline`
+marks `89c0b01`):
 
 - `docs/MVP-0.1-PROTOCOL-SCOPE.md`: the required MVP 0.1 subset of
   LFCP-WIRE-01, the deferred features and the completion gate;
