@@ -1,0 +1,6 @@
+{
+  "$comment": "Non-normative structural fixture for LFCP-006; values reuse SHARED-OBJECTS-TEST-VECTORS-01 fixtures.",
+  "profile": "org.openlfcp.shared-objects.v2",
+  "objects": {},
+  "extensions": {}
+}

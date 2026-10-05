@@ -1,0 +1,27 @@
+{
+  "$comment": "Non-normative structural fixture for LFCP-006; values reuse SHARED-OBJECTS-TEST-VECTORS-01 fixtures.",
+  "profile": "org.openlfcp.shared-objects.v1",
+  "objects": {
+    "019a2f85-7b31-7c42-b85a-fc843e2f40ad": {
+      "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+      "type": "task",
+      "lifecycle": "active",
+      "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
+      "created_at": "2026-10-04T05:30:00Z",
+      "title": "Prepare API contract",
+      "status": "in_progress",
+      "priority": "high",
+      "tags": {
+        "backend": true,
+        "important": true
+      },
+      "assignees": {
+        "p:66ZYp_TRzK3S0uRmWMhToLGf5YfzVeiEXxcNJIrCu-o": true
+      },
+      "extensions": {},
+      "due": "2026-10-10",
+      "scheduled": "2026-10-06"
+    }
+  },
+  "extensions": {}
+}

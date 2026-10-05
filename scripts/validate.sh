@@ -10,7 +10,10 @@
 #    (scripts/extract-cddl.mjs --check);
 # 5. the Wire CDDL compiles, agrees with its Part XXVIII summary and accepts
 #    or rejects every fixture in wire/fixtures/manifest.json
-#    (scripts/check-cddl.rb, with the cddl gem).
+#    (scripts/check-cddl.rb, with the cddl gem);
+# 6. the Shared Objects structural contract accepts its valid fixtures,
+#    rejects its invalid ones at the expected fields, and agrees with the
+#    Shared Objects vectors (scripts/validate-shared-objects.mjs).
 #
 # Run `pnpm install --frozen-lockfile` and `bundle install` first.
 set -euo pipefail
@@ -37,3 +40,4 @@ node scripts/validate-vectors.mjs
 node scripts/check-vector-migration.mjs
 node scripts/extract-cddl.mjs --check
 bundle exec ruby scripts/check-cddl.rb
+node scripts/validate-shared-objects.mjs

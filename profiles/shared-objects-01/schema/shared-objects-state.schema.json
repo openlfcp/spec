@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:openlfcp:schema:shared-objects-state:1",
+  "title": "Shared Objects logical state (org.openlfcp.shared-objects.v1)",
+  "description": "Structural contract for the logical JSON state that an Automerge document of SHARED-OBJECTS-PROFILE-01 materializes to. It does not describe Automerge bytes or history. Rules JSON Schema cannot express (Gregorian dates, RFC 3339 timestamps, object id equals map key, immutable fields across states) are checked by scripts/lib/shared-objects-checks.mjs. Unknown fields, extension namespaces and object types are allowed (§70).",
+  "$ref": "#/$defs/root",
+  "$defs": {
+    "root": {
+      "$comment": "§15, §74: profile, objects and extensions are required; objects and extensions are maps. §17 forbids creating unrelated top-level keys, but older clients must preserve keys reserved later, so unknown top-level keys are not rejected here (spec gap SO-G6).",
+      "type": "object",
+      "required": ["profile", "objects", "extensions"],
+      "properties": {
+        "profile": {
+          "$comment": "§6, §15: profile MUST equal org.openlfcp.shared-objects.v1.",
+          "const": "org.openlfcp.shared-objects.v1"
+        },
+        "objects": {
+          "$comment": "§15, §20: map keyed by canonical Object ID. The contained id MUST equal the key (validator).",
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/object_id" },
+          "additionalProperties": { "$ref": "#/$defs/shared_object" }
+        },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    },
+    "object_id": {
+      "$comment": "§19: UUIDv7 (RFC 9562), lowercase hexadecimal, standard hyphen positions, version 7, variant bits 10.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "principal_ref": {
+      "$comment": "§27, §42: p: followed by unpadded base64url of a 32-byte Principal ID. 32 bytes are exactly 43 characters, and the last character carries 4 data bits plus 2 zero bits, so it must be one of 048AEIMQUYcgkosw (canonical encoding).",
+      "type": "string",
+      "pattern": "^p:[A-Za-z0-9_-]{42}[048AEIMQUYcgkosw]$"
+    },
+    "local_date": {
+      "$comment": "§35: YYYY-MM-DD. The validator additionally requires a real Gregorian date.",
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "optional_local_date": {
+      "$comment": "§30, §36: a date field may be absent or null; both mean no date.",
+      "anyOf": [{ "$ref": "#/$defs/local_date" }, { "type": "null" }]
+    },
+    "utc_timestamp": {
+      "$comment": "§28: RFC 3339 UTC timestamp with Z. The validator additionally requires a real date and time.",
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+    },
+    "extensions": {
+      "$comment": "§15, §18, §29: a map of namespaces to unknown values; unknown namespaces MUST be preserved, so their contents are not constrained.",
+      "type": "object"
+    },
+    "namespaced_value": {
+      "$comment": "§33, §38: extension statuses and priorities use x/<reverse-domain>/<value>. The exact grammar of the two parts is not defined (spec gap SO-G2); only the shape is checked.",
+      "type": "string",
+      "pattern": "^x/[^/]+/[^/]+$"
+    },
+    "shared_object": {
+      "$comment": "§20, §25, §93: every object has an id and a type. Objects of type task follow the Task schema. Objects of other types are preserved (§71); the base fields of §23 are required only of standardized objects, and whether they bind non-standardized types is not stated (spec gap SO-G5).",
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "$ref": "#/$defs/object_id" },
+        "type": {
+          "$comment": "§25, §74: type is valid text.",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "if": { "type": "object", "properties": { "type": { "const": "task" } }, "required": ["type"] },
+      "then": { "$ref": "#/$defs/task" }
+    },
+    "base_object": {
+      "$comment": "§23, §74: required base fields of a standardized object.",
+      "type": "object",
+      "required": ["id", "type", "lifecycle", "created_by", "extensions"],
+      "properties": {
+        "id": { "$ref": "#/$defs/object_id" },
+        "type": { "type": "string", "minLength": 1 },
+        "lifecycle": {
+          "$comment": "§26, §74: lifecycle exists; standard values are active and deleted. Whether other values are valid is not stated (spec gap SO-G1), so only text is required.",
+          "type": "string"
+        },
+        "created_by": { "$ref": "#/$defs/principal_ref" },
+        "created_at": { "$ref": "#/$defs/utc_timestamp" },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    },
+    "task": {
+      "$comment": "§30, §31: required Task fields; unknown Task fields are allowed and preserved (§72).",
+      "$ref": "#/$defs/base_object",
+      "type": "object",
+      "required": ["title", "status", "priority", "tags", "assignees"],
+      "properties": {
+        "type": { "const": "task" },
+        "title": {
+          "$comment": "§32: UTF-8 string; empty is allowed. No length limit is defined.",
+          "type": "string"
+        },
+        "status": {
+          "$comment": "§33: todo, in_progress, done, cancelled, or an x/<reverse-domain>/<value> extension status.",
+          "anyOf": [
+            { "enum": ["todo", "in_progress", "done", "cancelled"] },
+            { "$ref": "#/$defs/namespaced_value" }
+          ]
+        },
+        "priority": {
+          "$comment": "§38: lowest, low, normal, high, highest, or an x/<domain>/<value> extension priority.",
+          "anyOf": [
+            { "enum": ["lowest", "low", "normal", "high", "highest"] },
+            { "$ref": "#/$defs/namespaced_value" }
+          ]
+        },
+        "due": { "$ref": "#/$defs/optional_local_date" },
+        "scheduled": { "$ref": "#/$defs/optional_local_date" },
+        "completion_date": { "$ref": "#/$defs/optional_local_date" },
+        "tags": {
+          "$comment": "§39, §40: a map used as an add-wins set; a tag is present when its key maps to true (false is not a removal mechanism). Tags are non-empty and have no leading #.",
+          "type": "object",
+          "propertyNames": { "minLength": 1, "pattern": "^[^#]" },
+          "additionalProperties": { "const": true }
+        },
+        "assignees": {
+          "$comment": "§42: a map keyed by PrincipalRef used as an add-wins set; members map to true.",
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/principal_ref" },
+          "additionalProperties": { "const": true }
+        }
+      }
+    }
+  }
+}
