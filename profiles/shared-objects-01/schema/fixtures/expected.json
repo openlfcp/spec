@@ -19,6 +19,12 @@
       ],
       "diagnostic": "INVALID_LOCAL_DATE"
     },
+    "invalid-date-not-string.json": {
+      "pointers": [
+        "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad/due"
+      ],
+      "diagnostic": "INVALID_LOCAL_DATE"
+    },
     "invalid-extension-namespace.json": {
       "pointers": [
         "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad/extensions/Tracker",
@@ -44,12 +50,24 @@
       ],
       "diagnostic": "MISSING_REQUIRED_FIELD"
     },
+    "invalid-object-extensions-not-map.json": {
+      "pointers": [
+        "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad/extensions"
+      ],
+      "diagnostic": "INVALID_FIELD_TYPE"
+    },
     "invalid-object-id-uuidv4.json": {
       "pointers": [
         "/objects/019a2f85-7b31-4c42-b85a-fc843e2f40ad",
         "/objects/019a2f85-7b31-4c42-b85a-fc843e2f40ad/id"
       ],
       "diagnostic": "INVALID_OBJECT_ID"
+    },
+    "invalid-objects-entry-not-map.json": {
+      "pointers": [
+        "/objects/019a2f85-7b31-7c42-9f24-8f933f2a91c0"
+      ],
+      "diagnostic": "INVALID_FIELD_TYPE"
     },
     "invalid-principal-ref-31-bytes.json": {
       "pointers": [
@@ -64,6 +82,12 @@
       "diagnostic": "INVALID_ROOT"
     },
     "invalid-status-bad-domain.json": {
+      "pointers": [
+        "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad/status"
+      ],
+      "diagnostic": "INVALID_ENUM_VALUE"
+    },
+    "invalid-status-not-string.json": {
       "pointers": [
         "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad/status"
       ],
@@ -86,6 +110,12 @@
         "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad/status"
       ],
       "diagnostic": "INVALID_ENUM_VALUE"
+    },
+    "invalid-unknown-type-created-at-hour-25.json": {
+      "pointers": [
+        "/objects/019a2f85-7b31-7c42-9f24-8f933f2a91c0/created_at"
+      ],
+      "diagnostic": "INVALID_TIMESTAMP"
     },
     "invalid-unknown-type-missing-base.json": {
       "pointers": [

@@ -668,7 +668,7 @@ Applications MAY map Principals to human-friendly names using local contact meta
 
 ## 28. `created_at`
 
-`created_at`, if present, MUST use an RFC 3339 UTC timestamp with `Z`.
+`created_at`, if present, MUST use an RFC 3339 UTC timestamp with `Z` that names a real date and time (for example, not hour `25` or February `30`). This applies to every object type, since `created_at` is a base field (Section 23), not only to Tasks.
 
 Example:
 
@@ -1694,16 +1694,20 @@ Every profile validation failure is reported with the code `PROFILE_INVALID` and
 | `INVALID_OBJECT_ID` | an Object ID or `objects` key is not a canonical UUIDv7 | §19 |
 | `OBJECT_ID_MISMATCH` | an object's `id` differs from its `objects` key | §20, §24 |
 | `MISSING_REQUIRED_FIELD` | a required base or Task field is absent | §23, §31 |
-| `INVALID_FIELD_TYPE` | a field has the wrong type, e.g. a non-text `title` | §32, §76 |
-| `INVALID_ENUM_VALUE` | `lifecycle`, `status` or `priority` is neither a standard value nor a valid `x/<reverse-domain>/<value>` extension value (for `lifecycle`, extension values are not allowed) | §26, §33, §38 |
+| `INVALID_FIELD_TYPE` | a field has the wrong type, e.g. a non-text `title`, a string held as Automerge Text (§30), an `objects` entry that is not a map, or an object's `extensions` that is not a map | §15, §29, §30, §32, §76 |
+| `INVALID_ENUM_VALUE` | `lifecycle`, `status` or `priority` is not a string, or is neither a standard value nor a valid `x/<reverse-domain>/<value>` extension value (for `lifecycle`, extension values are not allowed) | §26, §33, §38 |
 | `INVALID_EXTENSION_NAMESPACE` | an `extensions` key does not match `reverse-domain` | §18 |
 | `INVALID_PRINCIPAL_REF` | a Principal reference is not `p:` + base64url of 32 bytes | §27, §42 |
 | `INVALID_TIMESTAMP` | `created_at` is not an RFC 3339 UTC timestamp | §28 |
-| `INVALID_LOCAL_DATE` | a date field is not a valid Gregorian `YYYY-MM-DD` | §35 |
+| `INVALID_LOCAL_DATE` | a date field is not a string, or not a valid Gregorian `YYYY-MM-DD` | §35 |
 | `INVALID_COLLECTION_REPRESENTATION` | `tags` or `assignees` is not a map, or a member's value is not `true` | §39, §42 |
 | `INVALID_TAG` | a tag is empty or starts with `#` | §40 |
 | `IMMUTABLE_FIELD_MUTATED` | `id`, `type` or `created_by` changed | §75 |
 | `CHANGE_ACTOR_MISMATCH` | a Data Unit carries an Automerge change whose actor is not the §8 actor of the unit's signer; the change is not merged | §8, §11 |
+
+When one value breaks several rules, its diagnostic is the first that applies in the order of this table: structure and value rules first, `IMMUTABLE_FIELD_MUTATED` last. A changed `id` that is also not a UUIDv7, for example, is `INVALID_OBJECT_ID`.
+
+A field with concurrent values (Section 45) is valid only if every one of its values is valid. Otherwise the object is profile-invalid with the diagnostic of the first invalid value, in the order of this table.
 
 These are profile-level codes reported to the application. They are not LFCP Wire error codes.
 

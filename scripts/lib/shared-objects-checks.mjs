@@ -69,14 +69,16 @@ export function rootProblems(state) {
     if (!obj || typeof obj !== "object") continue;
     const base = `/objects/${escape(key)}`;
     if ("id" in obj && obj.id !== key) problems.push({ pointer: `${base}/id`, reason: "id-mismatch: id differs from the objects key (§20)" });
+    // §28 (SPEC-PATCH-04 / SOG-1): created_at is a base field, so the real
+    // date-time check applies to every object type, not only Tasks.
+    if (typeof obj.created_at === "string" && /Z$/.test(obj.created_at) && !isUtcTimestamp(obj.created_at)) {
+      problems.push({ pointer: `${base}/created_at`, reason: "bad-timestamp: not a valid RFC 3339 UTC date-time (§28)" });
+    }
     if (obj.type !== "task") continue;
     for (const f of DATE_FIELDS) {
       if (typeof obj[f] === "string" && /^\d{4}-\d{2}-\d{2}$/.test(obj[f]) && !isGregorianDate(obj[f])) {
         problems.push({ pointer: `${base}/${f}`, reason: "bad-date: not a valid Gregorian calendar date (§35)" });
       }
-    }
-    if (typeof obj.created_at === "string" && /Z$/.test(obj.created_at) && !isUtcTimestamp(obj.created_at)) {
-      problems.push({ pointer: `${base}/created_at`, reason: "bad-timestamp: not a valid RFC 3339 UTC date-time (§28)" });
     }
   }
   return problems;

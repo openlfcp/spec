@@ -32,7 +32,7 @@ Task fields, unknown extension namespaces, unknown object types, or custom
 | base fields | `id`, `type`, `lifecycle`, `created_by`, `extensions` required on every object, namespaced types included | §23, §74 | schema |
 | `lifecycle` | `active` or `deleted` (closed set in version 1) | §26, §74 | schema |
 | `created_by` | `p:` + unpadded base64url of exactly 32 bytes | §27 | schema (43 characters, canonical last character) |
-| `created_at` | optional RFC 3339 UTC timestamp ending in `Z` | §28 | schema (shape) + validator `bad-timestamp` (real date and time) |
+| `created_at` | optional RFC 3339 UTC timestamp ending in `Z`, on every object type | §28 | schema (shape) + validator `bad-timestamp` (real date and time, every object type: SPEC-PATCH-04 / SOG-1) |
 | `extensions` | map keyed by `reverse-domain` namespaces; contents unconstrained | §18, §29 | schema |
 | Task required fields | `title`, `status`, `priority`, `tags`, `assignees` (plus base) | §30, §31 | schema |
 | `title` | string; empty allowed | §32 | schema |
