@@ -87,6 +87,13 @@ and the Wire decoder (LFCP-016), not to CDDL:
   `lfcp-message` as written is a closed map. This is listed as a
   specification gap.
 
+The negative vectors in LFCP-TEST-VECTORS-01 demonstrate this: every one
+except the tag-18 object is listed in `fixtures/manifest.json` as a
+structurally valid object that must pass the CDDL. That covers flipped
+signatures, wrong `kid`, AEAD failure, non-canonical frontiers, stale epochs
+and Control forks. Non-canonical CBOR encoding is likewise invisible, because
+the tool validates decoded data.
+
 ## Checks
 
 `./scripts/validate.sh` runs:

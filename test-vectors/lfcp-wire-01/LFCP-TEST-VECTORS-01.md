@@ -2080,7 +2080,7 @@ ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfead
 | Snapshot | SNAPSHOT-01/02 canonical frontier, exact AAD, key, nonce, decrypt, signature, Snapshot ID |
 | Invitation | URI decode, Principal reconstruction, C2 subject match, C3 claim |
 | Wire | HELLO→CHALLENGE→AUTH→READY exact decoding and signature verification; every Section 16 message decodes to its §33 body |
-| Negative | tamper, wrong recipient, equivocation, stale epoch, CAS mismatch, double claim |
+| Negative | tamper, wrong recipient, equivocation, stale epoch, CAS mismatch, double claim; every Section 17.10 vector reaches its expected outcome |
 
 ## 20. Machine-readable artifacts
 
