@@ -163,6 +163,10 @@ When an LFCP algorithm requires reconstructing a deterministic structure, such a
 
 `hash32` means SHA-256 and is encoded as a 32-byte CBOR byte string.
 
+```cddl
+hash32 = bstr .size 32
+```
+
 ```text
 hash32(x) = SHA-256(x)
 ```
@@ -333,7 +337,7 @@ The value of `kid` MUST be the 32-byte Principal ID of the signing Principal.
 The unprotected header MUST be the empty CBOR map:
 
 ```cddl
-{}
+lfcp-unprotected-header = {}
 ```
 
 This requirement ensures that two conforming implementations do not create different persistent object bytes for the same LFCP signed payload by adding unsigned metadata.
@@ -359,11 +363,11 @@ external_aad = h''
 The Ed25519 signature MUST be computed according to COSE over the standard `Sig_structure`:
 
 ```cddl
-[
+sig-structure = [
   "Signature1",
-  protected,       ; exact protected-header bstr from the object
-  h'',             ; empty external AAD
-  payload          ; exact payload bstr from the object
+  protected: bstr,         ; exact protected-header bstr from the object
+  external-aad: h'',       ; empty external AAD
+  payload: bstr            ; exact payload bstr from the object
 ]
 ```
 
@@ -1008,7 +1012,7 @@ key-package-payload = {
 The HPKE `info` value is deterministic CBOR encoding of:
 
 ```cddl
-[
+key-package-hpke-info = [
   "LFCP-KEY-v1",
   resource-id,
   uint,          ; data epoch
@@ -1021,7 +1025,7 @@ The HPKE plaintext is exactly the 32-byte DEK.
 The HPKE AAD is deterministic CBOR encoding of:
 
 ```cddl
-[
+key-package-hpke-aad = [
   resource-id,
   uint,          ; data epoch
   hash32         ; Control Head
@@ -1079,7 +1083,7 @@ The Data Unit ID is the SHA-256 hash of the exact COSE bytes.
 The ChaCha20-Poly1305 AAD is deterministic CBOR encoding of:
 
 ```cddl
-[
+data-unit-aad = [
   "LFCP-DATA-v1",
   resource-id,
   uint,                  ; data epoch

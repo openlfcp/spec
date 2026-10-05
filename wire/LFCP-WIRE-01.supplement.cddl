@@ -7,59 +7,6 @@
 ; here; it is a specification gap.
 
 ; ---------------------------------------------------------------------------
-; Names used but not defined by the extracted blocks
-; ---------------------------------------------------------------------------
-
-; §5.3 Hash: "`hash32` means SHA-256 and is encoded as a 32-byte CBOR byte
-; string." (Also stated as a rule in Part XXVIII.)
-hash32 = bstr .size 32
-
-; ---------------------------------------------------------------------------
-; Unnamed blocks in the prose, given names
-; ---------------------------------------------------------------------------
-
-; §10.2 Unprotected header: "The unprotected header MUST be the empty CBOR map".
-lfcp-unprotected-header = {}
-
-; §10.5 Signature input: the standard Sig_structure with "exact protected-header
-; bstr from the object", "empty external AAD" and "exact payload bstr from the
-; object".
-sig-structure = [
-  "Signature1",
-  protected: bstr,
-  external-aad: h'',
-  payload: bstr
-]
-
-; §25.1 HPKE info: "The HPKE `info` value is deterministic CBOR encoding of"
-; this array.
-key-package-hpke-info = [
-  "LFCP-KEY-v1",
-  resource-id,
-  uint,          ; data epoch
-  principal-id   ; recipient
-]
-
-; §25.1: "The HPKE AAD is deterministic CBOR encoding of" this array.
-key-package-hpke-aad = [
-  resource-id,
-  uint,          ; data epoch
-  hash32         ; Control Head
-]
-
-; §26.1 AAD: "The ChaCha20-Poly1305 AAD is deterministic CBOR encoding of"
-; this array.
-data-unit-aad = [
-  "LFCP-DATA-v1",
-  resource-id,
-  uint,                  ; data epoch
-  principal-id,
-  uint,                  ; actor sequence
-  (hash32 / null),       ; previous actor unit
-  hash32                 ; Control Head
-]
-
-; ---------------------------------------------------------------------------
 ; Signed objects with their byte-string contents typed
 ; ---------------------------------------------------------------------------
 

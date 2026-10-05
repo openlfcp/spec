@@ -2,10 +2,13 @@
 ; Regenerate with: node scripts/extract-cddl.mjs
 ; Contents: every ```cddl block before Part XXVIII, in document order.
 
-; --- wire/LFCP-WIRE-01.md:180 (6. Resource ID) ---
+; --- wire/LFCP-WIRE-01.md:166 (5.3 Hash) ---
+hash32 = bstr .size 32
+
+; --- wire/LFCP-WIRE-01.md:184 (6. Resource ID) ---
 resource-id = bstr .size 32
 
-; --- wire/LFCP-WIRE-01.md:206 (7. Principal) ---
+; --- wire/LFCP-WIRE-01.md:210 (7. Principal) ---
 principal-id = bstr .size 32
 ed25519-public-key = bstr .size 32
 x25519-public-key = bstr .size 32
@@ -16,7 +19,7 @@ principal-descriptor = {
   2 => x25519-public-key
 }
 
-; --- wire/LFCP-WIRE-01.md:297 (10. COSE_Sign1 rules) ---
+; --- wire/LFCP-WIRE-01.md:301 (10. COSE_Sign1 rules) ---
 lfcp-cose-sign1 = [
   protected   : bstr,
   unprotected : {},
@@ -24,29 +27,27 @@ lfcp-cose-sign1 = [
   signature   : bstr .size 64
 ]
 
-; --- wire/LFCP-WIRE-01.md:320 (10.1 Protected header) ---
+; --- wire/LFCP-WIRE-01.md:324 (10.1 Protected header) ---
 lfcp-protected-header = {
   1 => -8,             ; alg = EdDSA
   4 => principal-id    ; kid = signing Principal ID
 }
 
-; --- wire/LFCP-WIRE-01.md:335 (10.2 Unprotected header) ---
-; Unnamed block: not a CDDL rule on its own; named in LFCP-WIRE-01.supplement.cddl.
-; {}
+; --- wire/LFCP-WIRE-01.md:339 (10.2 Unprotected header) ---
+lfcp-unprotected-header = {}
 
-; --- wire/LFCP-WIRE-01.md:361 (10.5 Signature input) ---
-; Unnamed block: not a CDDL rule on its own; named in LFCP-WIRE-01.supplement.cddl.
-; [
-;   "Signature1",
-;   protected,       ; exact protected-header bstr from the object
-;   h'',             ; empty external AAD
-;   payload          ; exact payload bstr from the object
-; ]
+; --- wire/LFCP-WIRE-01.md:365 (10.5 Signature input) ---
+sig-structure = [
+  "Signature1",
+  protected: bstr,         ; exact protected-header bstr from the object
+  external-aad: h'',       ; empty external AAD
+  payload: bstr            ; exact payload bstr from the object
+]
 
-; --- wire/LFCP-WIRE-01.md:409 (11. Resource Data Encryption Key) ---
+; --- wire/LFCP-WIRE-01.md:413 (11. Resource Data Encryption Key) ---
 dek = bstr .size 32
 
-; --- wire/LFCP-WIRE-01.md:493 (13. Control chain) ---
+; --- wire/LFCP-WIRE-01.md:497 (13. Control chain) ---
 control-record-payload = {
   0 => resource-id,
   1 => uint,                  ; control_seq
@@ -56,7 +57,7 @@ control-record-payload = {
   5 => any                    ; body
 }
 
-; --- wire/LFCP-WIRE-01.md:576 (15. Genesis Record) ---
+; --- wire/LFCP-WIRE-01.md:580 (15. Genesis Record) ---
 genesis-body = {
   0 => tstr,                  ; data_profile, e.g. "lfcp.automerge.v1"
   1 => principal-descriptor,  ; owner
@@ -65,14 +66,14 @@ genesis-body = {
   4 => tstr                   ; initial Control Coordinator URL
 }
 
-; --- wire/LFCP-WIRE-01.md:594 (16. Endpoint) ---
+; --- wire/LFCP-WIRE-01.md:598 (16. Endpoint) ---
 endpoint = {
   0 => tstr,          ; absolute wss:// URL
   1 => uint,          ; priority; lower is preferred
   ? 2 => uint         ; flags
 }
 
-; --- wire/LFCP-WIRE-01.md:645 (17.2 Capability Grant) ---
+; --- wire/LFCP-WIRE-01.md:649 (17.2 Capability Grant) ---
 capability-grant-body = {
   0 => principal-descriptor,  ; subject
   1 => [1* uint],             ; abilities
@@ -81,26 +82,26 @@ capability-grant-body = {
   ? 4 => uint                 ; claim_limit; only for invite principals
 }
 
-; --- wire/LFCP-WIRE-01.md:667 (17.3 Capability Revocation) ---
+; --- wire/LFCP-WIRE-01.md:671 (17.3 Capability Revocation) ---
 capability-revoke-body = {
   0 => hash32                 ; grant id
 }
 
-; --- wire/LFCP-WIRE-01.md:710 (18.1 Claim Record) ---
+; --- wire/LFCP-WIRE-01.md:714 (18.1 Claim Record) ---
 capability-claim-body = {
   0 => hash32,                ; invitation grant id
   1 => principal-descriptor,  ; claimant
   2 => [1* uint]              ; abilities to transfer
 }
 
-; --- wire/LFCP-WIRE-01.md:757 (18.2 Canonical invitation URI) ---
+; --- wire/LFCP-WIRE-01.md:761 (18.2 Canonical invitation URI) ---
 invite-secret = {
   0 => 1,                     ; secret format version
   1 => bstr .size 32,         ; Invitation Principal Ed25519 private seed
   2 => bstr .size 32          ; Invitation Principal X25519 private key
 }
 
-; --- wire/LFCP-WIRE-01.md:787 (19. Key Epoch Record) ---
+; --- wire/LFCP-WIRE-01.md:791 (19. Key Epoch Record) ---
 key-epoch-body = {
   0 => uint,                  ; new epoch number
   1 => hash32,                ; new DEK commitment
@@ -108,14 +109,14 @@ key-epoch-body = {
   3 => uint                   ; reason code
 }
 
-; --- wire/LFCP-WIRE-01.md:826 (20. Route Update Record) ---
+; --- wire/LFCP-WIRE-01.md:830 (20. Route Update Record) ---
 route-update-body = {
   0 => uint,          ; route version
   1 => [1* endpoint],
   2 => tstr           ; Control Coordinator URL
 }
 
-; --- wire/LFCP-WIRE-01.md:888 (22. Coordinator Recovery) ---
+; --- wire/LFCP-WIRE-01.md:892 (22. Coordinator Recovery) ---
 coordinator-recovery-body = {
   0 => uint,          ; new route version
   1 => [1* endpoint],
@@ -123,7 +124,7 @@ coordinator-recovery-body = {
   3 => tstr           ; human-readable reason; max 256 UTF-8 bytes
 }
 
-; --- wire/LFCP-WIRE-01.md:917 (23.1 Transfer Offer) ---
+; --- wire/LFCP-WIRE-01.md:921 (23.1 Transfer Offer) ---
 owner-transfer-offer-payload = {
   0 => resource-id,
   1 => hash32,                ; current Control Head
@@ -132,26 +133,26 @@ owner-transfer-offer-payload = {
   4 => bstr .size 16          ; nonce
 }
 
-; --- wire/LFCP-WIRE-01.md:933 (23.2 Transfer Accept) ---
+; --- wire/LFCP-WIRE-01.md:937 (23.2 Transfer Accept) ---
 owner-transfer-accept-payload = {
   0 => resource-id,
   1 => hash32,                ; transfer offer id
   2 => principal-id           ; accepting new owner id
 }
 
-; --- wire/LFCP-WIRE-01.md:945 (23.3 Transfer Commit) ---
+; --- wire/LFCP-WIRE-01.md:949 (23.3 Transfer Commit) ---
 owner-transfer-commit-body = {
   0 => bstr,                  ; exact COSE bytes of transfer offer
   1 => bstr                   ; exact COSE bytes of transfer accept
 }
 
-; --- wire/LFCP-WIRE-01.md:971 (24. Resource Tombstone) ---
+; --- wire/LFCP-WIRE-01.md:975 (24. Resource Tombstone) ---
 resource-tombstone-body = {
   0 => uint,          ; reason code
   ? 1 => tstr         ; optional note; max 256 UTF-8 bytes
 }
 
-; --- wire/LFCP-WIRE-01.md:994 (25. Key Package) ---
+; --- wire/LFCP-WIRE-01.md:998 (25. Key Package) ---
 key-package-payload = {
   0 => resource-id,
   1 => uint,                  ; data epoch
@@ -162,24 +163,22 @@ key-package-payload = {
   6 => bstr                   ; HPKE ciphertext
 }
 
-; --- wire/LFCP-WIRE-01.md:1010 (25.1 HPKE info) ---
-; Unnamed block: not a CDDL rule on its own; named in LFCP-WIRE-01.supplement.cddl.
-; [
-;   "LFCP-KEY-v1",
-;   resource-id,
-;   uint,          ; data epoch
-;   principal-id   ; recipient
-; ]
+; --- wire/LFCP-WIRE-01.md:1014 (25.1 HPKE info) ---
+key-package-hpke-info = [
+  "LFCP-KEY-v1",
+  resource-id,
+  uint,          ; data epoch
+  principal-id   ; recipient
+]
 
-; --- wire/LFCP-WIRE-01.md:1023 (25.1 HPKE info) ---
-; Unnamed block: not a CDDL rule on its own; named in LFCP-WIRE-01.supplement.cddl.
-; [
-;   resource-id,
-;   uint,          ; data epoch
-;   hash32         ; Control Head
-; ]
+; --- wire/LFCP-WIRE-01.md:1027 (25.1 HPKE info) ---
+key-package-hpke-aad = [
+  resource-id,
+  uint,          ; data epoch
+  hash32         ; Control Head
+]
 
-; --- wire/LFCP-WIRE-01.md:1061 (26. Data Unit) ---
+; --- wire/LFCP-WIRE-01.md:1065 (26. Data Unit) ---
 data-unit-payload = {
   0 => resource-id,
   1 => uint,                  ; data epoch
@@ -190,19 +189,18 @@ data-unit-payload = {
   6 => bstr                   ; ciphertext + AEAD tag
 }
 
-; --- wire/LFCP-WIRE-01.md:1081 (26.1 AAD) ---
-; Unnamed block: not a CDDL rule on its own; named in LFCP-WIRE-01.supplement.cddl.
-; [
-;   "LFCP-DATA-v1",
-;   resource-id,
-;   uint,                  ; data epoch
-;   principal-id,
-;   uint,                  ; actor sequence
-;   (hash32 / null),       ; previous actor unit
-;   hash32                 ; Control Head
-; ]
+; --- wire/LFCP-WIRE-01.md:1085 (26.1 AAD) ---
+data-unit-aad = [
+  "LFCP-DATA-v1",
+  resource-id,
+  uint,                  ; data epoch
+  principal-id,
+  uint,                  ; actor sequence
+  (hash32 / null),       ; previous actor unit
+  hash32                 ; Control Head
+]
 
-; --- wire/LFCP-WIRE-01.md:1147 (28. Have Vector) ---
+; --- wire/LFCP-WIRE-01.md:1151 (28. Have Vector) ---
 actor-have = {
   0 => principal-id,
   1 => uint,                   ; highest contiguous sequence
@@ -214,10 +212,10 @@ sequence-range = [
   uint                         ; inclusive end
 ]
 
-; --- wire/LFCP-WIRE-01.md:1211 (28.2 Canonical Frontier) ---
+; --- wire/LFCP-WIRE-01.md:1215 (28.2 Canonical Frontier) ---
 canonical-frontier = [* actor-have]
 
-; --- wire/LFCP-WIRE-01.md:1233 (29. Snapshot) ---
+; --- wire/LFCP-WIRE-01.md:1237 (29. Snapshot) ---
 snapshot-payload = {
   0 => resource-id,
   1 => uint,                  ; data epoch
@@ -228,7 +226,7 @@ snapshot-payload = {
   6 => bstr                   ; ciphertext || AEAD tag
 }
 
-; --- wire/LFCP-WIRE-01.md:1297 (29.1.3 Exact Snapshot AAD) ---
+; --- wire/LFCP-WIRE-01.md:1301 (29.1.3 Exact Snapshot AAD) ---
 snapshot-aad = [
   "LFCP-SNAPSHOT-v1",
   resource-id,
@@ -239,7 +237,7 @@ snapshot-aad = [
   canonical-frontier     ; included frontier
 ]
 
-; --- wire/LFCP-WIRE-01.md:1443 (32. LFCP message envelope) ---
+; --- wire/LFCP-WIRE-01.md:1447 (32. LFCP message envelope) ---
 lfcp-message = {
   0 => uint,                  ; message type
   1 => bstr .size 16,        ; message id
@@ -248,7 +246,7 @@ lfcp-message = {
   4 => any                    ; message body
 }
 
-; --- wire/LFCP-WIRE-01.md:1549 (34. HELLO) ---
+; --- wire/LFCP-WIRE-01.md:1553 (34. HELLO) ---
 hello-body = {
   0 => [1* tstr],             ; supported wire profiles
   1 => principal-descriptor,  ; session Principal
@@ -256,7 +254,7 @@ hello-body = {
   ? 3 => [* tstr]             ; supported application Data Profiles
 }
 
-; --- wire/LFCP-WIRE-01.md:1572 (35. CHALLENGE) ---
+; --- wire/LFCP-WIRE-01.md:1576 (35. CHALLENGE) ---
 challenge-body = {
   0 => tstr,                  ; selected wire profile
   1 => bstr .size 16,         ; server nonce
@@ -264,7 +262,7 @@ challenge-body = {
   3 => bstr .size 32          ; stable server id
 }
 
-; --- wire/LFCP-WIRE-01.md:1591 (36. AUTH) ---
+; --- wire/LFCP-WIRE-01.md:1595 (36. AUTH) ---
 auth-transcript = [
   "LFCP-AUTH-v1",
   bstr .size 16,       ; session id
@@ -274,13 +272,13 @@ auth-transcript = [
   principal-id
 ]
 
-; --- wire/LFCP-WIRE-01.md:1604 (36. AUTH) ---
+; --- wire/LFCP-WIRE-01.md:1608 (36. AUTH) ---
 auth-body = {
   0 => bstr,                  ; COSE_Sign1 auth proof
   ? 1 => bstr                 ; opaque hosting/account credential
 }
 
-; --- wire/LFCP-WIRE-01.md:1619 (37. READY) ---
+; --- wire/LFCP-WIRE-01.md:1623 (37. READY) ---
 ready-body = {
   0 => tstr,                  ; selected wire profile
   1 => bstr .size 32,         ; server id
@@ -290,7 +288,7 @@ ready-body = {
   ? 5 => [* tstr]             ; supported server extensions
 }
 
-; --- wire/LFCP-WIRE-01.md:1645 (38. PING and PONG) ---
+; --- wire/LFCP-WIRE-01.md:1649 (38. PING and PONG) ---
 ping-body = {
   0 => bstr .size 8
 }
@@ -299,19 +297,19 @@ pong-body = {
   0 => bstr .size 8
 }
 
-; --- wire/LFCP-WIRE-01.md:1667 (39. RESOURCE_HOST) ---
+; --- wire/LFCP-WIRE-01.md:1671 (39. RESOURCE_HOST) ---
 resource-host-body = {
   0 => bstr,                  ; exact Genesis COSE bytes
   ? 1 => bstr                 ; server-specific hosting credential
 }
 
-; --- wire/LFCP-WIRE-01.md:1688 (40. RESOURCE_HOSTED) ---
+; --- wire/LFCP-WIRE-01.md:1692 (40. RESOURCE_HOSTED) ---
 resource-hosted-body = {
   0 => resource-id,
   1 => uint                   ; durability level applied
 }
 
-; --- wire/LFCP-WIRE-01.md:1701 (41. RESOURCE_OPEN) ---
+; --- wire/LFCP-WIRE-01.md:1705 (41. RESOURCE_OPEN) ---
 control-head = {
   0 => uint,                  ; control sequence
   1 => hash32                 ; Control Record ID
@@ -325,7 +323,7 @@ resource-open-body = {
   ? 4 => uint                 ; flags
 }
 
-; --- wire/LFCP-WIRE-01.md:1730 (42. RESOURCE_OPENED) ---
+; --- wire/LFCP-WIRE-01.md:1734 (42. RESOURCE_OPENED) ---
 snapshot-summary = {
   0 => hash32,                ; Snapshot ID
   1 => uint,                  ; Data Epoch
@@ -341,44 +339,44 @@ resource-opened-body = {
   ? 5 => tstr                 ; current Control Coordinator URL
 }
 
-; --- wire/LFCP-WIRE-01.md:1755 (43. RESOURCE_CLOSE) ---
+; --- wire/LFCP-WIRE-01.md:1759 (43. RESOURCE_CLOSE) ---
 resource-close-body = {
   0 => resource-id
 }
 
-; --- wire/LFCP-WIRE-01.md:1771 (44. CONTROL_HAVE) ---
+; --- wire/LFCP-WIRE-01.md:1775 (44. CONTROL_HAVE) ---
 control-have-body = {
   0 => resource-id,
   1 => [* control-head]
 }
 
-; --- wire/LFCP-WIRE-01.md:1786 (45. CONTROL_GET) ---
+; --- wire/LFCP-WIRE-01.md:1790 (45. CONTROL_GET) ---
 control-get-body = {
   0 => resource-id,
   1 => uint,          ; inclusive start sequence
   2 => uint           ; inclusive end sequence
 }
 
-; --- wire/LFCP-WIRE-01.md:1800 (46. CONTROL_BATCH) ---
+; --- wire/LFCP-WIRE-01.md:1804 (46. CONTROL_BATCH) ---
 control-batch-body = {
   0 => resource-id,
   1 => [* bstr]       ; exact signed Control Record COSE bytes
 }
 
-; --- wire/LFCP-WIRE-01.md:1821 (47. CONTROL_PUT) ---
+; --- wire/LFCP-WIRE-01.md:1825 (47. CONTROL_PUT) ---
 control-put-body = {
   0 => resource-id,
   1 => (hash32 / null),       ; expected current Control Head
   2 => bstr                   ; exact signed Control Record COSE bytes
 }
 
-; --- wire/LFCP-WIRE-01.md:1853 (48. DATA_HAVE) ---
+; --- wire/LFCP-WIRE-01.md:1857 (48. DATA_HAVE) ---
 data-have-body = {
   0 => resource-id,
   1 => [* actor-have]
 }
 
-; --- wire/LFCP-WIRE-01.md:1866 (49. DATA_GET) ---
+; --- wire/LFCP-WIRE-01.md:1870 (49. DATA_GET) ---
 data-range = {
   0 => principal-id,
   1 => uint,                  ; inclusive start
@@ -390,56 +388,56 @@ data-get-body = {
   1 => [1* data-range]
 }
 
-; --- wire/LFCP-WIRE-01.md:1887 (50. DATA_BATCH) ---
+; --- wire/LFCP-WIRE-01.md:1891 (50. DATA_BATCH) ---
 data-batch-body = {
   0 => resource-id,
   1 => [* bstr]               ; exact Data Unit COSE bytes
 }
 
-; --- wire/LFCP-WIRE-01.md:1904 (51. DATA_PUT) ---
+; --- wire/LFCP-WIRE-01.md:1908 (51. DATA_PUT) ---
 data-put-body = {
   0 => resource-id,
   1 => [1* bstr]              ; exact Data Unit COSE bytes
 }
 
-; --- wire/LFCP-WIRE-01.md:1933 (52. KEY_PACKAGE_GET) ---
+; --- wire/LFCP-WIRE-01.md:1937 (52. KEY_PACKAGE_GET) ---
 key-package-get-body = {
   0 => resource-id,
   1 => principal-id,
   2 => [1* uint]              ; requested Data Epochs
 }
 
-; --- wire/LFCP-WIRE-01.md:1947 (53. KEY_PACKAGE_BATCH) ---
+; --- wire/LFCP-WIRE-01.md:1951 (53. KEY_PACKAGE_BATCH) ---
 key-package-batch-body = {
   0 => resource-id,
   1 => [* bstr]               ; exact signed Key Package COSE bytes
 }
 
-; --- wire/LFCP-WIRE-01.md:1958 (54. KEY_PACKAGE_PUT) ---
+; --- wire/LFCP-WIRE-01.md:1962 (54. KEY_PACKAGE_PUT) ---
 key-package-put-body = {
   0 => resource-id,
   1 => [1* bstr]              ; exact signed Key Package COSE bytes
 }
 
-; --- wire/LFCP-WIRE-01.md:1973 (55. SNAPSHOT_GET) ---
+; --- wire/LFCP-WIRE-01.md:1977 (55. SNAPSHOT_GET) ---
 snapshot-get-body = {
   0 => resource-id,
   ? 1 => hash32               ; exact Snapshot ID if known
 }
 
-; --- wire/LFCP-WIRE-01.md:1986 (56. SNAPSHOT) ---
+; --- wire/LFCP-WIRE-01.md:1990 (56. SNAPSHOT) ---
 snapshot-body = {
   0 => resource-id,
   1 => bstr                   ; exact signed Snapshot COSE bytes
 }
 
-; --- wire/LFCP-WIRE-01.md:1997 (57. SNAPSHOT_PUT) ---
+; --- wire/LFCP-WIRE-01.md:2001 (57. SNAPSHOT_PUT) ---
 snapshot-put-body = {
   0 => resource-id,
   1 => bstr                   ; exact signed Snapshot COSE bytes
 }
 
-; --- wire/LFCP-WIRE-01.md:2027 (58.1 PRESENCE) ---
+; --- wire/LFCP-WIRE-01.md:2031 (58.1 PRESENCE) ---
 presence-body = {
   0 => resource-id,
   1 => principal-id,
@@ -447,27 +445,27 @@ presence-body = {
   3 => bstr           ; application-defined opaque payload
 }
 
-; --- wire/LFCP-WIRE-01.md:2042 (58.2 PRESENCE_LEAVE) ---
+; --- wire/LFCP-WIRE-01.md:2046 (58.2 PRESENCE_LEAVE) ---
 presence-leave-body = {
   0 => resource-id,
   1 => principal-id
 }
 
-; --- wire/LFCP-WIRE-01.md:2055 (59. ACK) ---
+; --- wire/LFCP-WIRE-01.md:2059 (59. ACK) ---
 ack-body = {
   0 => uint,                  ; acknowledged operation kind
   ? 1 => [* hash32],          ; object IDs committed
   ? 2 => bool                 ; durable under advertised server policy
 }
 
-; --- wire/LFCP-WIRE-01.md:2073 (60. NACK) ---
+; --- wire/LFCP-WIRE-01.md:2077 (60. NACK) ---
 nack-body = {
   0 => uint,                  ; error code
   ? 1 => tstr,                ; human-readable diagnostic
   ? 2 => any                  ; machine-readable details
 }
 
-; --- wire/LFCP-WIRE-01.md:2089 (61. ERROR) ---
+; --- wire/LFCP-WIRE-01.md:2093 (61. ERROR) ---
 error-body = {
   0 => uint,
   ? 1 => tstr,

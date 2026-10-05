@@ -24,14 +24,10 @@ node scripts/extract-cddl.mjs
 
 ## The supplement
 
-The extracted blocks do not compile on their own. The supplement adds only
-what the prose states but the blocks omit:
+The extracted blocks compile on their own: every rule they use is defined in
+the prose. The supplement adds only rules that combine prose rules into
+checkable wholes:
 
-- `hash32`, which is used throughout but defined only in §5.3 prose (and
-  Part XXVIII);
-- names for the five unnamed blocks: the unprotected header (§10.2),
-  `Sig_structure` (§10.5), HPKE `info` and AAD (§25.1) and the Data Unit
-  AAD (§26.1);
 - signed-object rules (`control-record`, `data-unit`, `key-package`,
   `snapshot`, `owner-transfer-offer`, `owner-transfer-accept`,
   `auth-proof`). These use `.cbor` to decode the protected header (§10.1) and
