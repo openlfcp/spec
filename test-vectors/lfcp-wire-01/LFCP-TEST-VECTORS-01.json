@@ -1999,6 +1999,42 @@
       }
     },
     {
+      "id": "extension_type_non_owner_C1",
+      "type": "validation",
+      "kind": "control_record",
+      "description": "C1 replaced by an extension-type (32) record issued by BOB",
+      "note": "Structurally valid: the typed CDDL admits extension types 32 and above (SPEC-PATCH-03 / W2). No error code is named for this rejection.",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a05884a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203b141a9d660b274f73a042dbe47dcb1fe5b9f1d8d96f782cc8e4728695704adc0318200458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c505a100514c4643502d54562d455854454e53494f4e5840537002017064558b55c48aa1a5af6dc200711aca4ebb09c78961ccb4498119a0bee160a909fbc7c6434b9090684fd25c3507391fa1bd41def3274b6c0d008408"
+        },
+        "signer": "BOB"
+      },
+      "context": {
+        "previous_record": {
+          "case": "C0_genesis",
+          "field": "record_id"
+        }
+      },
+      "derivation": {
+        "base_case": "C1_grant_bob",
+        "mutation": {
+          "field": "payload field 3 and issuer",
+          "from": "type 1 issued by OWNER",
+          "to": "type 32 issued and signed by BOB"
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §14",
+          "text": "A Control Record of an extension type (`32` or above) requires owner authority: its issuer MUST be the Resource owner at the record's position in the chain, whether or not the receiver supports the extension."
+        },
+        "why": "Extension records share the chain with core records; letting a non-owner append them would let any member fork or extend the chain with records other replicas cannot evaluate."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject"
+      }
+    },
+    {
       "id": "actor_seq_zero_D1",
       "type": "validation",
       "kind": "data_unit",

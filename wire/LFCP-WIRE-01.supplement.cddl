@@ -80,6 +80,12 @@ typed-control-record-payload =
   / typed-control-record<6, owner-transfer-commit-body>  ; OWNER_TRANSFER_COMMIT, §23.3
   / typed-control-record<7, coordinator-recovery-body>   ; COORDINATOR_RECOVERY, §22
   / typed-control-record<8, resource-tombstone-body>     ; RESOURCE_TOMBSTONE, §24
+  / typed-control-record<(uint .ge 32), any>             ; extension space, §14
+
+; §14: "Unknown extension types MAY be retained but MUST NOT be interpreted
+; unless the implementation declares support for the extension." Their body
+; is not typed here; codes 9-31 stay unmatched ("Unknown core Control Record
+; types MUST cause validation failure").
 
 ; ---------------------------------------------------------------------------
 ; Messages by type (§32 envelope, §33 registry)

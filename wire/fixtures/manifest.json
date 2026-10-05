@@ -1598,6 +1598,16 @@
       },
       "expect": "pass",
       "note": "Structurally valid: range order (LFCP-WIRE-01 \u00a748) is semantic."
+    },
+    {
+      "rule": "control-record",
+      "source": {
+        "case": "extension_type_non_owner_C1",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Type 32 is in the \u00a714 extension space, which the typed CDDL admits with an untyped body (SPEC-PATCH-03 / W2); the owner-authority rule is semantic."
     }
   ]
 }

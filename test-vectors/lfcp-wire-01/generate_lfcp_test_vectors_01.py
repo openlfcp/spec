@@ -1046,6 +1046,21 @@ def generate():
         context={'previous_record': ref('C0_genesis', 'record_id')},
         cddl=('control-record', 'fail'))
 
+    extension_record = control_record(1, C0['id'], 32, BOB, {0: b'LFCP-TV-EXTENSION'})
+    neg('extension_type_non_owner_C1', 'control_record', 'C1 replaced by an extension-type (32) record issued by BOB',
+        'C1_grant_bob', 'payload field 3 and issuer', 'type 1 issued by OWNER', 'type 32 issued and signed by BOB',
+        'LFCP-WIRE-01 §14',
+        'A Control Record of an extension type (`32` or above) requires owner authority: its issuer MUST be the '
+        'Resource owner at the record\'s position in the chain, whether or not the receiver supports the extension.',
+        'Extension records share the chain with core records; letting a non-owner append them would let any member '
+        'fork or extend the chain with records other replicas cannot evaluate.',
+        {'cose_sign1': hexv(extension_record['cose'])},
+        {'valid': False, 'disposition': 'reject'},
+        context={'previous_record': ref('C0_genesis', 'record_id')},
+        cddl=('control-record', 'pass'),
+        note='Structurally valid: the typed CDDL admits extension types 32 and above (SPEC-PATCH-03 / W2). '
+             'No error code is named for this rejection.')
+
     # 8. Bad actor sequence.
     D_SEQ0 = data_unit(BOB, 0, 0, None, C3['id'], D1_plain, DEK0)
     neg('actor_seq_zero_D1', 'data_unit', 'D1 re-issued with actor sequence 0',
