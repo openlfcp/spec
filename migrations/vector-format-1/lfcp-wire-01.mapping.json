@@ -238,6 +238,11 @@
     { "path": "cases[id=dek_commitments].inputs.dek0_epoch", "value": 0, "rule": "Added after the migration by LFCP-008 (spec gap S1): explicit epoch input for the LFCP-WIRE-01 section 11 commitment. A new input, not a changed value." },
     { "path": "cases[id=dek_commitments].inputs.dek1_epoch", "value": 1, "rule": "Added after the migration by LFCP-008 (spec gap S1): explicit epoch input for the LFCP-WIRE-01 section 11 commitment. A new input, not a changed value." },
     { "path": "cases[id=tampered_D1].expected.error.code", "value": "INVALID_SIGNATURE", "rule": "SPEC-PATCH-01 / G1: the project owner assigned INVALID_SIGNATURE (LFCP-WIRE-01 section 10.5, section 62 code 7) to this rejection, which had no code." },
-    { "path": "cases[id=*].inputs.hpke_ephemeral_ikm.hex", "rule": "SPEC-PATCH-03 / G-KP2: HPKE ephemeral input keying material ikmE; skE = DeriveKeyPair(ikmE)." }
+    { "path": "cases[id=*].inputs.hpke_ephemeral_ikm.hex", "rule": "SPEC-PATCH-03 / G-KP2: HPKE ephemeral input keying material ikmE; skE = DeriveKeyPair(ikmE)." },
+    { "path": "cases[id=*].inputs.signer", "rule": "SPEC-PATCH-03 / G-RS3: the signing Principal of the case's COSE_Sign1 object, named by its principal case; read from the object's kid." },
+    { "path": "cases[id=owner_transfer].inputs.offer_signer", "value": "OWNER", "rule": "SPEC-PATCH-03 / G-RS3: signer of the Ownership Transfer Offer." },
+    { "path": "cases[id=owner_transfer].inputs.accept_signer", "value": "BOB", "rule": "SPEC-PATCH-03 / G-RS3: signer of the Ownership Transfer Acceptance." },
+    { "path": "cases[id=*].inputs.dek", "rule": "SPEC-PATCH-03 / V3: the fixtures.resource DEK of the case's Data Epoch." },
+    { "path": "cases[id=invite_uri].inputs.grant_case", "value": "C2_invite_grant", "rule": "SPEC-PATCH-03 / V1: the Control Record case of the invitation grant." }
   ]
 }

@@ -2404,7 +2404,7 @@ f8376ef326715840c61e8713b42895fc0f64fc0e7573e7dbd2770dc5235b911a6c08a8c19668eb4e
 - Base case: `principal_bob`
 - Mutation: descriptor fields: `"0, 1, 2"` → `"0, 1, 2, 3 (empty bstr)"`
 - Rule (LFCP-WIRE-01 §7): A Principal Descriptor with any field other than `0`, `1` and `2` is invalid; the map is closed, as the CDDL above defines it.
-- Expected: invalid, reject, no error code specified
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
 - Why: An open descriptor would let two byte forms describe one Principal and carry unauthenticated data next to its keys.
 
 descriptor_cbor:

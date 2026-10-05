@@ -184,6 +184,18 @@
           "from": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e5a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480358200b5dc558b8104686d5d6b0063629f1cfaf48049dee3580ca6e253d27f3359e33045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05582090ca4ed22f5b693d842711cd8c3d692e1002a3a84730926abd4e3eed9342ee0a065830e7a2257711c7244d0f333986ceab7baabdace14b42d179d3768648c535b3abed0ca41207be0e7157c31d6c073106e03758408802ca1c0b3a00ed98f3550c679e1e2d9a0d18b0b96075717cb31365c93f6e928642bb9bbc43cb7e1732172ebf5b90cbe2964d1f646aa0b5b76f120fa599c003",
           "to": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e5a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480358200b5dc558b8104686d5d6b0063629f1cfaf48049dee3580ca6e253d27f3359e33045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d0558205f4006c8c21101bbed5d4ad8e7811e0f9e538d25cdaa2a23e7a27b1bba274d400658304477414eb8cf8ec3ff550d73a05870b42b7a4af7f49ebd081f0b619c50a98a92e93b3dd2c105f6d7d1949316546a876458402ac79e0ca77f4e468c21b2eed0d7c02370983a342861c610aaf228f512ee439d8a44c806c6917b27daeeff585a3cd0c3d11a819ff8dc3aa1f87bea0135e53c07",
           "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=descriptor_extra_field].expected.error.code",
+          "from": null,
+          "to": "MALFORMED_MESSAGE",
+          "rule": "SPEC-PATCH-03 / V2: descriptor_extra_field is rejected with MALFORMED_MESSAGE (AUTH_FAILED in HELLO/AUTH, per P3); it had no code."
+        },
+        {
+          "path": "cases[id=descriptor_extra_field].expected.error.detail",
+          "from": null,
+          "to": "AUTH_FAILED when received in HELLO or AUTH (LFCP-WIRE-01 §7)",
+          "rule": "SPEC-PATCH-03 / V2: descriptor_extra_field is rejected with MALFORMED_MESSAGE (AUTH_FAILED in HELLO/AUTH, per P3); it had no code."
         }
       ]
     },

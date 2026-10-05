@@ -11,7 +11,8 @@
 //   new value (`to`, or null when the value was removed) and the approving
 //   decision (`rule`).
 // - New values (new cases, or new fields in existing cases) are allowed;
-//   they are counted and listed with --verbose.
+//   they are counted and listed with --verbose. An added value that changes
+//   what an existing case means may be listed explicitly with `from: null`.
 // - Every `changed` entry must match a real difference, so the list cannot
 //   go stale.
 
@@ -77,6 +78,10 @@ for (const suite of manifest.suites) {
     } else {
       errors.push(`value changed without approval: ${path} = ${value} -> ${now}`);
     }
+  }
+  for (const [path, entry] of changed) {
+    if (used.has(path) || entry.from !== null) continue;
+    if (!before.has(path) && after.get(path) === JSON.stringify(entry.to)) used.add(path);
   }
   for (const path of changed.keys()) {
     if (!used.has(path)) errors.push(`changed entry does not match a difference: ${path}`);

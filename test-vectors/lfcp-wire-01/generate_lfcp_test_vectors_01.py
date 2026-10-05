@@ -75,6 +75,42 @@ def cbor(obj: Any) -> bytes:
     raise TypeError(type(obj))
 
 
+def cbor_decode(b: bytes, i: int = 0):
+    """Decode one item of the deterministic subset above; returns (value, next index)."""
+    major, info = b[i] >> 5, b[i] & 0x1f
+    i += 1
+    if info < 24:
+        n = info
+    else:
+        size = {24: 1, 25: 2, 26: 4, 27: 8}[info]
+        n, i = int.from_bytes(b[i:i + size], 'big'), i + size
+    if major == 0:
+        return n, i
+    if major == 1:
+        return -1 - n, i
+    if major == 2:
+        return b[i:i + n], i + n
+    if major == 3:
+        return b[i:i + n].decode('utf-8'), i + n
+    if major == 4:
+        items = []
+        for _ in range(n):
+            item, i = cbor_decode(b, i)
+            items.append(item)
+        return items, i
+    if major == 5:
+        out = {}
+        for _ in range(n):
+            k, i = cbor_decode(b, i)
+            out[k], i = cbor_decode(b, i)
+        return out, i
+    if major == 6:
+        return cbor_decode(b, i)  # tag: the tagged item
+    if major == 7 and info in (20, 21, 22):
+        return {20: False, 21: True, 22: None}[info], i
+    raise ValueError('unsupported CBOR item')
+
+
 def hx(b: bytes) -> str:
     return b.hex()
 
@@ -1186,7 +1222,10 @@ def generate():
         'A Principal Descriptor with any field other than `0`, `1` and `2` is invalid; the map is closed, as the CDDL above defines it.',
         'An open descriptor would let two byte forms describe one Principal and carry unauthenticated data next to its keys.',
         {'descriptor_cbor': hexv(extra_descriptor)},
-        {'valid': False, 'disposition': 'reject'},
+        # SPEC-PATCH-03 / V2, P3: an invalid descriptor is MALFORMED_MESSAGE outside the session handshake.
+        {'valid': False, 'disposition': 'reject', 'error': {
+            'code': 'MALFORMED_MESSAGE',
+            'detail': 'AUTH_FAILED when received in HELLO or AUTH (LFCP-WIRE-01 §7)'}},
         cddl=('principal-descriptor', 'fail'))
 
     # 15. Signature with a small-order R (SPEC-PATCH-03 / G-RS2): D1's exact
@@ -1549,6 +1588,8 @@ def to_vector_format(fixtures: dict) -> dict:
         case['expected'] = x['expected']
         cases.append(case)
 
+    annotate_references(cases, fixtures)
+
     return {
         'format': 'lfcp-vector-format/1',
         'suite': {
@@ -1570,6 +1611,66 @@ def to_vector_format(fixtures: dict) -> dict:
         },
         'cases': cases,
     }
+
+def annotate_references(cases: list, fixtures: dict) -> None:
+    """Make references machine-readable (SPEC-PATCH-03 / G-RS3, V1, V3).
+
+    - G-RS3: every case whose own inputs or expected values hold a COSE_Sign1
+      object names its signer in `inputs.signer` (read from the object's
+      `kid`); `owner_transfer` names `offer_signer` and `accept_signer`.
+    - V1: `invite_uri` names the Control Record case of its grant.
+    - V3: every data_unit and snapshot case names its DEK fixture in
+      `inputs.dek` (read from the payload's Data Epoch).
+    """
+    label_by_pid = {bytes.fromhex(p['principal_id']): label.upper() for label, p in fixtures['principals'].items()}
+    unit_dek = {}
+
+    def signer_of(cose_hex: str) -> str:
+        cose_obj, _ = cbor_decode(bytes.fromhex(cose_hex))
+        protected, _ = cbor_decode(cose_obj[0])
+        return label_by_pid[protected[4]]
+
+    def epoch_of(cose_hex: str) -> int:
+        cose_obj, _ = cbor_decode(bytes.fromhex(cose_hex))
+        payload, _ = cbor_decode(cose_obj[2])
+        return payload[1]
+
+    def add_inputs(case: dict, values: dict) -> None:
+        inputs = dict(case.get('inputs') or {})
+        for k, v in values.items():
+            inputs.setdefault(k, v)
+        rebuilt = {}
+        for k, v in case.items():
+            if k == 'expected' and 'inputs' not in case:
+                rebuilt['inputs'] = inputs
+            rebuilt[k] = inputs if k == 'inputs' else v
+        if 'inputs' not in rebuilt:
+            rebuilt['inputs'] = inputs
+        case.clear()
+        case.update(rebuilt)
+
+    cose_fields = ('cose_sign1', 'auth_proof_cose_sign1', 'conflicting_D2_cose')
+    for case in cases:
+        values = {}
+        objects = [v['hex'] for part in ('inputs', 'expected') for k, v in (case.get(part) or {}).items()
+                   if k in cose_fields and isinstance(v, dict) and 'hex' in v]
+        if case['kind'] == 'owner_transfer':
+            values['offer_signer'] = signer_of(case['expected']['offer_cose_sign1']['hex'])
+            values['accept_signer'] = signer_of(case['expected']['accept_cose_sign1']['hex'])
+        elif objects:
+            values['signer'] = signer_of(objects[0])
+        if case['kind'] in ('data_unit', 'snapshot') and objects:
+            values['dek'] = f'dek{epoch_of(objects[0])}'
+            if case['type'] == 'bytes' and case['kind'] == 'data_unit':
+                unit_dek[case['expected']['unit_id']['hex']] = values['dek']
+        if case['id'] == 'invite_uri':
+            values['grant_case'] = 'C2_invite_grant'
+        if values:
+            add_inputs(case, values)
+    for case in cases:
+        unit = (case.get('inputs') or {}).get('unit_id')
+        if case['kind'] == 'data_unit' and unit and 'dek' not in case['inputs']:
+            add_inputs(case, {'dek': unit_dek[unit['hex']]})
 
 # -----------------------------------------------------------------------------
 # Markdown formatting.

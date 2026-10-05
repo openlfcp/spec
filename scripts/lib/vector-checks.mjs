@@ -354,9 +354,27 @@ export function semanticProblems(doc) {
   const unitIds = new Set(cases.filter((x) => x.type === "bytes" && x.kind === "data_unit").map((x) => x.expected?.unit_id?.hex));
   cases.forEach((c, k) => {
     const at = (suffix) => `/cases/${k}${suffix}`;
-    if (c.type === "bytes" && typeof c.inputs?.signer === "string") {
-      const target = `principal_${c.inputs.signer.toLowerCase()}`;
-      if (!byId.has(target)) add(c.id, at("/inputs/signer"), `unresolved-ref: no case ${target}`);
+    // Signer names (`signer`, `offer_signer`, `accept_signer`) resolve to a
+    // principal case in every case type (SPEC-PATCH-03 / G-RS3).
+    for (const [field, v] of Object.entries(c.inputs ?? {})) {
+      if (!/^(.+_)?signer$/.test(field) || typeof v !== "string") continue;
+      const target = `principal_${v.toLowerCase()}`;
+      if (!byId.has(target)) add(c.id, at(`/inputs/${escape(field)}`), `unresolved-ref: no case ${target}`);
+    }
+    // A DEK name resolves to a fixtures.resource key (V3).
+    if (typeof c.inputs?.dek === "string" && !(fx.resource && c.inputs.dek in fx.resource)) {
+      add(c.id, at("/inputs/dek"), `unresolved-ref: no fixtures.resource.${c.inputs.dek}`);
+    }
+    // A grant case resolves and carries the referenced grant id (V1).
+    if (typeof c.inputs?.grant_case === "string") {
+      const target = byId.get(c.inputs.grant_case);
+      const grant = c.expected?.grant_id_b64url?.b64url;
+      const recordId = target?.expected?.record_id?.hex;
+      if (!target || target.kind !== "control_record" || !recordId) {
+        add(c.id, at("/inputs/grant_case"), `unresolved-ref: no control_record case ${c.inputs.grant_case}`);
+      } else if (grant !== undefined && Buffer.from(grant, "base64url").toString("hex") !== recordId) {
+        add(c.id, at("/inputs/grant_case"), "encoding-mismatch: grant_id_b64url is not the record_id of grant_case");
+      }
     }
     for (const field of ["original_D2_id", "unit_id"]) {
       const v = c.type === "validation" ? c.inputs?.[field]?.hex : undefined;

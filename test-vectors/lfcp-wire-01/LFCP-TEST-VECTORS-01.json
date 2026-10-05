@@ -449,7 +449,9 @@
       "inputs": {
         "nonce": {
           "hex": "c4659b052b4850b974087b8aabc04561"
-        }
+        },
+        "offer_signer": "OWNER",
+        "accept_signer": "BOB"
       },
       "expected": {
         "offer_payload_cbor": {
@@ -479,7 +481,8 @@
       "inputs": {
         "hpke_ephemeral_ikm": {
           "hex": "9ca01f75dd467ecd5e2f2b9fa7414c50d6141a8a072bdec11f861f511a49e57a"
-        }
+        },
+        "signer": "OWNER"
       },
       "expected": {
         "hpke_ephemeral_private": {
@@ -524,7 +527,8 @@
       "inputs": {
         "hpke_ephemeral_ikm": {
           "hex": "ccf1c7dfa5982e7239e7f21297dc03a9a883519e2578558730cad3397100189c"
-        }
+        },
+        "signer": "OWNER"
       },
       "expected": {
         "hpke_ephemeral_private": {
@@ -569,7 +573,8 @@
       "inputs": {
         "hpke_ephemeral_ikm": {
           "hex": "cf72a9ce5d11ed7d631dc373d803a6a2fa5d2389310823796e537f0690cb091b"
-        }
+        },
+        "signer": "BOB"
       },
       "expected": {
         "hpke_ephemeral_private": {
@@ -615,7 +620,9 @@
         "plaintext_utf8": "LFCP test data unit #1",
         "plaintext_hex": {
           "hex": "4c4643502074657374206461746120756e6974202331"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek0"
       },
       "expected": {
         "actor_key": {
@@ -649,7 +656,9 @@
         "plaintext_utf8": "LFCP test data unit #2",
         "plaintext_hex": {
           "hex": "4c4643502074657374206461746120756e6974202332"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek0"
       },
       "expected": {
         "actor_key": {
@@ -683,7 +692,9 @@
         "plaintext_utf8": "LFCP stale offline unit #3",
         "plaintext_hex": {
           "hex": "4c464350207374616c65206f66666c696e6520756e6974202333"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek0"
       },
       "expected": {
         "actor_key": {
@@ -717,7 +728,9 @@
         "plaintext_utf8": "LFCP epoch-1 unit from Carol",
         "plaintext_hex": {
           "hex": "4c4643502065706f63682d3120756e69742066726f6d204361726f6c"
-        }
+        },
+        "signer": "CAROL",
+        "dek": "dek1"
       },
       "expected": {
         "actor_key": {
@@ -758,7 +771,8 @@
         "plaintext_utf8": "LFCP test snapshot #1",
         "plaintext_hex": {
           "hex": "4c464350207465737420736e617073686f74202331"
-        }
+        },
+        "dek": "dek1"
       },
       "expected": {
         "frontier_cbor": {
@@ -808,7 +822,8 @@
         "plaintext_utf8": "LFCP test snapshot #2",
         "plaintext_hex": {
           "hex": "4c464350207465737420736e617073686f74202332"
-        }
+        },
+        "dek": "dek1"
       },
       "expected": {
         "frontier_cbor": {
@@ -847,6 +862,9 @@
       "id": "invite_uri",
       "type": "bytes",
       "kind": "invite_uri",
+      "inputs": {
+        "grant_case": "C2_invite_grant"
+      },
       "expected": {
         "secret_cbor": {
           "hex": "a3000101582095d8068c889e24843a533db9d233863c0dae1bda7c32a83fd21606d5a113ac080258208cf3fea326c315bfca2286cfc9036d66432632c6c8a3026ec28f97887e184185"
@@ -887,6 +905,9 @@
       "id": "AUTH",
       "type": "bytes",
       "kind": "wire_message",
+      "inputs": {
+        "signer": "BOB"
+      },
       "expected": {
         "auth_transcript_cbor": {
           "hex": "866c4c4643502d415554482d763150f0d696e91c695cab3432fcd686eed9d25073dc4bd75464530922db519005d7d1f150d14570f31e8c8dfc2103b4201bd4fd77582073a5809efe3ec76131e969b550345b64628580c1122e8e5fa701da0630fe855e58203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5"
@@ -1172,7 +1193,9 @@
         },
         "conflicting_D2_cose": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058baa7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820708b5a5f1ab7b7c9146b3bd7e4902831aa6666913608502c13b1d32c3650be9f055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658262c71204ff8a4a4c0e8c96a2dcf46e03207cc6c0de1cf4e0c05962ac3c9ada3a19ddfcf0c4e485840e66598f457853e4f73eba35fa2d36174b688c1477edbd693659d7dd1cc92b409fd06eb27fc1cf08d86f6b02c7c8043508ec976fe7cade50baff0ea92efef570c"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek0"
       },
       "expected": {
         "valid": false,
@@ -1188,7 +1211,9 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a05899a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030104f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca31e51d9b62a572bf8376ff3267158408adb5052b4f93358a1d5397fd05f591b47b20724afd186d42368caba11bd1f7e2d7ab3e43ad96d124e08ac17968d6cfc558a67ddc564ed538070d9dad0329508"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek0"
       },
       "expected": {
         "valid": false,
@@ -1204,7 +1229,8 @@
       "inputs": {
         "unit_id": {
           "hex": "39c10fe1e07c34d052b71c8196e53e8b42c3d2e06b5bb94ae3a3c0ada55b4683"
-        }
+        },
+        "dek": "dek0"
       },
       "expected": {
         "valid": false,
@@ -1226,7 +1252,9 @@
         },
         "noncanonical_aad_cbor": {
           "hex": "876c4c4643502d444154412d76315820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c51801f65820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b8"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek0"
       },
       "derivation": {
         "base_case": "D1_bob_epoch0_seq1",
@@ -1258,7 +1286,9 @@
       "inputs": {
         "cose_sign1": {
           "hex": "d2845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a05899a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030104f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca31e51d9b62a572bf8376ef3267158408adb5052b4f93358a1d5397fd05f591b47b20724afd186d42368caba11bd1f7e2d7ab3e43ad96d124e08ac17968d6cfc558a67ddc564ed538070d9dad0329508"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek0"
       },
       "derivation": {
         "base_case": "D1_bob_epoch0_seq1",
@@ -1289,7 +1319,9 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a05899a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030104f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca31e51d9b62a572bf8376ef3267158408adb5052b4f93358a1d5397fd05f591b47b20724afd186d42368caba11bd1f7e2d7ab3e43ad96d124e08ac17968d6cfc558a67ddc564ed538070d9dad0329509"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek0"
       },
       "derivation": {
         "base_case": "D1_bob_epoch0_seq1",
@@ -1324,7 +1356,9 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a05899a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030104f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca31e51d9b62a572bf8376ef326715840b98ef0f8a87227bdc6a5f2dfc3f67865d3678ee76301b8060e85576da50b2c935e5340150b93016e40754a298470229c61b9406d99ba70910b086d090fdba702"
-        }
+        },
+        "signer": "CAROL",
+        "dek": "dek0"
       },
       "context": {
         "actor": {
@@ -1370,7 +1404,9 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a05899a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030104f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aeadfa4c94672f853eab1f58578e579f6ccc58409fffb58d10720976aa661d2f00f908ba7e2e518afed45e024dc0acb04c99d488244f9d548f49ac11a61645c4c8ffd545394112c92dd47860daae68f074ad8c02"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek0"
       },
       "derivation": {
         "base_case": "D1_bob_epoch0_seq1",
@@ -1547,7 +1583,8 @@
         },
         "record_id": {
           "hex": "82de4f8844a91a1a84e6d19ddc94092a153dbd3c96ccd1064c6c3c0559d1d5a4"
-        }
+        },
+        "signer": "BOB"
       },
       "context": {
         "previous_record": {
@@ -1588,7 +1625,8 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e5a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101060258201189b7d19ac6d09a8128d3967a4fdd80ea2a6180efaa8a9f15bf2ee5c32cda4603040458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c505a4000101582027df3173462d19512f2224f54bdc894a8c7e81c212301ed1f2bb8ccee0ce71510282a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102030358408517d08d033f91a1e5104bdf8171744f12fe02c7e6a514faf377012b80f19276713ece6447f78196d0ffd31d81775aa8989a2a96354af41472b59d061659ac08"
-        }
+        },
+        "signer": "BOB"
       },
       "context": {
         "previous_record": {
@@ -1625,7 +1663,8 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e5a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101060258201189b7d19ac6d09a8128d3967a4fdd80ea2a6180efaa8a9f15bf2ee5c32cda4603040458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c505a4000101582027df3173462d19512f2224f54bdc894a8c7e81c212301ed1f2bb8ccee0ce71510282a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102030358401bfc53bac8eaf855d776e0536dad5d6ac486092ed662c2f9f9fc36563f5f07848e73ac4b88542fffacd02e607e77f06da272f195ac1a822b695fca0fe47c8c06"
-        }
+        },
+        "signer": "BOB"
       },
       "context": {
         "previous_record": {
@@ -1662,7 +1701,8 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e2a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203b141a9d660b274f73a042dbe47dcb1fe5b9f1d8d96f782cc8e4728695704adc0301045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a300a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50158201953f4ada1cb4e0f8662108152c82e7e074cbf4859c487461cbe41e5d623e3c2025820b5a22f5f5cbdc3a6f8742ec8b2bc9665d0170478bf5aca7528fdd5eefb94f26c0183010202028058409aec9f8360153c29d8c71046b868d214e668b5a410a02378423c2257ee08d3eb4b76b36fae20d5a658550ae74968f7e0e236986cf528cd6affe64a232cccce09"
-        }
+        },
+        "signer": "OWNER"
       },
       "context": {
         "previous_record": {
@@ -1707,7 +1747,8 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da0590103a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410109025820dac2a5acd8bf2118a8a21ffa0d7334fa2484fde5988f32a609f95d75b5086f200301045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a400a3005820fd11cff30b5f51be630be47798a656119335d5ef0a41ebc0032335a6b2f6d6ba0158203bcc05261bc40609f528e983a23cd356af2e739b36787ab6ccf58e4befaeb133025820da9ae6b26e5e3618bb6b6e7380c00f8995bd31a34115425ea65bfcac1ea17f390181020280035820dac2a5acd8bf2118a8a21ffa0d7334fa2484fde5988f32a609f95d75b5086f205840807ea22df38f50bd6012d908aca8d2c2c6f45c63d180318305f464b7a608c71323d3731fb5e1b95580c3c9937704fdc98e48336eed6b03984dad5b98f43e350f"
-        }
+        },
+        "signer": "OWNER"
       },
       "context": {
         "previous_record": {
@@ -1745,7 +1786,8 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a05893a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc241010a025820bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce20475ef4d6599684a70302045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4805a1005820f83d37d02a85b9a624d0b50af3ea201f2fbb77c739fccbf1f039e2689d15f2a65840065c99c1c4afaf71bfb605a6253d69635e3aab8492192993c54929f1c24de5e3c16fae8f8e617a0732f5241b7c4471d273e8e809080d7cb768055eb80af20c02"
-        }
+        },
+        "signer": "CAROL"
       },
       "context": {
         "previous_record": {
@@ -1783,7 +1825,8 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a05893a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc241010b0258205627266b4519cd29dc193640281e5a3f673dc4d86c1c573e805f2c6ee1557e8a0302045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4805a1005820bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce20475ef4d6599684a75840cee1a376f6f5d4085bfd46a45a9f904c33ad57874691623322a488e3ad5b1107a7aa2a9ab7e990e587714557e7e1e355a2ef7f55cf70ef7c78ef17d806799e03"
-        }
+        },
+        "signer": "CAROL"
       },
       "context": {
         "previous_record": {
@@ -1820,7 +1863,8 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a059013fa6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc241010002f603000458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c505a500746f72672e6c6663702e746573742e7261772e763101a3005820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d015820f6fb6b8184ca17efdf2ca12486d3ba89fd4253efe9e1ae746fe0f93817c8851a02582053e766cd910b4dbc67f0d850bdcf235402f5e708e85b5223a307f65cb92e4f0a0258209239077c0c32fc80bc1a51b8aad2917aebb1316853b85ffda562b1800c0ced300381a300781f7773733a2f2f73796e632d612e6578616d706c652e746573742f76312f7773010002183f04781f7773733a2f2f73796e632d612e6578616d706c652e746573742f76312f7773584022d3f7049ca3cd2900ab315cf4f9494fb50ab40a92014fd28ad13ee1f7c49216b78641915862553d023a77dc8814b6c972e7c39f51feb68756d6a9b228f6da08"
-        }
+        },
+        "signer": "BOB"
       },
       "derivation": {
         "base_case": "C0_genesis",
@@ -1854,7 +1898,8 @@
         },
         "record_id": {
           "hex": "adf02fa177ebd51f651d5b955b8ebcf942b51148a6048dfaa5bb352f3aabba48"
-        }
+        },
+        "signer": "OWNER"
       },
       "context": {
         "competing_record": {
@@ -1891,7 +1936,8 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da0590140a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc241010002f60300045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a500746f72672e6c6663702e746573742e7261772e763101a3005820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d015820f6fb6b8184ca17efdf2ca12486d3ba89fd4253efe9e1ae746fe0f93817c8851a02582053e766cd910b4dbc67f0d850bdcf235402f5e708e85b5223a307f65cb92e4f0a0258209239077c0c32fc80bc1a51b8aad2917aebb1316853b85ffda562b1800c0ced300381a3007820687474703a2f2f73796e632d612e6578616d706c652e746573742f76312f7773010002183f04781f7773733a2f2f73796e632d612e6578616d706c652e746573742f76312f7773584048f774e312b53d3549a540d1414f6127a9cc7ca9ec319266192821f84aff68170fd3dd50e8fd9984df42c90eea3cf2e83611eee5c01184908ffbb113bda76408"
-        }
+        },
+        "signer": "OWNER"
       },
       "derivation": {
         "base_case": "C0_genesis",
@@ -1922,7 +1968,8 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e2a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203b141a9d660b274f73a042dbe47dcb1fe5b9f1d8d96f782cc8e4728695704adc0309045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a300a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50158201953f4ada1cb4e0f8662108152c82e7e074cbf4859c487461cbe41e5d623e3c2025820b5a22f5f5cbdc3a6f8742ec8b2bc9665d0170478bf5aca7528fdd5eefb94f26c018301020302805840c60d9ef8130cf2e28de9c154548df17ce890cf63410725d9a73caa326b39224ec2d926fbb9ea7ec8496c67d215aaa3cacb0eeb91c7d3ffef3d73607f16409c0e"
-        }
+        },
+        "signer": "OWNER"
       },
       "context": {
         "previous_record": {
@@ -1959,7 +2006,9 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a05899a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030004f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b8065826aeaeda7927384999a4de8d68689695ee07c6f89482faed18c8068d2f16e210480028d255c2f75840e4e3fa3176ec8e4616e14063468843d7b7145a15219f93eadc0a92ee6a5a04e46e10abb96b1a6294a5dc90959e0a0c1dde00b5d61c9559b183a8f389b18e9904"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek0"
       },
       "derivation": {
         "base_case": "D1_bob_epoch0_seq1",
@@ -1990,7 +2039,9 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058baa7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c503010458207745a3beb83838797591a1121e932799a5fb28b83890a3a9377f6c0d5cc34cd1055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead80cdbeebbca9afb5a1272381cde6b1615840e443e2635d7f965aa219b447656a69cd313e1eacbecd2e52bad5b1f0188c8b2c2e24d79c0eb07866c67a6b249e6a845c3ecb335ed59f8ad21449c7fdc85bcb04"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek0"
       },
       "derivation": {
         "base_case": "D1_bob_epoch0_seq1",
@@ -2021,7 +2072,8 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e5a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480358200b5dc558b8104686d5d6b0063629f1cfaf48049dee3580ca6e253d27f3359e33045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d0558205f4006c8c21101bbed5d4ad8e7811e0f9e538d25cdaa2a23e7a27b1bba274d400658304477414eb8cf8ec3ff550d73a05870b42b7a4af7f49ebd081f0b619c50a98a92e93b3dd2c105f6d7d1949316546a876458402ac79e0ca77f4e468c21b2eed0d7c02370983a342861c610aaf228f512ee439d8a44c806c6917b27daeeff585a3cd0c3d11a819ff8dc3aa1f87bea0135e53c07"
-        }
+        },
+        "signer": "OWNER"
       },
       "context": {
         "recipient_x25519_private": {
@@ -2060,7 +2112,8 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e4a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50358200b5dc558b8104686d5d6b0063629f1cfaf48049dee3580ca6e253d27f3359e33045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05581f5f4006c8c21101bbed5d4ad8e7811e0f9e538d25cdaa2a23e7a27b1bba274d0658304477414eb8cf8ec3ff550d73a05870b42b7a4af7f49ebd081f0b619c50a98a92e93b3dd2c105f6d7d1949316546a87645840f5f8a712a6c3d717b50a285cc8ea40c3f0e46efa952c96d42763af8a83918f9f070835a7bcd7cb41f29a986e1d497fe8ace5889f245af61b5c2284cf664c9a03"
-        }
+        },
+        "signer": "OWNER"
       },
       "derivation": {
         "base_case": "KP0_bob_epoch0",
@@ -2091,7 +2144,9 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e6a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50301045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102a3005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4801010280065825826d0cf4f6208b1daa2c8f0589916e0e7c68103ca43327922202cada2e6d19bb677f9ace7f5840c39f66939c22c25f314e4413205b9e6f5cb73418b84b7a293a4dddec7d1fc2ada7c3e7de030e06de5282447b59838f8b955ca5a16a5d7c631abeacd69543e804"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek1"
       },
       "derivation": {
         "base_case": "SNAPSHOT-01",
@@ -2122,7 +2177,9 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058eca7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5011864028182186b1869a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101065825a4c0b8bc8173d8df3ebc22780f532125084f7008cea757160cd39be158c48d75bee9e62f62584083d02701308525858406d1ba90699cf94a043e4b82eb6ee627bc2a8d1dc3a350573ac1494e5bde8577eca8ca8782d753e3b0837269bcc655677cb30e1b573901"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek1"
       },
       "derivation": {
         "base_case": "SNAPSHOT-02",
@@ -2163,7 +2220,9 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058eca7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5011864028182185f186ba2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101065825a4c0b8bc8173d8df3ebc22780f532125084f7008ce1993e653ff3e6c47421d7ca5750bcd7c584010f1f96b4fe738dd5e9fd330ba49079d375243a3273ea604d27b6d1605f547965f959d7244ce486dd676ddf7da35b37fe2cad729bed2a33b9c6cc820d07e0705"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek1"
       },
       "derivation": {
         "base_case": "SNAPSHOT-02",
@@ -2204,7 +2263,9 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058eca7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50118640281821865186ba2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101065825a4c0b8bc8173d8df3ebc22780f532125084f7008cebde4ee92ea77a3d9e16d13ea48af216058407ad3affd259fe2656ada3ffa5fd2a9dcf9da05e8ce1b5d863b6221a6b2ec6684cc35ba5505e778006a32f73d0587a2d835b195010967bb542e45e5b4ce4b8e06"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek1"
       },
       "derivation": {
         "base_case": "SNAPSHOT-02",
@@ -2245,7 +2306,9 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058f1a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5011864028282186e1870821869186ba2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101065825a4c0b8bc8173d8df3ebc22780f532125084f7008ce8eb51a5fa98d05fee976b8a7b1bb7ee05840b0aebf4ca511cb59476bc4fd9eb253e20037b2dbb9938a69ee5abf0a527ba44b2dafe326d7b1b1f77acde7573f8cd169787c74dd4e873586c032de197f36c502"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek1"
       },
       "derivation": {
         "base_case": "SNAPSHOT-02",
@@ -2290,7 +2353,9 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058f1a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50118640282821869186b82186a186ea2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101065825a4c0b8bc8173d8df3ebc22780f532125084f7008ce06c674da23c64da16c37ea04bb7faaf958408edeb4c1fba57b7a45baab536c503d402384fdc308d03187d6d4a4bd5f8b64c425a389bea6642e4604ecb524958ff49ce26fc47ab6eb65793a7a1ad8e2d9340a"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek1"
       },
       "derivation": {
         "base_case": "SNAPSHOT-02",
@@ -2335,7 +2400,9 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058f1a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50118640282821869186b82186c186ea2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101065825a4c0b8bc8173d8df3ebc22780f532125084f7008ce9ff8421b1f961400d3888abb0287f83b584072fb9cfc983227edf07424b793252c2734b5a29b8ed43beaec78df2013f6d59bcf5467443a2126dd77daf9ae11e33ce847ad913da8fe178f8710eb70ac104209"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek1"
       },
       "derivation": {
         "base_case": "SNAPSHOT-02",
@@ -2380,7 +2447,9 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a059010aa7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50301045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180583a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101065825826d0cf4f6208b1daa2c8f0589916e0e7c68103ca42b8f1243055602078a9c90def2b345b158405c89c34cfc485bf4f4ad50d13f90b4f24e529e0d606123f670bfde1440c720608227c380d2a5283876991f6fb5ecdc791619400db9201a2175b6f654cea15e0e"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek1"
       },
       "derivation": {
         "base_case": "SNAPSHOT-01",
@@ -2411,7 +2480,9 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e4a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50301045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102065825826d0cf4f6208b1daa2c8f0589916e0e7c68103ca412d2680307b40bbe6a54ed77594fb38c584088fe24e01ac3686d83cb282e9ee3f02562f989f3df39c026b58d2403a61a96305a9cd69d48e65ffb71ea7317884f8680f732fa65bb75a2909afe1656cad7c50d"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek1"
       },
       "derivation": {
         "base_case": "SNAPSHOT-01",
@@ -2442,7 +2513,9 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e4a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50300045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48010106582587f277c74bf0db9dfa1f7729c5c1d44fbc2935b1557cb03823c87f831dab9c9e643c91d794584048446f2f45fb817df15ac8a1e744e1022e460bcce5cfb7b40cd6a28b63a4a683bf91b13991fc6b893bfa61d6f17a3fde19cfa48c107914b88e9942cf7a568709"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek1"
       },
       "derivation": {
         "base_case": "SNAPSHOT-01",
@@ -2470,7 +2543,9 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a0589fa7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48030104f6055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc51806582c0799992a22830a7795a36ac1d55e602ce79871deee577330216419ce71e44aa1014ca2efa24fb1b0fdc554755840ae4947fc9b1adfe571f7c826432c9a7316b8d6be5c694a4c336d590df66b71bb284d5c2107385908a18154b908b383efd0341d9c959f92161e468633724abc0b"
-        }
+        },
+        "signer": "CAROL",
+        "dek": "dek0"
       },
       "context": {
         "cutoff_record": {
@@ -2508,7 +2583,9 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a0589aa7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410118000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030104f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca31e51d9b62a572bf8376ef326715840c61e8713b42895fc0f64fc0e7573e7dbd2770dc5235b911a6c08a8c19668eb4e7db6128e8caafc4b228151836168012f2d970f6c0fb45d725d7ffc7b8b782106"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek0"
       },
       "derivation": {
         "base_case": "D1_bob_epoch0_seq1",
@@ -2560,7 +2637,11 @@
       },
       "expected": {
         "valid": false,
-        "disposition": "reject"
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE",
+          "detail": "AUTH_FAILED when received in HELLO or AUTH (LFCP-WIRE-01 §7)"
+        }
       }
     },
     {
@@ -2571,7 +2652,9 @@
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a05899a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030104f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca31e51d9b62a572bf8376ef3267158400100000000000000000000000000000000000000000000000000000000000000d1e120123c2d2e5b98751ac3391a14c8e56ce49382f409343d2f5dc2941f2d08"
-        }
+        },
+        "signer": "BOB",
+        "dek": "dek0"
       },
       "derivation": {
         "base_case": "D1_bob_epoch0_seq1",
