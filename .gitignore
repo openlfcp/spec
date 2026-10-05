@@ -1,0 +1,9 @@
+# Generator scratch output
+__pycache__/
+*.pyc
+node_modules/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
