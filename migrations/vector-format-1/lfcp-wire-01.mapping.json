@@ -74,6 +74,7 @@
     { "path": "cases[id=actor_equivocation].expected.error.code", "value": "ACTOR_EQUIVOCATION", "rule": "LFCP-WIRE-01 section 62 error code 16; LFCP-TEST-VECTORS-01.md section 17.3 names this expected result." },
     { "path": "cases[id=stale_epoch].expected.error.code", "value": "STALE_DATA_EPOCH", "rule": "LFCP-WIRE-01 section 62 error code 14; the old free-text value starts with this code and is kept verbatim in error.detail." },
     { "path": "cases[id=dek_commitments].inputs.dek0_epoch", "value": 0, "rule": "Added after the migration by LFCP-008 (spec gap S1): explicit epoch input for the LFCP-WIRE-01 section 11 commitment. A new input, not a changed value." },
-    { "path": "cases[id=dek_commitments].inputs.dek1_epoch", "value": 1, "rule": "Added after the migration by LFCP-008 (spec gap S1): explicit epoch input for the LFCP-WIRE-01 section 11 commitment. A new input, not a changed value." }
+    { "path": "cases[id=dek_commitments].inputs.dek1_epoch", "value": 1, "rule": "Added after the migration by LFCP-008 (spec gap S1): explicit epoch input for the LFCP-WIRE-01 section 11 commitment. A new input, not a changed value." },
+    { "path": "cases[id=tampered_D1].expected.error.code", "value": "INVALID_SIGNATURE", "rule": "SPEC-PATCH-01 / G1: the project owner assigned INVALID_SIGNATURE (LFCP-WIRE-01 section 10.5, section 62 code 7) to this rejection, which had no code." }
   ]
 }

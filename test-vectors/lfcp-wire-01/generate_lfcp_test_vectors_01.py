@@ -646,9 +646,9 @@ def generate():
         return r
 
     def neg(case_id, kind, title, base_case, field, old, new, section, text, why, inputs, expected,
-            context=None, cddl=None):
+            context=None, cddl=None, note=None):
         NEG.append({
-            'id': case_id, 'kind': kind, 'description': title,
+            'id': case_id, 'kind': kind, 'description': title, 'note': note,
             'inputs': inputs, 'context': context, 'expected': expected,
             'derivation': {
                 'base_case': base_case,
@@ -669,6 +669,8 @@ def generate():
         return ChaCha20Poly1305(key).encrypt(nonce, plaintext, aad)
 
     D1_plain = b'LFCP test data unit #1'
+    CLIENT_NOTE = ('Client-local rejection (SPEC-PATCH-01 / N3): only a client holding the DEK can detect it; '
+                   'there is no wire error code.')
 
     # 1. Non-canonical CBOR in a reconstructed structure: D1 sealed under an AAD
     #    whose actor sequence is encoded as 0x18 0x01 instead of 0x01.
@@ -683,43 +685,46 @@ def generate():
         'LFCP-WIRE-01 §5.2; §26.3',
         'When an LFCP algorithm requires reconstructing a deterministic structure, such as AEAD AAD, HPKE `info`, '
         'or HPKE AAD, the reconstructed structure MUST follow these deterministic CBOR rules exactly. '
-        '(§26.3: a Data Unit is eligible for merge only if "the unit decrypts successfully".)',
+        '(§26.3: a Data Unit is eligible for merge only if "the unit decrypts successfully"; '
+        '"A client MUST NOT merge a Data Unit that fails AEAD authentication and SHOULD surface it to the application.")',
         'The receiver reconstructs the canonical AAD, so decryption fails; accepting it would require guessing alternative encodings of signed or authenticated structures.',
         {'cose_sign1': hexv(du_nc), 'noncanonical_aad_cbor': hexv(noncanon_aad)},
         {'valid': False, 'disposition': 'reject'},
-        cddl=('data-unit', 'pass'))
+        cddl=('data-unit', 'pass'),
+        note=CLIENT_NOTE)
 
     # 2. Tagged COSE_Sign1 (tag 18).
     neg('tagged_cose_D1', 'data_unit', 'D1 wrapped in COSE_Sign1 tag 18',
         'D1_bob_epoch0_seq1', 'outer CBOR tag', 'none', 'tag 18',
         'LFCP-WIRE-01 §10',
-        'A strict LFCP-WIRE-01 implementation MUST reject a tagged persistent LFCP object as non-canonical.',
+        'A strict LFCP-WIRE-01 implementation MUST reject a tagged persistent LFCP object as non-canonical, with `MALFORMED_MESSAGE`.',
         'The object ID is SHA-256 of the exact bytes; a tagged copy would be a second, different object for the same content.',
         {'cose_sign1': hexv(b'\xd2' + D1['cose'])},
-        {'valid': False, 'disposition': 'reject'},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'MALFORMED_MESSAGE'}},
         cddl=('data-unit', 'fail'))
 
     # 3. Invalid Ed25519 signature: last signature byte flipped.
     bad_sig = bytearray(D1['cose']); bad_sig[-1] ^= 0x01; bad_sig = bytes(bad_sig)
     neg('invalid_signature_D1', 'data_unit', 'D1 with one signature bit flipped',
         'D1_bob_epoch0_seq1', 'signature byte 63', hexv(D1['cose'][-1:]), hexv(bad_sig[-1:]),
-        'LFCP-WIRE-01 §26.3, §10.5',
-        'A Data Unit is eligible for merge only if: 1. its signature is valid for the actor Principal;',
+        'LFCP-WIRE-01 §10.5, §26.3',
+        'A receiver MUST reject a signed object whose signature does not verify under the public key of the Principal '
+        'named by `kid` [...]. It reports `INVALID_SIGNATURE`.',
         'An unverified signature lets anyone inject Data Units in the actor\'s name.',
         {'cose_sign1': hexv(bad_sig)},
-        {'valid': False, 'disposition': 'reject'},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'INVALID_SIGNATURE'}},
         cddl=('data-unit', 'pass'))
 
     # 4. Wrong kid: D1's payload (actor BOB) signed by CAROL with kid CAROL.
     du_kid = signed_data_unit(D1['payload_obj'], CAROL)
     neg('wrong_kid_D1', 'data_unit', 'D1 payload signed by CAROL (kid CAROL) instead of the actor BOB',
         'D1_bob_epoch0_seq1', 'protected header kid (and signing key)', hexv(BOB.pid), hexv(CAROL.pid),
-        'LFCP-WIRE-01 §10.1, §26',
-        'The value of `kid` MUST be the 32-byte Principal ID of the signing Principal. '
-        '(§26: "The payload is signed by the actor using COSE_Sign1.")',
+        'LFCP-WIRE-01 §10.1, §10.5, §26',
+        'A receiver MUST reject a signed object [...] whose `kid` does not identify the Principal the object requires '
+        'as signer (for example, the actor of a Data Unit). It reports `INVALID_SIGNATURE`.',
         'The signature is valid but by the wrong Principal; accepting it lets one member forge another member\'s edits.',
         {'cose_sign1': hexv(du_kid)},
-        {'valid': False, 'disposition': 'reject'},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'INVALID_SIGNATURE'}},
         context={'actor': ref('principal_bob', 'principal_id'), 'kid': ref('principal_carol', 'principal_id')},
         cddl=('data-unit', 'pass'))
 
@@ -737,11 +742,13 @@ def generate():
     neg('aead_failure_D1', 'data_unit', 'D1 ciphertext sealed under the AAD of sequence 2',
         'D1_bob_epoch0_seq1', 'AAD actor sequence used for sealing', 1, 2,
         'LFCP-WIRE-01 §26.1, §26.3',
-        'A Data Unit is eligible for merge only if: [...] 6. the unit decrypts successfully;',
+        'A Data Unit is eligible for merge only if: [...] 6. the unit decrypts successfully [...] '
+        'A client MUST NOT merge a Data Unit that fails AEAD authentication and SHOULD surface it to the application.',
         'The AAD binds the ciphertext to its resource, epoch, actor and position; accepting it would let ciphertext be replayed elsewhere.',
         {'cose_sign1': hexv(du_aead)},
         {'valid': False, 'disposition': 'reject'},
-        cddl=('data-unit', 'pass'))
+        cddl=('data-unit', 'pass'),
+        note=CLIENT_NOTE)
 
     # 6. Stale Control Head: CONTROL_PUT expecting C4 while the head is C5.
     stale_put = wire_msg(23, msgid('CONTROL-PUT'), {0: RESOURCE, 1: C4['id'], 2: C6['cose']})
@@ -764,7 +771,8 @@ def generate():
         'C6_key_epoch_1', 'body field 2: BOB cutoff sequence', 2, 3,
         'LFCP-WIRE-01 §13.2',
         'Two different validly signed records referencing the same previous Control Record create a Control Fork. '
-        'A client MUST NOT silently choose a branch. The Resource enters `CONTROL_CONFLICT` [...]',
+        'A client MUST NOT silently choose a branch. Neither record is accepted as the Control Head; a receiver that '
+        'refuses a competing record reports `CONTROL_CONFLICT`.',
         'Choosing a branch silently would let replicas diverge on authorization and keys.',
         {'cose_sign1': hexv(C6_FORK['cose']), 'record_id': hexv(C6_FORK['id'])},
         {'valid': False, 'disposition': 'conflict', 'error': {'code': 'CONTROL_CONFLICT'}},
@@ -776,10 +784,10 @@ def generate():
     neg('actor_seq_zero_D1', 'data_unit', 'D1 re-issued with actor sequence 0',
         'D1_bob_epoch0_seq1', 'actor sequence (payload field 3)', 1, 0,
         'LFCP-WIRE-01 §8',
-        'Sequence numbers begin at `1`.',
+        'Sequence numbers begin at `1`. A receiver MUST reject a Data Unit with actor sequence `0` with `MALFORMED_MESSAGE`.',
         'Sequence 0 is outside the per-actor sequence space, so Have Vectors and hash chains cannot describe it.',
         {'cose_sign1': hexv(D_SEQ0['cose'])},
-        {'valid': False},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'MALFORMED_MESSAGE'}},
         cddl=('data-unit', 'pass'))
     D_PREV = data_unit(BOB, 0, 1, D2['id'], C3['id'], D1_plain, DEK0)
     neg('actor_seq1_prev_not_null_D1', 'data_unit', 'D1 with a previous-unit reference although it is sequence 1',
@@ -806,12 +814,14 @@ def generate():
         'KP0_bob_epoch0', 'recipient (payload field 2)', hexv(BOB.pid), hexv(CAROL.pid),
         'LFCP-WIRE-01 §25.1, §25.2',
         'The HPKE `info` value is deterministic CBOR encoding of ["LFCP-KEY-v1", resource-id, data epoch, recipient]. '
-        '[...] Clients accept any cryptographically valid package that yields the correct DEK commitment.',
+        '[...] A package that does not open for its named recipient, or whose DEK does not match the commitment, '
+        'is ignored and SHOULD be surfaced to the application. This is a client-local decision [...]',
         'HPKE info binds the recipient; a package that does not open for its named recipient delivers no key.',
         {'cose_sign1': hexv(KP_WRONG)},
         {'valid': False, 'disposition': 'reject'},
         context={'recipient_x25519_private': ref('principal_carol', 'x25519_private', 'inputs')},
-        cddl=('key-package', 'pass'))
+        cddl=('key-package', 'pass'),
+        note='Client-local rejection (SPEC-PATCH-01 / N5): the package is ignored and surfaced; there is no wire error code.')
 
     # 11. Malformed Have ranges inside a Snapshot frontier (re-sealed and
     #     re-signed, so only canonicality is wrong).
@@ -853,20 +863,21 @@ def generate():
         cose = raw_snapshot(frontier, seq, base_snap['plaintext'])
         neg(cid, 'snapshot', f'{base} with a frontier that violates §28.1 {rule_no}', base, field, old, new,
             f'LFCP-WIRE-01 §28.1 {rule_no}; §28.2',
-            f'{text} (§28.2: "A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.")',
+            f'{text} (§28.2: "A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical, with '
+            f'`MALFORMED_MESSAGE`.")',
             'Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier.',
             {'cose_sign1': hexv(cose)},
-            {'valid': False, 'disposition': 'reject'},
+            {'valid': False, 'disposition': 'reject', 'error': {'code': 'MALFORMED_MESSAGE'}},
             cddl=('snapshot', 'pass'))
     cose = raw_snapshot([carol, bob(2)], 1, S1['plaintext'])
     neg('frontier_unsorted', 'snapshot', 'SNAPSHOT-01 with CAROL listed before BOB', 'SNAPSHOT-01',
         'frontier entry order', 'BOB, CAROL', 'CAROL, BOB',
         'LFCP-WIRE-01 §28.2',
         'Entries MUST be sorted by ascending raw 32-byte `principal-id`, compared lexicographically as unsigned bytes. '
-        '[...] A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.',
+        '[...] A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical, with `MALFORMED_MESSAGE`.',
         'Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one entry order.',
         {'cose_sign1': hexv(cose)},
-        {'valid': False, 'disposition': 'reject'},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'MALFORMED_MESSAGE'}},
         cddl=('snapshot', 'pass'))
 
     # 12. Stale-epoch cutoff for an actor absent from the cutoff frontier:
@@ -877,7 +888,8 @@ def generate():
         'LFCP-WIRE-01 §19.1; §88 step 7; §75',
         'If an actor is absent from the recorded frontier, no newly discovered Data Units from that actor in the closed '
         'epoch are automatically acceptable. Any later-arriving previous-epoch unit beyond that frontier MUST NOT be merged '
-        'automatically. It SHOULD be surfaced to the application as stale offline work [...]',
+        'automatically. A server that receives such a unit in `DATA_PUT` responds `NACK(STALE_DATA_EPOCH)`; a client keeps '
+        'it in quarantine. [...] It SHOULD be surfaced to the application as stale offline work [...]',
         'The cutoff frontier makes revocation deterministic; merging late closed-epoch work would let removed members keep writing.',
         {'cose_sign1': hexv(D_ABSENT['cose'])},
         {'valid': False, 'disposition': 'quarantine', 'error': {'code': 'STALE_DATA_EPOCH'}},
@@ -1171,8 +1183,8 @@ def to_vector_format(fixtures: dict) -> dict:
     cases.append({
         'id': 'tampered_D1', 'type': 'validation', 'kind': 'data_unit',
         'inputs': {'cose_sign1': hexv(n['tampered_D1_cose'])},
-        # No error code is specified for this rejection yet.
-        'expected': {'valid': False},
+        # LFCP-WIRE-01 §10.5, §62 code 7 (SPEC-PATCH-01 / G1).
+        'expected': {'valid': False, 'error': {'code': 'INVALID_SIGNATURE'}},
     })
     cases.append({
         'id': 'stale_epoch', 'type': 'validation', 'kind': 'data_unit',
@@ -1181,8 +1193,10 @@ def to_vector_format(fixtures: dict) -> dict:
         'expected': {'valid': False, 'error': {'code': 'STALE_DATA_EPOCH', 'detail': n['stale_epoch_expected']}},
     })
     for x in fixtures['negatives']:
-        case = {'id': x['id'], 'type': 'validation', 'kind': x['kind'], 'description': x['description'],
-                'inputs': x['inputs']}
+        case = {'id': x['id'], 'type': 'validation', 'kind': x['kind'], 'description': x['description']}
+        if x['note']:
+            case['note'] = x['note']
+        case['inputs'] = x['inputs']
         if x['context']:
             case['context'] = x['context']
         case['derivation'] = x['derivation']
@@ -1523,7 +1537,7 @@ def generate_markdown(f: dict):
     a('')
     a('### 17.2 COSE payload tamper')
     a('')
-    a('The following bytes are a one-byte mutation of D1. Expected result: reject the object; it must not be assigned a valid Data Unit identity or merged.')
+    a('The following bytes are a one-byte mutation of D1. Expected result: reject the object with `INVALID_SIGNATURE` (LFCP-WIRE-01 §10.5); it must not be assigned a valid Data Unit identity or merged.')
     a('')
     a(code_hex(N['tampered_D1_cose']))
     a('')
@@ -1540,11 +1554,11 @@ def generate_markdown(f: dict):
     a('')
     a('### 17.4 AEAD AAD mismatch')
     a('')
-    a('Decrypt D1 with the same actor key and nonce but change any AAD field, for example `seq=2`. Expected result: ChaCha20-Poly1305 authentication failure.')
+    a('Decrypt D1 with the same actor key and nonce but change any AAD field, for example `seq=2`. Expected result: ChaCha20-Poly1305 authentication failure. The client MUST NOT merge the unit; this is client-local and has no wire error code (LFCP-WIRE-01 §26.3).')
     a('')
     a('### 17.5 Wrong HPKE recipient')
     a('')
-    a('Attempt to decrypt `KP0_bob_epoch0` using CAROL\'s X25519 private key. Expected result: HPKE/AEAD open failure; no DEK is returned.')
+    a('Attempt to decrypt `KP0_bob_epoch0` using CAROL\'s X25519 private key. Expected result: HPKE/AEAD open failure; no DEK is returned and the package is ignored (client-local, no wire error code; LFCP-WIRE-01 §25.2).')
     a('')
     a('### 17.6 Stale epoch')
     a('')
@@ -1561,7 +1575,7 @@ def generate_markdown(f: dict):
     a('')
     a('### 17.9 Non-deterministic CBOR signed object')
     a('')
-    a('Re-encode any signed payload using a non-preferred integer width or non-deterministic map ordering and sign those different bytes. Even with a mathematically valid Ed25519 signature, a WIRE-01 validator claiming deterministic-CBOR conformance SHOULD reject the object as non-canonical. This requirement should be stated explicitly in the next WIRE draft.')
+    a('Re-encode any signed payload using a non-preferred integer width or non-deterministic map ordering and sign those different bytes. Even with a mathematically valid Ed25519 signature, the receiver MUST reject the object with `MALFORMED_MESSAGE`: it re-encodes the decoded payload and the bytes differ (LFCP-WIRE-01 §5.2).')
     a('')
     a('### 17.10 Machine-readable negative vectors')
     a('')

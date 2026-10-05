@@ -1405,7 +1405,7 @@ Take the BOB Principal Descriptor from Section 4 and flip any bit of field `0` w
 
 ### 17.2 COSE payload tamper
 
-The following bytes are a one-byte mutation of D1. Expected result: reject the object; it must not be assigned a valid Data Unit identity or merged.
+The following bytes are a one-byte mutation of D1. Expected result: reject the object with `INVALID_SIGNATURE` (LFCP-WIRE-01 §10.5); it must not be assigned a valid Data Unit identity or merged.
 
 ```text
 845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a05899a7005820
@@ -1437,11 +1437,11 @@ aff0ea92efef570c
 
 ### 17.4 AEAD AAD mismatch
 
-Decrypt D1 with the same actor key and nonce but change any AAD field, for example `seq=2`. Expected result: ChaCha20-Poly1305 authentication failure.
+Decrypt D1 with the same actor key and nonce but change any AAD field, for example `seq=2`. Expected result: ChaCha20-Poly1305 authentication failure. The client MUST NOT merge the unit; this is client-local and has no wire error code (LFCP-WIRE-01 §26.3).
 
 ### 17.5 Wrong HPKE recipient
 
-Attempt to decrypt `KP0_bob_epoch0` using CAROL's X25519 private key. Expected result: HPKE/AEAD open failure; no DEK is returned.
+Attempt to decrypt `KP0_bob_epoch0` using CAROL's X25519 private key. Expected result: HPKE/AEAD open failure; no DEK is returned and the package is ignored (client-local, no wire error code; LFCP-WIRE-01 §25.2).
 
 ### 17.6 Stale epoch
 
@@ -1458,7 +1458,7 @@ After C3 consumes the C2 invitation grant with `claim_limit=1`, a second `CAPABI
 
 ### 17.9 Non-deterministic CBOR signed object
 
-Re-encode any signed payload using a non-preferred integer width or non-deterministic map ordering and sign those different bytes. Even with a mathematically valid Ed25519 signature, a WIRE-01 validator claiming deterministic-CBOR conformance SHOULD reject the object as non-canonical. This requirement should be stated explicitly in the next WIRE draft.
+Re-encode any signed payload using a non-preferred integer width or non-deterministic map ordering and sign those different bytes. Even with a mathematically valid Ed25519 signature, the receiver MUST reject the object with `MALFORMED_MESSAGE`: it re-encodes the decoded payload and the bytes differ (LFCP-WIRE-01 §5.2).
 
 ### 17.10 Machine-readable negative vectors
 
@@ -1468,7 +1468,7 @@ Each vector below changes exactly one property of a published positive case and 
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: AAD encoding of the actor sequence (seq 1): `01` → `1801`
-- Rule (LFCP-WIRE-01 §5.2; §26.3): When an LFCP algorithm requires reconstructing a deterministic structure, such as AEAD AAD, HPKE `info`, or HPKE AAD, the reconstructed structure MUST follow these deterministic CBOR rules exactly. (§26.3: a Data Unit is eligible for merge only if "the unit decrypts successfully".)
+- Rule (LFCP-WIRE-01 §5.2; §26.3): When an LFCP algorithm requires reconstructing a deterministic structure, such as AEAD AAD, HPKE `info`, or HPKE AAD, the reconstructed structure MUST follow these deterministic CBOR rules exactly. (§26.3: a Data Unit is eligible for merge only if "the unit decrypts successfully"; "A client MUST NOT merge a Data Unit that fails AEAD authentication and SHOULD surface it to the application.")
 - Expected: invalid, reject, no error code specified
 - Why: The receiver reconstructs the canonical AAD, so decryption fails; accepting it would require guessing alternative encodings of signed or authenticated structures.
 
@@ -1495,8 +1495,8 @@ noncanonical_aad_cbor:
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: outer CBOR tag: `"none"` → `"tag 18"`
-- Rule (LFCP-WIRE-01 §10): A strict LFCP-WIRE-01 implementation MUST reject a tagged persistent LFCP object as non-canonical.
-- Expected: invalid, reject, no error code specified
+- Rule (LFCP-WIRE-01 §10): A strict LFCP-WIRE-01 implementation MUST reject a tagged persistent LFCP object as non-canonical, with `MALFORMED_MESSAGE`.
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
 - Why: The object ID is SHA-256 of the exact bytes; a tagged copy would be a second, different object for the same content.
 
 cose_sign1:
@@ -1514,8 +1514,8 @@ f8376ef3267158408adb5052b4f93358a1d5397fd05f591b47b20724afd186d42368caba11bd1f7e
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: signature byte 63: `08` → `09`
-- Rule (LFCP-WIRE-01 §26.3, §10.5): A Data Unit is eligible for merge only if: 1. its signature is valid for the actor Principal;
-- Expected: invalid, reject, no error code specified
+- Rule (LFCP-WIRE-01 §10.5, §26.3): A receiver MUST reject a signed object whose signature does not verify under the public key of the Principal named by `kid` [...]. It reports `INVALID_SIGNATURE`.
+- Expected: invalid, reject, error code `INVALID_SIGNATURE`
 - Why: An unverified signature lets anyone inject Data Units in the actor's name.
 
 cose_sign1:
@@ -1533,8 +1533,8 @@ f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca3
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: protected header kid (and signing key): `3ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5` → `a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48`
-- Rule (LFCP-WIRE-01 §10.1, §26): The value of `kid` MUST be the 32-byte Principal ID of the signing Principal. (§26: "The payload is signed by the actor using COSE_Sign1.")
-- Expected: invalid, reject, no error code specified
+- Rule (LFCP-WIRE-01 §10.1, §10.5, §26): A receiver MUST reject a signed object [...] whose `kid` does not identify the Principal the object requires as signer (for example, the actor of a Data Unit). It reports `INVALID_SIGNATURE`.
+- Expected: invalid, reject, error code `INVALID_SIGNATURE`
 - Why: The signature is valid but by the wrong Principal; accepting it lets one member forge another member's edits.
 
 cose_sign1:
@@ -1552,7 +1552,7 @@ f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca3
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: AAD actor sequence used for sealing: `1` → `2`
-- Rule (LFCP-WIRE-01 §26.1, §26.3): A Data Unit is eligible for merge only if: [...] 6. the unit decrypts successfully;
+- Rule (LFCP-WIRE-01 §26.1, §26.3): A Data Unit is eligible for merge only if: [...] 6. the unit decrypts successfully [...] A client MUST NOT merge a Data Unit that fails AEAD authentication and SHOULD surface it to the application.
 - Expected: invalid, reject, no error code specified
 - Why: The AAD binds the ciphertext to its resource, epoch, actor and position; accepting it would let ciphertext be replayed elsewhere.
 
@@ -1593,7 +1593,7 @@ d3967a4fdd80ea2a6180efaa8a9f15bf2ee5c32cda4603040458203ddf22ff145274bcc59c56ffdd
 
 - Base case: `C6_key_epoch_1`
 - Mutation: body field 2: BOB cutoff sequence: `2` → `3`
-- Rule (LFCP-WIRE-01 §13.2): Two different validly signed records referencing the same previous Control Record create a Control Fork. A client MUST NOT silently choose a branch. The Resource enters `CONTROL_CONFLICT` [...]
+- Rule (LFCP-WIRE-01 §13.2): Two different validly signed records referencing the same previous Control Record create a Control Fork. A client MUST NOT silently choose a branch. Neither record is accepted as the Control Head; a receiver that refuses a competing record reports `CONTROL_CONFLICT`.
 - Expected: invalid, conflict, error code `CONTROL_CONFLICT`
 - Why: Choosing a branch silently would let replicas diverge on authorization and keys.
 
@@ -1619,8 +1619,8 @@ record_id:
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: actor sequence (payload field 3): `1` → `0`
-- Rule (LFCP-WIRE-01 §8): Sequence numbers begin at `1`.
-- Expected: invalid, no error code specified
+- Rule (LFCP-WIRE-01 §8): Sequence numbers begin at `1`. A receiver MUST reject a Data Unit with actor sequence `0` with `MALFORMED_MESSAGE`.
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
 - Why: Sequence 0 is outside the per-actor sequence space, so Have Vectors and hash chains cannot describe it.
 
 cose_sign1:
@@ -1658,7 +1658,7 @@ a219b447656a69cd313e1eacbecd2e52bad5b1f0188c8b2c2e24d79c0eb07866c67a6b249e6a845c
 
 - Base case: `KP0_bob_epoch0`
 - Mutation: recipient (payload field 2): `3ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5` → `a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48`
-- Rule (LFCP-WIRE-01 §25.1, §25.2): The HPKE `info` value is deterministic CBOR encoding of ["LFCP-KEY-v1", resource-id, data epoch, recipient]. [...] Clients accept any cryptographically valid package that yields the correct DEK commitment.
+- Rule (LFCP-WIRE-01 §25.1, §25.2): The HPKE `info` value is deterministic CBOR encoding of ["LFCP-KEY-v1", resource-id, data epoch, recipient]. [...] A package that does not open for its named recipient, or whose DEK does not match the commitment, is ignored and SHOULD be surfaced to the application. This is a client-local decision [...]
 - Expected: invalid, reject, no error code specified
 - Why: HPKE info binds the recipient; a package that does not open for its named recipient delivers no key.
 
@@ -1679,8 +1679,8 @@ aabdace14b42d179d3768648c535b3abed0ca41207be0e7157c31d6c073106e03758408802ca1c0b
 
 - Base case: `SNAPSHOT-01`
 - Mutation: CAROL entry key 2: `"absent"` → `"[] (present and empty)"`
-- Rule (LFCP-WIRE-01 §28.1 rule 2; §28.2): 2. key `2` MUST be omitted when there are no extra ranges; (§28.2: "A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.")
-- Expected: invalid, reject, no error code specified
+- Rule (LFCP-WIRE-01 §28.1 rule 2; §28.2): 2. key `2` MUST be omitted when there are no extra ranges; (§28.2: "A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical, with `MALFORMED_MESSAGE`.")
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
 - Why: Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier.
 
 cose_sign1:
@@ -1700,8 +1700,8 @@ f4f6208b1daa2c8f0589916e0e7c68103ca43327922202cada2e6d19bb677f9ace7f5840c39f6693
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra range: `[[105, 107]]` → `[[107, 105]]`
-- Rule (LFCP-WIRE-01 §28.1 rule 4; §28.2): 4. each sequence range MUST have `start <= end`; (§28.2: "A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.")
-- Expected: invalid, reject, no error code specified
+- Rule (LFCP-WIRE-01 §28.1 rule 4; §28.2): 4. each sequence range MUST have `start <= end`; (§28.2: "A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical, with `MALFORMED_MESSAGE`.")
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
 - Why: Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier.
 
 cose_sign1:
@@ -1721,8 +1721,8 @@ c655677cb30e1b573901
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra range: `[[105, 107]]` → `[[95, 107]]`
-- Rule (LFCP-WIRE-01 §28.1 rule 5; §28.2): 5. ranges MUST be strictly above `contiguous`; (§28.2: "A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.")
-- Expected: invalid, reject, no error code specified
+- Rule (LFCP-WIRE-01 §28.1 rule 5; §28.2): 5. ranges MUST be strictly above `contiguous`; (§28.2: "A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical, with `MALFORMED_MESSAGE`.")
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
 - Why: Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier.
 
 cose_sign1:
@@ -1742,8 +1742,8 @@ a33b9c6cc820d07e0705
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra ranges: `[[105, 107]]` → `[[110, 112], [105, 107]]`
-- Rule (LFCP-WIRE-01 §28.1 rule 6; §28.2): 6. ranges MUST be sorted by ascending `start`, then ascending `end`; (§28.2: "A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.")
-- Expected: invalid, reject, no error code specified
+- Rule (LFCP-WIRE-01 §28.1 rule 6; §28.2): 6. ranges MUST be sorted by ascending `start`, then ascending `end`; (§28.2: "A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical, with `MALFORMED_MESSAGE`.")
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
 - Why: Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier.
 
 cose_sign1:
@@ -1763,8 +1763,8 @@ aebf4ca511cb59476bc4fd9eb253e20037b2dbb9938a69ee5abf0a527ba44b2dafe326d7b1b1f77a
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra ranges: `[[105, 107]]` → `[[105, 107], [106, 110]]`
-- Rule (LFCP-WIRE-01 §28.1 rule 7; §28.2): 7. ranges MUST be non-overlapping; (§28.2: "A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.")
-- Expected: invalid, reject, no error code specified
+- Rule (LFCP-WIRE-01 §28.1 rule 7; §28.2): 7. ranges MUST be non-overlapping; (§28.2: "A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical, with `MALFORMED_MESSAGE`.")
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
 - Why: Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier.
 
 cose_sign1:
@@ -1784,8 +1784,8 @@ deb4c1fba57b7a45baab536c503d402384fdc308d03187d6d4a4bd5f8b64c425a389bea6642e4604
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra ranges: `[[105, 107]]` → `[[105, 107], [108, 110]]`
-- Rule (LFCP-WIRE-01 §28.1 rule 8; §28.2): 8. ranges MUST be non-adjacent; (§28.2: "A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.")
-- Expected: invalid, reject, no error code specified
+- Rule (LFCP-WIRE-01 §28.1 rule 8; §28.2): 8. ranges MUST be non-adjacent; (§28.2: "A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical, with `MALFORMED_MESSAGE`.")
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
 - Why: Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier.
 
 cose_sign1:
@@ -1805,8 +1805,8 @@ ad913da8fe178f8710eb70ac104209
 
 - Base case: `SNAPSHOT-01`
 - Mutation: BOB entries in the frontier: `1` → `2`
-- Rule (LFCP-WIRE-01 §28.1 rule 9; §28.2): 9. no two `actor-have` entries for the same Principal MAY occur in one canonical frontier. (§28.2: "A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.")
-- Expected: invalid, reject, no error code specified
+- Rule (LFCP-WIRE-01 §28.1 rule 9; §28.2): 9. no two `actor-have` entries for the same Principal MAY occur in one canonical frontier. (§28.2: "A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical, with `MALFORMED_MESSAGE`.")
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
 - Why: Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier.
 
 cose_sign1:
@@ -1826,8 +1826,8 @@ f670bfde1440c720608227c380d2a5283876991f6fb5ecdc791619400db9201a2175b6f654cea15e
 
 - Base case: `SNAPSHOT-01`
 - Mutation: frontier entry order: `"BOB, CAROL"` → `"CAROL, BOB"`
-- Rule (LFCP-WIRE-01 §28.2): Entries MUST be sorted by ascending raw 32-byte `principal-id`, compared lexicographically as unsigned bytes. [...] A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.
-- Expected: invalid, reject, no error code specified
+- Rule (LFCP-WIRE-01 §28.2): Entries MUST be sorted by ascending raw 32-byte `principal-id`, compared lexicographically as unsigned bytes. [...] A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical, with `MALFORMED_MESSAGE`.
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
 - Why: Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one entry order.
 
 cose_sign1:
@@ -1847,7 +1847,7 @@ c50d
 
 - Base case: `D4_carol_epoch1_seq1`
 - Mutation: Data Epoch (payload field 1): `1` → `0`
-- Rule (LFCP-WIRE-01 §19.1; §88 step 7; §75): If an actor is absent from the recorded frontier, no newly discovered Data Units from that actor in the closed epoch are automatically acceptable. Any later-arriving previous-epoch unit beyond that frontier MUST NOT be merged automatically. It SHOULD be surfaced to the application as stale offline work [...]
+- Rule (LFCP-WIRE-01 §19.1; §88 step 7; §75): If an actor is absent from the recorded frontier, no newly discovered Data Units from that actor in the closed epoch are automatically acceptable. Any later-arriving previous-epoch unit beyond that frontier MUST NOT be merged automatically. A server that receives such a unit in `DATA_PUT` responds `NACK(STALE_DATA_EPOCH)`; a client keeps it in quarantine. [...] It SHOULD be surfaced to the application as stale offline work [...]
 - Expected: invalid, quarantine, error code `STALE_DATA_EPOCH`
 - Why: The cutoff frontier makes revocation deterministic; merging late closed-epoch work would let removed members keep writing.
 

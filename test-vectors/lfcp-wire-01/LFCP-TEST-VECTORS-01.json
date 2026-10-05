@@ -1062,7 +1062,10 @@
         }
       },
       "expected": {
-        "valid": false
+        "valid": false,
+        "error": {
+          "code": "INVALID_SIGNATURE"
+        }
       }
     },
     {
@@ -1087,6 +1090,7 @@
       "type": "validation",
       "kind": "data_unit",
       "description": "D1 sealed under a non-deterministically encoded AAD",
+      "note": "Client-local rejection (SPEC-PATCH-01 / N3): only a client holding the DEK can detect it; there is no wire error code.",
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a05899a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030104f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead8c23b6b8e66403566f94fa11126cfd785840ceb668343f6ca82263e057b75390bf93030f4e7b1e58e4c5de885f029f93e8f59996e45b6cc658560e4156042fe995290f6be0d99371083bb45f0255d12e7e09"
@@ -1108,7 +1112,7 @@
         },
         "rule": {
           "section": "LFCP-WIRE-01 §5.2; §26.3",
-          "text": "When an LFCP algorithm requires reconstructing a deterministic structure, such as AEAD AAD, HPKE `info`, or HPKE AAD, the reconstructed structure MUST follow these deterministic CBOR rules exactly. (§26.3: a Data Unit is eligible for merge only if \"the unit decrypts successfully\".)"
+          "text": "When an LFCP algorithm requires reconstructing a deterministic structure, such as AEAD AAD, HPKE `info`, or HPKE AAD, the reconstructed structure MUST follow these deterministic CBOR rules exactly. (§26.3: a Data Unit is eligible for merge only if \"the unit decrypts successfully\"; \"A client MUST NOT merge a Data Unit that fails AEAD authentication and SHOULD surface it to the application.\")"
         },
         "why": "The receiver reconstructs the canonical AAD, so decryption fails; accepting it would require guessing alternative encodings of signed or authenticated structures."
       },
@@ -1136,13 +1140,16 @@
         },
         "rule": {
           "section": "LFCP-WIRE-01 §10",
-          "text": "A strict LFCP-WIRE-01 implementation MUST reject a tagged persistent LFCP object as non-canonical."
+          "text": "A strict LFCP-WIRE-01 implementation MUST reject a tagged persistent LFCP object as non-canonical, with `MALFORMED_MESSAGE`."
         },
         "why": "The object ID is SHA-256 of the exact bytes; a tagged copy would be a second, different object for the same content."
       },
       "expected": {
         "valid": false,
-        "disposition": "reject"
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE"
+        }
       }
     },
     {
@@ -1167,14 +1174,17 @@
           }
         },
         "rule": {
-          "section": "LFCP-WIRE-01 §26.3, §10.5",
-          "text": "A Data Unit is eligible for merge only if: 1. its signature is valid for the actor Principal;"
+          "section": "LFCP-WIRE-01 §10.5, §26.3",
+          "text": "A receiver MUST reject a signed object whose signature does not verify under the public key of the Principal named by `kid` [...]. It reports `INVALID_SIGNATURE`."
         },
         "why": "An unverified signature lets anyone inject Data Units in the actor's name."
       },
       "expected": {
         "valid": false,
-        "disposition": "reject"
+        "disposition": "reject",
+        "error": {
+          "code": "INVALID_SIGNATURE"
+        }
       }
     },
     {
@@ -1209,14 +1219,17 @@
           }
         },
         "rule": {
-          "section": "LFCP-WIRE-01 §10.1, §26",
-          "text": "The value of `kid` MUST be the 32-byte Principal ID of the signing Principal. (§26: \"The payload is signed by the actor using COSE_Sign1.\")"
+          "section": "LFCP-WIRE-01 §10.1, §10.5, §26",
+          "text": "A receiver MUST reject a signed object [...] whose `kid` does not identify the Principal the object requires as signer (for example, the actor of a Data Unit). It reports `INVALID_SIGNATURE`."
         },
         "why": "The signature is valid but by the wrong Principal; accepting it lets one member forge another member's edits."
       },
       "expected": {
         "valid": false,
-        "disposition": "reject"
+        "disposition": "reject",
+        "error": {
+          "code": "INVALID_SIGNATURE"
+        }
       }
     },
     {
@@ -1224,6 +1237,7 @@
       "type": "validation",
       "kind": "data_unit",
       "description": "D1 ciphertext sealed under the AAD of sequence 2",
+      "note": "Client-local rejection (SPEC-PATCH-01 / N3): only a client holding the DEK can detect it; there is no wire error code.",
       "inputs": {
         "cose_sign1": {
           "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a05899a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030104f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aeadfa4c94672f853eab1f58578e579f6ccc58409fffb58d10720976aa661d2f00f908ba7e2e518afed45e024dc0acb04c99d488244f9d548f49ac11a61645c4c8ffd545394112c92dd47860daae68f074ad8c02"
@@ -1238,7 +1252,7 @@
         },
         "rule": {
           "section": "LFCP-WIRE-01 §26.1, §26.3",
-          "text": "A Data Unit is eligible for merge only if: [...] 6. the unit decrypts successfully;"
+          "text": "A Data Unit is eligible for merge only if: [...] 6. the unit decrypts successfully [...] A client MUST NOT merge a Data Unit that fails AEAD authentication and SHOULD surface it to the application."
         },
         "why": "The AAD binds the ciphertext to its resource, epoch, actor and position; accepting it would let ciphertext be replayed elsewhere."
       },
@@ -1320,7 +1334,7 @@
         },
         "rule": {
           "section": "LFCP-WIRE-01 §13.2",
-          "text": "Two different validly signed records referencing the same previous Control Record create a Control Fork. A client MUST NOT silently choose a branch. The Resource enters `CONTROL_CONFLICT` [...]"
+          "text": "Two different validly signed records referencing the same previous Control Record create a Control Fork. A client MUST NOT silently choose a branch. Neither record is accepted as the Control Head; a receiver that refuses a competing record reports `CONTROL_CONFLICT`."
         },
         "why": "Choosing a branch silently would let replicas diverge on authorization and keys."
       },
@@ -1351,12 +1365,16 @@
         },
         "rule": {
           "section": "LFCP-WIRE-01 §8",
-          "text": "Sequence numbers begin at `1`."
+          "text": "Sequence numbers begin at `1`. A receiver MUST reject a Data Unit with actor sequence `0` with `MALFORMED_MESSAGE`."
         },
         "why": "Sequence 0 is outside the per-actor sequence space, so Have Vectors and hash chains cannot describe it."
       },
       "expected": {
-        "valid": false
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE"
+        }
       }
     },
     {
@@ -1394,6 +1412,7 @@
       "type": "validation",
       "kind": "key_package",
       "description": "KP0 payload names CAROL as recipient but is sealed to BOB",
+      "note": "Client-local rejection (SPEC-PATCH-01 / N5): the package is ignored and surfaced; there is no wire error code.",
       "inputs": {
         "cose_sign1": {
           "hex": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e5a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480358200b5dc558b8104686d5d6b0063629f1cfaf48049dee3580ca6e253d27f3359e33045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05582090ca4ed22f5b693d842711cd8c3d692e1002a3a84730926abd4e3eed9342ee0a065830e7a2257711c7244d0f333986ceab7baabdace14b42d179d3768648c535b3abed0ca41207be0e7157c31d6c073106e03758408802ca1c0b3a00ed98f3550c679e1e2d9a0d18b0b96075717cb31365c93f6e928642bb9bbc43cb7e1732172ebf5b90cbe2964d1f646aa0b5b76f120fa599c003"
@@ -1419,7 +1438,7 @@
         },
         "rule": {
           "section": "LFCP-WIRE-01 §25.1, §25.2",
-          "text": "The HPKE `info` value is deterministic CBOR encoding of [\"LFCP-KEY-v1\", resource-id, data epoch, recipient]. [...] Clients accept any cryptographically valid package that yields the correct DEK commitment."
+          "text": "The HPKE `info` value is deterministic CBOR encoding of [\"LFCP-KEY-v1\", resource-id, data epoch, recipient]. [...] A package that does not open for its named recipient, or whose DEK does not match the commitment, is ignored and SHOULD be surfaced to the application. This is a client-local decision [...]"
         },
         "why": "HPKE info binds the recipient; a package that does not open for its named recipient delivers no key."
       },
@@ -1447,13 +1466,16 @@
         },
         "rule": {
           "section": "LFCP-WIRE-01 §28.1 rule 2; §28.2",
-          "text": "2. key `2` MUST be omitted when there are no extra ranges; (§28.2: \"A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.\")"
+          "text": "2. key `2` MUST be omitted when there are no extra ranges; (§28.2: \"A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical, with `MALFORMED_MESSAGE`.\")"
         },
         "why": "Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier."
       },
       "expected": {
         "valid": false,
-        "disposition": "reject"
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE"
+        }
       }
     },
     {
@@ -1485,13 +1507,16 @@
         },
         "rule": {
           "section": "LFCP-WIRE-01 §28.1 rule 4; §28.2",
-          "text": "4. each sequence range MUST have `start <= end`; (§28.2: \"A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.\")"
+          "text": "4. each sequence range MUST have `start <= end`; (§28.2: \"A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical, with `MALFORMED_MESSAGE`.\")"
         },
         "why": "Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier."
       },
       "expected": {
         "valid": false,
-        "disposition": "reject"
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE"
+        }
       }
     },
     {
@@ -1523,13 +1548,16 @@
         },
         "rule": {
           "section": "LFCP-WIRE-01 §28.1 rule 5; §28.2",
-          "text": "5. ranges MUST be strictly above `contiguous`; (§28.2: \"A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.\")"
+          "text": "5. ranges MUST be strictly above `contiguous`; (§28.2: \"A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical, with `MALFORMED_MESSAGE`.\")"
         },
         "why": "Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier."
       },
       "expected": {
         "valid": false,
-        "disposition": "reject"
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE"
+        }
       }
     },
     {
@@ -1565,13 +1593,16 @@
         },
         "rule": {
           "section": "LFCP-WIRE-01 §28.1 rule 6; §28.2",
-          "text": "6. ranges MUST be sorted by ascending `start`, then ascending `end`; (§28.2: \"A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.\")"
+          "text": "6. ranges MUST be sorted by ascending `start`, then ascending `end`; (§28.2: \"A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical, with `MALFORMED_MESSAGE`.\")"
         },
         "why": "Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier."
       },
       "expected": {
         "valid": false,
-        "disposition": "reject"
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE"
+        }
       }
     },
     {
@@ -1607,13 +1638,16 @@
         },
         "rule": {
           "section": "LFCP-WIRE-01 §28.1 rule 7; §28.2",
-          "text": "7. ranges MUST be non-overlapping; (§28.2: \"A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.\")"
+          "text": "7. ranges MUST be non-overlapping; (§28.2: \"A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical, with `MALFORMED_MESSAGE`.\")"
         },
         "why": "Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier."
       },
       "expected": {
         "valid": false,
-        "disposition": "reject"
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE"
+        }
       }
     },
     {
@@ -1649,13 +1683,16 @@
         },
         "rule": {
           "section": "LFCP-WIRE-01 §28.1 rule 8; §28.2",
-          "text": "8. ranges MUST be non-adjacent; (§28.2: \"A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.\")"
+          "text": "8. ranges MUST be non-adjacent; (§28.2: \"A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical, with `MALFORMED_MESSAGE`.\")"
         },
         "why": "Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier."
       },
       "expected": {
         "valid": false,
-        "disposition": "reject"
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE"
+        }
       }
     },
     {
@@ -1677,13 +1714,16 @@
         },
         "rule": {
           "section": "LFCP-WIRE-01 §28.1 rule 9; §28.2",
-          "text": "9. no two `actor-have` entries for the same Principal MAY occur in one canonical frontier. (§28.2: \"A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.\")"
+          "text": "9. no two `actor-have` entries for the same Principal MAY occur in one canonical frontier. (§28.2: \"A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical, with `MALFORMED_MESSAGE`.\")"
         },
         "why": "Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier."
       },
       "expected": {
         "valid": false,
-        "disposition": "reject"
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE"
+        }
       }
     },
     {
@@ -1705,13 +1745,16 @@
         },
         "rule": {
           "section": "LFCP-WIRE-01 §28.2",
-          "text": "Entries MUST be sorted by ascending raw 32-byte `principal-id`, compared lexicographically as unsigned bytes. [...] A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical."
+          "text": "Entries MUST be sorted by ascending raw 32-byte `principal-id`, compared lexicographically as unsigned bytes. [...] A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical, with `MALFORMED_MESSAGE`."
         },
         "why": "Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one entry order."
       },
       "expected": {
         "valid": false,
-        "disposition": "reject"
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE"
+        }
       }
     },
     {
@@ -1740,7 +1783,7 @@
         },
         "rule": {
           "section": "LFCP-WIRE-01 §19.1; §88 step 7; §75",
-          "text": "If an actor is absent from the recorded frontier, no newly discovered Data Units from that actor in the closed epoch are automatically acceptable. Any later-arriving previous-epoch unit beyond that frontier MUST NOT be merged automatically. It SHOULD be surfaced to the application as stale offline work [...]"
+          "text": "If an actor is absent from the recorded frontier, no newly discovered Data Units from that actor in the closed epoch are automatically acceptable. Any later-arriving previous-epoch unit beyond that frontier MUST NOT be merged automatically. A server that receives such a unit in `DATA_PUT` responds `NACK(STALE_DATA_EPOCH)`; a client keeps it in quarantine. [...] It SHOULD be surfaced to the application as stale offline work [...]"
         },
         "why": "The cutoff frontier makes revocation deterministic; merging late closed-epoch work would let removed members keep writing."
       },

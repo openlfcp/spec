@@ -157,6 +157,8 @@ Where an LFCP field is optional, omitting the field and encoding the field with 
 
 A verifier receiving a signed object verifies the exact received bytes. It MUST NOT decode and re-encode an object before signature verification or object-ID calculation.
 
+A receiver MUST also reject a persistent signed object whose protected-header bytes or payload bytes are not the deterministic encoding of their own decoded value. It decodes each byte string, re-encodes the decoded value under the rules of this section, and compares the result byte for byte with the received bytes; any difference is rejected with `MALFORMED_MESSAGE`. This comparison is in addition to, not instead of, verifying the signature and computing the object ID over the exact received bytes.
+
 When an LFCP algorithm requires reconstructing a deterministic structure, such as AEAD AAD, HPKE `info`, or HPKE AAD, the reconstructed structure MUST follow these deterministic CBOR rules exactly.
 
 ### 5.3 Hash
@@ -259,7 +261,7 @@ Every writing Principal maintains a monotonically increasing sequence number **p
 (resource, principal) -> next_seq
 ```
 
-Sequence numbers begin at `1`.
+Sequence numbers begin at `1`. A receiver MUST reject a Data Unit with actor sequence `0` with `MALFORMED_MESSAGE`.
 
 A Principal MUST NOT create two different Data Units with the same `(resource_id, principal_id, seq)` tuple.
 
@@ -313,7 +315,7 @@ The object is encoded as a CBOR array, not as:
 18([ protected, unprotected, payload, signature ])
 ```
 
-A strict LFCP-WIRE-01 implementation MUST reject a tagged persistent LFCP object as non-canonical.
+A strict LFCP-WIRE-01 implementation MUST reject a tagged persistent LFCP object as non-canonical, with `MALFORMED_MESSAGE`.
 
 Because LFCP-WIRE-01 is still a Working Draft, no compatibility with pre-consolidation experimental tagged objects is required. An implementation MAY offer an explicit import tool for such data, but imported objects MUST retain their exact received bytes until deliberately migrated.
 
@@ -348,7 +350,7 @@ The COSE payload MUST be present and MUST be a CBOR byte string.
 
 Detached payloads are not permitted in LFCP-WIRE-01.
 
-For LFCP records whose payload is an LFCP CBOR structure, the byte string MUST contain the deterministic CBOR encoding of that structure.
+For LFCP records whose payload is an LFCP CBOR structure, the byte string MUST contain the deterministic CBOR encoding of that structure. A receiver rejects a payload that is not (Section 5.2).
 
 ### 10.4 External AAD
 
@@ -374,6 +376,8 @@ sig-structure = [
 The `Sig_structure` itself MUST be encoded using the deterministic CBOR rules in Section 5.2.
 
 The signature is the 64-byte Ed25519 signature over the encoded `Sig_structure`.
+
+A receiver MUST reject a signed object whose signature does not verify under the public key of the Principal named by `kid`, or whose `kid` does not identify the Principal the object requires as signer (for example, the actor of a Data Unit). It reports `INVALID_SIGNATURE`.
 
 ### 10.6 Exact bytes and object IDs
 
@@ -537,7 +541,7 @@ Two different validly signed records referencing the same previous Control Recor
 
 A client MUST NOT silently choose a branch.
 
-The Resource enters `CONTROL_CONFLICT` until the owner explicitly resolves the fork using a future recovery procedure or an implementation-specific administrative procedure.
+Neither record is accepted as the Control Head; a receiver that refuses a competing record reports `CONTROL_CONFLICT`. The Resource enters `CONTROL_CONFLICT` until the owner explicitly resolves the fork using a future recovery procedure or an implementation-specific administrative procedure.
 
 Normal operation uses a Control Coordinator to prevent accidental forks.
 
@@ -817,7 +821,7 @@ After a Key Epoch Record is committed, a Data Unit belonging to the previous epo
 
 If an actor is absent from the recorded frontier, no newly discovered Data Units from that actor in the closed epoch are automatically acceptable.
 
-Any later-arriving previous-epoch unit beyond that frontier MUST NOT be merged automatically.
+Any later-arriving previous-epoch unit beyond that frontier MUST NOT be merged automatically. A server that receives such a unit in `DATA_PUT` responds `NACK(STALE_DATA_EPOCH)`; a client keeps it in quarantine.
 
 It SHOULD be surfaced to the application as stale offline work that may be manually reviewed and re-applied.
 
@@ -942,6 +946,8 @@ owner-transfer-accept-payload = {
 }
 ```
 
+The transfer offer ID and the transfer accept ID are the Section 10.6 object IDs of the offer's and the accept's exact COSE_Sign1 bytes.
+
 ### 23.3 Transfer Commit
 
 The new owner submits a Control Record of type `OWNER_TRANSFER_COMMIT` signed by the new owner.
@@ -993,7 +999,7 @@ It only states that the Resource should no longer accept normal future mutations
 
 A Key Package delivers a Resource DEK to an authorized Principal using HPKE.
 
-The payload is signed with COSE_Sign1.
+The payload is signed with COSE_Sign1. The Key Package ID is the Section 10.6 object ID of the Key Package's exact COSE_Sign1 bytes.
 
 ```cddl
 key-package-payload = {
@@ -1043,6 +1049,8 @@ The recipient MUST have had `data/read` authority at that Control Head, except f
 A server MAY store multiple Key Packages for the same `(resource, epoch, recipient)` tuple.
 
 Clients accept any cryptographically valid package that yields the correct DEK commitment.
+
+A package that does not open for its named recipient, or whose DEK does not match the commitment, is ignored and SHOULD be surfaced to the application. This is a client-local decision: the server cannot open packages, and no wire error code applies.
 
 ---
 
@@ -1115,8 +1123,10 @@ A Data Unit is eligible for merge only if:
 3. the referenced Control Head belongs to the valid Control Chain;
 4. the Data Epoch is recognized;
 5. if the epoch has since been closed, the unit is within the epoch cutoff frontier;
-6. the unit decrypts successfully;
+6. the unit decrypts successfully (see below);
 7. the Data Profile accepts the plaintext.
+
+Decryption failure is detected only by clients that hold the DEK; the server cannot decrypt. A client MUST NOT merge a Data Unit that fails AEAD authentication and SHOULD surface it to the application. This rejection is client-local and has no wire error code.
 
 ---
 
@@ -1208,6 +1218,8 @@ Thus the following two representations are not both canonical:
 
 Only the first form is canonical when no extra ranges exist.
 
+A persistent LFCP object that contains a non-canonical `actor-have` MUST be rejected with `MALFORMED_MESSAGE`.
+
 ### 28.2 Canonical Frontier
 
 A **canonical frontier** is an array of canonical `actor-have` maps:
@@ -1222,7 +1234,7 @@ The empty frontier is encoded as the empty CBOR array.
 
 Any Snapshot publisher MUST canonicalize the frontier before encrypting or signing a Snapshot.
 
-A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.
+A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical, with `MALFORMED_MESSAGE`.
 
 This sorting rule applies to the Snapshot frontier. It does not require live `DATA_HAVE` messages to be transmitted in that order unless another LFCP section explicitly requires it.
 
@@ -1366,7 +1378,7 @@ snapshot_plaintext = ChaCha20Poly1305.Open(
 )
 ```
 
-A verifier MUST reconstruct the canonical frontier and exact AAD and MUST reject the Snapshot if AEAD authentication fails.
+A verifier MUST reconstruct the canonical frontier and exact AAD and MUST reject the Snapshot if AEAD authentication fails. As for Data Units, this rejection is client-local and has no wire error code.
 
 A verifier MUST NOT attempt alternate AAD layouts.
 
@@ -1450,7 +1462,8 @@ lfcp-message = {
   1 => bstr .size 16,        ; message id
   ? 2 => bstr .size 16,      ; correlation id
   ? 3 => uint,               ; flags; currently 0
-  4 => any                    ; message body
+  4 => any,                   ; message body
+  * (uint .gt 15) => any      ; future fields, ignored if unknown
 }
 ```
 
@@ -2058,11 +2071,13 @@ presence-leave-body = {
 
 ```cddl
 ack-body = {
-  0 => uint,                  ; acknowledged operation kind
+  0 => uint,                  ; §33 message type code of the acknowledged request
   ? 1 => [* hash32],          ; object IDs committed
   ? 2 => bool                 ; durable under advertised server policy
 }
 ```
+
+Field `0` is the Section 33 message type code of the request being acknowledged, for example `33` for `DATA_PUT`.
 
 For `CONTROL_PUT`, the ACK SHOULD include the new Control Record ID.
 
@@ -3177,7 +3192,8 @@ lfcp-message = {
   1 => bstr .size 16,
   ? 2 => bstr .size 16,
   ? 3 => uint,
-  4 => any
+  4 => any,
+  * (uint .gt 15) => any
 }
 
 control-record-payload = {
