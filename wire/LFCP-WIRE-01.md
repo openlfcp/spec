@@ -1288,6 +1288,8 @@ Whenever an `actor-have` value is used inside a persistent LFCP object or crypto
 8. ranges MUST be non-adjacent;
 9. no two `actor-have` entries for the same Principal MAY occur in one canonical frontier.
 
+Note (non-normative): once rule 7 holds, no two ranges share a `start`, so the "then ascending `end`" part of rule 6 never decides an order; it is kept for completeness. Rule 3 states what a writer produces from a set of extra ranges; on decode, a present key `2` is checked only by rule 2 (it MUST NOT be an empty list), since an absent key `2` simply means no extra ranges.
+
 Thus the following two representations are not both canonical:
 
 ```cbor-diag
