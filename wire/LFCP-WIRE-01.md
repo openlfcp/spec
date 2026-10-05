@@ -146,12 +146,14 @@ A conforming LFCP encoder MUST:
 1. use the shortest permitted CBOR encoding for integers and lengths;
 2. use definite-length arrays, maps, byte strings, and text strings;
 3. reject or avoid duplicate map keys;
-4. order map keys according to deterministic CBOR ordering: first by the length of each key's deterministic CBOR encoding, then by bytewise lexical order of that encoding;
+4. order map keys according to deterministic CBOR ordering: first by the length of each key's deterministic CBOR encoding, then by bytewise lexical order of that encoding. This is the length-first ordering of RFC 8949 §4.2.3, not the purely bytewise ordering of RFC 8949 §4.2.1;
 5. preserve array order exactly where an LFCP schema defines an array;
 6. emit CBOR tags only where LFCP explicitly requires them;
 7. not add semantically redundant fields whose presence changes deterministic bytes.
 
 For protocol-owned maps, LFCP normally uses small unsigned integer keys.
+
+Map keys in LFCP deterministic structures MUST be integers, text strings or byte strings. LFCP deterministic structures, including the contents of fields typed `any`, MUST NOT contain floating-point values, `undefined`, or simple values other than `false`, `true` and `null`. A receiver MUST reject a structure that violates either rule with `MALFORMED_MESSAGE`.
 
 Where an LFCP field is optional, omitting the field and encoding the field with an empty value are distinct byte representations. Individual LFCP schemas MAY require one representation as canonical. Such requirements are normative.
 
@@ -232,6 +234,8 @@ principal_id = SHA-256(
 ```
 
 A verifier MUST recompute the ID whenever a descriptor is received.
+
+A Principal Descriptor with any field other than `0`, `1` and `2` is invalid; the map is closed, as the CDDL above defines it. A descriptor whose Principal ID does not equal the recomputed ID is rejected with `AUTH_FAILED` when it is received in `HELLO` or `AUTH` (session context) and with `MALFORMED_MESSAGE` in every other context.
 
 ### 7.1 Principal and human identity
 
@@ -351,6 +355,8 @@ The COSE payload MUST be present and MUST be a CBOR byte string.
 Detached payloads are not permitted in LFCP-WIRE-01.
 
 For LFCP records whose payload is an LFCP CBOR structure, the byte string MUST contain the deterministic CBOR encoding of that structure. A receiver rejects a payload that is not (Section 5.2).
+
+Every persistent LFCP signed object has a CBOR payload; the Section 5.2 check of payload bytes applies to it.
 
 ### 10.4 External AAD
 
