@@ -146,6 +146,46 @@
         { "$ref": "#/$defs/behavioral_case" }
       ]
     },
+    "case_ref": {
+      "description": "A value of another case: `field` of its `expected` values, or of its `inputs` when `in` is \"inputs\".",
+      "type": "object",
+      "required": ["case", "field"],
+      "additionalProperties": false,
+      "properties": {
+        "case": { "$ref": "#/$defs/identifier" },
+        "field": { "type": "string", "minLength": 1 },
+        "in": { "enum": ["inputs", "expected"] }
+      }
+    },
+    "derivation": {
+      "description": "How a negative case was derived from a positive one: exactly one property changed.",
+      "type": "object",
+      "required": ["base_case", "mutation", "rule", "why"],
+      "additionalProperties": false,
+      "properties": {
+        "base_case": { "$ref": "#/$defs/identifier" },
+        "mutation": {
+          "type": "object",
+          "required": ["field", "from", "to"],
+          "additionalProperties": false,
+          "properties": {
+            "field": { "type": "string", "minLength": 1 },
+            "from": {},
+            "to": {}
+          }
+        },
+        "rule": {
+          "type": "object",
+          "required": ["section", "text"],
+          "additionalProperties": false,
+          "properties": {
+            "section": { "type": "string", "minLength": 1 },
+            "text": { "type": "string", "minLength": 1 }
+          }
+        },
+        "why": { "type": "string", "minLength": 1 }
+      }
+    },
     "bytes_case": {
       "description": "Byte-exact case: the same inputs MUST produce exactly the expected values in every implementation.",
       "type": "object",
@@ -170,12 +210,28 @@
       "properties": {
         "type": { "const": "validation" },
         "inputs": { "type": "object" },
+        "context": {
+          "description": "State the outcome depends on (current head, cutoff, recipient, ...). Values are literals or references to values of other cases in the suite.",
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [
+              { "$ref": "#/$defs/case_ref" },
+              { "$ref": "#/$defs/value" },
+              { "type": "array", "items": { "$ref": "#/$defs/case_ref" } }
+            ]
+          }
+        },
+        "derivation": { "$ref": "#/$defs/derivation" },
         "expected": {
           "type": "object",
           "required": ["valid"],
           "additionalProperties": false,
           "properties": {
             "valid": { "type": "boolean" },
+            "disposition": {
+              "description": "What the specification says happens to an invalid input: reject it, quarantine it (keep it out of the merge and surface it), enter a conflict state, or report it to the sync engine.",
+              "enum": ["reject", "quarantine", "conflict", "report"]
+            },
             "error": {
               "type": "object",
               "additionalProperties": false,

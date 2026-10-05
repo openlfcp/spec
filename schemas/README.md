@@ -81,6 +81,23 @@ COSE, hashes, signed object IDs, wire framing and profile framing.
 
 A case with `valid: true` must not carry `error`.
 
+Optional fields for negative cases:
+
+- `expected.disposition`: what the specification says happens to the
+  input. The values are `reject`, `quarantine` (kept out of the merge and
+  surfaced), `conflict` (enter a conflict state; choose neither) and
+  `report` (report to the sync engine). It is given only where the
+  specification states it.
+- `context`: the state the outcome depends on, such as the current Control
+  Head, the epoch cutoff record or the recipient key. Values are literals or
+  references `{"case": <id>, "field": <name>}` to another case's `expected`
+  values (`"in": "inputs"` for its inputs). A negative case must be decidable
+  from its inputs, its context and the cases it references.
+- `derivation`: how the case was derived from a positive one. It records the
+  `base_case`, the single `mutation` (`field`, `from`, `to`), the violated
+  `rule` (`section` and exact `text`) and `why` acceptance would break the
+  protocol.
+
 ### `behavioral`: logical state
 
 For Automerge/profile scenarios where independent implementations may produce
