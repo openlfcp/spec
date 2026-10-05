@@ -57,7 +57,10 @@ migrations/    Value-preservation proofs for format migrations
 scripts/       Validation entry point and checks
 ```
 
-`registries/`, `rfcs/` and `adr/` will be added when they first have content.
+`adr/` holds architecture and protocol decision records, starting with
+[ADR 0001](adr/0001-mvp-0.1-protocol-decisions.md), the MVP 0.1 protocol
+decisions. `registries/` and `rfcs/` will be added when they first have
+content.
 
 ## Validate from a clean checkout
 
