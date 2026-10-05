@@ -33,6 +33,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import zlib from "node:zlib";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const outIndex = process.argv.indexOf("--out-dir");
@@ -502,6 +503,180 @@ corpus.validations.push(
     ],
   },
 );
+
+// SPEC-PATCH-07 (SHARED-OBJECTS-PROFILE-01 §11.1, §13.1): expansion limits.
+// Changes have exact limits (every receiver accepts or rejects the same
+// change); Snapshots have local limits with a floor every receiver accepts.
+// A receiver checks a chunk before its Automerge engine sees it.
+const leb = (n) => {
+  const out = [];
+  do {
+    let b = n % 128;
+    n = Math.floor(n / 128);
+    if (n > 0) b |= 0x80;
+    out.push(b);
+  } while (n > 0);
+  return out;
+};
+const sleb = (n) => {
+  const out = [];
+  for (;;) {
+    const b = n & 0x7f;
+    n = Math.floor(n / 128);
+    if ((n === 0 && (b & 0x40) === 0) || (n === -1 && (b & 0x40) !== 0)) {
+      out.push(b);
+      return out;
+    }
+    out.push(b | 0x80);
+  }
+};
+/** A chunk: magic, checksum (first 4 bytes of the chunk hash), type, length, data. */
+const chunk = (type, data) => {
+  const hash = crypto
+    .createHash("sha256")
+    .update(Uint8Array.from([type, ...leb(data.length)]))
+    .update(data)
+    .digest();
+  return Uint8Array.from([0x85, 0x6f, 0x4a, 0x83, ...hash.subarray(0, 4), type, ...leb(data.length), ...data]);
+};
+const EXP_ACTOR = actorOf("andrey");
+const expBase = A.decodeChange(
+  A.getLastLocalChange(
+    A.change(A.init({ actor: EXP_ACTOR }), { message: "EXP.base", time: 0 }, (d) => {
+      d.a = 0;
+    }),
+  ),
+);
+/** A change of `n` ops `root[key] = null` with `preds` each: Automerge's own encoder, every column run-length collapses. */
+const nullSets = (n, key = "k", preds = []) =>
+  A.encodeChange({
+    actor: EXP_ACTOR,
+    seq: 2,
+    startOp: expBase.startOp + expBase.ops.length,
+    time: 0,
+    message: null,
+    deps: [expBase.hash],
+    ops: Array.from({ length: n }, () => ({ action: "set", obj: "_root", key, value: null, pred: preds })),
+  });
+const predsOf = (n) => Array.from({ length: n }, (_, i) => `${i + 1}@${EXP_ACTOR}`);
+/** The same change as a compressed chunk (type 2): one stored DEFLATE block. */
+const compressed = (change) => {
+  const headerLen = 9 + leb(change.length - 9).length;
+  const data = change.subarray(headerLen);
+  const len = data.length;
+  const stored = Uint8Array.from([0x01, len & 0xff, len >> 8, ~len & 0xff, (~len >> 8) & 0xff, ...data]);
+  return Uint8Array.from([...change.subarray(0, 8), 2, ...leb(stored.length), ...stored]);
+};
+/**
+ * `zeros` zero bytes as one dynamic-Huffman DEFLATE block (RFC 1951), built
+ * by hand so the bytes never depend on a zlib version: literal 0 (code 10),
+ * then length 258 at distance 1 (codes 0 and 0) repeated, literal zeros for
+ * the rest, end of block (11).
+ */
+function deflateZeros(zeros) {
+  const out = [];
+  let acc = 0;
+  let bits = 0;
+  const put = (value, n) => {
+    for (let i = 0; i < n; i++) {
+      acc |= ((value >> i) & 1) << bits;
+      if (++bits === 8) {
+        out.push(acc);
+        acc = 0;
+        bits = 0;
+      }
+    }
+  };
+  const code = (c, n) => {
+    for (let i = n - 1; i >= 0; i--) put((c >> i) & 1, 1);
+  };
+  put(1, 1); // BFINAL
+  put(2, 2); // dynamic Huffman
+  put(29, 5); // HLIT: 286 literal/length codes
+  put(0, 5); // HDIST: 1 distance code
+  put(14, 4); // HCLEN: 18 code length codes
+  const order = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1];
+  const clLen = { 18: 1, 1: 2, 2: 2 };
+  for (const sym of order) put(clLen[sym] ?? 0, 3);
+  // Code length codes: 18 -> 0, 1 -> 10, 2 -> 11.
+  const cl = { 1: [0b10, 2], 2: [0b11, 2], 18: [0b0, 1] };
+  const zerosRun = (n) => {
+    code(...cl[18]);
+    put(n - 11, 7);
+  };
+  code(...cl[2]); // literal 0: length 2
+  zerosRun(138);
+  zerosRun(117); // literals 1..255 unused
+  code(...cl[2]); // 256 (end of block): length 2
+  zerosRun(28); // 257..284 unused
+  code(...cl[1]); // 285 (length 258): length 1
+  code(...cl[1]); // distance 0 (distance 1): length 1
+  // Literal/length codes: 285 -> 0, 0 -> 10, 256 -> 11; distance 0 -> 0.
+  code(0b10, 2);
+  let left = zeros - 1;
+  for (; left >= 258; left -= 258) {
+    code(0b0, 1);
+    code(0b0, 1);
+  }
+  for (; left > 0; left--) code(0b10, 2);
+  code(0b11, 2);
+  if (bits > 0) out.push(acc);
+  const bytes = Uint8Array.from(out);
+  const check = zlib.inflateRawSync(bytes);
+  if (check.length !== zeros || check.some((b) => b !== 0)) throw new Error("deflateZeros is wrong");
+  return bytes;
+}
+/** A document chunk with no actors, heads or change columns and the given op columns. */
+const documentChunk = (columns) =>
+  chunk(0, Uint8Array.from([
+    0, // actors
+    0, // heads
+    0, // change columns
+    ...leb(columns.length),
+    ...columns.flatMap(([spec, data]) => [...leb(spec), ...leb(data.length)]),
+    ...columns.flatMap(([, data]) => [...data]),
+  ]));
+const ACTION_INT = (4 << 4) | 2;
+const RAW_DEFLATED = (5 << 4) | 0x08 | 7;
+const rleRun = (n) => Uint8Array.from([...sleb(n), ...leb(1)]);
+const LIMITS = { change: { max_rows: 16384, max_group_sum: 16384, max_string_bytes: 4194304, max_deps: 1024, max_actors: 1024 }, snapshot_floor: { max_rows: 262144, max_group_sum: 262144, max_string_bytes: 33554432, max_inflated_bytes: 33554432, max_actors: 1024, max_heads: 1024 } };
+const expansion = (id, kind, description, rule, bytes, within) => ({
+  id,
+  kind,
+  description,
+  rule,
+  bytes_hex: hex(bytes),
+  sha256: sha256(bytes),
+  expected: within
+    ? { within_limits: true }
+    : { within_limits: false, error: { code: "PROFILE_INVALID", diagnostic: "INVALID_AUTOMERGE_BYTES" } },
+});
+const CHANGE_RULE = "SHARED-OBJECTS-PROFILE-01 §11.1: exact change limits, checked before the engine";
+const FLOOR_RULE = "SHARED-OBJECTS-PROFILE-01 §13.1: a receiver accepts at least the floor; one with floor limits rejects above it";
+const save01 = A.save(s01);
+corpus.expansion = {
+  limits: LIMITS,
+  note:
+    "Each case is checked with the expansion check alone (§11.1 for a change, §13.1 with floor limits for a Snapshot). " +
+    "A case within the limits may still fail other checks (it is not a valid Shared Objects change or document).",
+  cases: [
+    expansion("EXP-change-ops-at-limit", "change", "16,384 operations: the limit", CHANGE_RULE, nullSets(16384), true),
+    expansion("EXP-change-ops-over-limit", "change", "16,385 operations", CHANGE_RULE, nullSets(16385), false),
+    expansion("EXP-change-rle-bomb", "change", "1,000,000 operations in about 112 bytes (Automerge's own encoder)", CHANGE_RULE, nullSets(1_000_000), false),
+    expansion("EXP-change-preds-at-limit", "change", "one operation with 16,384 predecessors", CHANGE_RULE, nullSets(1, "k", predsOf(16384)), true),
+    expansion("EXP-change-preds-over-limit", "change", "one operation with 16,385 predecessors", CHANGE_RULE, nullSets(1, "k", predsOf(16385)), false),
+    expansion("EXP-change-strings-at-limit", "change", "16,384 rows of a 256-byte key: 4 MiB of strings", CHANGE_RULE, nullSets(16384, "x".repeat(256)), true),
+    expansion("EXP-change-strings-over-limit", "change", "16,384 rows of a 257-byte key", CHANGE_RULE, nullSets(16384, "x".repeat(257)), false),
+    expansion("EXP-change-compressed", "change", "a valid change as a compressed chunk (type 2)", "SHARED-OBJECTS-PROFILE-01 §11: a change is an uncompressed chunk (type 1)", compressed(nullSets(3)), false),
+    expansion("EXP-snapshot-rows-at-floor", "snapshot", "an op column of 262,144 values", FLOOR_RULE, documentChunk([[ACTION_INT, rleRun(262144)]]), true),
+    expansion("EXP-snapshot-rows-over-floor", "snapshot", "an op column of 262,145 values", FLOOR_RULE, documentChunk([[ACTION_INT, rleRun(262145)]]), false),
+    expansion("EXP-snapshot-inflated-at-floor", "snapshot", "a deflated column inflating to 32 MiB", FLOOR_RULE, documentChunk([[RAW_DEFLATED, deflateZeros(33554432)]]), true),
+    expansion("EXP-snapshot-inflated-over-floor", "snapshot", "a deflated column inflating to 32 MiB + 1 byte", FLOOR_RULE, documentChunk([[RAW_DEFLATED, deflateZeros(33554433)]]), false),
+    expansion("EXP-snapshot-trailing-chunk", "snapshot", "the S01 save followed by a change chunk", "SHARED-OBJECTS-PROFILE-01 §13, §13.1: exactly one document chunk, nothing after it", Uint8Array.from([...save01, ...nullSets(1)]), false),
+  ],
+};
+// The compressed case is a real compressed change: Automerge itself decodes it.
+if (A.decodeChange(compressed(nullSets(3))).ops.length !== 3) throw new Error("compressed() is wrong");
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
 fs.writeFileSync(path.join(OUT_DIR, OUT_NAME), JSON.stringify(corpus, null, 2) + "\n");

@@ -294,11 +294,41 @@ A receiver MUST reject profile plaintext that:
 - uses an unsupported framing version;
 - contains invalid Automerge change bytes.
 
-The second element MUST be an Automerge change chunk: a storage chunk whose chunk type is a change (an uncompressed or a compressed change), not a document chunk (a full save belongs in a Snapshot, Section 13). A receiver MUST verify the chunk checksum (the first four bytes of the chunk's hash, which the chunk header carries) and MUST reject a chunk whose checksum does not match, even when its Automerge library would parse it. These are "invalid Automerge change bytes". A receiver rejects any of the plaintexts above with `PROFILE_INVALID` and the diagnostic `INVALID_AUTOMERGE_BYTES` (Section 74.1).
+The second element MUST be an uncompressed Automerge change chunk: a storage chunk of chunk type 1 (a change). It is not a compressed change (chunk type 2), a bundle or a document chunk (a full save belongs in a Snapshot, Section 13). A writer MUST NOT emit a compressed change; a receiver rejects one. Every published vector uses chunk type 1. A receiver MUST verify the chunk checksum (the first four bytes of the chunk's hash, which the chunk header carries) and MUST reject a chunk whose checksum does not match, even when its Automerge library would parse it. These are "invalid Automerge change bytes". A receiver rejects any of the plaintexts above with `PROFILE_INVALID` and the diagnostic `INVALID_AUTOMERGE_BYTES` (Section 74.1).
 
 The change's Automerge actor MUST be the actor of the Data Unit's signer for this Resource (Section 8). A receiver MUST NOT merge a change of any other actor; it rejects the plaintext with `PROFILE_INVALID` and the diagnostic `CHANGE_ACTOR_MISMATCH` (Section 74.1).
 
 A rejected plaintext is not merged. The LFCP server does not perform this validation.
+
+### 11.1 Change expansion limits
+
+Automerge's columnar encoding run-length encodes its columns, so a change of a few bytes can declare millions of operations: a 112-byte change built by Automerge's own encoder expanded to 1,000,000 operations and 1.2 GiB in Automerge JS 3.5.0. A receiver MUST check a change against the limits below BEFORE its Automerge engine decodes or applies it, and MUST reject a change above any of them with `PROFILE_INVALID` and the diagnostic `INVALID_AUTOMERGE_BYTES` (Section 74.1). A writer MUST NOT emit a change above them: an application transaction that would exceed them fails locally, and splitting it into several changes is the application's choice (Section 12).
+
+The limits are exact: whether a change is accepted decides the replica state (Section 14.1), so every receiver applies the same numbers and counts the same way.
+
+| Limit | Value |
+| --- | --- |
+| Values in any one column | 16,384 |
+| Sum of the values of all group columns | 16,384 |
+| Expanded string bytes | 4,194,304 (4 MiB) |
+| Dependencies (the change's `deps`) | 1,024 |
+| Other actors | 1,024 |
+
+The counts come from the chunk's structure and the run headers of its columns, without decoding any value into the document:
+
+1. The chunk is one change chunk with nothing after it: magic, checksum, chunk type 1, a ULEB128 length equal to the rest of the input.
+2. The change header is read in order: dependency count and hashes, actor, sequence number, start op, time, message, other actor count and actors, then the operation column metadata (a ULEB128 column count, and per column a ULEB128 specification and a ULEB128 data length) and the column data in metadata order. Bytes after the column data are the change's extra bytes and are not counted.
+3. A column's specification is `id << 4 | deflate << 3 | type`. A change column with the deflate bit set is rejected.
+4. A column's value count is read by its type (the low 3 bits):
+   - types 0 (group), 1 (actor), 2 (integer), 3 (delta integer), 5 (string) and 6 (value metadata) are run-length encoded: a signed LEB128 header `n`; `n > 0` is a run of `n` copies of the one value that follows; `n < 0` is a literal run of `-n` values that follow; `n = 0` is a null run whose ULEB128 length follows. Each run adds its length to the count. Values are ULEB128 numbers, signed LEB128 numbers for type 3, and ULEB128 length-prefixed UTF-8 for type 5;
+   - type 4 (boolean) is a sequence of ULEB128 run lengths; each adds to the count;
+   - type 7 (raw value bytes) has no count.
+5. A group column's sum is the total of its values, each value counted once per row it occupies (a run of `n` copies of `v` adds `n * v`). These are the entries of the operations' predecessor lists.
+6. Expanded string bytes are the lengths of the string values of all type-5 columns, each counted once per row it occupies (a run of `n` copies of a `k`-byte string adds `n * k`).
+
+A change's operation count is the value count of its action column (column 4, type 2), so it is within the first limit. The check runs in time linear in the chunk's length. A receiver reads numbers of 2^53 or more as above every limit.
+
+A writer that commits one application transaction per change (Section 10) stays far below these limits: a Shared Objects intent is tens of operations.
 
 ---
 
@@ -335,11 +365,32 @@ shared-objects-snapshot = [
 ]
 ```
 
-The second element MUST be an Automerge document chunk (a full save), not a change chunk; a receiver MUST verify the chunk checksum as for Data Units (Section 11) and MUST reject a Snapshot plaintext that fails either check, or that its Automerge library cannot load, with `PROFILE_INVALID` and the diagnostic `INVALID_AUTOMERGE_BYTES` (Section 74.1). The framing rules of Section 11 apply to the Snapshot plaintext as well.
+The second element MUST be exactly one Automerge document chunk (a full save) with nothing after it, not a change chunk; a receiver MUST verify the chunk checksum as for Data Units (Section 11) and MUST reject a Snapshot plaintext that fails either check, that exceeds its Snapshot expansion limits (Section 13.1), or that its Automerge library cannot load, with `PROFILE_INVALID` and the diagnostic `INVALID_AUTOMERGE_BYTES` (Section 74.1). The framing rules of Section 11 apply to the Snapshot plaintext as well.
 
 A client loads the second element using the corresponding Automerge full-document load operation.
 
 After loading a Snapshot, the client applies all LFCP Data Units beyond the Snapshot frontier.
+
+### 13.1 Snapshot expansion limits
+
+A document chunk's columns are run-length encoded and MAY also be deflated (the deflate bit of the column specification), so a small Snapshot can expand far beyond its size. A receiver MUST check a Snapshot against its local limits BEFORE its Automerge engine loads it. The counts are those of Section 11.1, read from the document chunk's structure:
+
+1. the chunk is one document chunk (chunk type 0) with nothing after it;
+2. the document header is read in order: actor count and actors, head count and head hashes, the change column metadata, the operation column metadata, then the change column data and the operation column data in metadata order. The rest of the chunk (the head indices) is not counted;
+3. a column with the deflate bit set is raw DEFLATE (RFC 1951) data, and its value count is read from the inflated bytes. A receiver inflates with a running cap: it stops and rejects as soon as the inflated column data of the whole chunk passes its limit, so it never holds more than the limit.
+
+Snapshot acceptance does not change the replica state: a rejected Snapshot is not merged, and the receiver falls back to the units (LFCP-WIRE-01 §29). The limits are therefore local, with a floor that every receiver accepts:
+
+| Limit | Floor |
+| --- | --- |
+| Values in any one column | 262,144 |
+| Sum of the values of all group columns | 262,144 |
+| Expanded string bytes | 33,554,432 (32 MiB) |
+| Column data after inflation | 33,554,432 (32 MiB) |
+| Actors | 1,024 |
+| Heads | 1,024 |
+
+A receiver MUST accept a Snapshot within the floor (subject to the other checks of this section and LFCP-WIRE-01 §29). It MAY accept more, up to limits it configures. It MUST reject a Snapshot above its own limits with `PROFILE_INVALID` and the diagnostic `INVALID_AUTOMERGE_BYTES`, before the engine sees it. A publisher whose state exceeds the floor SHOULD NOT publish a Snapshot of it: receivers with floor limits would reject it.
 
 ---
 
@@ -1712,7 +1763,7 @@ Every profile validation failure is reported with the code `PROFILE_INVALID` and
 | `INVALID_TAG` | a tag is empty or starts with `#` | §40 |
 | `IMMUTABLE_FIELD_MUTATED` | `id`, `type` or `created_by` changed | §75 |
 | `CHANGE_ACTOR_MISMATCH` | a Data Unit carries an Automerge change whose actor is not the §8 actor of the unit's signer; the change is not merged | §8, §11 |
-| `INVALID_AUTOMERGE_BYTES` | a Data Unit or Snapshot plaintext is not the §11 or §13 framing, or its Automerge bytes are not a valid chunk of the required type with a matching checksum, or cannot be parsed or loaded, or the change skips a sequence number of its actor; nothing is merged | §11, §13, §14.1 |
+| `INVALID_AUTOMERGE_BYTES` | a Data Unit or Snapshot plaintext is not the §11 or §13 framing, or its Automerge bytes are not a valid chunk of the required type with a matching checksum, or cannot be parsed or loaded, or the change skips a sequence number of its actor, or the chunk exceeds the change expansion limits (§11.1) or the receiver's Snapshot expansion limits (§13.1); nothing is merged | §11, §11.1, §13, §13.1, §14.1 |
 
 When one value breaks several rules, its diagnostic is the first that applies in the order of this table: structure and value rules first, `IMMUTABLE_FIELD_MUTATED` last. Precedence applies within one value only. A changed `id` that is also not a UUIDv7, for example, is `INVALID_OBJECT_ID`.
 
