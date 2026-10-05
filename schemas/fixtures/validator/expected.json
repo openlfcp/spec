@@ -54,6 +54,24 @@
       "problems": [
         "SELFTEST-UNRESOLVED-REF C0_genesis /cases/0/inputs/signer unresolved-ref: no case principal_owner"
       ]
+    },
+    "unresolved-base-case.json": {
+      "covers": "negative base case must resolve",
+      "problems": [
+        "SELFTEST-UNRESOLVED-BASE wrong_kid_D1 /cases/2/derivation/base_case unresolved-ref: no other case D9_missing"
+      ]
+    },
+    "no-op-mutation.json": {
+      "covers": "negative mutation must differ from the base",
+      "problems": [
+        "SELFTEST-NO-OP-MUTATION invalid_signature_D1 /cases/1/derivation/mutation no-op-mutation: from and to are identical"
+      ]
+    },
+    "unresolved-context.json": {
+      "covers": "context references must resolve",
+      "problems": [
+        "SELFTEST-UNRESOLVED-CONTEXT stale_control_head_put /cases/1/context/current_control_head unresolved-ref: no expected value record_id in case C5_route_update"
+      ]
     }
   }
 }

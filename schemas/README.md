@@ -129,7 +129,8 @@ Each problem is printed on one line:
 - `schema/<keyword>`: a schema violation, reported against the case's own
   type branch;
 - `duplicate-key`, `duplicate-id`, `bad-hex`, `bad-b64url`, `hash-mismatch`,
-  `encoding-mismatch`, `unresolved-ref`: the checks beyond the schema.
+  `encoding-mismatch`, `unresolved-ref`, `no-op-mutation`: the checks beyond
+  the schema.
 
 ### Coverage
 
@@ -146,7 +147,8 @@ Each requirement is enforced in exactly one place.
 | Unique keys, including fixture keys | validator `duplicate-key` (JSON.parse would hide repeats) |
 | Expected hashes reproduced | validator `hash-mismatch` (table below) |
 | Deterministic encodings reproduced | validator `encoding-mismatch` |
-| References resolve | validator `unresolved-ref` |
+| References resolve (including negative `derivation.base_case` and `context` references) | validator `unresolved-ref` |
+| A negative's mutation changes something | validator `no-op-mutation` |
 | Behavioral cases not forced into byte shape | schema (`behavioral` branch has no byte requirements) |
 | Byte-exact cases carry expected bytes | schema (`bytes` branch: `expected` with at least one value) |
 | Wire and Shared Objects suites accepted | both suites validate in CI |
@@ -175,4 +177,6 @@ cover:
 - a duplicate key;
 - a wrong hash;
 - an unknown case type;
-- an unresolved reference.
+- an unresolved reference;
+- a negative case with a missing base case, a no-op mutation, or an
+  unresolved context reference.

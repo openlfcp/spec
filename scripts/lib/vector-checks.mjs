@@ -13,6 +13,7 @@
 //   hash-mismatch        a recomputed SHA-256 differs from the published value
 //   encoding-mismatch    a recomputed deterministic encoding differs
 //   unresolved-ref       a field that names another case or fixture does not resolve
+//   no-op-mutation       a negative case's derivation changes nothing (from == to)
 //
 // Only plain SHA-256 hashes over bytes present in the vector are recomputed,
 // using formulas stated in LFCP-WIRE-01 or SHARED-OBJECTS-PROFILE-01. No
@@ -360,6 +361,25 @@ export function semanticProblems(doc) {
     for (const field of ["original_D2_id", "unit_id"]) {
       const v = c.type === "validation" ? c.inputs?.[field]?.hex : undefined;
       if (v !== undefined && !unitIds.has(v)) add(c.id, at(`/inputs/${field}/hex`), "unresolved-ref: no data_unit case has this unit_id");
+    }
+    if (c.derivation) {
+      const base = c.derivation.base_case;
+      if (!byId.has(base) || base === c.id) add(c.id, at("/derivation/base_case"), `unresolved-ref: no other case ${base}`);
+      if (JSON.stringify(c.derivation.mutation?.from) === JSON.stringify(c.derivation.mutation?.to)) {
+        add(c.id, at("/derivation/mutation"), "no-op-mutation: from and to are identical");
+      }
+    }
+    for (const [name, v] of Object.entries(c.context ?? {})) {
+      const refs = Array.isArray(v) ? v : [v];
+      refs.forEach((r, j) => {
+        if (!r || typeof r !== "object" || !("case" in r)) return;
+        const where = Array.isArray(v) ? `/context/${escape(name)}/${j}` : `/context/${escape(name)}`;
+        const target = byId.get(r.case);
+        const section = r.in === "inputs" ? target?.inputs : target?.expected;
+        if (!target || !section || !(r.field in section)) {
+          add(c.id, at(where), `unresolved-ref: no ${r.in ?? "expected"} value ${r.field} in case ${r.case}`);
+        }
+      });
     }
     if (c.type === "behavioral") {
       const derived = c.inputs?.base_state?.derived_from;

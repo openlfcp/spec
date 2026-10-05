@@ -1,0 +1,65 @@
+{
+  "format": "lfcp-vector-format/1",
+  "suite": {
+    "id": "SELFTEST-UNRESOLVED-CONTEXT",
+    "version": "1",
+    "specification": {
+      "id": "LFCP-WIRE-01",
+      "revision": "working-draft"
+    },
+    "description": "Validator self-test (NOT a normative vector): context refers to a Control Record that is not in the suite."
+  },
+  "cases": [
+    {
+      "id": "CONTROL_PUT",
+      "type": "bytes",
+      "kind": "wire_message",
+      "expected": {
+        "message_cbor": {
+          "hex": "a300170150aacf67fb06babec5ab13782022cbf69c04a3005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410158201189b7d19ac6d09a8128d3967a4fdd80ea2a6180efaa8a9f15bf2ee5c32cda460259012d845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058bfa6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101060258201189b7d19ac6d09a8128d3967a4fdd80ea2a6180efaa8a9f15bf2ee5c32cda4603040458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c505a4000101582027df3173462d19512f2224f54bdc894a8c7e81c212301ed1f2bb8ccee0ce71510281a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c501020303584071b309518143fd640aff64033ba76503c985f1509398202ff6dfa1e4315ed29f06e305774d467adb142a8fbeec0a10eae2b390eac527d92b7849a60e85cf520f"
+        }
+      }
+    },
+    {
+      "id": "stale_control_head_put",
+      "type": "validation",
+      "kind": "control_put",
+      "description": "CONTROL_PUT of C6 with expected head C4 while the coordinator head is C5",
+      "inputs": {
+        "message_cbor": {
+          "hex": "a300170150aacf67fb06babec5ab13782022cbf69c04a3005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc241015820be67407af4130b61d2df1da9ad2a59daa24eaab1387529a7eaa14c27e1a148790259012d845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058bfa6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101060258201189b7d19ac6d09a8128d3967a4fdd80ea2a6180efaa8a9f15bf2ee5c32cda4603040458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c505a4000101582027df3173462d19512f2224f54bdc894a8c7e81c212301ed1f2bb8ccee0ce71510281a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c501020303584071b309518143fd640aff64033ba76503c985f1509398202ff6dfa1e4315ed29f06e305774d467adb142a8fbeec0a10eae2b390eac527d92b7849a60e85cf520f"
+        }
+      },
+      "context": {
+        "current_control_head": {
+          "case": "C5_route_update",
+          "field": "record_id"
+        }
+      },
+      "derivation": {
+        "base_case": "CONTROL_PUT",
+        "mutation": {
+          "field": "expected current Control Head (body field 1)",
+          "from": {
+            "hex": "1189b7d19ac6d09a8128d3967a4fdd80ea2a6180efaa8a9f15bf2ee5c32cda46"
+          },
+          "to": {
+            "hex": "be67407af4130b61d2df1da9ad2a59daa24eaab1387529a7eaa14c27e1a14879"
+          }
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §47",
+          "text": "If not equal, it MUST return `NACK(CONTROL_HEAD_MISMATCH)` with the current head."
+        },
+        "why": "Compare-and-swap is what keeps the Control Chain linear; committing against a stale head would fork it."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "CONTROL_HEAD_MISMATCH"
+        }
+      }
+    }
+  ]
+}

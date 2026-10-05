@@ -1,0 +1,80 @@
+{
+  "format": "lfcp-vector-format/1",
+  "suite": {
+    "id": "SELFTEST-NO-OP-MUTATION",
+    "version": "1",
+    "specification": {
+      "id": "LFCP-WIRE-01",
+      "revision": "working-draft"
+    },
+    "description": "Validator self-test (NOT a normative vector): a negative case whose mutation changes nothing."
+  },
+  "cases": [
+    {
+      "id": "D1_bob_epoch0_seq1",
+      "type": "bytes",
+      "kind": "data_unit",
+      "inputs": {
+        "plaintext_utf8": "LFCP test data unit #1",
+        "plaintext_hex": {
+          "hex": "4c4643502074657374206461746120756e6974202331"
+        }
+      },
+      "expected": {
+        "actor_key": {
+          "hex": "f0d0b547db5742146a3cbf038650be15fbf9de0fb13f0f88be2fcbd8f15a581d"
+        },
+        "nonce": {
+          "hex": "000000000000000000000001"
+        },
+        "aad_cbor": {
+          "hex": "876c4c4643502d444154412d76315820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c501f65820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b8"
+        },
+        "ciphertext": {
+          "hex": "6e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca31e51d9b62a572bf8376ef32671"
+        },
+        "payload_cbor": {
+          "hex": "a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030104f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca31e51d9b62a572bf8376ef32671"
+        },
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a05899a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030104f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca31e51d9b62a572bf8376ef3267158408adb5052b4f93358a1d5397fd05f591b47b20724afd186d42368caba11bd1f7e2d7ab3e43ad96d124e08ac17968d6cfc558a67ddc564ed538070d9dad0329508"
+        },
+        "unit_id": {
+          "hex": "708b5a5f1ab7b7c9146b3bd7e4902831aa6666913608502c13b1d32c3650be9f"
+        }
+      }
+    },
+    {
+      "id": "invalid_signature_D1",
+      "type": "validation",
+      "kind": "data_unit",
+      "description": "D1 with one signature bit flipped",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a05899a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030104f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca31e51d9b62a572bf8376ef3267158408adb5052b4f93358a1d5397fd05f591b47b20724afd186d42368caba11bd1f7e2d7ab3e43ad96d124e08ac17968d6cfc558a67ddc564ed538070d9dad0329509"
+        }
+      },
+      "derivation": {
+        "base_case": "D1_bob_epoch0_seq1",
+        "mutation": {
+          "field": "signature byte 63",
+          "from": {
+            "hex": "08"
+          },
+          "to": {
+            "hex": "08"
+          }
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §26.3, §10.5",
+          "text": "A Data Unit is eligible for merge only if: 1. its signature is valid for the actor Principal;"
+        },
+        "why": "An unverified signature lets anyone inject Data Units in the actor's name."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject"
+      }
+    }
+  ]
+}

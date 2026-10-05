@@ -1,0 +1,110 @@
+{
+  "format": "lfcp-vector-format/1",
+  "suite": {
+    "id": "SELFTEST-UNRESOLVED-BASE",
+    "version": "1",
+    "specification": {
+      "id": "LFCP-WIRE-01",
+      "revision": "working-draft"
+    },
+    "description": "Validator self-test (NOT a normative vector): a negative case derived from a case that does not exist."
+  },
+  "cases": [
+    {
+      "id": "principal_bob",
+      "type": "bytes",
+      "kind": "principal",
+      "inputs": {
+        "ed25519_seed": {
+          "hex": "3e7bc1815b7518d38d8d240970d8e1e8032483a5681434190cbf0ec635353a0f"
+        },
+        "x25519_private": {
+          "hex": "95f8f14ba1f1c117a6f78f8ac92c2d5afc7d0ffb50e5579a22cea1909c97fa3d"
+        }
+      },
+      "expected": {
+        "ed25519_public": {
+          "hex": "1953f4ada1cb4e0f8662108152c82e7e074cbf4859c487461cbe41e5d623e3c2"
+        },
+        "x25519_public": {
+          "hex": "b5a22f5f5cbdc3a6f8742ec8b2bc9665d0170478bf5aca7528fdd5eefb94f26c"
+        },
+        "principal_id": {
+          "hex": "3ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5"
+        },
+        "descriptor_cbor": {
+          "hex": "a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50158201953f4ada1cb4e0f8662108152c82e7e074cbf4859c487461cbe41e5d623e3c2025820b5a22f5f5cbdc3a6f8742ec8b2bc9665d0170478bf5aca7528fdd5eefb94f26c"
+        }
+      }
+    },
+    {
+      "id": "principal_carol",
+      "type": "bytes",
+      "kind": "principal",
+      "inputs": {
+        "ed25519_seed": {
+          "hex": "b2a3c42376fe97aa221f63f6280200976eb9619f52b8d9edc9dfc998491a75d5"
+        },
+        "x25519_private": {
+          "hex": "b33a94ec0fde36e333ab4aa4364857544bc1f6148b417f92564ea77a79896257"
+        }
+      },
+      "expected": {
+        "ed25519_public": {
+          "hex": "e85e0878a5ef3cac47224c5ad65466d1d9ce8f5da0531bcfd44f4801eca9d862"
+        },
+        "x25519_public": {
+          "hex": "f0a5fba7ce3f994d3225a96a6e7a2a93a0f49bdffa27587faabbcf885dc64062"
+        },
+        "principal_id": {
+          "hex": "a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48"
+        },
+        "descriptor_cbor": {
+          "hex": "a3005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48015820e85e0878a5ef3cac47224c5ad65466d1d9ce8f5da0531bcfd44f4801eca9d862025820f0a5fba7ce3f994d3225a96a6e7a2a93a0f49bdffa27587faabbcf885dc64062"
+        }
+      }
+    },
+    {
+      "id": "wrong_kid_D1",
+      "type": "validation",
+      "kind": "data_unit",
+      "description": "D1 payload signed by CAROL (kid CAROL) instead of the actor BOB",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a05899a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030104f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca31e51d9b62a572bf8376ef326715840b98ef0f8a87227bdc6a5f2dfc3f67865d3678ee76301b8060e85576da50b2c935e5340150b93016e40754a298470229c61b9406d99ba70910b086d090fdba702"
+        }
+      },
+      "context": {
+        "actor": {
+          "case": "principal_bob",
+          "field": "principal_id"
+        },
+        "kid": {
+          "case": "principal_carol",
+          "field": "principal_id"
+        }
+      },
+      "derivation": {
+        "base_case": "D9_missing",
+        "mutation": {
+          "field": "protected header kid (and signing key)",
+          "from": {
+            "hex": "3ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5"
+          },
+          "to": {
+            "hex": "a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48"
+          }
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §10.1, §26",
+          "text": "The value of `kid` MUST be the 32-byte Principal ID of the signing Principal. (§26: \"The payload is signed by the actor using COSE_Sign1.\")"
+        },
+        "why": "The signature is valid but by the wrong Principal; accepting it lets one member forge another member's edits."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject"
+      }
+    }
+  ]
+}
