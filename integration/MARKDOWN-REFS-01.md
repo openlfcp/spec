@@ -24,14 +24,14 @@ Both forms are conforming and identify the same Shared Object.
 Compact inline form:
 
 ```md
-- [ ] Prepare API contract <!-- lfcp-ref: lfcp1:RESOURCE#task:OBJECT -->
+- [ ] Prepare API contract <!-- lfcp-ref: lfcp1:yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad -->
 ```
 
 Preferred compatibility form:
 
 ```md
 - [ ] Prepare API contract
-  <!-- lfcp-ref: lfcp1:RESOURCE#task:OBJECT -->
+  <!-- lfcp-ref: lfcp1:yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad -->
 ```
 
 The child-line form is RECOMMENDED when the host editor or another Markdown plugin attaches semantics to the end of the Task line, or when compatibility is not known.
@@ -66,7 +66,7 @@ For example:
 
 ```md
 - [ ] Prepare API contract 📅 2026-10-10
-  <!-- lfcp-ref: lfcp1:RESOURCE#task:OBJECT -->
+  <!-- lfcp-ref: lfcp1:yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad -->
 ```
 
 keeps the Task line itself untouched by LFCP metadata.
@@ -74,7 +74,7 @@ keeps the Task line itself untouched by LFCP metadata.
 The equivalent inline form is valid OpenLFCP Markdown:
 
 ```md
-- [ ] Prepare API contract 📅 2026-10-10 <!-- lfcp-ref: lfcp1:RESOURCE#task:OBJECT -->
+- [ ] Prepare API contract 📅 2026-10-10 <!-- lfcp-ref: lfcp1:yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad -->
 ```
 
 but an Obsidian adapter SHOULD avoid emitting it by default when Obsidian Tasks or another suffix-sensitive parser is in use.
@@ -98,7 +98,7 @@ TASK_LINE_WITH_REF
 Example:
 
 ```md
-- [ ] Prepare API contract <!-- lfcp-ref: lfcp1:AAA#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad -->
+- [ ] Prepare API contract <!-- lfcp-ref: lfcp1:yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad -->
 ```
 
 ### 4.2 Child-line projection unit
@@ -114,7 +114,7 @@ Example:
 
 ```md
 - [ ] Prepare API contract
-  <!-- lfcp-ref: lfcp1:AAA#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad -->
+  <!-- lfcp-ref: lfcp1:yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad -->
 ```
 
 There MUST be no blank line between a Task and its child-line ref.
@@ -163,7 +163,7 @@ Canonical spacing is:
 
 A serializer MUST emit this canonical comment spelling regardless of placement.
 
-A parser MAY accept additional horizontal ASCII whitespace around the object reference for robustness, but SHOULD normalize it if it deliberately rewrites the comment.
+A parser recognizes the comment by its fixed parts: `<!--`, then one or more whitespace characters, then the literal `lfcp-ref:`, then one or more whitespace characters, the object reference, one or more whitespace characters, and `-->`. Whitespace here is an ASCII space or horizontal tab. A parser MUST accept extra whitespace at each separator, and SHOULD normalize it to the canonical single space if it deliberately rewrites the comment. A comment that begins `<!--` and contains `lfcp-ref:` but does not have this shape (for example `<!--lfcp-ref:` with no separator) is a malformed ref (Section 15).
 
 ---
 
@@ -187,10 +187,10 @@ For a Task:
 lfcp1:<resource-b64url>#task:<uuidv7>
 ```
 
-Example shape:
+Example (the Resource ID `c8c3041c…c241` of the LFCP Wire vectors and a UUIDv7 Object ID):
 
 ```text
-lfcp1:yMMEHNHo...wkE#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad
+lfcp1:yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad
 ```
 
 The textual `lfcp1:` representation defined here is an application reference encoding. It does not change the raw 32-byte Resource ID used by LFCP Wire.
@@ -223,7 +223,13 @@ The v1 Shared Objects standardized type is:
 task
 ```
 
-Object type tokens are case-sensitive.
+Object type tokens are case-sensitive and follow this grammar (RFC 5234 ABNF):
+
+```abnf
+object-type = "task" / reverse-domain  ; reverse-domain: SHARED-OBJECTS-PROFILE-01 §18
+```
+
+A token that does not match the grammar makes the ref malformed (`MALFORMED_LFCP_REF`). A token that matches it but names a type the adapter does not support, such as `org.example.poll` for an adapter that only projects Tasks, is not malformed: the parser reports `OBJECT_TYPE_UNSUPPORTED`, binds nothing and leaves the text untouched.
 
 Future standardized or namespaced object types may be added by profile specifications.
 
@@ -256,7 +262,7 @@ In inline form, the canonical LFCP comment MUST be the final non-whitespace elem
 Canonical:
 
 ```md
-- [ ] Prepare API contract <!-- lfcp-ref: lfcp1:AAA#task:... -->
+- [ ] Prepare API contract <!-- lfcp-ref: lfcp1:yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad -->
 ```
 
 The Task semantic text is the line content before the LFCP comment, after normal adapter parsing.
@@ -266,7 +272,7 @@ A serializer MUST NOT place application metadata after the LFCP comment.
 Example of a non-canonical ordering:
 
 ```md
-- [ ] Prepare API contract <!-- lfcp-ref: ... --> 📅 2026-10-10
+- [ ] Prepare API contract <!-- lfcp-ref: lfcp1:yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad --> 📅 2026-10-10
 ```
 
 A robust parser MAY diagnose or recover such text, but a conforming serializer MUST NOT emit it.
@@ -288,17 +294,20 @@ Examples:
 
 ```md
 - [ ] Top-level task
-  <!-- lfcp-ref: lfcp1:AAA#task:... -->
+  <!-- lfcp-ref: lfcp1:yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad -->
 ```
 
 ```md
+- [ ] Parent task
     - [ ] Nested task
-      <!-- lfcp-ref: lfcp1:AAA#task:... -->
+      <!-- lfcp-ref: lfcp1:yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad -->
 ```
+
+Here the parent Task is local-only (Section 17); the ref line belongs to the nested Task, whose content indentation it uses.
 
 ```md
 1. [ ] Ordered task
-   <!-- lfcp-ref: lfcp1:AAA#task:... -->
+   <!-- lfcp-ref: lfcp1:yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad -->
 ```
 
 Adapters MAY parse equivalent child indentation accepted by their Markdown engine, but SHOULD emit a stable canonical indentation for that engine.
@@ -328,6 +337,8 @@ A child-line ref belongs to a Task when:
 4. its indentation is compatible with the preceding list item;
 5. neither line is inside a fenced code block or another context treated as literal text.
 
+The child refs of a Task are the unbroken run of ref lines that starts on the line right after the Task line: consecutive lines, each holding an `lfcp-ref` comment, with no blank line or other line between them. The whole run belongs to that Task as one projection unit, and Section 14 then requires it to hold exactly one ref in total, counting an inline ref on the Task line. A ref line separated from the Task by a blank line or by any other line is not part of the unit; it is an orphan (Section 16).
+
 A scanner MUST NOT search arbitrarily through surrounding prose to associate an orphan ref with a distant Task.
 
 ---
@@ -340,18 +351,20 @@ Two child refs are invalid:
 
 ```md
 - [ ] Prepare API contract
-  <!-- lfcp-ref: lfcp1:AAA#task:ONE -->
-  <!-- lfcp-ref: lfcp1:BBB#task:TWO -->
+  <!-- lfcp-ref: lfcp1:yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad -->
+  <!-- lfcp-ref: lfcp1:yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE#task:019a2f85-7b31-7c42-9f24-8f933f2a91c0 -->
 ```
 
 Inline plus child-line is also invalid, even if both refs are byte-identical:
 
 ```md
-- [ ] Prepare API contract <!-- lfcp-ref: lfcp1:AAA#task:ONE -->
-  <!-- lfcp-ref: lfcp1:AAA#task:ONE -->
+- [ ] Prepare API contract <!-- lfcp-ref: lfcp1:yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad -->
+  <!-- lfcp-ref: lfcp1:yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad -->
 ```
 
 A parser MUST surface `DUPLICATE_LFCP_REF` and MUST NOT silently choose one.
+
+When a projection unit with two or more refs includes a malformed one, the parser reports both diagnostics: `DUPLICATE_LFCP_REF` for the unit and `MALFORMED_LFCP_REF` for the malformed ref. The Task gets no binding: the valid ref in the unit is not used either.
 
 ---
 
@@ -374,14 +387,14 @@ The adapter MUST NOT delete the Task because its ref is malformed.
 
 ## 16. Orphan refs
 
-A child-line ref without an immediately preceding compatible host is an orphan.
+A child-line ref without an immediately preceding compatible host is an orphan. A ref line separated from a Task by a blank line or by another line is an orphan too, even when it is indented like a child of that Task (Section 13.2).
 
 Example:
 
 ```md
 Paragraph.
 
-<!-- lfcp-ref: lfcp1:AAA#task:... -->
+<!-- lfcp-ref: lfcp1:yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad -->
 ```
 
 The adapter SHOULD surface `ORPHAN_LFCP_REF` and leave the text untouched.
@@ -414,7 +427,7 @@ Child-line before:
 
 ```md
 - [x] Prepare API contract
-  <!-- lfcp-ref: lfcp1:AAA#task:... -->
+  <!-- lfcp-ref: lfcp1:yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad -->
 ```
 
 Child-line after:
@@ -426,7 +439,7 @@ Child-line after:
 Inline before:
 
 ```md
-- [x] Prepare API contract <!-- lfcp-ref: lfcp1:AAA#task:... -->
+- [x] Prepare API contract <!-- lfcp-ref: lfcp1:yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad -->
 ```
 
 Inline after:
@@ -493,14 +506,14 @@ Copying the complete projection unit copies another projection of the same Share
 Inline:
 
 ```md
-- [ ] Prepare API contract <!-- lfcp-ref: lfcp1:AAA#task:... -->
+- [ ] Prepare API contract <!-- lfcp-ref: lfcp1:yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad -->
 ```
 
 Child-line:
 
 ```md
 - [ ] Prepare API contract
-  <!-- lfcp-ref: lfcp1:AAA#task:... -->
+  <!-- lfcp-ref: lfcp1:yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad -->
 ```
 
 Multiple projections of one Shared Object are valid.
@@ -544,7 +557,7 @@ Example:
 ````md
 ```md
 - [ ] Example task
-  <!-- lfcp-ref: lfcp1:AAA#task:... -->
+  <!-- lfcp-ref: lfcp1:yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE#task:019a2f85-7b31-7c42-b85a-fc843e2f40ad -->
 ```
 ````
 
@@ -585,9 +598,12 @@ MALFORMED_LFCP_REF
 DUPLICATE_LFCP_REF
 ORPHAN_LFCP_REF
 OBJECT_TYPE_MISMATCH
+OBJECT_TYPE_UNSUPPORTED
 OBJECT_ID_INVALID
 RESOURCE_ID_INVALID
 ```
+
+`OBJECT_TYPE_UNSUPPORTED` reports a well-formed ref whose object type the adapter does not project (Section 9); it is not a malformed ref.
 
 Editor-specific diagnostics may add further codes.
 
@@ -636,7 +652,11 @@ Minimum acceptance cases:
 14. preserve an existing valid placement during unrelated rewrites;
 15. serializer can emit child-line form;
 16. serializer can emit inline form when requested;
-17. Obsidian default policy emits child-line form unless explicitly configured otherwise.
+17. Obsidian default policy emits child-line form unless explicitly configured otherwise;
+18. accept extra whitespace at each separator of the ref comment (Section 6);
+19. report a well-formed ref of an unsupported object type as `OBJECT_TYPE_UNSUPPORTED`, not as malformed;
+20. report a ref line separated from its Task by a blank or other line as an orphan;
+21. report both `DUPLICATE_LFCP_REF` and `MALFORMED_LFCP_REF`, and bind nothing, for a unit with two refs of which one is malformed.
 
 ---
 
