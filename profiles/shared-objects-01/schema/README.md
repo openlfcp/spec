@@ -54,7 +54,7 @@ Not checked, and why:
 
 `validate-shared-objects.mjs` also checks SHARED-OBJECTS-TEST-VECTORS-01:
 
-- **S01–S14** must satisfy the contract wherever a scenario states or writes
+- **S01–S16** must satisfy the contract wherever a scenario states or writes
   a value. That covers base-state and expected Tasks and object maps, created
   objects, field writes, and expected field values: `tags` and `assignees`
   lists, `*_conflict_set` and `*_values_may_include` arrays.

@@ -5,7 +5,7 @@
 //    valid-*.json MUST pass; each invalid-*.json MUST report exactly the
 //    problem pointers listed in expected.json.
 // 2. SHARED-OBJECTS-TEST-VECTORS-01 consistency: every Task, object map and
-//    field value that the behavioral scenarios S01-S14 state or write MUST
+//    field value that the behavioral scenarios S01-S16 state or write MUST
 //    satisfy the contract.
 // 3. The invalid vectors I01-I07 and the Object ID vectors D06-D08 MUST be
 //    classified as the vector says, invalid at the expected field.
