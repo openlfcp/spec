@@ -237,6 +237,8 @@ The safest recovery strategy is to create a new LFCP operational Principal for f
 
 This mirrors LFCP Wire's protection against Principal sequence reuse.
 
+A rebuild (Section 14.1) that removes changes of the writer's own actor is not lost state. The removed changes are the writer's own unit beyond an epoch cutoff, one of its own equivocating pair, or its own change that depends on an excluded change of another actor. The writer continues from the rebuilt document: its next change takes the actor's next Automerge sequence number in that document, which can equal the sequence number of a removed change. This is the same history, not an unrelated new one, and the writer MUST NOT refuse to write because of it. The writer's next Data Unit is in the current Data Epoch and names its latest own unit still accepted (LFCP-WIRE-01 §26.2). So a replica that still holds a removed change because it does not yet know the Key Epoch Record or the equivocating pair cannot accept the new unit before it rebuilds the same way. Stale work that the application keeps is re-applied in such a change (LFCP-WIRE-01 §19.1).
+
 ---
 
 ## 10. One application transaction per Automerge change
@@ -359,6 +361,10 @@ When a unit that a replica has already merged leaves the accepted set, the repli
 - the unit turns out to be one of an equivocating pair, of which neither stays merged (LFCP-WIRE-01 §26.2).
 
 A rebuild starts from the profile's initial document (Section 16), or from a Snapshot whose frontier excludes the removed units, and applies the remaining accepted changes.
+
+A replica gives a change to its Automerge engine only when every dependency of the change is in its document. A change with a missing dependency, including one that depends on an excluded change, stays outside the document until its dependencies arrive. It is not handed to the engine as a pending change. Automerge refuses a change whose actor and sequence number match a change it holds, merged or pending. A pending change that can never be merged would therefore block its writer's next change (Section 9).
+
+When every dependency of a change is in the document, its sequence number is exactly one more than that of the latest change of its actor in the document, or `1` for the actor's first change. A change with a higher sequence number is invalid. A receiver checks this before the engine sees the change, because an Automerge implementation may abort on it rather than return an error. It rejects the plaintext with `PROFILE_INVALID` and the diagnostic `INVALID_AUTOMERGE_BYTES` (Section 74.1).
 
 ---
 
@@ -1704,7 +1710,7 @@ Every profile validation failure is reported with the code `PROFILE_INVALID` and
 | `INVALID_TAG` | a tag is empty or starts with `#` | §40 |
 | `IMMUTABLE_FIELD_MUTATED` | `id`, `type` or `created_by` changed | §75 |
 | `CHANGE_ACTOR_MISMATCH` | a Data Unit carries an Automerge change whose actor is not the §8 actor of the unit's signer; the change is not merged | §8, §11 |
-| `INVALID_AUTOMERGE_BYTES` | a Data Unit or Snapshot plaintext is not the §11 or §13 framing, or its Automerge bytes are not a valid chunk of the required type with a matching checksum, or cannot be parsed or loaded; nothing is merged | §11, §13 |
+| `INVALID_AUTOMERGE_BYTES` | a Data Unit or Snapshot plaintext is not the §11 or §13 framing, or its Automerge bytes are not a valid chunk of the required type with a matching checksum, or cannot be parsed or loaded, or the change skips a sequence number of its actor; nothing is merged | §11, §13, §14.1 |
 
 When one value breaks several rules, its diagnostic is the first that applies in the order of this table: structure and value rules first, `IMMUTABLE_FIELD_MUTATED` last. Precedence applies within one value only. A changed `id` that is also not a UUIDv7, for example, is `INVALID_OBJECT_ID`.
 
