@@ -632,6 +632,258 @@ def generate():
     assert accept_payload_obj[1] == offer_id and accept_payload_obj[2] == BOB.pid
     assert C4['payload_obj'][4] == BOB.pid
 
+    # -------------------------------------------------------------------------
+    # LFCP-009 negative vectors. Each one changes exactly one property of a
+    # published positive case; derived bytes (ciphertext, signature) are
+    # recomputed so that only the named rule is violated.
+    # -------------------------------------------------------------------------
+    NEG: list[dict[str, Any]] = []
+
+    def ref(case_id: str, field: str, where: str = 'expected') -> dict[str, str]:
+        r = {'case': case_id, 'field': field}
+        if where != 'expected':
+            r['in'] = where
+        return r
+
+    def neg(case_id, kind, title, base_case, field, old, new, section, text, why, inputs, expected,
+            context=None, cddl=None):
+        NEG.append({
+            'id': case_id, 'kind': kind, 'description': title,
+            'inputs': inputs, 'context': context, 'expected': expected,
+            'derivation': {
+                'base_case': base_case,
+                'mutation': {'field': field, 'from': old, 'to': new},
+                'rule': {'section': section, 'text': text},
+                'why': why,
+            },
+            'cddl': cddl,
+        })
+
+    def hexv(b: bytes) -> dict[str, str]:
+        return {'hex': hx(b)}
+
+    def signed_data_unit(payload_obj: dict[int, Any], signer: Principal) -> bytes:
+        return cose_sign1(payload_obj, signer)[0]
+
+    def sealed(key: bytes, nonce: bytes, plaintext: bytes, aad: bytes) -> bytes:
+        return ChaCha20Poly1305(key).encrypt(nonce, plaintext, aad)
+
+    D1_plain = b'LFCP test data unit #1'
+
+    # 1. Non-canonical CBOR in a reconstructed structure: D1 sealed under an AAD
+    #    whose actor sequence is encoded as 0x18 0x01 instead of 0x01.
+    aad_items = [cbor(x) for x in D1['aad_obj']]
+    assert aad_items[4] == b'\x01'
+    noncanon_aad = b'\x87' + b''.join(aad_items[:4] + [b'\x18\x01'] + aad_items[5:])
+    assert noncanon_aad != D1['aad'] and len(noncanon_aad) == len(D1['aad']) + 1
+    ct_nc = sealed(D1['actor_key'], D1['nonce'], D1_plain, noncanon_aad)
+    du_nc = signed_data_unit({**D1['payload_obj'], 6: ct_nc}, BOB)
+    neg('noncanonical_aad_D1', 'data_unit', 'D1 sealed under a non-deterministically encoded AAD',
+        'D1_bob_epoch0_seq1', 'AAD encoding of the actor sequence (seq 1)', hexv(b'\x01'), hexv(b'\x18\x01'),
+        'LFCP-WIRE-01 §5.2; §26.3',
+        'When an LFCP algorithm requires reconstructing a deterministic structure, such as AEAD AAD, HPKE `info`, '
+        'or HPKE AAD, the reconstructed structure MUST follow these deterministic CBOR rules exactly. '
+        '(§26.3: a Data Unit is eligible for merge only if "the unit decrypts successfully".)',
+        'The receiver reconstructs the canonical AAD, so decryption fails; accepting it would require guessing alternative encodings of signed or authenticated structures.',
+        {'cose_sign1': hexv(du_nc), 'noncanonical_aad_cbor': hexv(noncanon_aad)},
+        {'valid': False, 'disposition': 'reject'},
+        cddl=('data-unit', 'pass'))
+
+    # 2. Tagged COSE_Sign1 (tag 18).
+    neg('tagged_cose_D1', 'data_unit', 'D1 wrapped in COSE_Sign1 tag 18',
+        'D1_bob_epoch0_seq1', 'outer CBOR tag', 'none', 'tag 18',
+        'LFCP-WIRE-01 §10',
+        'A strict LFCP-WIRE-01 implementation MUST reject a tagged persistent LFCP object as non-canonical.',
+        'The object ID is SHA-256 of the exact bytes; a tagged copy would be a second, different object for the same content.',
+        {'cose_sign1': hexv(b'\xd2' + D1['cose'])},
+        {'valid': False, 'disposition': 'reject'},
+        cddl=('data-unit', 'fail'))
+
+    # 3. Invalid Ed25519 signature: last signature byte flipped.
+    bad_sig = bytearray(D1['cose']); bad_sig[-1] ^= 0x01; bad_sig = bytes(bad_sig)
+    neg('invalid_signature_D1', 'data_unit', 'D1 with one signature bit flipped',
+        'D1_bob_epoch0_seq1', 'signature byte 63', hexv(D1['cose'][-1:]), hexv(bad_sig[-1:]),
+        'LFCP-WIRE-01 §26.3, §10.5',
+        'A Data Unit is eligible for merge only if: 1. its signature is valid for the actor Principal;',
+        'An unverified signature lets anyone inject Data Units in the actor\'s name.',
+        {'cose_sign1': hexv(bad_sig)},
+        {'valid': False, 'disposition': 'reject'},
+        cddl=('data-unit', 'pass'))
+
+    # 4. Wrong kid: D1's payload (actor BOB) signed by CAROL with kid CAROL.
+    du_kid = signed_data_unit(D1['payload_obj'], CAROL)
+    neg('wrong_kid_D1', 'data_unit', 'D1 payload signed by CAROL (kid CAROL) instead of the actor BOB',
+        'D1_bob_epoch0_seq1', 'protected header kid (and signing key)', hexv(BOB.pid), hexv(CAROL.pid),
+        'LFCP-WIRE-01 §10.1, §26',
+        'The value of `kid` MUST be the 32-byte Principal ID of the signing Principal. '
+        '(§26: "The payload is signed by the actor using COSE_Sign1.")',
+        'The signature is valid but by the wrong Principal; accepting it lets one member forge another member\'s edits.',
+        {'cose_sign1': hexv(du_kid)},
+        {'valid': False, 'disposition': 'reject'},
+        context={'actor': ref('principal_bob', 'principal_id'), 'kid': ref('principal_carol', 'principal_id')},
+        cddl=('data-unit', 'pass'))
+
+    # 5. AEAD authentication failure: D1 sealed under the AAD of sequence 2.
+    wrong_aad = cbor(['LFCP-DATA-v1', RESOURCE, 0, BOB.pid, 2, None, C3['id']])
+    ct_aead = sealed(D1['actor_key'], D1['nonce'], D1_plain, wrong_aad)
+    du_aead = signed_data_unit({**D1['payload_obj'], 6: ct_aead}, BOB)
+    try:
+        ChaCha20Poly1305(D1['actor_key']).decrypt(D1['nonce'], ct_aead, D1['aad'])
+        raise AssertionError('AEAD failure vector unexpectedly decrypts')
+    except AssertionError:
+        raise
+    except Exception:
+        pass
+    neg('aead_failure_D1', 'data_unit', 'D1 ciphertext sealed under the AAD of sequence 2',
+        'D1_bob_epoch0_seq1', 'AAD actor sequence used for sealing', 1, 2,
+        'LFCP-WIRE-01 §26.1, §26.3',
+        'A Data Unit is eligible for merge only if: [...] 6. the unit decrypts successfully;',
+        'The AAD binds the ciphertext to its resource, epoch, actor and position; accepting it would let ciphertext be replayed elsewhere.',
+        {'cose_sign1': hexv(du_aead)},
+        {'valid': False, 'disposition': 'reject'},
+        cddl=('data-unit', 'pass'))
+
+    # 6. Stale Control Head: CONTROL_PUT expecting C4 while the head is C5.
+    stale_put = wire_msg(23, msgid('CONTROL-PUT'), {0: RESOURCE, 1: C4['id'], 2: C6['cose']})
+    neg('stale_control_head_put', 'control_put', 'CONTROL_PUT of C6 with expected head C4 while the coordinator head is C5',
+        'CONTROL_PUT', 'expected current Control Head (body field 1)', hexv(C5['id']), hexv(C4['id']),
+        'LFCP-WIRE-01 §47',
+        'If not equal, it MUST return `NACK(CONTROL_HEAD_MISMATCH)` with the current head.',
+        'Compare-and-swap is what keeps the Control Chain linear; committing against a stale head would fork it.',
+        {'message_cbor': hexv(stale_put)},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'CONTROL_HEAD_MISMATCH'}},
+        context={'current_control_head': ref('C5_route_update', 'record_id')},
+        cddl=('typed-lfcp-message', 'pass'))
+
+    # 7. Control fork: a second validly signed record at seq 6 after C5,
+    #    differing from C6 only in the cutoff frontier (BOB 3 instead of 2).
+    fork_body = {0: 1, 1: dek_commitment(1, DEK1), 2: [{0: BOB.pid, 1: 3}], 3: 3}
+    C6_FORK = control_record(6, C5['id'], 4, BOB, fork_body)
+    assert C6_FORK['id'] != C6['id']
+    neg('control_fork_C6', 'control_record', 'A second Control Record at sequence 6 on top of C5',
+        'C6_key_epoch_1', 'body field 2: BOB cutoff sequence', 2, 3,
+        'LFCP-WIRE-01 §13.2',
+        'Two different validly signed records referencing the same previous Control Record create a Control Fork. '
+        'A client MUST NOT silently choose a branch. The Resource enters `CONTROL_CONFLICT` [...]',
+        'Choosing a branch silently would let replicas diverge on authorization and keys.',
+        {'cose_sign1': hexv(C6_FORK['cose']), 'record_id': hexv(C6_FORK['id'])},
+        {'valid': False, 'disposition': 'conflict', 'error': {'code': 'CONTROL_CONFLICT'}},
+        context={'previous_record': ref('C5_route_update', 'record_id'), 'competing_record': ref('C6_key_epoch_1', 'record_id')},
+        cddl=('control-record', 'pass'))
+
+    # 8. Bad actor sequence.
+    D_SEQ0 = data_unit(BOB, 0, 0, None, C3['id'], D1_plain, DEK0)
+    neg('actor_seq_zero_D1', 'data_unit', 'D1 re-issued with actor sequence 0',
+        'D1_bob_epoch0_seq1', 'actor sequence (payload field 3)', 1, 0,
+        'LFCP-WIRE-01 §8',
+        'Sequence numbers begin at `1`.',
+        'Sequence 0 is outside the per-actor sequence space, so Have Vectors and hash chains cannot describe it.',
+        {'cose_sign1': hexv(D_SEQ0['cose'])},
+        {'valid': False},
+        cddl=('data-unit', 'pass'))
+    D_PREV = data_unit(BOB, 0, 1, D2['id'], C3['id'], D1_plain, DEK0)
+    neg('actor_seq1_prev_not_null_D1', 'data_unit', 'D1 with a previous-unit reference although it is sequence 1',
+        'D1_bob_epoch0_seq1', 'previous Data Unit (payload field 4)', None, hexv(D2['id']),
+        'LFCP-WIRE-01 §26.2',
+        'For sequence `1`, it MUST be `null`. [...] A gap or mismatch MUST be reported to the sync engine.',
+        'The actor hash chain must start at sequence 1; a non-null link there breaks gap and equivocation detection.',
+        {'cose_sign1': hexv(D_PREV['cose'])},
+        {'valid': False, 'disposition': 'report'},
+        cddl=('data-unit', 'pass'))
+
+    # 10. HPKE recipient binding: KP0 relabelled for CAROL, sealed to BOB.
+    kp_wrong_obj = {**kp0_payload_obj, 2: CAROL.pid}
+    KP_WRONG = cose_sign1(kp_wrong_obj, OWNER)[0]
+    carol_info = cbor(['LFCP-KEY-v1', RESOURCE, 0, CAROL.pid])
+    try:
+        hpke_open(CAROL.x_sk_raw, hp0['enc'], carol_info, kp0_aad, hp0['ct'])
+        raise AssertionError('HPKE recipient vector unexpectedly opens')
+    except AssertionError:
+        raise
+    except Exception:
+        pass
+    neg('hpke_recipient_mismatch_KP0', 'key_package', 'KP0 payload names CAROL as recipient but is sealed to BOB',
+        'KP0_bob_epoch0', 'recipient (payload field 2)', hexv(BOB.pid), hexv(CAROL.pid),
+        'LFCP-WIRE-01 §25.1, §25.2',
+        'The HPKE `info` value is deterministic CBOR encoding of ["LFCP-KEY-v1", resource-id, data epoch, recipient]. '
+        '[...] Clients accept any cryptographically valid package that yields the correct DEK commitment.',
+        'HPKE info binds the recipient; a package that does not open for its named recipient delivers no key.',
+        {'cose_sign1': hexv(KP_WRONG)},
+        {'valid': False, 'disposition': 'reject'},
+        context={'recipient_x25519_private': ref('principal_carol', 'x25519_private', 'inputs')},
+        cddl=('key-package', 'pass'))
+
+    # 11. Malformed Have ranges inside a Snapshot frontier (re-sealed and
+    #     re-signed, so only canonicality is wrong).
+    def raw_snapshot(frontier, seq, plaintext):
+        aad = cbor(['LFCP-SNAPSHOT-v1', RESOURCE, 1, BOB.pid, seq, C6['id'], frontier])
+        key = snapshot_key(RESOURCE, 1, DEK1, BOB.pid)
+        ct = sealed(key, lfcp_nonce(seq), plaintext, aad)
+        payload = {0: RESOURCE, 1: 1, 2: BOB.pid, 3: seq, 4: C6['id'], 5: frontier, 6: ct}
+        return cose_sign1(payload, BOB)[0]
+
+    def bob(contiguous, extras=None):
+        e = {0: BOB.pid, 1: contiguous}
+        if extras is not None:
+            e[2] = extras
+        return e
+    carol = {0: CAROL.pid, 1: 1}
+    have_cases = [
+        ('have_empty_extra_list', 'SNAPSHOT-01', 'CAROL entry key 2', 'absent', '[] (present and empty)',
+         [bob(2), {**carol, 2: []}], 'rule 2',
+         '2. key `2` MUST be omitted when there are no extra ranges;'),
+        ('have_range_reversed', 'SNAPSHOT-02', 'BOB extra range', [[105, 107]], [[107, 105]],
+         [bob(100, [[107, 105]]), carol], 'rule 4', '4. each sequence range MUST have `start <= end`;'),
+        ('have_range_not_above_contiguous', 'SNAPSHOT-02', 'BOB extra range', [[105, 107]], [[95, 107]],
+         [bob(100, [[95, 107]]), carol], 'rule 5', '5. ranges MUST be strictly above `contiguous`;'),
+        ('have_ranges_unsorted', 'SNAPSHOT-02', 'BOB extra ranges', [[105, 107]], [[110, 112], [105, 107]],
+         [bob(100, [[110, 112], [105, 107]]), carol], 'rule 6',
+         '6. ranges MUST be sorted by ascending `start`, then ascending `end`;'),
+        ('have_ranges_overlapping', 'SNAPSHOT-02', 'BOB extra ranges', [[105, 107]], [[105, 107], [106, 110]],
+         [bob(100, [[105, 107], [106, 110]]), carol], 'rule 7', '7. ranges MUST be non-overlapping;'),
+        ('have_ranges_adjacent', 'SNAPSHOT-02', 'BOB extra ranges', [[105, 107]], [[105, 107], [108, 110]],
+         [bob(100, [[105, 107], [108, 110]]), carol], 'rule 8', '8. ranges MUST be non-adjacent;'),
+        ('frontier_duplicate_principal', 'SNAPSHOT-01', 'BOB entries in the frontier', 1, 2,
+         [bob(2), bob(2), carol], 'rule 9',
+         '9. no two `actor-have` entries for the same Principal MAY occur in one canonical frontier.'),
+    ]
+    base_seq = {'SNAPSHOT-01': (1, S1), 'SNAPSHOT-02': (2, S2)}
+    for cid, base, field, old, new, frontier, rule_no, text in have_cases:
+        seq, base_snap = base_seq[base]
+        cose = raw_snapshot(frontier, seq, base_snap['plaintext'])
+        neg(cid, 'snapshot', f'{base} with a frontier that violates §28.1 {rule_no}', base, field, old, new,
+            f'LFCP-WIRE-01 §28.1 {rule_no}; §28.2',
+            f'{text} (§28.2: "A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.")',
+            'Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier.',
+            {'cose_sign1': hexv(cose)},
+            {'valid': False, 'disposition': 'reject'},
+            cddl=('snapshot', 'pass'))
+    cose = raw_snapshot([carol, bob(2)], 1, S1['plaintext'])
+    neg('frontier_unsorted', 'snapshot', 'SNAPSHOT-01 with CAROL listed before BOB', 'SNAPSHOT-01',
+        'frontier entry order', 'BOB, CAROL', 'CAROL, BOB',
+        'LFCP-WIRE-01 §28.2',
+        'Entries MUST be sorted by ascending raw 32-byte `principal-id`, compared lexicographically as unsigned bytes. '
+        '[...] A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.',
+        'Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one entry order.',
+        {'cose_sign1': hexv(cose)},
+        {'valid': False, 'disposition': 'reject'},
+        cddl=('snapshot', 'pass'))
+
+    # 12. Stale-epoch cutoff for an actor absent from the cutoff frontier:
+    #     D4 moved to the closed epoch 0 (keys re-derived from DEK0).
+    D_ABSENT = data_unit(CAROL, 0, 1, None, C6['id'], b'LFCP epoch-1 unit from Carol', DEK0)
+    neg('stale_epoch_absent_actor', 'data_unit', 'CAROL Data Unit in closed epoch 0, where C6 records no CAROL entry',
+        'D4_carol_epoch1_seq1', 'Data Epoch (payload field 1)', 1, 0,
+        'LFCP-WIRE-01 §19.1; §88 step 7; §75',
+        'If an actor is absent from the recorded frontier, no newly discovered Data Units from that actor in the closed '
+        'epoch are automatically acceptable. Any later-arriving previous-epoch unit beyond that frontier MUST NOT be merged '
+        'automatically. It SHOULD be surfaced to the application as stale offline work [...]',
+        'The cutoff frontier makes revocation deterministic; merging late closed-epoch work would let removed members keep writing.',
+        {'cose_sign1': hexv(D_ABSENT['cose'])},
+        {'valid': False, 'disposition': 'quarantine', 'error': {'code': 'STALE_DATA_EPOCH'}},
+        context={'cutoff_record': ref('C6_key_epoch_1', 'record_id'), 'closed_epoch': 0},
+        cddl=('data-unit', 'pass'))
+
     fixtures = {
         'meta': {
             'wire_spec': 'LFCP-WIRE-01',
@@ -792,6 +1044,7 @@ def generate():
         'stale_epoch_expected': 'STALE_DATA_EPOCH / quarantine because Bob cutoff at epoch 0 is seq=2',
     }
 
+    fixtures['negatives'] = NEG
     OUT_JSON.write_text(json.dumps(to_vector_format(fixtures), indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
     return fixtures
 
@@ -927,6 +1180,14 @@ def to_vector_format(fixtures: dict) -> dict:
         # LFCP-WIRE-01 section 62, error code 14.
         'expected': {'valid': False, 'error': {'code': 'STALE_DATA_EPOCH', 'detail': n['stale_epoch_expected']}},
     })
+    for x in fixtures['negatives']:
+        case = {'id': x['id'], 'type': 'validation', 'kind': x['kind'], 'description': x['description'],
+                'inputs': x['inputs']}
+        if x['context']:
+            case['context'] = x['context']
+        case['derivation'] = x['derivation']
+        case['expected'] = x['expected']
+        cases.append(case)
 
     return {
         'format': 'lfcp-vector-format/1',
@@ -1302,6 +1563,30 @@ def generate_markdown(f: dict):
     a('')
     a('Re-encode any signed payload using a non-preferred integer width or non-deterministic map ordering and sign those different bytes. Even with a mathematically valid Ed25519 signature, a WIRE-01 validator claiming deterministic-CBOR conformance SHOULD reject the object as non-canonical. This requirement should be stated explicitly in the next WIRE draft.')
     a('')
+    a('### 17.10 Machine-readable negative vectors')
+    a('')
+    a('Each vector below changes exactly one property of a published positive case and recomputes only what that change forces (ciphertext, signature). The JSON carries the same data as `validation` cases with `derivation` (base case, mutation, rule, rationale) and, where the outcome depends on state, `context`. An `error.code` is given only where `LFCP-WIRE-01` names the code for that rejection.')
+    a('')
+    for idx, x in enumerate(f['negatives']):
+        d = x['derivation']; e = x['expected']
+        a(f'#### 17.10.{idx+1} {x["id"]}: {x["description"]}')
+        a('')
+        a(f'- Base case: `{d["base_case"]}`')
+        show = lambda v: v['hex'] if isinstance(v, dict) and 'hex' in v else json.dumps(v)
+        a(f'- Mutation: {d["mutation"]["field"]}: `{show(d["mutation"]["from"])}` → `{show(d["mutation"]["to"])}`')
+        a(f'- Rule ({d["rule"]["section"]}): {d["rule"]["text"]}')
+        outcome = 'invalid'
+        if 'disposition' in e:
+            outcome += f', {e["disposition"]}'
+        outcome += f', error code `{e["error"]["code"]}`' if 'error' in e else ', no error code specified'
+        a(f'- Expected: {outcome}')
+        a(f'- Why: {d["why"]}')
+        a('')
+        for k, v in x['inputs'].items():
+            a(f'{k}:')
+            a('')
+            a(code_hex(v['hex']))
+            a('')
 
     a('## 18. Snapshot vectors')
     a('')

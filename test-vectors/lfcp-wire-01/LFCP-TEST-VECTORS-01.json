@@ -1081,6 +1081,676 @@
           "detail": "STALE_DATA_EPOCH / quarantine because Bob cutoff at epoch 0 is seq=2"
         }
       }
+    },
+    {
+      "id": "noncanonical_aad_D1",
+      "type": "validation",
+      "kind": "data_unit",
+      "description": "D1 sealed under a non-deterministically encoded AAD",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a05899a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030104f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead8c23b6b8e66403566f94fa11126cfd785840ceb668343f6ca82263e057b75390bf93030f4e7b1e58e4c5de885f029f93e8f59996e45b6cc658560e4156042fe995290f6be0d99371083bb45f0255d12e7e09"
+        },
+        "noncanonical_aad_cbor": {
+          "hex": "876c4c4643502d444154412d76315820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c51801f65820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b8"
+        }
+      },
+      "derivation": {
+        "base_case": "D1_bob_epoch0_seq1",
+        "mutation": {
+          "field": "AAD encoding of the actor sequence (seq 1)",
+          "from": {
+            "hex": "01"
+          },
+          "to": {
+            "hex": "1801"
+          }
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §5.2; §26.3",
+          "text": "When an LFCP algorithm requires reconstructing a deterministic structure, such as AEAD AAD, HPKE `info`, or HPKE AAD, the reconstructed structure MUST follow these deterministic CBOR rules exactly. (§26.3: a Data Unit is eligible for merge only if \"the unit decrypts successfully\".)"
+        },
+        "why": "The receiver reconstructs the canonical AAD, so decryption fails; accepting it would require guessing alternative encodings of signed or authenticated structures."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject"
+      }
+    },
+    {
+      "id": "tagged_cose_D1",
+      "type": "validation",
+      "kind": "data_unit",
+      "description": "D1 wrapped in COSE_Sign1 tag 18",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "d2845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a05899a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030104f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca31e51d9b62a572bf8376ef3267158408adb5052b4f93358a1d5397fd05f591b47b20724afd186d42368caba11bd1f7e2d7ab3e43ad96d124e08ac17968d6cfc558a67ddc564ed538070d9dad0329508"
+        }
+      },
+      "derivation": {
+        "base_case": "D1_bob_epoch0_seq1",
+        "mutation": {
+          "field": "outer CBOR tag",
+          "from": "none",
+          "to": "tag 18"
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §10",
+          "text": "A strict LFCP-WIRE-01 implementation MUST reject a tagged persistent LFCP object as non-canonical."
+        },
+        "why": "The object ID is SHA-256 of the exact bytes; a tagged copy would be a second, different object for the same content."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject"
+      }
+    },
+    {
+      "id": "invalid_signature_D1",
+      "type": "validation",
+      "kind": "data_unit",
+      "description": "D1 with one signature bit flipped",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a05899a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030104f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca31e51d9b62a572bf8376ef3267158408adb5052b4f93358a1d5397fd05f591b47b20724afd186d42368caba11bd1f7e2d7ab3e43ad96d124e08ac17968d6cfc558a67ddc564ed538070d9dad0329509"
+        }
+      },
+      "derivation": {
+        "base_case": "D1_bob_epoch0_seq1",
+        "mutation": {
+          "field": "signature byte 63",
+          "from": {
+            "hex": "08"
+          },
+          "to": {
+            "hex": "09"
+          }
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §26.3, §10.5",
+          "text": "A Data Unit is eligible for merge only if: 1. its signature is valid for the actor Principal;"
+        },
+        "why": "An unverified signature lets anyone inject Data Units in the actor's name."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject"
+      }
+    },
+    {
+      "id": "wrong_kid_D1",
+      "type": "validation",
+      "kind": "data_unit",
+      "description": "D1 payload signed by CAROL (kid CAROL) instead of the actor BOB",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a05899a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030104f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca31e51d9b62a572bf8376ef326715840b98ef0f8a87227bdc6a5f2dfc3f67865d3678ee76301b8060e85576da50b2c935e5340150b93016e40754a298470229c61b9406d99ba70910b086d090fdba702"
+        }
+      },
+      "context": {
+        "actor": {
+          "case": "principal_bob",
+          "field": "principal_id"
+        },
+        "kid": {
+          "case": "principal_carol",
+          "field": "principal_id"
+        }
+      },
+      "derivation": {
+        "base_case": "D1_bob_epoch0_seq1",
+        "mutation": {
+          "field": "protected header kid (and signing key)",
+          "from": {
+            "hex": "3ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5"
+          },
+          "to": {
+            "hex": "a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48"
+          }
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §10.1, §26",
+          "text": "The value of `kid` MUST be the 32-byte Principal ID of the signing Principal. (§26: \"The payload is signed by the actor using COSE_Sign1.\")"
+        },
+        "why": "The signature is valid but by the wrong Principal; accepting it lets one member forge another member's edits."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject"
+      }
+    },
+    {
+      "id": "aead_failure_D1",
+      "type": "validation",
+      "kind": "data_unit",
+      "description": "D1 ciphertext sealed under the AAD of sequence 2",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a05899a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030104f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aeadfa4c94672f853eab1f58578e579f6ccc58409fffb58d10720976aa661d2f00f908ba7e2e518afed45e024dc0acb04c99d488244f9d548f49ac11a61645c4c8ffd545394112c92dd47860daae68f074ad8c02"
+        }
+      },
+      "derivation": {
+        "base_case": "D1_bob_epoch0_seq1",
+        "mutation": {
+          "field": "AAD actor sequence used for sealing",
+          "from": 1,
+          "to": 2
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §26.1, §26.3",
+          "text": "A Data Unit is eligible for merge only if: [...] 6. the unit decrypts successfully;"
+        },
+        "why": "The AAD binds the ciphertext to its resource, epoch, actor and position; accepting it would let ciphertext be replayed elsewhere."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject"
+      }
+    },
+    {
+      "id": "stale_control_head_put",
+      "type": "validation",
+      "kind": "control_put",
+      "description": "CONTROL_PUT of C6 with expected head C4 while the coordinator head is C5",
+      "inputs": {
+        "message_cbor": {
+          "hex": "a300170150aacf67fb06babec5ab13782022cbf69c04a3005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc241015820be67407af4130b61d2df1da9ad2a59daa24eaab1387529a7eaa14c27e1a148790259012d845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058bfa6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101060258201189b7d19ac6d09a8128d3967a4fdd80ea2a6180efaa8a9f15bf2ee5c32cda4603040458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c505a4000101582027df3173462d19512f2224f54bdc894a8c7e81c212301ed1f2bb8ccee0ce71510281a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c501020303584071b309518143fd640aff64033ba76503c985f1509398202ff6dfa1e4315ed29f06e305774d467adb142a8fbeec0a10eae2b390eac527d92b7849a60e85cf520f"
+        }
+      },
+      "context": {
+        "current_control_head": {
+          "case": "C5_route_update",
+          "field": "record_id"
+        }
+      },
+      "derivation": {
+        "base_case": "CONTROL_PUT",
+        "mutation": {
+          "field": "expected current Control Head (body field 1)",
+          "from": {
+            "hex": "1189b7d19ac6d09a8128d3967a4fdd80ea2a6180efaa8a9f15bf2ee5c32cda46"
+          },
+          "to": {
+            "hex": "be67407af4130b61d2df1da9ad2a59daa24eaab1387529a7eaa14c27e1a14879"
+          }
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §47",
+          "text": "If not equal, it MUST return `NACK(CONTROL_HEAD_MISMATCH)` with the current head."
+        },
+        "why": "Compare-and-swap is what keeps the Control Chain linear; committing against a stale head would fork it."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "CONTROL_HEAD_MISMATCH"
+        }
+      }
+    },
+    {
+      "id": "control_fork_C6",
+      "type": "validation",
+      "kind": "control_record",
+      "description": "A second Control Record at sequence 6 on top of C5",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058bfa6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101060258201189b7d19ac6d09a8128d3967a4fdd80ea2a6180efaa8a9f15bf2ee5c32cda4603040458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c505a4000101582027df3173462d19512f2224f54bdc894a8c7e81c212301ed1f2bb8ccee0ce71510281a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c501030303584067a1458144801485ceaea71dbab2ae346f350cceb7c93c8cd61ada0c0f08441645843a8b91e9f0cdf79929eedddbb53eccff4eb264edd632959e55782332790d"
+        },
+        "record_id": {
+          "hex": "82de4f8844a91a1a84e6d19ddc94092a153dbd3c96ccd1064c6c3c0559d1d5a4"
+        }
+      },
+      "context": {
+        "previous_record": {
+          "case": "C5_route_update",
+          "field": "record_id"
+        },
+        "competing_record": {
+          "case": "C6_key_epoch_1",
+          "field": "record_id"
+        }
+      },
+      "derivation": {
+        "base_case": "C6_key_epoch_1",
+        "mutation": {
+          "field": "body field 2: BOB cutoff sequence",
+          "from": 2,
+          "to": 3
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §13.2",
+          "text": "Two different validly signed records referencing the same previous Control Record create a Control Fork. A client MUST NOT silently choose a branch. The Resource enters `CONTROL_CONFLICT` [...]"
+        },
+        "why": "Choosing a branch silently would let replicas diverge on authorization and keys."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "conflict",
+        "error": {
+          "code": "CONTROL_CONFLICT"
+        }
+      }
+    },
+    {
+      "id": "actor_seq_zero_D1",
+      "type": "validation",
+      "kind": "data_unit",
+      "description": "D1 re-issued with actor sequence 0",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a05899a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030004f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b8065826aeaeda7927384999a4de8d68689695ee07c6f89482faed18c8068d2f16e210480028d255c2f75840e4e3fa3176ec8e4616e14063468843d7b7145a15219f93eadc0a92ee6a5a04e46e10abb96b1a6294a5dc90959e0a0c1dde00b5d61c9559b183a8f389b18e9904"
+        }
+      },
+      "derivation": {
+        "base_case": "D1_bob_epoch0_seq1",
+        "mutation": {
+          "field": "actor sequence (payload field 3)",
+          "from": 1,
+          "to": 0
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §8",
+          "text": "Sequence numbers begin at `1`."
+        },
+        "why": "Sequence 0 is outside the per-actor sequence space, so Have Vectors and hash chains cannot describe it."
+      },
+      "expected": {
+        "valid": false
+      }
+    },
+    {
+      "id": "actor_seq1_prev_not_null_D1",
+      "type": "validation",
+      "kind": "data_unit",
+      "description": "D1 with a previous-unit reference although it is sequence 1",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058baa7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c503010458207745a3beb83838797591a1121e932799a5fb28b83890a3a9377f6c0d5cc34cd1055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead80cdbeebbca9afb5a1272381cde6b1615840e443e2635d7f965aa219b447656a69cd313e1eacbecd2e52bad5b1f0188c8b2c2e24d79c0eb07866c67a6b249e6a845c3ecb335ed59f8ad21449c7fdc85bcb04"
+        }
+      },
+      "derivation": {
+        "base_case": "D1_bob_epoch0_seq1",
+        "mutation": {
+          "field": "previous Data Unit (payload field 4)",
+          "from": null,
+          "to": {
+            "hex": "7745a3beb83838797591a1121e932799a5fb28b83890a3a9377f6c0d5cc34cd1"
+          }
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §26.2",
+          "text": "For sequence `1`, it MUST be `null`. [...] A gap or mismatch MUST be reported to the sync engine."
+        },
+        "why": "The actor hash chain must start at sequence 1; a non-null link there breaks gap and equivocation detection."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "report"
+      }
+    },
+    {
+      "id": "hpke_recipient_mismatch_KP0",
+      "type": "validation",
+      "kind": "key_package",
+      "description": "KP0 payload names CAROL as recipient but is sealed to BOB",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e5a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480358200b5dc558b8104686d5d6b0063629f1cfaf48049dee3580ca6e253d27f3359e33045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05582090ca4ed22f5b693d842711cd8c3d692e1002a3a84730926abd4e3eed9342ee0a065830e7a2257711c7244d0f333986ceab7baabdace14b42d179d3768648c535b3abed0ca41207be0e7157c31d6c073106e03758408802ca1c0b3a00ed98f3550c679e1e2d9a0d18b0b96075717cb31365c93f6e928642bb9bbc43cb7e1732172ebf5b90cbe2964d1f646aa0b5b76f120fa599c003"
+        }
+      },
+      "context": {
+        "recipient_x25519_private": {
+          "case": "principal_carol",
+          "field": "x25519_private",
+          "in": "inputs"
+        }
+      },
+      "derivation": {
+        "base_case": "KP0_bob_epoch0",
+        "mutation": {
+          "field": "recipient (payload field 2)",
+          "from": {
+            "hex": "3ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5"
+          },
+          "to": {
+            "hex": "a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48"
+          }
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §25.1, §25.2",
+          "text": "The HPKE `info` value is deterministic CBOR encoding of [\"LFCP-KEY-v1\", resource-id, data epoch, recipient]. [...] Clients accept any cryptographically valid package that yields the correct DEK commitment."
+        },
+        "why": "HPKE info binds the recipient; a package that does not open for its named recipient delivers no key."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject"
+      }
+    },
+    {
+      "id": "have_empty_extra_list",
+      "type": "validation",
+      "kind": "snapshot",
+      "description": "SNAPSHOT-01 with a frontier that violates §28.1 rule 2",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e6a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50301045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102a3005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4801010280065825826d0cf4f6208b1daa2c8f0589916e0e7c68103ca43327922202cada2e6d19bb677f9ace7f5840c39f66939c22c25f314e4413205b9e6f5cb73418b84b7a293a4dddec7d1fc2ada7c3e7de030e06de5282447b59838f8b955ca5a16a5d7c631abeacd69543e804"
+        }
+      },
+      "derivation": {
+        "base_case": "SNAPSHOT-01",
+        "mutation": {
+          "field": "CAROL entry key 2",
+          "from": "absent",
+          "to": "[] (present and empty)"
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §28.1 rule 2; §28.2",
+          "text": "2. key `2` MUST be omitted when there are no extra ranges; (§28.2: \"A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.\")"
+        },
+        "why": "Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject"
+      }
+    },
+    {
+      "id": "have_range_reversed",
+      "type": "validation",
+      "kind": "snapshot",
+      "description": "SNAPSHOT-02 with a frontier that violates §28.1 rule 4",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058eca7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5011864028182186b1869a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101065825a4c0b8bc8173d8df3ebc22780f532125084f7008cea757160cd39be158c48d75bee9e62f62584083d02701308525858406d1ba90699cf94a043e4b82eb6ee627bc2a8d1dc3a350573ac1494e5bde8577eca8ca8782d753e3b0837269bcc655677cb30e1b573901"
+        }
+      },
+      "derivation": {
+        "base_case": "SNAPSHOT-02",
+        "mutation": {
+          "field": "BOB extra range",
+          "from": [
+            [
+              105,
+              107
+            ]
+          ],
+          "to": [
+            [
+              107,
+              105
+            ]
+          ]
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §28.1 rule 4; §28.2",
+          "text": "4. each sequence range MUST have `start <= end`; (§28.2: \"A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.\")"
+        },
+        "why": "Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject"
+      }
+    },
+    {
+      "id": "have_range_not_above_contiguous",
+      "type": "validation",
+      "kind": "snapshot",
+      "description": "SNAPSHOT-02 with a frontier that violates §28.1 rule 5",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058eca7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5011864028182185f186ba2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101065825a4c0b8bc8173d8df3ebc22780f532125084f7008ce1993e653ff3e6c47421d7ca5750bcd7c584010f1f96b4fe738dd5e9fd330ba49079d375243a3273ea604d27b6d1605f547965f959d7244ce486dd676ddf7da35b37fe2cad729bed2a33b9c6cc820d07e0705"
+        }
+      },
+      "derivation": {
+        "base_case": "SNAPSHOT-02",
+        "mutation": {
+          "field": "BOB extra range",
+          "from": [
+            [
+              105,
+              107
+            ]
+          ],
+          "to": [
+            [
+              95,
+              107
+            ]
+          ]
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §28.1 rule 5; §28.2",
+          "text": "5. ranges MUST be strictly above `contiguous`; (§28.2: \"A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.\")"
+        },
+        "why": "Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject"
+      }
+    },
+    {
+      "id": "have_ranges_unsorted",
+      "type": "validation",
+      "kind": "snapshot",
+      "description": "SNAPSHOT-02 with a frontier that violates §28.1 rule 6",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058f1a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5011864028282186e1870821869186ba2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101065825a4c0b8bc8173d8df3ebc22780f532125084f7008ce8eb51a5fa98d05fee976b8a7b1bb7ee05840b0aebf4ca511cb59476bc4fd9eb253e20037b2dbb9938a69ee5abf0a527ba44b2dafe326d7b1b1f77acde7573f8cd169787c74dd4e873586c032de197f36c502"
+        }
+      },
+      "derivation": {
+        "base_case": "SNAPSHOT-02",
+        "mutation": {
+          "field": "BOB extra ranges",
+          "from": [
+            [
+              105,
+              107
+            ]
+          ],
+          "to": [
+            [
+              110,
+              112
+            ],
+            [
+              105,
+              107
+            ]
+          ]
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §28.1 rule 6; §28.2",
+          "text": "6. ranges MUST be sorted by ascending `start`, then ascending `end`; (§28.2: \"A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.\")"
+        },
+        "why": "Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject"
+      }
+    },
+    {
+      "id": "have_ranges_overlapping",
+      "type": "validation",
+      "kind": "snapshot",
+      "description": "SNAPSHOT-02 with a frontier that violates §28.1 rule 7",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058f1a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50118640282821869186b82186a186ea2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101065825a4c0b8bc8173d8df3ebc22780f532125084f7008ce06c674da23c64da16c37ea04bb7faaf958408edeb4c1fba57b7a45baab536c503d402384fdc308d03187d6d4a4bd5f8b64c425a389bea6642e4604ecb524958ff49ce26fc47ab6eb65793a7a1ad8e2d9340a"
+        }
+      },
+      "derivation": {
+        "base_case": "SNAPSHOT-02",
+        "mutation": {
+          "field": "BOB extra ranges",
+          "from": [
+            [
+              105,
+              107
+            ]
+          ],
+          "to": [
+            [
+              105,
+              107
+            ],
+            [
+              106,
+              110
+            ]
+          ]
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §28.1 rule 7; §28.2",
+          "text": "7. ranges MUST be non-overlapping; (§28.2: \"A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.\")"
+        },
+        "why": "Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject"
+      }
+    },
+    {
+      "id": "have_ranges_adjacent",
+      "type": "validation",
+      "kind": "snapshot",
+      "description": "SNAPSHOT-02 with a frontier that violates §28.1 rule 8",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058f1a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50118640282821869186b82186c186ea2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101065825a4c0b8bc8173d8df3ebc22780f532125084f7008ce9ff8421b1f961400d3888abb0287f83b584072fb9cfc983227edf07424b793252c2734b5a29b8ed43beaec78df2013f6d59bcf5467443a2126dd77daf9ae11e33ce847ad913da8fe178f8710eb70ac104209"
+        }
+      },
+      "derivation": {
+        "base_case": "SNAPSHOT-02",
+        "mutation": {
+          "field": "BOB extra ranges",
+          "from": [
+            [
+              105,
+              107
+            ]
+          ],
+          "to": [
+            [
+              105,
+              107
+            ],
+            [
+              108,
+              110
+            ]
+          ]
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §28.1 rule 8; §28.2",
+          "text": "8. ranges MUST be non-adjacent; (§28.2: \"A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.\")"
+        },
+        "why": "Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject"
+      }
+    },
+    {
+      "id": "frontier_duplicate_principal",
+      "type": "validation",
+      "kind": "snapshot",
+      "description": "SNAPSHOT-01 with a frontier that violates §28.1 rule 9",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a059010aa7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50301045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180583a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101065825826d0cf4f6208b1daa2c8f0589916e0e7c68103ca42b8f1243055602078a9c90def2b345b158405c89c34cfc485bf4f4ad50d13f90b4f24e529e0d606123f670bfde1440c720608227c380d2a5283876991f6fb5ecdc791619400db9201a2175b6f654cea15e0e"
+        }
+      },
+      "derivation": {
+        "base_case": "SNAPSHOT-01",
+        "mutation": {
+          "field": "BOB entries in the frontier",
+          "from": 1,
+          "to": 2
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §28.1 rule 9; §28.2",
+          "text": "9. no two `actor-have` entries for the same Principal MAY occur in one canonical frontier. (§28.2: \"A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical.\")"
+        },
+        "why": "Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject"
+      }
+    },
+    {
+      "id": "frontier_unsorted",
+      "type": "validation",
+      "kind": "snapshot",
+      "description": "SNAPSHOT-01 with CAROL listed before BOB",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e4a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50301045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102065825826d0cf4f6208b1daa2c8f0589916e0e7c68103ca412d2680307b40bbe6a54ed77594fb38c584088fe24e01ac3686d83cb282e9ee3f02562f989f3df39c026b58d2403a61a96305a9cd69d48e65ffb71ea7317884f8680f732fa65bb75a2909afe1656cad7c50d"
+        }
+      },
+      "derivation": {
+        "base_case": "SNAPSHOT-01",
+        "mutation": {
+          "field": "frontier entry order",
+          "from": "BOB, CAROL",
+          "to": "CAROL, BOB"
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §28.2",
+          "text": "Entries MUST be sorted by ascending raw 32-byte `principal-id`, compared lexicographically as unsigned bytes. [...] A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical."
+        },
+        "why": "Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one entry order."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject"
+      }
+    },
+    {
+      "id": "stale_epoch_absent_actor",
+      "type": "validation",
+      "kind": "data_unit",
+      "description": "CAROL Data Unit in closed epoch 0, where C6 records no CAROL entry",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a0589fa7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48030104f6055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc51806582c0799992a22830a7795a36ac1d55e602ce79871deee577330216419ce71e44aa1014ca2efa24fb1b0fdc554755840ae4947fc9b1adfe571f7c826432c9a7316b8d6be5c694a4c336d590df66b71bb284d5c2107385908a18154b908b383efd0341d9c959f92161e468633724abc0b"
+        }
+      },
+      "context": {
+        "cutoff_record": {
+          "case": "C6_key_epoch_1",
+          "field": "record_id"
+        },
+        "closed_epoch": 0
+      },
+      "derivation": {
+        "base_case": "D4_carol_epoch1_seq1",
+        "mutation": {
+          "field": "Data Epoch (payload field 1)",
+          "from": 1,
+          "to": 0
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §19.1; §88 step 7; §75",
+          "text": "If an actor is absent from the recorded frontier, no newly discovered Data Units from that actor in the closed epoch are automatically acceptable. Any later-arriving previous-epoch unit beyond that frontier MUST NOT be merged automatically. It SHOULD be surfaced to the application as stale offline work [...]"
+        },
+        "why": "The cutoff frontier makes revocation deterministic; merging late closed-epoch work would let removed members keep writing."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "quarantine",
+        "error": {
+          "code": "STALE_DATA_EPOCH"
+        }
+      }
     }
   ]
 }
