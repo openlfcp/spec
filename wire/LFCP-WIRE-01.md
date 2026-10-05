@@ -2038,7 +2038,7 @@ data-get-body = {
 }
 ```
 
-A request SHOULD contain no more than 256 ranges.
+A request SHOULD contain no more than 256 ranges. A server MAY reject a request with more than 256 ranges with `MALFORMED_MESSAGE`, so that one request cannot make it load an unbounded amount of data.
 
 A peer MAY answer in multiple `DATA_BATCH` messages.
 
@@ -2103,6 +2103,8 @@ key-package-get-body = {
   2 => [1* uint]              ; requested Data Epochs
 }
 ```
+
+A request MUST NOT list more than 256 distinct Data Epochs; a client that needs more sends several requests. A server MAY reject a request listing more with `MALFORMED_MESSAGE`.
 
 A server SHOULD return every matching Key Package it stores. It serves a Key Package only to a session authenticated as that package's recipient.
 

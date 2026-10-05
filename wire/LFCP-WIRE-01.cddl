@@ -408,37 +408,37 @@ key-package-get-body = {
   2 => [1* uint]              ; requested Data Epochs
 }
 
-; --- wire/LFCP-WIRE-01.md:2113 (53. KEY_PACKAGE_BATCH) ---
+; --- wire/LFCP-WIRE-01.md:2115 (53. KEY_PACKAGE_BATCH) ---
 key-package-batch-body = {
   0 => resource-id,
   1 => [* bstr]               ; exact signed Key Package COSE bytes
 }
 
-; --- wire/LFCP-WIRE-01.md:2124 (54. KEY_PACKAGE_PUT) ---
+; --- wire/LFCP-WIRE-01.md:2126 (54. KEY_PACKAGE_PUT) ---
 key-package-put-body = {
   0 => resource-id,
   1 => [1* bstr]              ; exact signed Key Package COSE bytes
 }
 
-; --- wire/LFCP-WIRE-01.md:2139 (55. SNAPSHOT_GET) ---
+; --- wire/LFCP-WIRE-01.md:2141 (55. SNAPSHOT_GET) ---
 snapshot-get-body = {
   0 => resource-id,
   ? 1 => hash32               ; exact Snapshot ID if known
 }
 
-; --- wire/LFCP-WIRE-01.md:2154 (56. SNAPSHOT) ---
+; --- wire/LFCP-WIRE-01.md:2156 (56. SNAPSHOT) ---
 snapshot-body = {
   0 => resource-id,
   1 => bstr                   ; exact signed Snapshot COSE bytes
 }
 
-; --- wire/LFCP-WIRE-01.md:2165 (57. SNAPSHOT_PUT) ---
+; --- wire/LFCP-WIRE-01.md:2167 (57. SNAPSHOT_PUT) ---
 snapshot-put-body = {
   0 => resource-id,
   1 => bstr                   ; exact signed Snapshot COSE bytes
 }
 
-; --- wire/LFCP-WIRE-01.md:2195 (58.1 PRESENCE) ---
+; --- wire/LFCP-WIRE-01.md:2197 (58.1 PRESENCE) ---
 presence-body = {
   0 => resource-id,
   1 => principal-id,
@@ -446,27 +446,27 @@ presence-body = {
   3 => bstr           ; application-defined opaque payload
 }
 
-; --- wire/LFCP-WIRE-01.md:2210 (58.2 PRESENCE_LEAVE) ---
+; --- wire/LFCP-WIRE-01.md:2212 (58.2 PRESENCE_LEAVE) ---
 presence-leave-body = {
   0 => resource-id,
   1 => principal-id
 }
 
-; --- wire/LFCP-WIRE-01.md:2223 (59. ACK) ---
+; --- wire/LFCP-WIRE-01.md:2225 (59. ACK) ---
 ack-body = {
   0 => uint,                  ; §33 message type code of the acknowledged request
   ? 1 => [* hash32],          ; object IDs committed
   ? 2 => bool                 ; durable under advertised server policy
 }
 
-; --- wire/LFCP-WIRE-01.md:2243 (60. NACK) ---
+; --- wire/LFCP-WIRE-01.md:2245 (60. NACK) ---
 nack-body = {
   0 => uint,                  ; error code
   ? 1 => tstr,                ; human-readable diagnostic
   ? 2 => any                  ; machine-readable details
 }
 
-; --- wire/LFCP-WIRE-01.md:2261 (61. ERROR) ---
+; --- wire/LFCP-WIRE-01.md:2263 (61. ERROR) ---
 error-body = {
   0 => uint,
   ? 1 => tstr,
