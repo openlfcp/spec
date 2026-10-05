@@ -178,8 +178,7 @@ DATA_PROFILE = 'org.lfcp.test.raw.v1'
 
 # -----------------------------------------------------------------------------
 # COSE_Sign1.
-# TEST-VECTORS-01 chooses an *untagged* COSE_Sign1 array. WIRE-01 must be
-# clarified to make this normative before RC.
+# LFCP-WIRE-01 §10 requires the untagged four-element COSE_Sign1 array.
 # -----------------------------------------------------------------------------
 
 COSE_ALG_EDDSA = -8
@@ -349,6 +348,56 @@ def wire_msg(msg_type: int, msg_id: bytes, body: Any, correlation: bytes | None 
 def msgid(label: str) -> bytes:
     return h('LFCP-TV-MSG-' + label)[:16]
 
+
+def actor_have(pid: bytes, contiguous: int, extras: list[list[int]] | None = None) -> dict[int, Any]:
+    """Canonical actor-have, LFCP-WIRE-01 §28.1."""
+    extras = extras or []
+    prev_end = contiguous
+    for start, end in extras:
+        # rules 4-8: start <= end, above contiguous, sorted, non-overlapping, non-adjacent
+        assert start <= end and start > prev_end + 1, 'non-canonical sequence range'
+        prev_end = end
+    entry = {0: pid, 1: contiguous}
+    if extras:  # rules 2-3: key 2 present only when there are extra ranges
+        entry[2] = [list(r) for r in extras]
+    return entry
+
+
+def canonical_frontier(entries: list[dict[int, Any]]) -> list[dict[int, Any]]:
+    """Canonical frontier, LFCP-WIRE-01 §28.2: sorted by raw principal-id bytes."""
+    pids = [e[0] for e in entries]
+    assert len(set(pids)) == len(pids), 'duplicate Principal in frontier (§28.1 rule 9)'
+    return sorted(entries, key=lambda e: e[0])
+
+
+def snapshot(publisher: Principal, epoch: int, seq: int, control_head: bytes, frontier: list[dict[int, Any]],
+             plaintext: bytes, dek: bytes) -> dict[str, Any]:
+    """Encrypted, signed Snapshot, LFCP-WIRE-01 §29."""
+    aad_obj = ['LFCP-SNAPSHOT-v1', RESOURCE, epoch, publisher.pid, seq, control_head, frontier]  # §29.1.3
+    aad = cbor(aad_obj)
+    key = snapshot_key(RESOURCE, epoch, dek, publisher.pid)  # §29.1.1
+    nonce = lfcp_nonce(seq)  # §29.1.2: 0x00000000 || uint64_be(snapshot_sequence)
+    ciphertext = ChaCha20Poly1305(key).encrypt(nonce, plaintext, aad)  # §29.1.4
+    payload_obj = {0: RESOURCE, 1: epoch, 2: publisher.pid, 3: seq, 4: control_head, 5: frontier, 6: ciphertext}
+    # §29.1.3: the AAD elements after the label equal payload fields 0..5.
+    assert aad_obj[1:] == [payload_obj[i] for i in range(6)]
+    cose, payload, protected, sig_struct = cose_sign1(payload_obj, publisher)  # §29, §10
+    assert ChaCha20Poly1305(key).decrypt(nonce, ciphertext, aad) == plaintext
+    return {
+        'frontier': frontier,
+        'frontier_cbor': cbor(frontier),
+        'aad': aad,
+        'key': key,
+        'nonce': nonce,
+        'plaintext': plaintext,
+        'ciphertext': ciphertext,
+        'payload': payload,
+        'protected': protected,
+        'sig_structure': sig_struct,
+        'cose': cose,
+        'id': sha256(cose),  # §29: snapshot_id = SHA-256(exact COSE_Sign1 bytes)
+    }
+
 # -----------------------------------------------------------------------------
 # Generate chain.
 # -----------------------------------------------------------------------------
@@ -454,6 +503,21 @@ def generate():
     # Carol's first epoch-1 unit.
     D_C1 = data_unit(CAROL, 1, 1, None, C6['id'], b'LFCP epoch-1 unit from Carol', DEK1)
 
+    # SNAPSHOT-01: BOB (owner since C4, so snapshot/publish per §29.2) publishes
+    # epoch 1 at Control Head C6. The frontier matches the accepted Data Units:
+    # BOB 1..2 (C6 cut epoch 0 at seq 2, so D3 is excluded) and CAROL 1 (D4).
+    # Entries are given out of order on purpose; §28.2 sorts them.
+    S1 = snapshot(BOB, 1, 1, C6['id'],
+                  canonical_frontier([actor_have(CAROL.pid, 1), actor_have(BOB.pid, 2)]),
+                  b'LFCP test snapshot #1', DEK1)
+    # SNAPSHOT-02: same publisher and epoch, next snapshot sequence, with the
+    # BOB entry of DATA_HAVE_with_hole (1..100 plus 105..107) to exercise an
+    # extra range in a canonical frontier (§28.1 rule 3). It is not derived
+    # from D1-D4.
+    S2 = snapshot(BOB, 1, 2, C6['id'],
+                  canonical_frontier([actor_have(CAROL.pid, 1), actor_have(BOB.pid, 100, [[105, 107]])]),
+                  b'LFCP test snapshot #2', DEK1)
+
     # Invite secret and URI.
     invite_secret_obj = {0: 1, 1: INVITE.ed_seed, 2: INVITE.x_sk_raw}
     invite_secret_cbor = cbor(invite_secret_obj)
@@ -534,6 +598,7 @@ def generate():
         'transfers': {},
         'key_packages': {},
         'data_units': {},
+        'snapshots': {},
         'invite': {},
         'wire': {},
         'negative': {},
@@ -613,6 +678,33 @@ def generate():
     add_du('D2_bob_epoch0_seq2', D2)
     add_du('D3_bob_epoch0_seq3_stale', D3_STALE)
     add_du('D4_carol_epoch1_seq1', D_C1)
+
+    def add_snap(name, S, publisher, epoch, seq, note):
+        fixtures['snapshots'][name] = {
+            'note': note,
+            'publisher': publisher.label,
+            'data_epoch': epoch,
+            'snapshot_sequence': seq,
+            'control_head': hx(C6['id']),
+            'plaintext_utf8': S['plaintext'].decode('utf-8'),
+            'plaintext_hex': hx(S['plaintext']),
+            'frontier_cbor': hx(S['frontier_cbor']),
+            'aad_cbor': hx(S['aad']),
+            'snapshot_key': hx(S['key']),
+            'nonce': hx(S['nonce']),
+            'ciphertext': hx(S['ciphertext']),
+            'payload_cbor': hx(S['payload']),
+            'protected_header_cbor': hx(S['protected']),
+            'sig_structure_cbor': hx(S['sig_structure']),
+            'cose_sign1': hx(S['cose']),
+            'snapshot_id': hx(S['id']),
+        }
+
+    add_snap('SNAPSHOT-01', S1, BOB, 1, 1,
+             'Frontier from the accepted Data Units: BOB 1..2 (D1, D2; D3 is past the C6 cutoff) and CAROL 1 (D4).')
+    add_snap('SNAPSHOT-02', S2, BOB, 1, 2,
+             'Frontier with an extra range: the BOB entry of DATA_HAVE_with_hole (1..100, 105..107) and CAROL 1. '
+             'Not derived from D1-D4.')
 
     fixtures['invite'] = {
         'secret_cbor': hx(invite_secret_cbor),
@@ -719,6 +811,24 @@ def to_vector_format(fixtures: dict) -> dict:
             {f: hexv(v) for f, v in d.items() if f not in ('plaintext_utf8', 'plaintext_hex')},
         ))
 
+    snapshot_inputs = ('publisher', 'data_epoch', 'snapshot_sequence', 'control_head', 'plaintext_utf8', 'plaintext_hex')
+    for name, x in fixtures['snapshots'].items():
+        case = bytes_case(
+            name, 'snapshot',
+            {
+                'signer': x['publisher'],
+                'data_epoch': x['data_epoch'],
+                'snapshot_sequence': x['snapshot_sequence'],
+                'control_head': hexv(x['control_head']),
+                'plaintext_utf8': x['plaintext_utf8'],
+                'plaintext_hex': hexv(x['plaintext_hex']),
+            },
+            {k: hexv(v) for k, v in x.items() if k not in snapshot_inputs and k != 'note'},
+        )
+        case = {'id': case['id'], 'type': case['type'], 'kind': case['kind'], 'note': x['note'],
+                'inputs': case['inputs'], 'expected': case['expected']}
+        cases.append(case)
+
     inv = fixtures['invite']
     cases.append(bytes_case('invite_uri', 'invite_uri', None, {
         'secret_cbor': hexv(inv['secret_cbor']),
@@ -816,7 +926,7 @@ def generate_markdown(f: dict):
     a('')
     a('## 1. What these vectors test')
     a('')
-    a('The suite covers deterministic CBOR, Principal IDs, LFCP DEK commitments, COSE_Sign1, Control Chain records, capability invitation and claim, ownership transfer, route migration, HPKE Key Packages, Data Unit encryption, actor hash chaining, strict epoch cutoff, invitation URIs, session handshake messages, resource opening, Have Vectors, batched DATA_PUT, and negative validation cases.')
+    a('The suite covers deterministic CBOR, Principal IDs, LFCP DEK commitments, COSE_Sign1, Control Chain records, capability invitation and claim, ownership transfer, route migration, HPKE Key Packages, Data Unit encryption, actor hash chaining, strict epoch cutoff, invitation URIs, session handshake messages, resource opening, Have Vectors, batched DATA_PUT, encrypted signed Snapshots with canonical frontiers, and negative validation cases.')
     a('')
     a('The test profile uses `org.lfcp.test.raw.v1`; its decrypted Data Unit plaintext is opaque bytes and has no application-level merge semantics. This isolates Wire Protocol interoperability from Automerge/Yjs behavior.')
     a('')
@@ -831,7 +941,7 @@ def generate_markdown(f: dict):
     a('3. deterministic CBOR follows the explicit WIRE-01 canonical rules;')
     a('4. Snapshot frontiers are canonicalized and Snapshot AAD is the exact seven-element array defined by WIRE-01.')
     a('')
-    a('The current vector set predates the consolidated Snapshot rule and does not yet include a byte-exact `SNAPSHOT-01` ciphertext/signature vector. Adding it is an interoperability backlog item, not a specification blocker.')
+    a('The byte-exact Snapshot vectors `SNAPSHOT-01` and `SNAPSHOT-02` (Section 18) follow these consolidated rules.')
     a('')
     a('## 3. Conformance rules')
     a('')
@@ -1132,15 +1242,43 @@ def generate_markdown(f: dict):
     a('Re-encode any signed payload using a non-preferred integer width or non-deterministic map ordering and sign those different bytes. Even with a mathematically valid Ed25519 signature, a WIRE-01 validator claiming deterministic-CBOR conformance SHOULD reject the object as non-canonical. This requirement should be stated explicitly in the next WIRE draft.')
     a('')
 
-    a('## 18. Snapshot vector status')
+    a('## 18. Snapshot vectors')
     a('')
-    a('The consolidated `LFCP-WIRE-01` now defines canonical frontier ordering and exact Snapshot AAD. Snapshot key derivation is:')
+    a('`SNAPSHOT-01` and `SNAPSHOT-02` are byte-exact Snapshots under the consolidated `LFCP-WIRE-01` rules. Both are published by BOB, who owns the Resource after C4 and therefore holds `snapshot/publish` (§29.2), in Data Epoch 1 at Control Head C6, using DEK1. The plaintext is opaque test bytes: Snapshot plaintext framing belongs to the application profile, not to the Wire suite.')
     a('')
-    snapk = snapshot_key(bytes.fromhex(R['id']), 1, bytes.fromhex(R['dek1']), bytes.fromhex(P['bob']['principal_id']))
-    a(f'For BOB, epoch 1, expected `snapshot_key = {hx(snapk)}`.')
+    a('Derivation, with the defining sections of `LFCP-WIRE-01`:')
     a('')
-    a('The current suite does not yet contain the byte-exact Snapshot ciphertext/signature fixture. `SNAPSHOT-01` MUST be added before snapshot interoperability is declared complete; this no longer requires a Wire specification change.')
+    a('1. **Actor Have** (§28.1): keys `0` and `1` always; key `2` only when there are extra ranges, which are sorted, non-overlapping, non-adjacent and above `contiguous`.')
+    a('2. **Canonical frontier** (§28.2): the actor-have entries sorted by raw 32-byte Principal ID, one entry per Principal. BOB (`3ddf…`) sorts before CAROL (`a6e4…`).')
+    a('3. **Snapshot AAD** (§29.1.3): deterministic CBOR of `["LFCP-SNAPSHOT-v1", resource_id, data_epoch, publisher_id, snapshot_sequence, control_head, frontier]`, i.e. payload fields `0`..`5` after the label.')
+    a('4. **Snapshot key** (§29.1.1): `HKDF-Expand(HKDF-Extract(resource_id || uint64_be(data_epoch), DEK), ASCII("LFCP-SNAPSHOT-KEY-v1") || publisher_id, 32)`.')
+    a('5. **Nonce** (§29.1.2): `0x00000000 || uint64_be(snapshot_sequence)`.')
+    a('6. **Encryption** (§29.1.4): ChaCha20-Poly1305 Seal of the plaintext with that key, nonce and AAD; the result includes the 16-byte tag.')
+    a('7. **Payload** (§29): `{0: resource_id, 1: data_epoch, 2: publisher_id, 3: snapshot_sequence, 4: control_head, 5: frontier, 6: ciphertext}`.')
+    a('8. **COSE_Sign1** (§10, §29): untagged four-element array, protected header `{1: -8, 4: publisher_id}`, empty unprotected header.')
+    a('9. **Signature** (§10.5): Ed25519 by BOB over the deterministic CBOR `Sig_structure`.')
+    a('10. **Snapshot ID** (§29): `SHA-256(exact COSE_Sign1 bytes)`.')
     a('')
+    S = f['snapshots']
+    for idx, (name, x) in enumerate(S.items()):
+        a(f'### 18.{idx+1} {name}')
+        a('')
+        a(x['note'])
+        a('')
+        a(f'Publisher `{x["publisher"]}`, Data Epoch `{x["data_epoch"]}`, Snapshot Sequence `{x["snapshot_sequence"]}`, plaintext UTF-8 `{x["plaintext_utf8"]}`.')
+        a('')
+        for label, key in [
+            ('Control Head (C6)', 'control_head'), ('Canonical frontier CBOR', 'frontier_cbor'), ('Snapshot AAD CBOR', 'aad_cbor'),
+            ('Snapshot key', 'snapshot_key'), ('Nonce', 'nonce'), ('Ciphertext + tag', 'ciphertext'), ('Payload CBOR', 'payload_cbor'),
+            ('Protected header CBOR', 'protected_header_cbor'), ('Sig_structure CBOR', 'sig_structure_cbor'), ('Snapshot ID', 'snapshot_id')]:
+            a(f'**{label}:**')
+            a('')
+            a(code_hex(x[key]))
+            a('')
+        a('Exact Snapshot COSE_Sign1:')
+        a('')
+        a(code_hex(x['cose_sign1']))
+        a('')
 
     a('## 19. Minimum implementation test matrix')
     a('')
@@ -1154,6 +1292,7 @@ def generate_markdown(f: dict):
         ('HPKE','RFC 9180 A.2.1 self-test + all three LFCP Key Packages'),
         ('Data crypto','D1/D2/D4 decrypt; D3 decrypts cryptographically but is rejected semantically'),
         ('Anti-entropy','Have Vector hole 101..104 inferred correctly'),
+        ('Snapshot','SNAPSHOT-01/02 canonical frontier, exact AAD, key, nonce, decrypt, signature, Snapshot ID'),
         ('Invitation','URI decode, Principal reconstruction, C2 subject match, C3 claim'),
         ('Wire','HELLO→CHALLENGE→AUTH→READY exact decoding and signature verification'),
         ('Negative','tamper, wrong recipient, equivocation, stale epoch, CAS mismatch, double claim'),

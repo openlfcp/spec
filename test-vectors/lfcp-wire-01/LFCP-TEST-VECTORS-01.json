@@ -631,6 +631,106 @@
       }
     },
     {
+      "id": "SNAPSHOT-01",
+      "type": "bytes",
+      "kind": "snapshot",
+      "note": "Frontier from the accepted Data Units: BOB 1..2 (D1, D2; D3 is past the C6 cutoff) and CAROL 1 (D4).",
+      "inputs": {
+        "signer": "BOB",
+        "data_epoch": 1,
+        "snapshot_sequence": 1,
+        "control_head": {
+          "hex": "e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518"
+        },
+        "plaintext_utf8": "LFCP test snapshot #1",
+        "plaintext_hex": {
+          "hex": "4c464350207465737420736e617073686f74202331"
+        }
+      },
+      "expected": {
+        "frontier_cbor": {
+          "hex": "82a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101"
+        },
+        "aad_cbor": {
+          "hex": "87704c4643502d534e415053484f542d76315820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410158203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5015820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc51882a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101"
+        },
+        "snapshot_key": {
+          "hex": "50ce63da1403713804f364d5816761288f5f770c231f10da3001ea715c13ec16"
+        },
+        "nonce": {
+          "hex": "000000000000000000000001"
+        },
+        "ciphertext": {
+          "hex": "826d0cf4f6208b1daa2c8f0589916e0e7c68103ca465bc3e67cff349420b6e89438de5c11b"
+        },
+        "payload_cbor": {
+          "hex": "a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50301045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101065825826d0cf4f6208b1daa2c8f0589916e0e7c68103ca465bc3e67cff349420b6e89438de5c11b"
+        },
+        "protected_header_cbor": {
+          "hex": "a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5"
+        },
+        "sig_structure_cbor": {
+          "hex": "846a5369676e6174757265315826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c54058e4a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50301045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101065825826d0cf4f6208b1daa2c8f0589916e0e7c68103ca465bc3e67cff349420b6e89438de5c11b"
+        },
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e4a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50301045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101065825826d0cf4f6208b1daa2c8f0589916e0e7c68103ca465bc3e67cff349420b6e89438de5c11b58401fd600bcececeb5f8318e9dcbcd2ae023e9ad779e68ca867c8e78490251378a7779cbd992b7bfa338fe81b6ff9cfd2f42bd753693ece4a929c9571715d61b50f"
+        },
+        "snapshot_id": {
+          "hex": "85f5035604998e4738c7c698318cf39401c674309da70b3c79e84bb8ee1a09df"
+        }
+      }
+    },
+    {
+      "id": "SNAPSHOT-02",
+      "type": "bytes",
+      "kind": "snapshot",
+      "note": "Frontier with an extra range: the BOB entry of DATA_HAVE_with_hole (1..100, 105..107) and CAROL 1. Not derived from D1-D4.",
+      "inputs": {
+        "signer": "BOB",
+        "data_epoch": 1,
+        "snapshot_sequence": 2,
+        "control_head": {
+          "hex": "e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518"
+        },
+        "plaintext_utf8": "LFCP test snapshot #2",
+        "plaintext_hex": {
+          "hex": "4c464350207465737420736e617073686f74202332"
+        }
+      },
+      "expected": {
+        "frontier_cbor": {
+          "hex": "82a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50118640281821869186ba2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101"
+        },
+        "aad_cbor": {
+          "hex": "87704c4643502d534e415053484f542d76315820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410158203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5025820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc51882a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50118640281821869186ba2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101"
+        },
+        "snapshot_key": {
+          "hex": "50ce63da1403713804f364d5816761288f5f770c231f10da3001ea715c13ec16"
+        },
+        "nonce": {
+          "hex": "000000000000000000000002"
+        },
+        "ciphertext": {
+          "hex": "a4c0b8bc8173d8df3ebc22780f532125084f7008ce7e70f4bcdc9d1d3b4c4e78c2d571aff7"
+        },
+        "payload_cbor": {
+          "hex": "a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50118640281821869186ba2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101065825a4c0b8bc8173d8df3ebc22780f532125084f7008ce7e70f4bcdc9d1d3b4c4e78c2d571aff7"
+        },
+        "protected_header_cbor": {
+          "hex": "a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5"
+        },
+        "sig_structure_cbor": {
+          "hex": "846a5369676e6174757265315826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c54058eca7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50118640281821869186ba2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101065825a4c0b8bc8173d8df3ebc22780f532125084f7008ce7e70f4bcdc9d1d3b4c4e78c2d571aff7"
+        },
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058eca7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50118640281821869186ba2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101065825a4c0b8bc8173d8df3ebc22780f532125084f7008ce7e70f4bcdc9d1d3b4c4e78c2d571aff758400e6a3d82ee217cc341f97d28b01a085dbaa6b99f24e18fc77313efc6fa6696f912fde473ba435f63689b7f3c8efba82599137316e33f5a120495e48eecbbe40c"
+        },
+        "snapshot_id": {
+          "hex": "5a4f0652181f0cb04eecf9e91e488e7f4052d3b406f2f7503911459084048750"
+        }
+      }
+    },
+    {
       "id": "invite_uri",
       "type": "bytes",
       "kind": "invite_uri",

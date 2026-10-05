@@ -86,6 +86,12 @@ export const HASH_RULES = [
     pairs: (c) => [["/expected/unit_id/hex", c.expected.unit_id?.hex, sha256(bytes(c.expected.cose_sign1.hex))]],
   },
   {
+    field: "snapshot_id",
+    section: "LFCP-WIRE-01 §29: snapshot_id = SHA-256(exact COSE_Sign1 bytes)",
+    applies: (c) => c.type === "bytes" && c.kind === "snapshot",
+    pairs: (c) => [["/expected/snapshot_id/hex", c.expected.snapshot_id?.hex, sha256(bytes(c.expected.cose_sign1.hex))]],
+  },
+  {
     field: "conflicting_D2_id",
     section: "LFCP-WIRE-01 §26 and §10.6: SHA-256(exact COSE_Sign1 bytes)",
     applies: (c) => c.inputs?.conflicting_D2_cose && c.inputs?.conflicting_D2_id,
@@ -329,7 +335,7 @@ export function semanticProblems(doc) {
   const unitIds = new Set(cases.filter((x) => x.type === "bytes" && x.kind === "data_unit").map((x) => x.expected?.unit_id?.hex));
   cases.forEach((c, k) => {
     const at = (suffix) => `/cases/${k}${suffix}`;
-    if (c.kind === "control_record" && typeof c.inputs?.signer === "string") {
+    if (c.type === "bytes" && typeof c.inputs?.signer === "string") {
       const target = `principal_${c.inputs.signer.toLowerCase()}`;
       if (!byId.has(target)) add(c.id, at("/inputs/signer"), `unresolved-ref: no case ${target}`);
     }

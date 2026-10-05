@@ -10,7 +10,7 @@ This document defines deterministic byte-level fixtures for independent LFCP imp
 
 ## 1. What these vectors test
 
-The suite covers deterministic CBOR, Principal IDs, LFCP DEK commitments, COSE_Sign1, Control Chain records, capability invitation and claim, ownership transfer, route migration, HPKE Key Packages, Data Unit encryption, actor hash chaining, strict epoch cutoff, invitation URIs, session handshake messages, resource opening, Have Vectors, batched DATA_PUT, and negative validation cases.
+The suite covers deterministic CBOR, Principal IDs, LFCP DEK commitments, COSE_Sign1, Control Chain records, capability invitation and claim, ownership transfer, route migration, HPKE Key Packages, Data Unit encryption, actor hash chaining, strict epoch cutoff, invitation URIs, session handshake messages, resource opening, Have Vectors, batched DATA_PUT, encrypted signed Snapshots with canonical frontiers, and negative validation cases.
 
 The test profile uses `org.lfcp.test.raw.v1`; its decrypted Data Unit plaintext is opaque bytes and has no application-level merge semantics. This isolates Wire Protocol interoperability from Automerge/Yjs behavior.
 
@@ -25,7 +25,7 @@ The canonical rules used by this suite are therefore normative WIRE-01 rules:
 3. deterministic CBOR follows the explicit WIRE-01 canonical rules;
 4. Snapshot frontiers are canonicalized and Snapshot AAD is the exact seven-element array defined by WIRE-01.
 
-The current vector set predates the consolidated Snapshot rule and does not yet include a byte-exact `SNAPSHOT-01` ciphertext/signature vector. Adding it is an interoperability backlog item, not a specification blocker.
+The byte-exact Snapshot vectors `SNAPSHOT-01` and `SNAPSHOT-02` (Section 18) follow these consolidated rules.
 
 ## 3. Conformance rules
 
@@ -1199,13 +1199,209 @@ After C3 consumes the C2 invitation grant with `claim_limit=1`, a second `CAPABI
 
 Re-encode any signed payload using a non-preferred integer width or non-deterministic map ordering and sign those different bytes. Even with a mathematically valid Ed25519 signature, a WIRE-01 validator claiming deterministic-CBOR conformance SHOULD reject the object as non-canonical. This requirement should be stated explicitly in the next WIRE draft.
 
-## 18. Snapshot vector status
+## 18. Snapshot vectors
 
-The consolidated `LFCP-WIRE-01` now defines canonical frontier ordering and exact Snapshot AAD. Snapshot key derivation is:
+`SNAPSHOT-01` and `SNAPSHOT-02` are byte-exact Snapshots under the consolidated `LFCP-WIRE-01` rules. Both are published by BOB, who owns the Resource after C4 and therefore holds `snapshot/publish` (§29.2), in Data Epoch 1 at Control Head C6, using DEK1. The plaintext is opaque test bytes: Snapshot plaintext framing belongs to the application profile, not to the Wire suite.
 
-For BOB, epoch 1, expected `snapshot_key = 50ce63da1403713804f364d5816761288f5f770c231f10da3001ea715c13ec16`.
+Derivation, with the defining sections of `LFCP-WIRE-01`:
 
-The current suite does not yet contain the byte-exact Snapshot ciphertext/signature fixture. `SNAPSHOT-01` MUST be added before snapshot interoperability is declared complete; this no longer requires a Wire specification change.
+1. **Actor Have** (§28.1): keys `0` and `1` always; key `2` only when there are extra ranges, which are sorted, non-overlapping, non-adjacent and above `contiguous`.
+2. **Canonical frontier** (§28.2): the actor-have entries sorted by raw 32-byte Principal ID, one entry per Principal. BOB (`3ddf…`) sorts before CAROL (`a6e4…`).
+3. **Snapshot AAD** (§29.1.3): deterministic CBOR of `["LFCP-SNAPSHOT-v1", resource_id, data_epoch, publisher_id, snapshot_sequence, control_head, frontier]`, i.e. payload fields `0`..`5` after the label.
+4. **Snapshot key** (§29.1.1): `HKDF-Expand(HKDF-Extract(resource_id || uint64_be(data_epoch), DEK), ASCII("LFCP-SNAPSHOT-KEY-v1") || publisher_id, 32)`.
+5. **Nonce** (§29.1.2): `0x00000000 || uint64_be(snapshot_sequence)`.
+6. **Encryption** (§29.1.4): ChaCha20-Poly1305 Seal of the plaintext with that key, nonce and AAD; the result includes the 16-byte tag.
+7. **Payload** (§29): `{0: resource_id, 1: data_epoch, 2: publisher_id, 3: snapshot_sequence, 4: control_head, 5: frontier, 6: ciphertext}`.
+8. **COSE_Sign1** (§10, §29): untagged four-element array, protected header `{1: -8, 4: publisher_id}`, empty unprotected header.
+9. **Signature** (§10.5): Ed25519 by BOB over the deterministic CBOR `Sig_structure`.
+10. **Snapshot ID** (§29): `SHA-256(exact COSE_Sign1 bytes)`.
+
+### 18.1 SNAPSHOT-01
+
+Frontier from the accepted Data Units: BOB 1..2 (D1, D2; D3 is past the C6 cutoff) and CAROL 1 (D4).
+
+Publisher `BOB`, Data Epoch `1`, Snapshot Sequence `1`, plaintext UTF-8 `LFCP test snapshot #1`.
+
+**Control Head (C6):**
+
+```text
+e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518
+```
+
+**Canonical frontier CBOR:**
+
+```text
+82a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102a2005820a6e402657a
+505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101
+```
+
+**Snapshot AAD CBOR:**
+
+```text
+87704c4643502d534e415053484f542d76315820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4c
+fc3cc2410158203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5015820e67fb23dc530
+252680216aecfeadb0951b1d3f8726c49afefd724b182dddc51882a20058203ddf22ff145274bcc59c56ffddaab8c123
+ffea4ac95ff8e9cedbeb788bf0a9c50102a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe94
+3c1282da480101
+```
+
+**Snapshot key:**
+
+```text
+50ce63da1403713804f364d5816761288f5f770c231f10da3001ea715c13ec16
+```
+
+**Nonce:**
+
+```text
+000000000000000000000001
+```
+
+**Ciphertext + tag:**
+
+```text
+826d0cf4f6208b1daa2c8f0589916e0e7c68103ca465bc3e67cff349420b6e89438de5c11b
+```
+
+**Payload CBOR:**
+
+```text
+a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274
+bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50301045820e67fb23dc530252680216aecfeadb0951b1d
+3f8726c49afefd724b182dddc5180582a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb78
+8bf0a9c50102a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48010106582582
+6d0cf4f6208b1daa2c8f0589916e0e7c68103ca465bc3e67cff349420b6e89438de5c11b
+```
+
+**Protected header CBOR:**
+
+```text
+a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5
+```
+
+**Sig_structure CBOR:**
+
+```text
+846a5369676e6174757265315826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb78
+8bf0a9c54058e4a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820
+3ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50301045820e67fb23dc530252680216a
+ecfeadb0951b1d3f8726c49afefd724b182dddc5180582a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac9
+5ff8e9cedbeb788bf0a9c50102a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da
+480101065825826d0cf4f6208b1daa2c8f0589916e0e7c68103ca465bc3e67cff349420b6e89438de5c11b
+```
+
+**Snapshot ID:**
+
+```text
+85f5035604998e4738c7c698318cf39401c674309da70b3c79e84bb8ee1a09df
+```
+
+Exact Snapshot COSE_Sign1:
+
+```text
+845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e4a7005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56
+ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50301045820e67fb23dc530252680216aecfeadb0951b1d3f8726c4
+9afefd724b182dddc5180582a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5
+0102a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101065825826d0cf4f6
+208b1daa2c8f0589916e0e7c68103ca465bc3e67cff349420b6e89438de5c11b58401fd600bcececeb5f8318e9dcbcd2
+ae023e9ad779e68ca867c8e78490251378a7779cbd992b7bfa338fe81b6ff9cfd2f42bd753693ece4a929c9571715d61
+b50f
+```
+
+### 18.2 SNAPSHOT-02
+
+Frontier with an extra range: the BOB entry of DATA_HAVE_with_hole (1..100, 105..107) and CAROL 1. Not derived from D1-D4.
+
+Publisher `BOB`, Data Epoch `1`, Snapshot Sequence `2`, plaintext UTF-8 `LFCP test snapshot #2`.
+
+**Control Head (C6):**
+
+```text
+e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518
+```
+
+**Canonical frontier CBOR:**
+
+```text
+82a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50118640281821869186ba2
+005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101
+```
+
+**Snapshot AAD CBOR:**
+
+```text
+87704c4643502d534e415053484f542d76315820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4c
+fc3cc2410158203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5025820e67fb23dc530
+252680216aecfeadb0951b1d3f8726c49afefd724b182dddc51882a30058203ddf22ff145274bcc59c56ffddaab8c123
+ffea4ac95ff8e9cedbeb788bf0a9c50118640281821869186ba2005820a6e402657a505a183a2c2685ecc3a0457fef86
+d4e251abd48efe943c1282da480101
+```
+
+**Snapshot key:**
+
+```text
+50ce63da1403713804f364d5816761288f5f770c231f10da3001ea715c13ec16
+```
+
+**Nonce:**
+
+```text
+000000000000000000000002
+```
+
+**Ciphertext + tag:**
+
+```text
+a4c0b8bc8173d8df3ebc22780f532125084f7008ce7e70f4bcdc9d1d3b4c4e78c2d571aff7
+```
+
+**Payload CBOR:**
+
+```text
+a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274
+bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfeadb0951b1d
+3f8726c49afefd724b182dddc5180582a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb78
+8bf0a9c50118640281821869186ba2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282
+da480101065825a4c0b8bc8173d8df3ebc22780f532125084f7008ce7e70f4bcdc9d1d3b4c4e78c2d571aff7
+```
+
+**Protected header CBOR:**
+
+```text
+a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5
+```
+
+**Sig_structure CBOR:**
+
+```text
+846a5369676e6174757265315826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb78
+8bf0a9c54058eca7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820
+3ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216a
+ecfeadb0951b1d3f8726c49afefd724b182dddc5180582a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac9
+5ff8e9cedbeb788bf0a9c50118640281821869186ba2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251ab
+d48efe943c1282da480101065825a4c0b8bc8173d8df3ebc22780f532125084f7008ce7e70f4bcdc9d1d3b4c4e78c2d5
+71aff7
+```
+
+**Snapshot ID:**
+
+```text
+5a4f0652181f0cb04eecf9e91e488e7f4052d3b406f2f7503911459084048750
+```
+
+Exact Snapshot COSE_Sign1:
+
+```text
+845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058eca7005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56
+ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfeadb0951b1d3f8726c4
+9afefd724b182dddc5180582a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5
+0118640281821869186ba2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101
+065825a4c0b8bc8173d8df3ebc22780f532125084f7008ce7e70f4bcdc9d1d3b4c4e78c2d571aff758400e6a3d82ee21
+7cc341f97d28b01a085dbaa6b99f24e18fc77313efc6fa6696f912fde473ba435f63689b7f3c8efba82599137316e33f
+5a120495e48eecbbe40c
+```
 
 ## 19. Minimum implementation test matrix
 
@@ -1218,6 +1414,7 @@ The current suite does not yet contain the byte-exact Snapshot ciphertext/signat
 | HPKE | RFC 9180 A.2.1 self-test + all three LFCP Key Packages |
 | Data crypto | D1/D2/D4 decrypt; D3 decrypts cryptographically but is rejected semantically |
 | Anti-entropy | Have Vector hole 101..104 inferred correctly |
+| Snapshot | SNAPSHOT-01/02 canonical frontier, exact AAD, key, nonce, decrypt, signature, Snapshot ID |
 | Invitation | URI decode, Principal reconstruction, C2 subject match, C3 claim |
 | Wire | HELLO→CHALLENGE→AUTH→READY exact decoding and signature verification |
 | Negative | tamper, wrong recipient, equivocation, stale epoch, CAS mismatch, double claim |
