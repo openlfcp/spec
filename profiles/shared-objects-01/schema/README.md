@@ -24,20 +24,20 @@ Task fields, unknown extension namespaces, unknown object types, or custom
 | --- | --- | --- | --- |
 | root `profile` | equals `org.openlfcp.shared-objects.v1` | §6, §15, §74 | schema |
 | root `objects` | map keyed by Object ID | §15, §20 | schema |
-| root `extensions` | map | §15, §18 | schema |
+| root `extensions` | map keyed by `reverse-domain` namespaces | §15, §18 | schema |
 | `objects` key / `id` | UUIDv7: lowercase, hyphenated, version 7, variant `10` | §19 | schema (pattern) |
 | `id` | equals its key in `objects` | §20, §24 | validator `id-mismatch` |
 | `id`, `type`, `created_by` | unchanged between two states of the same object | §24, §25, §27, §75 | validator `immutable` |
 | `type` | non-empty text; `task` selects the Task rules | §25, §74, §93 | schema |
-| base fields | `id`, `type`, `lifecycle`, `created_by`, `extensions` required on Tasks | §23, §74 | schema |
-| `lifecycle` | text (standard values `active`, `deleted`) | §26, §74 | schema (text only, gap SO-G1) |
+| base fields | `id`, `type`, `lifecycle`, `created_by`, `extensions` required on every object, namespaced types included | §23, §74 | schema |
+| `lifecycle` | `active` or `deleted` (closed set in version 1) | §26, §74 | schema |
 | `created_by` | `p:` + unpadded base64url of exactly 32 bytes | §27 | schema (43 characters, canonical last character) |
 | `created_at` | optional RFC 3339 UTC timestamp ending in `Z` | §28 | schema (shape) + validator `bad-timestamp` (real date and time) |
-| `extensions` | map; contents unconstrained | §18, §29 | schema |
+| `extensions` | map keyed by `reverse-domain` namespaces; contents unconstrained | §18, §29 | schema |
 | Task required fields | `title`, `status`, `priority`, `tags`, `assignees` (plus base) | §30, §31 | schema |
 | `title` | string; empty allowed | §32 | schema |
-| `status` | `todo`, `in_progress`, `done`, `cancelled`, or `x/<…>/<…>` | §33 | schema |
-| `priority` | `lowest`, `low`, `normal`, `high`, `highest`, or `x/<…>/<…>` | §38 | schema |
+| `status` | `todo`, `in_progress`, `done`, `cancelled`, or `x/<reverse-domain>/<value>` (§33 ABNF) | §33 | schema |
+| `priority` | `lowest`, `low`, `normal`, `high`, `highest`, or `x/<reverse-domain>/<value>` | §38 | schema |
 | `due`, `scheduled`, `completion_date` | optional; `YYYY-MM-DD` or `null` | §30, §35, §36 | schema (shape) + validator `bad-date` (real Gregorian date) |
 | `tags` | map; keys non-empty, no leading `#`; values `true` | §39, §40 | schema |
 | `assignees` | map; keys are PrincipalRefs; values `true` | §42, §43 | schema |
@@ -58,35 +58,21 @@ Not checked, and why:
   a value. That covers base-state and expected Tasks and object maps, created
   objects, field writes, and expected field values: `tags` and `assignees`
   lists, `*_conflict_set` and `*_values_may_include` arrays.
-- **I01–I07** must be invalid at the mutated field. The scenario field
-  (mutation of the S01 Task) is checked, but not the diagnostic name, which is
-  undecided (gaps G2/G3). I07 (`type` changed) is valid as a state; it is
-  caught only by the immutable-field check across states.
+- **I01–I07** must be invalid at the mutated field (a mutation of the S01
+  Task). The vectors also name the `PROFILE_INVALID` diagnostic; the contract
+  checks the field, not the diagnostic name. I07 (`type` changed) is valid as
+  a state; it is caught only by the immutable-field check across states.
 - **D06–D08** Object IDs are classified as the vectors say.
 
 Profile framing (D04, D05) is byte-verified by the vector validator
 (`scripts/lib/vector-checks.mjs`) and not repeated here. The profile defines
 no other framing.
 
-## Spec gaps
+## Spec decisions
 
-- **SO-G1** `lifecycle`: §26 lists *standard* values `active`/`deleted`, while
-  §30 types it as exactly `"active" | "deleted"`. It is unclear whether other
-  values are invalid or must be preserved.
-- **SO-G2** The grammar of `x/<reverse-domain>/<value>` is undefined, and §38
-  writes `x/<domain>/<value>`. Only the `x/<part>/<part>` shape is checked.
-- **SO-G3** Extension namespace keys must be "reverse-domain names" (§18), but
-  no grammar is given. Not checked.
-- **SO-G4** How a conflicted scalar appears in logical state is not defined.
-  The vectors use their own `<field>_conflict_set` arrays.
-- **SO-G5** It is not stated whether the §23 base fields are required for
-  non-standardized (namespaced) object types. Only `id` and `type` are
-  required for them.
-- **SO-G6** §17 forbids creating unrelated root keys, yet future reserved keys
-  must be preserved by older clients. Unknown root keys are accepted.
-- **SO-G7** No maximum `title` length is stated. None is enforced.
-- **SO-G8** §39 makes `true` the only tag value. §42/§43 only imply the same
-  for `assignees`, which the contract also requires.
-- **SO-G9** The §87 "Tombstoned Task" example omits required fields
-  (`created_by`, `priority`, `tags`, `assignees`, `extensions`) without saying
-  "only relevant fields are shown" as §86 does.
+The gaps this contract first found (SO-G1 to SO-G9) were decided by the
+project owner and applied by SPEC-PATCH-01; see
+`adr/0001-mvp-0.1-protocol-decisions.md`. Every failure reported here
+corresponds to a §74.1 diagnostic, listed per fixture in
+`fixtures/expected.json`. The contract asserts the failing field, not the
+diagnostic name.

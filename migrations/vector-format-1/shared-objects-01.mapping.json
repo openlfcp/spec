@@ -40,6 +40,10 @@
     ["invalid_cases[id=*].expected", "cases[id=$1].expected.error.code"],
     ["invalid_cases[id=*].diagnostic", "cases[id=$1].expected.error.diagnostic"]
   ],
+  "changed": [
+    { "path": "deterministic_vectors[id=D07-uuid-invalid-uppercase].error", "from": "INVALID_OBJECT_ID", "to": "PROFILE_INVALID", "rule": "SPEC-PATCH-01 / G3: profile failures use code PROFILE_INVALID; INVALID_OBJECT_ID moves to the diagnostic." },
+    { "path": "deterministic_vectors[id=D08-uuid-invalid-version].error", "from": "INVALID_OBJECT_ID", "to": "PROFILE_INVALID", "rule": "SPEC-PATCH-01 / G3: profile failures use code PROFILE_INVALID; INVALID_OBJECT_ID moves to the diagnostic." }
+  ],
   "structural": [
     { "path": "deterministic_vectors[id=*].deterministic_bytes", "value": true, "rule": "Encoded by the case type: bytes for D01-D05; validation (exact accept/reject) for D06-D08." }
   ],
@@ -51,6 +55,8 @@
     { "path": "suite.description", "rule": "Prose summary of the suite." },
     { "path": "cases[*].type", "rule": "Case type: bytes (D01-D05), validation (D06-D08, I01-I07), behavioral (S01-S14)." },
     { "path": "cases[*].kind", "rule": "Kind for old sections without one: shared_object_scenario (S01-S14), profile_validation (I01-I07)." },
-    { "path": "cases[*].expected.valid", "value": false, "rule": "Every old invalid_cases entry describes a profile-invalid state." }
+    { "path": "cases[*].expected.valid", "value": false, "rule": "Every old invalid_cases entry describes a profile-invalid state." },
+    { "path": "cases[id=D07-uuid-invalid-uppercase].expected.error.diagnostic", "value": "INVALID_OBJECT_ID", "rule": "SPEC-PATCH-01 / G3: the former top-level code becomes the diagnostic." },
+    { "path": "cases[id=D08-uuid-invalid-version].expected.error.diagnostic", "value": "INVALID_OBJECT_ID", "rule": "SPEC-PATCH-01 / G3: the former top-level code becomes the diagnostic." }
   ]
 }

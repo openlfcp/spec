@@ -406,7 +406,7 @@ objects
 extensions
 ```
 
-Implementations MUST NOT create unrelated top-level keys outside `extensions`.
+Writers MUST NOT create unrelated top-level keys outside `extensions`. Readers MUST preserve any unknown top-level key they find.
 
 Future compatible revisions MAY reserve additional top-level keys only if older clients can preserve them safely.
 
@@ -429,6 +429,15 @@ Recommended namespace form:
 ```text
 org.openlfcp.example
 com.vendor.feature
+```
+
+A namespace key MUST match this grammar (RFC 5234 ABNF), which is also used by extension status and priority values (Sections 33 and 38):
+
+```abnf
+reverse-domain = label 1*("." label)                 ; at least two labels
+label          = lower-alnum [*ldh-char lower-alnum]  ; no leading or trailing hyphen
+ldh-char       = lower-alnum / "-"
+lower-alnum    = %x61-7A / DIGIT                      ; a-z, 0-9
 ```
 
 A conforming client that does not understand an extension MUST preserve it.
@@ -484,7 +493,7 @@ UUIDv7 collisions should be extraordinarily unlikely.
 
 If two concurrent creations use the same Object ID but produce different object identities, implementations MUST NOT silently merge them as though they were intentionally the same object.
 
-The Resource MUST expose an `OBJECT_ID_COLLISION` profile error for that object.
+The Resource MUST expose an `OBJECT_ID_COLLISION` profile error for that object. `OBJECT_ID_COLLISION` is a separate named profile error, not a `PROFILE_INVALID` diagnostic: each colliding object may be valid on its own, and the error describes their relationship.
 
 A repair operation SHOULD create a new Object ID for one object and explicitly migrate any local projections.
 
@@ -524,7 +533,7 @@ Object references MUST NOT include the current sync server as part of object ide
 
 ## 23. Base object
 
-Every standardized Shared Object MUST logically contain:
+Every Shared Object, of any type including namespaced types, MUST logically contain:
 
 ```ts
 {
@@ -596,6 +605,8 @@ Standard values:
 active
 deleted
 ```
+
+Version 1 defines `lifecycle` as a closed set of these two values. A reader MUST preserve any other value and treat the object as `PROFILE_INVALID` with diagnostic `INVALID_ENUM_VALUE` (Section 74.1).
 
 Objects MUST NOT normally be removed from the Automerge `objects` map.
 
@@ -743,6 +754,8 @@ A client MUST permit an empty title at the data-model level so that offline or p
 
 UI clients SHOULD discourage permanently empty Task titles.
 
+Version 1 sets no maximum title length; a title is bounded only by the LFCP Wire maximum message size.
+
 Concurrent title edits MUST NOT be silently treated as a resolved single value.
 
 ---
@@ -770,6 +783,14 @@ Example:
 
 ```text
 x/com.example/waiting_review
+```
+
+The grammar is:
+
+```abnf
+namespaced-value = "x/" reverse-domain "/" value     ; reverse-domain: Section 18
+value            = 1*value-char                      ; non-empty
+value-char       = %x00-2E / %x30-10FFFF             ; any character except "/"
 ```
 
 A generic client MUST preserve unknown extension statuses.
@@ -896,7 +917,7 @@ highest
 
 New standardized values require a profile revision.
 
-Extensions MAY define namespaced values using the same `x/<domain>/<value>` pattern as statuses.
+Extensions MAY define namespaced values using the same `x/<reverse-domain>/<value>` grammar as statuses (Section 33).
 
 ---
 
@@ -994,6 +1015,8 @@ Conceptual representation:
   "p:XYZ...": true
 }
 ```
+
+An assignee is present when its key exists with scalar value `true`. As for tags, clients MUST NOT store `false` values as a removal mechanism; removal deletes the map key.
 
 Version 1 permits multiple assignees.
 
@@ -1638,6 +1661,30 @@ extensions is map
 
 A valid Task additionally requires the required Task fields defined above.
 
+### 74.1 Validation codes and diagnostics
+
+Every profile validation failure is reported with the code `PROFILE_INVALID` and exactly one diagnostic from this registry, naming what is wrong:
+
+| Diagnostic | Meaning | Rule |
+|---|---|---|
+| `INVALID_ROOT` | `profile` differs, or `objects` or `extensions` is missing or not a map | §15 |
+| `INVALID_OBJECT_ID` | an Object ID or `objects` key is not a canonical UUIDv7 | §19 |
+| `OBJECT_ID_MISMATCH` | an object's `id` differs from its `objects` key | §20, §24 |
+| `MISSING_REQUIRED_FIELD` | a required base or Task field is absent | §23, §31 |
+| `INVALID_FIELD_TYPE` | a field has the wrong type, e.g. a non-text `title` | §32, §76 |
+| `INVALID_ENUM_VALUE` | `lifecycle`, `status` or `priority` is neither a standard value nor a valid `x/<reverse-domain>/<value>` extension value (for `lifecycle`, extension values are not allowed) | §26, §33, §38 |
+| `INVALID_EXTENSION_NAMESPACE` | an `extensions` key does not match `reverse-domain` | §18 |
+| `INVALID_PRINCIPAL_REF` | a Principal reference is not `p:` + base64url of 32 bytes | §27, §42 |
+| `INVALID_TIMESTAMP` | `created_at` is not an RFC 3339 UTC timestamp | §28 |
+| `INVALID_LOCAL_DATE` | a date field is not a valid Gregorian `YYYY-MM-DD` | §35 |
+| `INVALID_COLLECTION_REPRESENTATION` | `tags` or `assignees` is not a map, or a member's value is not `true` | §39, §42 |
+| `INVALID_TAG` | a tag is empty or starts with `#` | §40 |
+| `IMMUTABLE_FIELD_MUTATED` | `id`, `type` or `created_by` changed | §75 |
+
+These are profile-level codes reported to the application. They are not LFCP Wire error codes.
+
+`OBJECT_ID_COLLISION` (Section 21) is a separate named profile error, not a `PROFILE_INVALID` diagnostic.
+
 ---
 
 ## 75. Immutable field violations
@@ -1894,6 +1941,8 @@ Only relevant fields are shown.
   "status": "done"
 }
 ```
+
+Only relevant fields are shown.
 
 The object remains addressable so old projections can report that the shared object was deleted.
 
@@ -2291,6 +2340,8 @@ The vectors should include:
 - unknown field preservation;
 - unknown object type preservation;
 - malformed profile states.
+
+How a test vector writes down a conflicted field (for example a `<field>_conflict_set` list of the concurrent values) is a test-vector convention defined by the vector format, not part of this profile's logical state.
 
 ---
 

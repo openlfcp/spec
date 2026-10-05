@@ -168,7 +168,8 @@
       "expected": {
         "valid": false,
         "error": {
-          "code": "INVALID_OBJECT_ID"
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_OBJECT_ID"
         }
       }
     },
@@ -182,7 +183,8 @@
       "expected": {
         "valid": false,
         "error": {
-          "code": "INVALID_OBJECT_ID"
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_OBJECT_ID"
         }
       }
     },

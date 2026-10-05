@@ -1,72 +1,97 @@
 {
-  "description": "Expected problem pointers for each invalid-*.json state fixture. A fixture passes when the set of reported pointers equals this set. `would_map_to` is the SHARED-OBJECTS-TEST-VECTORS-01 diagnostic the case resembles; diagnostics are not asserted (spec gaps G2/G3).",
+  "description": "Expected problem pointers for each invalid-*.json state fixture. A fixture passes when the set of reported pointers equals this set. `diagnostic` is the SHARED-OBJECTS-PROFILE-01 §74.1 diagnostic the failure corresponds to (reported with code PROFILE_INVALID); the check asserts the pointers, not the diagnostic.",
   "cases": {
+    "invalid-created-at-hour-25.json": {
+      "pointers": [
+        "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad/created_at"
+      ],
+      "diagnostic": "INVALID_TIMESTAMP"
+    },
     "invalid-date-feb-30.json": {
       "pointers": [
         "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad/due"
       ],
-      "would_map_to": "INVALID_LOCAL_DATE"
+      "diagnostic": "INVALID_LOCAL_DATE"
     },
     "invalid-date-not-leap-year.json": {
       "pointers": [
         "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad/scheduled"
       ],
-      "would_map_to": "INVALID_LOCAL_DATE"
+      "diagnostic": "INVALID_LOCAL_DATE"
+    },
+    "invalid-extension-namespace.json": {
+      "pointers": [
+        "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad/extensions/Tracker",
+        "/extensions/calendar"
+      ],
+      "diagnostic": "INVALID_EXTENSION_NAMESPACE"
+    },
+    "invalid-id-key-mismatch.json": {
+      "pointers": [
+        "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad/id"
+      ],
+      "diagnostic": "OBJECT_ID_MISMATCH"
+    },
+    "invalid-lifecycle-unknown.json": {
+      "pointers": [
+        "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad/lifecycle"
+      ],
+      "diagnostic": "INVALID_ENUM_VALUE"
+    },
+    "invalid-missing-priority.json": {
+      "pointers": [
+        "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad"
+      ],
+      "diagnostic": "MISSING_REQUIRED_FIELD"
     },
     "invalid-object-id-uuidv4.json": {
       "pointers": [
         "/objects/019a2f85-7b31-4c42-b85a-fc843e2f40ad",
         "/objects/019a2f85-7b31-4c42-b85a-fc843e2f40ad/id"
       ],
-      "would_map_to": "INVALID_OBJECT_ID"
+      "diagnostic": "INVALID_OBJECT_ID"
     },
     "invalid-principal-ref-31-bytes.json": {
       "pointers": [
         "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad/created_by"
       ],
-      "would_map_to": "INVALID_PRINCIPAL_REF"
-    },
-    "invalid-id-key-mismatch.json": {
-      "pointers": [
-        "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad/id"
-      ],
-      "would_map_to": "OBJECT_ID_MISMATCH"
-    },
-    "invalid-created-at-hour-25.json": {
-      "pointers": [
-        "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad/created_at"
-      ],
-      "would_map_to": "(none listed; INVALID_FIELD_TYPE closest)"
-    },
-    "invalid-tag-false.json": {
-      "pointers": [
-        "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad/tags/backend"
-      ],
-      "would_map_to": "INVALID_COLLECTION_REPRESENTATION"
-    },
-    "invalid-tag-leading-hash.json": {
-      "pointers": [
-        "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad/tags/#backend"
-      ],
-      "would_map_to": "(none listed)"
+      "diagnostic": "INVALID_PRINCIPAL_REF"
     },
     "invalid-profile.json": {
       "pointers": [
         "/profile"
       ],
-      "would_map_to": "PROFILE_INVALID (root)"
+      "diagnostic": "INVALID_ROOT"
     },
-    "invalid-missing-priority.json": {
+    "invalid-status-bad-domain.json": {
       "pointers": [
-        "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad"
+        "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad/status"
       ],
-      "would_map_to": "(none listed)"
+      "diagnostic": "INVALID_ENUM_VALUE"
+    },
+    "invalid-tag-false.json": {
+      "pointers": [
+        "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad/tags/backend"
+      ],
+      "diagnostic": "INVALID_COLLECTION_REPRESENTATION"
+    },
+    "invalid-tag-leading-hash.json": {
+      "pointers": [
+        "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad/tags/#backend"
+      ],
+      "diagnostic": "INVALID_TAG"
     },
     "invalid-unknown-plain-status.json": {
       "pointers": [
         "/objects/019a2f85-7b31-7c42-b85a-fc843e2f40ad/status"
       ],
-      "would_map_to": "(none listed; INVALID_FIELD_TYPE closest)"
+      "diagnostic": "INVALID_ENUM_VALUE"
+    },
+    "invalid-unknown-type-missing-base.json": {
+      "pointers": [
+        "/objects/019a2f85-7b31-7c42-9f24-8f933f2a91c0"
+      ],
+      "diagnostic": "MISSING_REQUIRED_FIELD"
     }
   }
 }

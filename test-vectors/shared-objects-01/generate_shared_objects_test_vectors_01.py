@@ -143,11 +143,11 @@ vectors = {
     },
     {
       'id':'D07-uuid-invalid-uppercase', 'kind':'object_id_validation', 'deterministic_bytes':True,
-      'input':obj_task_1.upper(), 'expected_valid':False, 'error':'INVALID_OBJECT_ID'
+      'input':obj_task_1.upper(), 'expected_valid':False, 'error':'PROFILE_INVALID', 'diagnostic':'INVALID_OBJECT_ID'
     },
     {
       'id':'D08-uuid-invalid-version', 'kind':'object_id_validation', 'deterministic_bytes':True,
-      'input':'019a2f85-7b31-6c42-b85a-fc843e2f40ad', 'expected_valid':False, 'error':'INVALID_OBJECT_ID'
+      'input':'019a2f85-7b31-6c42-b85a-fc843e2f40ad', 'expected_valid':False, 'error':'PROFILE_INVALID', 'diagnostic':'INVALID_OBJECT_ID'
     },
   ],
   'behavioral_scenarios': []
@@ -305,6 +305,8 @@ def to_vector_format(v):
             expected = {'valid': d['expected_valid']}
             if 'error' in d:
                 expected['error'] = {'code': d['error']}
+                if 'diagnostic' in d:
+                    expected['error']['diagnostic'] = d['diagnostic']
             case.update(type='validation', inputs={'object_id': d['input']}, expected=expected)
         else:
             raise ValueError('unmapped deterministic vector kind: ' + d['kind'])
@@ -615,7 +617,7 @@ Expected deterministic CBOR:
 {h(change_frame)}
 ```
 
-SHA-256:
+SHA-256 of the expected deterministic framed CBOR:
 
 ```text
 {h(sha256(change_frame))}
@@ -646,7 +648,7 @@ Expected deterministic CBOR:
 {h(snapshot_frame)}
 ```
 
-SHA-256:
+SHA-256 of the expected deterministic framed CBOR:
 
 ```text
 {h(sha256(snapshot_frame))}
@@ -684,6 +686,7 @@ Input:
 Expected:
 
 ```text
+PROFILE_INVALID
 INVALID_OBJECT_ID
 ```
 
@@ -700,6 +703,7 @@ Input:
 Expected:
 
 ```text
+PROFILE_INVALID
 INVALID_OBJECT_ID
 ```
 

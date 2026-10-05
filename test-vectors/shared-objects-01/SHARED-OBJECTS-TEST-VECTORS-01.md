@@ -183,7 +183,7 @@ Expected deterministic CBOR:
 82014600010203a0ff
 ```
 
-SHA-256:
+SHA-256 of the expected deterministic framed CBOR:
 
 ```text
 8b04fa1dc8dc3cc339215889b2b6083059a10e81a35a61af9255a2457f662b99
@@ -214,7 +214,7 @@ Expected deterministic CBOR:
 82014aaabbccddeeff00112233
 ```
 
-SHA-256:
+SHA-256 of the expected deterministic framed CBOR:
 
 ```text
 d6e1b96b61dd66a7b2092e517d3536029da0a5042452fbba1a9c9cc3dee580cb
@@ -252,6 +252,7 @@ Input:
 Expected:
 
 ```text
+PROFILE_INVALID
 INVALID_OBJECT_ID
 ```
 
@@ -268,6 +269,7 @@ Input:
 Expected:
 
 ```text
+PROFILE_INVALID
 INVALID_OBJECT_ID
 ```
 

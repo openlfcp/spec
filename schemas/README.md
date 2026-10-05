@@ -106,6 +106,18 @@ different bytes. `inputs` gives the starting state and the operations;
 convergence; `assertions` adds prose checks. Independent implementations are
 never required to emit identical changes.
 
+#### Conflict convention
+
+A behavioral `expected` object states a conflicted field as
+`<field>_conflict_set`: the list of concurrent values that must remain
+discoverable (for example `"status_conflict_set": ["cancelled", "done"]`),
+usually together with `must_report_conflict`. `<field>_values_may_include`
+lists values that may appear among them. This is a test convention of the
+vector format, not part of any profile's logical state (decision SO-G4,
+spec: adr/0001-mvp-0.1-protocol-decisions.md). Each listed value must still
+be a valid value of its field; `scripts/validate-shared-objects.mjs` checks
+that.
+
 ## Checks
 
 `./scripts/validate.sh` runs `scripts/validate-vectors.mjs`, the protocol

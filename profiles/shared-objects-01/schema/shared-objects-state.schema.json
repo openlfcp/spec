@@ -6,7 +6,7 @@
   "$ref": "#/$defs/root",
   "$defs": {
     "root": {
-      "$comment": "§15, §74: profile, objects and extensions are required; objects and extensions are maps. §17 forbids creating unrelated top-level keys, but older clients must preserve keys reserved later, so unknown top-level keys are not rejected here (spec gap SO-G6).",
+      "$comment": "§15, §74: profile, objects and extensions are required; objects and extensions are maps. §17: writers MUST NOT create unknown top-level keys, readers MUST preserve them, so a reader does not reject them.",
       "type": "object",
       "required": ["profile", "objects", "extensions"],
       "properties": {
@@ -47,40 +47,37 @@
       "type": "string",
       "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
     },
+    "reverse_domain": {
+      "$comment": "§18 ABNF reverse-domain: at least two dot-separated lowercase LDH labels without leading or trailing hyphen.",
+      "type": "string",
+      "pattern": "^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$"
+    },
     "extensions": {
-      "$comment": "§15, §18, §29: a map of namespaces to unknown values; unknown namespaces MUST be preserved, so their contents are not constrained.",
-      "type": "object"
+      "$comment": "§15, §18, §29: a map keyed by reverse-domain namespaces; unknown namespaces MUST be preserved, so their contents are not constrained.",
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/reverse_domain" }
     },
     "namespaced_value": {
-      "$comment": "§33, §38: extension statuses and priorities use x/<reverse-domain>/<value>. The exact grammar of the two parts is not defined (spec gap SO-G2); only the shape is checked.",
+      "$comment": "§33 ABNF namespaced-value: x/<reverse-domain>/<value>, value non-empty without \"/\" (also used by §38 priorities).",
       "type": "string",
-      "pattern": "^x/[^/]+/[^/]+$"
+      "pattern": "^x/[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+/[^/]+$"
     },
     "shared_object": {
-      "$comment": "§20, §25, §93: every object has an id and a type. Objects of type task follow the Task schema. Objects of other types are preserved (§71); the base fields of §23 are required only of standardized objects, and whether they bind non-standardized types is not stated (spec gap SO-G5).",
-      "type": "object",
-      "required": ["id", "type"],
-      "properties": {
-        "id": { "$ref": "#/$defs/object_id" },
-        "type": {
-          "$comment": "§25, §74: type is valid text.",
-          "type": "string",
-          "minLength": 1
-        }
-      },
+      "$comment": "§20, §23, §25, §93: every object, of any type including namespaced types, has the base fields. Objects of type task also follow the Task schema; other types are preserved (§71).",
+      "$ref": "#/$defs/base_object",
       "if": { "type": "object", "properties": { "type": { "const": "task" } }, "required": ["type"] },
       "then": { "$ref": "#/$defs/task" }
     },
     "base_object": {
-      "$comment": "§23, §74: required base fields of a standardized object.",
+      "$comment": "§23, §74: required base fields of every Shared Object.",
       "type": "object",
       "required": ["id", "type", "lifecycle", "created_by", "extensions"],
       "properties": {
         "id": { "$ref": "#/$defs/object_id" },
         "type": { "type": "string", "minLength": 1 },
         "lifecycle": {
-          "$comment": "§26, §74: lifecycle exists; standard values are active and deleted. Whether other values are valid is not stated (spec gap SO-G1), so only text is required.",
-          "type": "string"
+          "$comment": "§26: a closed set in version 1. Another value is preserved but makes the object PROFILE_INVALID (INVALID_ENUM_VALUE).",
+          "enum": ["active", "deleted"]
         },
         "created_by": { "$ref": "#/$defs/principal_ref" },
         "created_at": { "$ref": "#/$defs/utc_timestamp" },
@@ -95,7 +92,7 @@
       "properties": {
         "type": { "const": "task" },
         "title": {
-          "$comment": "§32: UTF-8 string; empty is allowed. No length limit is defined.",
+          "$comment": "§32: UTF-8 string; empty is allowed; no length limit in version 1.",
           "type": "string"
         },
         "status": {
@@ -122,7 +119,7 @@
           "additionalProperties": { "const": true }
         },
         "assignees": {
-          "$comment": "§42: a map keyed by PrincipalRef used as an add-wins set; members map to true.",
+          "$comment": "§42: a map keyed by PrincipalRef used as an add-wins set; a member is present when its key maps to true.",
           "type": "object",
           "propertyNames": { "$ref": "#/$defs/principal_ref" },
           "additionalProperties": { "const": true }
