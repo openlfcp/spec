@@ -1,0 +1,150 @@
+; GENERATED from wire/LFCP-WIRE-01.md by scripts/extract-cddl.mjs. Do not edit.
+; Regenerate with: node scripts/extract-cddl.mjs
+; Contents: Part XXVIII (Full CDDL Summary), which restates body rules.
+
+; --- wire/LFCP-WIRE-01.md:3141 (Part XXVIII. Full CDDL Summary) ---
+resource-id = bstr .size 32
+principal-id = bstr .size 32
+hash32 = bstr .size 32
+
+principal-descriptor = {
+  0 => principal-id,
+  1 => bstr .size 32,         ; Ed25519 public key
+  2 => bstr .size 32          ; X25519 public key
+}
+
+endpoint = {
+  0 => tstr,
+  1 => uint,
+  ? 2 => uint
+}
+
+control-head = {
+  0 => uint,
+  1 => hash32
+}
+
+sequence-range = [uint, uint]
+
+actor-have = {
+  0 => principal-id,
+  1 => uint,
+  ? 2 => [* sequence-range]
+}
+
+lfcp-message = {
+  0 => uint,
+  1 => bstr .size 16,
+  ? 2 => bstr .size 16,
+  ? 3 => uint,
+  4 => any
+}
+
+control-record-payload = {
+  0 => resource-id,
+  1 => uint,
+  2 => (hash32 / null),
+  3 => uint,
+  4 => principal-id,
+  5 => any
+}
+
+genesis-body = {
+  0 => tstr,
+  1 => principal-descriptor,
+  2 => hash32,
+  3 => [1* endpoint],
+  4 => tstr
+}
+
+capability-grant-body = {
+  0 => principal-descriptor,
+  1 => [1* uint],
+  2 => [* uint],
+  ? 3 => hash32,
+  ? 4 => uint
+}
+
+capability-revoke-body = {
+  0 => hash32
+}
+
+capability-claim-body = {
+  0 => hash32,
+  1 => principal-descriptor,
+  2 => [1* uint]
+}
+
+key-epoch-body = {
+  0 => uint,
+  1 => hash32,
+  2 => [* actor-have],
+  3 => uint
+}
+
+route-update-body = {
+  0 => uint,
+  1 => [1* endpoint],
+  2 => tstr
+}
+
+coordinator-recovery-body = {
+  0 => uint,
+  1 => [1* endpoint],
+  2 => tstr,
+  3 => tstr
+}
+
+owner-transfer-offer-payload = {
+  0 => resource-id,
+  1 => hash32,
+  2 => uint,
+  3 => principal-descriptor,
+  4 => bstr .size 16
+}
+
+owner-transfer-accept-payload = {
+  0 => resource-id,
+  1 => hash32,
+  2 => principal-id
+}
+
+owner-transfer-commit-body = {
+  0 => bstr,
+  1 => bstr
+}
+
+resource-tombstone-body = {
+  0 => uint,
+  ? 1 => tstr
+}
+
+key-package-payload = {
+  0 => resource-id,
+  1 => uint,
+  2 => principal-id,
+  3 => hash32,
+  4 => principal-id,
+  5 => bstr,
+  6 => bstr
+}
+
+data-unit-payload = {
+  0 => resource-id,
+  1 => uint,
+  2 => principal-id,
+  3 => uint,
+  4 => (hash32 / null),
+  5 => hash32,
+  6 => bstr
+}
+
+snapshot-payload = {
+  0 => resource-id,
+  1 => uint,
+  2 => principal-id,
+  3 => uint,
+  4 => hash32,
+  5 => [* actor-have],
+  6 => bstr
+}
