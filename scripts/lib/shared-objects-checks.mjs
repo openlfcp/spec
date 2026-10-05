@@ -47,13 +47,21 @@ export function rootProblems(state) {
   if (!validateRoot(state)) {
     // A bad map key is reported once, at the key: drop the propertyNames
     // sub-errors and move the propertyNames error itself onto the key.
-    // Key errors are kept even when the value under the key also fails.
-    const errors = validateRoot.errors.filter((e) => !/\/propertyNames\//.test(e.schemaPath));
-    const keyErrors = errors
-      .filter((e) => e.keyword === "propertyNames")
-      .map((e) => ({ ...e, instancePath: `${e.instancePath}/${escape(e.params.propertyName)}` }));
-    for (const e of [...relevant(errors.filter((x) => x.keyword !== "propertyNames")), ...keyErrors]) {
-      problems.push({ pointer: e.instancePath || "/", reason: schemaReason(e) });
+    // A bad map key is reported once, at the key. Its sub-errors (e.g. the
+    // key pattern) are reported by ajv at the map's path, so non-key errors
+    // at the same path as a key error are dropped. Key errors are kept even
+    // when the value under the key also fails.
+    const keyErrors = validateRoot.errors.filter((e) => e.keyword === "propertyNames");
+    const keyMaps = new Set(keyErrors.map((e) => e.instancePath));
+    const others = validateRoot.errors.filter((e) => e.keyword !== "propertyNames" && !keyMaps.has(e.instancePath));
+    const keyed = keyErrors.map((e) => ({ ...e, instancePath: `${e.instancePath}/${escape(e.params.propertyName)}` }));
+    const seen = new Set();
+    for (const e of [...relevant(others), ...keyed]) {
+      const pointer = e.instancePath || "/";
+      const reason = schemaReason(e);
+      if (seen.has(`${pointer} ${reason}`)) continue;
+      seen.add(`${pointer} ${reason}`);
+      problems.push({ pointer, reason });
     }
   }
   const objects = state && typeof state.objects === "object" && !Array.isArray(state.objects) ? state.objects : {};
