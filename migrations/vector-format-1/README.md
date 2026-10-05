@@ -10,6 +10,8 @@ Each `*.mapping.json` file lists, for one suite:
 - `moves`: where every old value now lives (`old path` → `new path`);
 - `structural`: old values the new format expresses as structure instead
   (for example `deterministic_bytes: true` became the case type);
+- `changed`: later, explicitly approved changes to a migrated value, with old
+  value, new value and approval (only the `suite.warning` wording so far);
 - `added`: every new value, with its source. These are the format metadata,
   case IDs taken from old object keys, and the error codes mapped from
   LFCP-WIRE-01 §62.

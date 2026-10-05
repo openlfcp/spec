@@ -14,6 +14,10 @@
 //    Cases whose ID did not exist at migration time are skipped, so later
 //    additions to a suite do not break this check.
 //
+// A later, explicitly approved change to a migrated value is listed under
+// `changed` (old path, old value, new value, approval). Such a value must
+// match both sides exactly and is left out of the multiset comparison.
+//
 // Path syntax in mapping files: dot-separated keys; `name[id=X]` selects the
 // array element whose `id` is X; `*` matches any key, `[id=*]` any id and
 // `[*]` any element; `$1`, `$2`, ... insert what the wildcards matched.
@@ -133,6 +137,8 @@ function checkSuite(mappingFile) {
   const moves = mapping.moves.map(([from, to]) => ({ from: parsePath(from), to }));
   const structural = mapping.structural.map((r) => ({ ...r, segs: parsePath(r.path) }));
   const added = mapping.added.map((r) => ({ ...r, segs: parsePath(r.path) }));
+  const changed = new Map((mapping.changed ?? []).map((r) => [r.path, r]));
+  const changedValues = [];
 
   const claimed = new Map();
   const oldValues = [];
@@ -160,6 +166,12 @@ function checkSuite(mappingFile) {
     if (!found.found) {
       errors.push(`old value at ${where} is missing from the new file (expected at ${targetText})`);
     } else if (!same(found.value, leaf.value)) {
+      const approved = changed.get(where);
+      if (approved && same(approved.from, leaf.value) && same(approved.to, found.value)) {
+        changedValues.push(`${where}: ${approved.rule}`);
+        claimed.set(targetText, where);
+        continue;
+      }
       errors.push(`value changed: ${where} = ${JSON.stringify(leaf.value)} but ${targetText} = ${JSON.stringify(found.value)}`);
     }
     if (claimed.has(targetText)) {
@@ -202,7 +214,8 @@ function checkSuite(mappingFile) {
   return {
     suite: mapping.suite_file,
     baseline: mapping.baseline_commit,
-    oldLeaves: oldValues.length + structuralCount,
+    oldLeaves: oldValues.length + structuralCount + changedValues.length,
+    changed: changedValues,
     moved: oldValues.length,
     structural: structuralCount,
     newLeaves: newLeaves.length,
@@ -224,6 +237,7 @@ for (const file of files) {
     `      old leaves ${r.oldLeaves}: moved unchanged ${r.moved}, encoded as structure ${r.structural}; ` +
       `new leaves ${r.newLeaves}: moved ${r.moved}, added ${r.added.length}, outside migrated cases ${r.skipped}`,
   );
+  for (const c of r.changed) console.log(`      changed with approval: ${c}`);
   console.log(`      multiset of ${r.moved} old values == values at their new locations: ${r.multisetEqual}`);
   if (verbose) for (const a of r.added) console.log(`      added ${a}`);
   for (const e of r.errors) console.log(`      ${e}`);

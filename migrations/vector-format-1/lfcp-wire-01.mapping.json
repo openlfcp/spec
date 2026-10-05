@@ -54,6 +54,14 @@
     ["negative.stale_epoch_expected", "cases[id=stale_epoch].expected.error.detail"]
   ],
   "structural": [],
+  "changed": [
+    {
+      "path": "meta.warning",
+      "from": "All private keys are public test material and MUST NOT be used in production.",
+      "to": "All private keys, DEKs and derived keys in this suite are public test fixtures. They MUST NOT be used in production or as production defaults.",
+      "rule": "Changed by LFCP-009 (orchestrator-approved wording): metadata, not a normative value."
+    }
+  ],
   "added": [
     { "path": "format", "rule": "Vector format identifier." },
     { "path": "suite.version", "rule": "Suite version, taken from the -01 suffix of the suite ID." },

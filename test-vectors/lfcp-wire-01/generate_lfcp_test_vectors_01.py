@@ -638,7 +638,7 @@ def generate():
             'vector_spec': 'LFCP-TEST-VECTORS-01',
             'cose_sign1_tag_policy': 'untagged-array',
             'cbor_profile': 'RFC8949 preferred deterministic serialization',
-            'warning': 'All private keys are public test material and MUST NOT be used in production.'
+            'warning': 'All private keys, DEKs and derived keys in this suite are public test fixtures. They MUST NOT be used in production or as production defaults.'
         },
         'principals': {},
         'resource': {
