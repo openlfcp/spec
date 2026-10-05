@@ -2380,7 +2380,27 @@ e1022e460bcce5cfb7b40cd6a28b63a4a683bf91b13991fc6b893bfa61d6f17a3fde19cfa48c1079
 8709
 ```
 
-#### 17.10.36 stale_epoch_absent_actor: CAROL Data Unit in closed epoch 0, where C6 records no CAROL entry
+#### 17.10.36 snapshot_beyond_cutoff: A Snapshot of epoch 0 whose frontier covers BOB 1..3, beyond the C6 cutoff (BOB 2)
+
+- Base case: `SNAPSHOT-01`
+- Mutation: Data Epoch, Control Head and frontier: `"epoch 1 at C6: BOB 1..2, CAROL 1"` → `"epoch 0 at C5: BOB 1..3"`
+- Rule (LFCP-WIRE-01 §29; §19.1): A Snapshot MUST NOT include Data Units beyond a closed epoch's cutoff. When the Snapshot's Data Epoch has been closed by a Key Epoch Record the verifier knows, every sequence its frontier covers MUST lie within that record's final frontier (Section 19.1); a verifier rejects a Snapshot whose frontier covers any unit beyond it with `STALE_DATA_EPOCH`.
+- Expected: invalid, reject, error code `STALE_DATA_EPOCH`
+- Why: A Snapshot that includes stale work would merge it into every replica that loads it, bypassing the cutoff.
+
+cose_sign1:
+
+```text
+845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058d0a7005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56
+ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c503010458201189b7d19ac6d09a8128d3967a4fdd80ea2a6180efaa
+8a9f15bf2ee5c32cda460581a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5
+01030658372f4d78b54b28c1be603915b8f3cf471a00ce6d8a89c15c6202a39a7e65cb2d5184bd808064de8d0ae44e05
+e642bc8edba191b55ea8962058404303f8af058dac3e39b7e755d91fbe0d37742853c610ee6288b9d6898ecf614f6427
+818626bb9e5023c2f571a15d6b326ba60845c300a05911827929fc2eb50e
+```
+
+#### 17.10.37 stale_epoch_absent_actor: CAROL Data Unit in closed epoch 0, where C6 records no CAROL entry
 
 - Base case: `D4_carol_epoch1_seq1`
 - Mutation: Data Epoch (payload field 1): `1` → `0`
@@ -2399,7 +2419,7 @@ c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820a6e402
 2107385908a18154b908b383efd0341d9c959f92161e468633724abc0b
 ```
 
-#### 17.10.37 noncanonical_payload_D1: D1 payload with a non-shortest integer encoding, re-signed
+#### 17.10.38 noncanonical_payload_D1: D1 payload with a non-shortest integer encoding, re-signed
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: payload encoding of the data epoch (0): `00` → `1800`
@@ -2418,7 +2438,7 @@ f8376ef326715840c61e8713b42895fc0f64fc0e7573e7dbd2770dc5235b911a6c08a8c19668eb4e
 228151836168012f2d970f6c0fb45d725d7ffc7b8b782106
 ```
 
-#### 17.10.38 descriptor_extra_field: BOB Principal Descriptor with an additional field 3
+#### 17.10.39 descriptor_extra_field: BOB Principal Descriptor with an additional field 3
 
 - Base case: `principal_bob`
 - Mutation: descriptor fields: `"0, 1, 2"` → `"0, 1, 2, 3 (empty bstr)"`
@@ -2434,7 +2454,7 @@ a40058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c501582019
 ca7528fdd5eefb94f26c0340
 ```
 
-#### 17.10.39 small_order_r_signature_D1: D1 signed with a small-order R that cofactored (ZIP-215) verification accepts
+#### 17.10.40 small_order_r_signature_D1: D1 signed with a small-order R that cofactored (ZIP-215) verification accepts
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: signature R (first 32 bytes): `8adb5052b4f93358a1d5397fd05f591b47b20724afd186d42368caba11bd1f7e` → `0100000000000000000000000000000000000000000000000000000000000000`
@@ -2453,7 +2473,7 @@ f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca3
 751ac3391a14c8e56ce49382f409343d2f5dc2941f2d08
 ```
 
-#### 17.10.40 descriptor_small_order_key: Principal Descriptor whose Ed25519 key is a point of small order
+#### 17.10.41 descriptor_small_order_key: Principal Descriptor whose Ed25519 key is a point of small order
 
 - Base case: `principal_bob`
 - Mutation: Ed25519 public key (field 1), with the ID recomputed: `1953f4ada1cb4e0f8662108152c82e7e074cbf4859c487461cbe41e5d623e3c2` → `0000000000000000000000000000000000000000000000000000000000000000`

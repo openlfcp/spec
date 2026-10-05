@@ -874,7 +874,7 @@ Reason codes:
 | 3 | Ownership transfer |
 | 4 | Manual security rotation |
 
-The new epoch number MUST be exactly the previous Data Epoch plus one.
+The new epoch number MUST be exactly the previous Data Epoch plus one. A Key Epoch Record whose new epoch number is anything else breaks the chain and is rejected with `INVALID_CONTROL_CHAIN`.
 
 The issuer MUST possess `key/rotate`.
 
@@ -887,6 +887,12 @@ If an actor is absent from the recorded frontier, no newly discovered Data Units
 Any later-arriving previous-epoch unit beyond that frontier MUST NOT be merged automatically. A server that receives such a unit in `DATA_PUT` responds `NACK(STALE_DATA_EPOCH)`; a client keeps it in quarantine.
 
 It SHOULD be surfaced to the application as stale offline work that may be manually reviewed and re-applied.
+
+The cutoff is evaluated against the latest Control state the receiver knows. Once a receiver knows the Key Epoch Record that closes epoch `E`, every Data Unit of epoch `E` is held to that record's final frontier, whichever Control Head the unit references, including an older head at which `E` was still current.
+
+Stale work that the application decides to keep is re-applied as a new Data Unit: in the current Data Epoch, with the actor's next sequence number, encrypted with the current epoch's key. The stale unit itself is never re-encrypted, re-signed or merged.
+
+A replica's state is a deterministic function of the set of Data Units it has accepted. When a newly known Key Epoch Record places a unit that the replica had already merged beyond its cutoff, the replica rebuilds its state without that unit and surfaces the unit as stale. How a profile rebuilds is defined by the Data Profile (for example SHARED-OBJECTS-PROFILE-01).
 
 This rule makes strict revocation deterministic across replicas.
 
@@ -1121,6 +1127,8 @@ The package signer MUST have had `key/distribute` authority at the referenced Co
 
 The recipient MUST have had `data/read` authority at that Control Head, except for an Invitation Principal explicitly authorized by an active invite grant: a recipient that is the subject of an active grant that includes and still confers `invite/claim` (Section 18) may receive the package without `data/read`.
 
+A Key Package's Data Epoch MUST be known at its referenced Control Head; a package whose epoch is not is rejected with `MISSING_DEPENDENCY`. Key Packages of an epoch that has since been closed stay valid: the epoch's accepted Data Units still need its DEK.
+
 A server MAY store multiple Key Packages for the same `(resource, epoch, recipient)` tuple.
 
 Clients accept any cryptographically valid package that yields the correct DEK commitment.
@@ -1193,6 +1201,8 @@ The client MUST NOT silently choose one.
 
 Valid here means signature-valid: two Data Units with the same `(resource, actor, seq)`, different Data Unit IDs and signatures that verify under the actor's key are equivocation, whatever their authorization or decryptability. Servers and clients both detect it; a server reports `ACTOR_EQUIVOCATION`.
 
+Neither unit of an equivocating pair stays merged. When the receiver had already merged one of them, it excludes both: it rebuilds its state without them (Section 19.1) and surfaces both to the application.
+
 ### 26.3 Authorization
 
 A Data Unit is eligible for merge only if:
@@ -1204,6 +1214,8 @@ A Data Unit is eligible for merge only if:
 5. if the epoch has since been closed, the unit is within the epoch cutoff frontier;
 6. the unit decrypts successfully (see below);
 7. the Data Profile accepts the plaintext.
+
+A Data Unit whose referenced Control Head the receiver does not have, or whose Data Epoch is not known at that head (including an epoch from the head's future), is rejected with `MISSING_DEPENDENCY`; the receiver may fetch the missing Control Records and try again. Rule 5 is evaluated against the latest Control state the receiver knows (Section 19.1).
 
 Decryption failure is detected only by clients that hold the DEK; the server cannot decrypt. A client MUST NOT merge a Data Unit that fails AEAD authentication and SHOULD surface it to the application. This rejection is client-local and has no wire error code.
 
@@ -1356,6 +1368,8 @@ A publisher SHOULD monotonically increase it.
 For the v1 Snapshot nonce construction, `snapshot_sequence` MUST fit in an unsigned 64-bit integer.
 
 The Snapshot frontier in field `5` MUST be canonical according to Sections 28.1 and 28.2.
+
+A Snapshot MUST NOT include Data Units beyond a closed epoch's cutoff. When the Snapshot's Data Epoch has been closed by a Key Epoch Record the verifier knows, every sequence its frontier covers MUST lie within that record's final frontier (Section 19.1); a verifier rejects a Snapshot whose frontier covers any unit beyond it with `STALE_DATA_EPOCH`. As for Data Units, this is evaluated against the latest Control state the verifier knows.
 
 ### 29.1 Snapshot encryption
 

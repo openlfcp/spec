@@ -1191,6 +1191,28 @@ def generate():
         {'valid': False, 'disposition': 'reject'},
         cddl=('snapshot', 'pass'))
 
+    # 11c. Snapshot beyond a closed epoch's cutoff (SPEC-PATCH-04 / G-EP4):
+    #      BOB publishes epoch 0 at C5, where epoch 0 is still current, with a
+    #      frontier covering his sequences 1..3. C6 later closes epoch 0 at
+    #      BOB 2, so with C6 known the frontier covers D3, a unit beyond the
+    #      cutoff. Snapshot Sequence 1 is unused in epoch 0 (SNAPSHOT-01 and
+    #      SNAPSHOT-02 are in epoch 1).
+    S_BEYOND = snapshot(BOB, 0, 1, C5['id'], canonical_frontier([actor_have(BOB.pid, 3)]),
+                        b'LFCP snapshot beyond the epoch-0 cutoff', DEK0)
+    neg('snapshot_beyond_cutoff', 'snapshot', 'A Snapshot of epoch 0 whose frontier covers BOB 1..3, beyond the C6 cutoff (BOB 2)',
+        'SNAPSHOT-01', 'Data Epoch, Control Head and frontier', 'epoch 1 at C6: BOB 1..2, CAROL 1',
+        'epoch 0 at C5: BOB 1..3',
+        'LFCP-WIRE-01 §29; §19.1',
+        'A Snapshot MUST NOT include Data Units beyond a closed epoch\'s cutoff. When the Snapshot\'s Data Epoch has been '
+        'closed by a Key Epoch Record the verifier knows, every sequence its frontier covers MUST lie within that record\'s '
+        'final frontier (Section 19.1); a verifier rejects a Snapshot whose frontier covers any unit beyond it with '
+        '`STALE_DATA_EPOCH`.',
+        'A Snapshot that includes stale work would merge it into every replica that loads it, bypassing the cutoff.',
+        {'cose_sign1': hexv(S_BEYOND['cose'])},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'STALE_DATA_EPOCH'}},
+        context={'cutoff_record': ref('C6_key_epoch_1', 'record_id'), 'closed_epoch': 0},
+        cddl=('snapshot', 'pass'))
+
     # 12. Stale-epoch cutoff for an actor absent from the cutoff frontier:
     #     D4 moved to the closed epoch 0 (keys re-derived from DEK0).
     D_ABSENT = data_unit(CAROL, 0, 1, None, C6['id'], b'LFCP epoch-1 unit from Carol', DEK0)

@@ -1608,6 +1608,16 @@
       },
       "expect": "pass",
       "note": "Type 32 is in the \u00a714 extension space, which the typed CDDL admits with an untyped body (SPEC-PATCH-03 / W2); the owner-authority rule is semantic."
+    },
+    {
+      "rule": "snapshot",
+      "source": {
+        "case": "snapshot_beyond_cutoff",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the closed-epoch cutoff for Snapshots (LFCP-WIRE-01 \u00a729, SPEC-PATCH-04 / G-EP4) is semantic."
     }
   ]
 }

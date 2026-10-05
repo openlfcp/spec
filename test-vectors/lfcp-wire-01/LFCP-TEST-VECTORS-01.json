@@ -2572,6 +2572,46 @@
       }
     },
     {
+      "id": "snapshot_beyond_cutoff",
+      "type": "validation",
+      "kind": "snapshot",
+      "description": "A Snapshot of epoch 0 whose frontier covers BOB 1..3, beyond the C6 cutoff (BOB 2)",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058d0a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c503010458201189b7d19ac6d09a8128d3967a4fdd80ea2a6180efaa8a9f15bf2ee5c32cda460581a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c501030658372f4d78b54b28c1be603915b8f3cf471a00ce6d8a89c15c6202a39a7e65cb2d5184bd808064de8d0ae44e05e642bc8edba191b55ea8962058404303f8af058dac3e39b7e755d91fbe0d37742853c610ee6288b9d6898ecf614f6427818626bb9e5023c2f571a15d6b326ba60845c300a05911827929fc2eb50e"
+        },
+        "signer": "BOB",
+        "dek": "dek0"
+      },
+      "context": {
+        "cutoff_record": {
+          "case": "C6_key_epoch_1",
+          "field": "record_id"
+        },
+        "closed_epoch": 0
+      },
+      "derivation": {
+        "base_case": "SNAPSHOT-01",
+        "mutation": {
+          "field": "Data Epoch, Control Head and frontier",
+          "from": "epoch 1 at C6: BOB 1..2, CAROL 1",
+          "to": "epoch 0 at C5: BOB 1..3"
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §29; §19.1",
+          "text": "A Snapshot MUST NOT include Data Units beyond a closed epoch's cutoff. When the Snapshot's Data Epoch has been closed by a Key Epoch Record the verifier knows, every sequence its frontier covers MUST lie within that record's final frontier (Section 19.1); a verifier rejects a Snapshot whose frontier covers any unit beyond it with `STALE_DATA_EPOCH`."
+        },
+        "why": "A Snapshot that includes stale work would merge it into every replica that loads it, bypassing the cutoff."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "STALE_DATA_EPOCH"
+        }
+      }
+    },
+    {
       "id": "stale_epoch_absent_actor",
       "type": "validation",
       "kind": "data_unit",
