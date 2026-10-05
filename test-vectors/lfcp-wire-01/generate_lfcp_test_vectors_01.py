@@ -1168,7 +1168,7 @@ def generate_markdown(f: dict):
     a('')
     a('```text\nLFCP-TEST-VECTORS-01.md\nLFCP-TEST-VECTORS-01.json\ngenerate_lfcp_test_vectors_01.py\n```')
     a('')
-    a('The JSON contains the same exact fixture values without prose. The Python generator recomputes all values and aborts if its HPKE implementation fails the official RFC 9180 A.2.1 check.')
+    a('The JSON contains the same exact fixture values without prose, laid out as an `lfcp-vector-format/1` suite (`schemas/lfcp-vector-format-1.schema.json` in the spec repository). The Python generator recomputes all values and aborts if its HPKE implementation fails the official RFC 9180 A.2.1 check.')
     a('')
 
     a('## 21. Conformance philosophy')

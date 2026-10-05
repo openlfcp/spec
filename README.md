@@ -52,6 +52,9 @@ wire/          LFCP Wire specification
 profiles/      Shared Objects Profile and other application profiles
 integration/   Editor-integration formats (Markdown refs)
 test-vectors/  Interoperability vectors and their generators
+schemas/       lfcp-vector-format/1 schema for the vector suites, with fixtures
+migrations/    Value-preservation proofs for format migrations
+scripts/       Validation entry point and checks
 ```
 
 `registries/`, `rfcs/` and `adr/` will be added when they first have content.
