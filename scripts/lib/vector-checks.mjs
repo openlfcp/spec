@@ -59,6 +59,25 @@ export const HASH_RULES = [
     ]],
   },
   {
+    field: "dek0_commitment, dek1_commitment",
+    section:
+      'LFCP-WIRE-01 §11: SHA-256(ASCII("LFCP-DEK-v1") || resource_id || uint64_be(E) || DEK), with resource_id and DEKs from fixtures.resource',
+    applies: (c, doc) =>
+      c.type === "bytes" && c.kind === "dek_commitment" && Number.isInteger(c.inputs?.dek0_epoch) && doc.fixtures?.resource?.id,
+    pairs: (c, doc) =>
+      ["dek0", "dek1"]
+        .filter((d) => Number.isInteger(c.inputs[`${d}_epoch`]) && doc.fixtures.resource[d])
+        .map((d) => {
+          const epoch = Buffer.alloc(8);
+          epoch.writeBigUInt64BE(BigInt(c.inputs[`${d}_epoch`]));
+          return [
+            `/expected/${d}_commitment/hex`,
+            c.expected[`${d}_commitment`]?.hex,
+            sha256(ascii("LFCP-DEK-v1"), bytes(doc.fixtures.resource.id.hex), epoch, bytes(doc.fixtures.resource[d].hex)),
+          ];
+        }),
+  },
+  {
     field: "record_id",
     section: "LFCP-WIRE-01 §13 and §10.6: SHA-256(exact COSE_Sign1 bytes)",
     applies: (c) => c.type === "bytes" && c.kind === "control_record",
@@ -123,7 +142,6 @@ export const HASH_RULES = [
 // Hash-like fields deliberately not recomputed, with the reason. Reported so
 // the gap is visible rather than silent.
 export const NOT_VERIFIED = [
-  ["dek0_commitment, dek1_commitment", "LFCP-WIRE-01 §11 includes uint64_be(epoch), but the epoch is not a vector value (only implied by the field name)"],
   ["actor_key, hpke_shared_secret, hpke_key, hpke_base_nonce, hpke_enc, hpke_ciphertext, ciphertext", "HKDF/HPKE/AEAD derivations; implementation work (LFCP-017, LFCP-070)"],
   ["cose_sign1 signatures, auth_proof_cose_sign1", "Ed25519 signature verification; implementation work"],
   ["prev_control_id and other hashes inside payload CBOR", "needs CBOR decoding; Control Chain linkage is a semantic check (LFCP-016)"],
@@ -244,8 +262,8 @@ export function semanticProblems(doc) {
   // Hash recomputation.
   cases.forEach((c, k) => {
     for (const rule of HASH_RULES) {
-      if (!rule.applies(c)) continue;
-      for (const [suffix, published, computed] of rule.pairs(c)) {
+      if (!rule.applies(c, doc)) continue;
+      for (const [suffix, published, computed] of rule.pairs(c, doc)) {
         if (published === undefined) continue; // missing field: schema/required territory
         if (published !== computed) {
           add(c.id, `/cases/${k}${suffix}`, `hash-mismatch: recomputed ${computed} (${rule.section})`);

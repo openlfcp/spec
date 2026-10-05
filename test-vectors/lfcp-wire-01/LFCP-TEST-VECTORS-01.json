@@ -154,6 +154,10 @@
       "id": "dek_commitments",
       "type": "bytes",
       "kind": "dek_commitment",
+      "inputs": {
+        "dek0_epoch": 0,
+        "dek1_epoch": 1
+      },
       "expected": {
         "dek0_commitment": {
           "hex": "9239077c0c32fc80bc1a51b8aad2917aebb1316853b85ffda562b1800c0ced30"

@@ -831,7 +831,8 @@ def to_vector_format(fixtures: dict) -> dict:
         ))
 
     r = fixtures['resource']
-    cases.append(bytes_case('dek_commitments', 'dek_commitment', None, {
+    # Epochs are explicit inputs so the §11 commitment can be recomputed.
+    cases.append(bytes_case('dek_commitments', 'dek_commitment', {'dek0_epoch': 0, 'dek1_epoch': 1}, {
         'dek0_commitment': hexv(r['dek0_commitment']),
         'dek1_commitment': hexv(r['dek1_commitment']),
     }))
