@@ -2746,6 +2746,82 @@ signature:
 6ffd89dc74bad3c9a688b7ea2c714708
 ```
 
+### 17.12 Actor chains across a sequence gap
+
+`validation` cases of kind `actor_chain` for `LFCP-WIRE-01` §26.2 (SPEC-PATCH-05 / G-DP1-GAP). CAROL publishes epoch-1 units at Control Head C6; her sequence 3 was reserved and abandoned, so her sequence 4 links to sequence 2. A receiver receives `accepted_seq1_cose` (D4), then `accepted_seq2_cose`, then `cose_sign1`, and reaches the expected outcome for `cose_sign1`: the gap-linked unit is accepted (the Have Vector keeps the hole, CAROL 1..2 and 4..4); a unit whose `previous` names an unknown unit is held and reported (`disposition` `report`), not merged.
+
+#### chain_gap_linked_seq4: CAROL seq 4 linked to seq 2 across the abandoned seq 3
+
+Receive accepted_seq1_cose, then accepted_seq2_cose, then cose_sign1. All three are accepted; the Have Vector keeps the hole: CAROL 1..2 plus 4..4.
+
+accepted_seq2_cose:
+
+```text
+845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058c7a7005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c26
+85ecc3a0457fef86d4e251abd48efe943c1282da4803020458209b0c864dbee938ab1f0a106d32947004c7bb444d2924
+211fede31f8bcf411743055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518065833
+ffa816bf70cb8b6b20a71f548931cfd4fd3354a40482afcc00619056f4d9336aae232e2896cca615f0c95af65017f9f5
+4b5d415840b3e1ffc12943909458141fd17e7eca388e398d9618423aec26f8d873b7b2bb2cbe1714ff59317d950467ad
+8dc0320b9bc7e5dc2f34682229b126db35cc44430e
+```
+
+cose_sign1:
+
+```text
+845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058c7a7005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c26
+85ecc3a0457fef86d4e251abd48efe943c1282da480304045820b025bf1e23739dbdd9aa7ae78c9707d0f9a2013997cd
+b5dd8ecc2f80f5a72480055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518065833
+f653cf1d443bf60b29ebacf7706a49d11ccce0d839b70ed8559c973dfdde381204a243b47b6d1c21730e6f67ff41b3c6
+ec1e1758400bc7d15111a7b1935226f44557e3562f8693b4ecc22727c56192ab9c7ba623a9020e676fe4baf5887f3fe0
+9bf48dd1b772e0617a35fcdbce74c1b5af1875840f
+```
+
+#### chain_prev_unknown_seq4: CAROL seq 4 whose previous names a unit the receiver does not have
+
+Receive accepted_seq1_cose, then accepted_seq2_cose, then cose_sign1: it is held (reported), not merged.
+
+accepted_seq2_cose:
+
+```text
+845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058c7a7005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c26
+85ecc3a0457fef86d4e251abd48efe943c1282da4803020458209b0c864dbee938ab1f0a106d32947004c7bb444d2924
+211fede31f8bcf411743055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518065833
+ffa816bf70cb8b6b20a71f548931cfd4fd3354a40482afcc00619056f4d9336aae232e2896cca615f0c95af65017f9f5
+4b5d415840b3e1ffc12943909458141fd17e7eca388e398d9618423aec26f8d873b7b2bb2cbe1714ff59317d950467ad
+8dc0320b9bc7e5dc2f34682229b126db35cc44430e
+```
+
+cose_sign1:
+
+```text
+845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058c7a7005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c26
+85ecc3a0457fef86d4e251abd48efe943c1282da4803040458208b461442e191edcc675e3a44112f60fb702cfaecb4db
+802a0bc6c44d0c24356e055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518065833
+f653cf1d443bf60b29ebacf7706a49d11ccce0d839b70ed8559c973dfdde381204a243dc9609538f0c00ee19c4fb9671
+4088645840ae20ffbd26c5c332b4f678228804fbab777c3f344f778ecc8735fa5a82e0562c6cba99ba0e57238d099191
+52c27116635ffa405c8e3a66138a5c43145051f200
+```
+
+### 17.13 Invitation URI parsing
+
+`validation` cases of kind `invite_uri` for `LFCP-WIRE-01` §18.2 (SPEC-PATCH-05): the bearer URI of Section 14 with an undefined query parameter parses (it is ignored); with its `grant` parameter repeated it is rejected. The rejection is client-local and has no wire code.
+
+#### invite_uri_unknown_parameter: The bearer URI with an undefined query parameter
+
+```text
+lfcp://join/yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE?endpoint=wss%3A%2F%2Fsync-a.example.test%2Fv1%2Fws&grant=p36MLOutRFjpygNr72Bs2acwU5USe2qEeeegiFBjNMI&mode=readonly#secret=owABAVggldgGjIieJIQ6Uz250jOGPA2uG9p8Mqg_0hYG1aETrAgCWCCM8_6jJsMVv8oihs_JA21mQyYyxsijAm7Cj5eIfhhBhQ
+```
+
+#### invite_uri_duplicate_grant: The bearer URI with its grant parameter repeated
+
+```text
+lfcp://join/yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE?endpoint=wss%3A%2F%2Fsync-a.example.test%2Fv1%2Fws&grant=p36MLOutRFjpygNr72Bs2acwU5USe2qEeeegiFBjNMI&grant=p36MLOutRFjpygNr72Bs2acwU5USe2qEeeegiFBjNMI#secret=owABAVggldgGjIieJIQ6Uz250jOGPA2uG9p8Mqg_0hYG1aETrAgCWCCM8_6jJsMVv8oihs_JA21mQyYyxsijAm7Cj5eIfhhBhQ
+```
+
 ## 18. Snapshot vectors
 
 `SNAPSHOT-01` and `SNAPSHOT-02` are byte-exact Snapshots under the consolidated `LFCP-WIRE-01` rules. Both are published by BOB, who owns the Resource after C4 and therefore holds `snapshot/publish` (§29.2), in Data Epoch 1 at Control Head C6, using DEK1. The plaintext is opaque test bytes: Snapshot plaintext framing belongs to the application profile, not to the Wire suite.

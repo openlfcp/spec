@@ -1666,6 +1666,83 @@ def generate():
                  'S = k*a mod L for the message "small-order R".')
     fixtures['ed25519'] = ED
 
+    # 18. Actor chains across a sequence gap (SPEC-PATCH-05 / G-DP1-GAP,
+    #     LFCP-WIRE-01 §26.2): CAROL's epoch-1 units at C6. Sequence 3 was
+    #     reserved and abandoned, so sequence 4 links to sequence 2. Each case
+    #     is received after the `accepted_*` units, in order.
+    D_C2 = data_unit(CAROL, 1, 2, D_C1['id'], C6['id'], b'LFCP epoch-1 unit from Carol, seq 2', DEK1)
+    D_C4 = data_unit(CAROL, 1, 4, D_C2['id'], C6['id'], b'LFCP epoch-1 unit from Carol, seq 4', DEK1)
+    unknown_prev = h('LFCP-TV-UNKNOWN-PREVIOUS')
+    D_C4_UNKNOWN = data_unit(CAROL, 1, 4, unknown_prev, C6['id'], b'LFCP epoch-1 unit from Carol, seq 4', DEK1)
+    CHAIN_RULE = 'LFCP-WIRE-01 §26.2'
+    CHAIN_TEXT = ('A unit links when its `previous` names the receiver\'s latest accepted unit of that actor '
+                  '[...], even when sequences lie between the two. Such a sequence gap is a hole: it never blocks '
+                  'the chain [...]. A unit that does not link MUST be reported to the sync engine and is held, '
+                  'not merged, until it links [...]')
+    chain_inputs = {
+        'accepted_seq1_cose': hexv(D_C1['cose']),
+        'accepted_seq2_cose': hexv(D_C2['cose']),
+        'signer': 'CAROL',
+        'dek': 'dek1',
+    }
+    CHAIN: list[dict[str, Any]] = [
+        {
+            'id': 'chain_gap_linked_seq4', 'description': 'CAROL seq 4 linked to seq 2 across the abandoned seq 3',
+            'note': 'Receive accepted_seq1_cose, then accepted_seq2_cose, then cose_sign1. All three are accepted; '
+                    'the Have Vector keeps the hole: CAROL 1..2 plus 4..4.',
+            'inputs': {**chain_inputs, 'cose_sign1': hexv(D_C4['cose'])},
+            'derivation': None,
+            'expected': {'valid': True},
+        },
+        {
+            'id': 'chain_prev_unknown_seq4', 'description': 'CAROL seq 4 whose previous names a unit the receiver does not have',
+            'note': 'Receive accepted_seq1_cose, then accepted_seq2_cose, then cose_sign1: it is held (reported), '
+                    'not merged.',
+            'inputs': {**chain_inputs, 'cose_sign1': hexv(D_C4_UNKNOWN['cose'])},
+            'derivation': {
+                'base_case': 'chain_gap_linked_seq4',
+                'mutation': {'field': 'previous Data Unit (payload field 4)', 'from': hexv(D_C2['id']),
+                             'to': hexv(unknown_prev)},
+                'rule': {'section': CHAIN_RULE, 'text': CHAIN_TEXT},
+                'why': 'Only a link to the latest accepted unit completes the chain; a link to an unknown unit '
+                       'waits for it.',
+            },
+            'expected': {'valid': False, 'disposition': 'report'},
+        },
+    ]
+    fixtures['actor_chain'] = CHAIN
+
+    # 19. Invitation URI parsing (SPEC-PATCH-05, LFCP-WIRE-01 §18.2): an
+    #     undefined query parameter is ignored; a repeated grant is rejected.
+    #     Client-local: no wire code.
+    split = invite_uri.index('#')
+    INVITE_PARSE = [
+        {
+            'id': 'invite_uri_unknown_parameter', 'description': 'The bearer URI with an undefined query parameter',
+            'note': 'It parses to the same Resource, endpoint, grant and secret as invite_uri.',
+            'inputs': {'uri': invite_uri[:split] + '&mode=readonly' + invite_uri[split:]},
+            'derivation': None,
+            'expected': {'valid': True},
+        },
+        {
+            'id': 'invite_uri_duplicate_grant', 'description': 'The bearer URI with its grant parameter repeated',
+            'note': 'Client-local rejection: no wire code.',
+            'inputs': {'uri': invite_uri[:split] + '&grant=' + b64u(C2['id']) + invite_uri[split:]},
+            'derivation': {
+                'base_case': 'invite_uri_unknown_parameter',
+                'mutation': {'field': 'query parameter after grant', 'from': 'mode=readonly',
+                             'to': 'grant=' + b64u(C2['id'])},
+                'rule': {'section': 'LFCP-WIRE-01 §18.2',
+                         'text': 'A receiver ignores query parameters this section does not define, for forward '
+                                 'compatibility, but rejects a URI whose query is not well-formed percent-encoding, '
+                                 'that repeats `grant`, or whose `endpoint` or `grant` values are invalid.'},
+                'why': 'Two grant values are ambiguous: the receiver cannot tell which grant the secret is for.',
+            },
+            'expected': {'valid': False, 'disposition': 'reject'},
+        },
+    ]
+    fixtures['invite_parse'] = INVITE_PARSE
+
     fixtures['negatives'] = NEG
     OUT_JSON.write_text(json.dumps(to_vector_format(fixtures), indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
     return fixtures
@@ -1812,6 +1889,17 @@ def to_vector_format(fixtures: dict) -> dict:
         case['derivation'] = x['derivation']
         case['expected'] = x['expected']
         cases.append(case)
+
+    for kind, key in (('actor_chain', 'actor_chain'), ('invite_uri', 'invite_parse')):
+        for x in fixtures[key]:
+            case = {'id': x['id'], 'type': 'validation', 'kind': kind, 'description': x['description']}
+            if x['note']:
+                case['note'] = x['note']
+            case['inputs'] = x['inputs']
+            if x['derivation']:
+                case['derivation'] = x['derivation']
+            case['expected'] = x['expected']
+            cases.append(case)
 
     for x in fixtures['ed25519']:
         case = {'id': x['id'], 'type': 'validation', 'kind': 'ed25519_signature', 'description': x['description']}
@@ -2312,6 +2400,31 @@ def generate_markdown(f: dict):
             a(code_hex(v['hex']) if v['hex'] else '(empty)')
             a('')
 
+    a('### 17.12 Actor chains across a sequence gap')
+    a('')
+    a('`validation` cases of kind `actor_chain` for `LFCP-WIRE-01` §26.2 (SPEC-PATCH-05 / G-DP1-GAP). CAROL publishes epoch-1 units at Control Head C6; her sequence 3 was reserved and abandoned, so her sequence 4 links to sequence 2. A receiver receives `accepted_seq1_cose` (D4), then `accepted_seq2_cose`, then `cose_sign1`, and reaches the expected outcome for `cose_sign1`: the gap-linked unit is accepted (the Have Vector keeps the hole, CAROL 1..2 and 4..4); a unit whose `previous` names an unknown unit is held and reported (`disposition` `report`), not merged.')
+    a('')
+    for x in f['actor_chain']:
+        a(f'#### {x["id"]}: {x["description"]}')
+        a('')
+        a(x['note'])
+        a('')
+        for k in ('accepted_seq2_cose', 'cose_sign1'):
+            a(f'{k}:')
+            a('')
+            a(code_hex(x['inputs'][k]['hex']))
+            a('')
+    a('### 17.13 Invitation URI parsing')
+    a('')
+    a('`validation` cases of kind `invite_uri` for `LFCP-WIRE-01` §18.2 (SPEC-PATCH-05): the bearer URI of Section 14 with an undefined query parameter parses (it is ignored); with its `grant` parameter repeated it is rejected. The rejection is client-local and has no wire code.')
+    a('')
+    for x in f['invite_parse']:
+        a(f'#### {x["id"]}: {x["description"]}')
+        a('')
+        a('```text')
+        a(x['inputs']['uri'])
+        a('```')
+        a('')
     a('## 18. Snapshot vectors')
     a('')
     a('`SNAPSHOT-01` and `SNAPSHOT-02` are byte-exact Snapshots under the consolidated `LFCP-WIRE-01` rules. Both are published by BOB, who owns the Resource after C4 and therefore holds `snapshot/publish` (§29.2), in Data Epoch 1 at Control Head C6, using DEK1. The plaintext is opaque test bytes: Snapshot plaintext framing belongs to the application profile, not to the Wire suite.')

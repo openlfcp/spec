@@ -809,6 +809,8 @@ Claims are counted in Control Chain order. An Invitation Grant whose claims are 
 
 For `claim_limit = 1`, only one claimant can win at the Control Coordinator.
 
+The claimant obtains the current epoch's DEK through the Invitation Principal's Key Package (Section 73), so joining needs no package addressed to the claimant. So that a claimant that later loses its local key store can recover, the inviter, or any holder of `key/distribute`, SHOULD seal a Key Package of the current epoch to the claimant once it observes the claim.
+
 ### 18.2 Canonical invitation URI
 
 WIRE-01 defines a portable custom URI for invitation handoff.
@@ -828,6 +830,8 @@ lfcp://join/<resource-b64url>?endpoint=<escaped-wss-url>&grant=<grant-id-b64url>
 ```
 
 Multiple `endpoint` query parameters MAY be present.
+
+A receiver ignores query parameters this section does not define, for forward compatibility, but rejects a URI whose query is not well-formed percent-encoding, that repeats `grant`, or whose `endpoint` or `grant` values are invalid.
 
 The decoded bearer secret is deterministic CBOR:
 
@@ -900,7 +904,7 @@ The cutoff is evaluated against the latest Control state the receiver knows. Onc
 
 Stale work that the application decides to keep is re-applied as a new Data Unit: in the current Data Epoch, with the actor's next sequence number, encrypted with the current epoch's key. The stale unit itself is never re-encrypted, re-signed or merged.
 
-A replica's state is a deterministic function of the set of Data Units it has accepted. When a newly known Key Epoch Record places a unit that the replica had already merged beyond its cutoff, the replica rebuilds its state without that unit and surfaces the unit as stale. How a profile rebuilds is defined by the Data Profile (for example SHARED-OBJECTS-PROFILE-01).
+A replica's state is a deterministic function of the set of Data Units it has accepted. When a newly known Key Epoch Record places a unit that the replica had already merged beyond its cutoff, the replica rebuilds its state without that unit and surfaces the unit as stale. This includes a unit merged through a loaded Snapshot: the replica then discards the Snapshot-derived state and rebuilds from accepted units only (Section 29.3). How a profile rebuilds is defined by the Data Profile (for example SHARED-OBJECTS-PROFILE-01).
 
 This rule makes strict revocation deterministic across replicas.
 
@@ -1195,13 +1199,19 @@ data-unit-aad = [
 
 ### 26.2 Actor hash chain
 
-For sequence `N > 1`, `previous Data Unit` SHOULD identify sequence `N-1` from the same actor and Resource.
+A writer sets `previous Data Unit` to its last published unit for the same Resource: the last unit it queued for sending, or `null` before its first one. Normally that is sequence `N-1`. A sequence can be reserved and then abandoned, for example by a crash before the unit was queued (Section 8 forbids reusing it); the next unit then links to the last published one, so after an abandoned sequence `N` the unit at `N+1` names the unit at `N-1`.
 
-For sequence `1`, it MUST be `null`.
+For sequence `1`, `previous` MUST be `null`.
 
-A gap or mismatch MUST be reported to the sync engine.
+A receiver links each unit to the actor's chain as it has accepted it. A unit links when its `previous` names the receiver's latest accepted unit of that actor (the accepted unit with the highest sequence), or is `null` and the receiver has accepted no unit of that actor, even when sequences lie between the two. Such a sequence gap is a hole: it never blocks the chain, and the receiver's Have Vector (Section 28) keeps describing it.
 
-A reported Data Unit is held, not merged, until the report is resolved: the unit at sequence `N-1` arrives and links, or the actor turns out to have equivocated. A unit is reported when the receiver lacks the actor's unit at sequence `N-1` (a gap), when `previous` names a unit other than that one, when `previous` is not `null` at sequence `1`, or when it is `null` at a sequence `N > 1`.
+A unit that does not link MUST be reported to the sync engine and is held, not merged, until it links or the actor turns out to have equivocated. A unit is reported when:
+
+- its `previous` names a unit the receiver has not accepted (for example one it has not received yet); the unit links once that unit is accepted and is the actor's latest;
+- its `previous` is not `null` at sequence `1`;
+- its `previous` is `null` while the receiver has already accepted a unit of that actor.
+
+Units covered by a verified Snapshot the receiver loaded are accepted without checking their own `previous` link: the Snapshot attests to them (Section 29.3). The first unit after the Snapshot's frontier links to the actor's latest unit the Snapshot covers.
 
 If two differently hashed valid signatures exist for the same `(resource, actor, seq)`, the actor has equivocated.
 
@@ -1515,6 +1525,12 @@ The publisher MUST have `snapshot/publish` at the referenced Control Head.
 A Snapshot never establishes authorization, ownership or routing.
 
 It is only a Data Plane optimization.
+
+### 29.3 Loading a Snapshot
+
+A receiver that loads a verified Snapshot takes the profile state it carries as the state of the units its frontier covers, and then applies the units beyond the frontier. The covered units are accepted without checking their own `previous` links (Section 26.2), because the Snapshot attests to them; the receiver may still fetch them.
+
+When a Key Epoch Record the receiver learns later places a unit covered by a loaded Snapshot beyond its epoch's cutoff (Section 19.1), the Snapshot-derived state is no longer a function of the accepted units. The receiver discards it and rebuilds the profile state from accepted units only, fetching the covered units it does not hold, as it rebuilds for any merged unit the cutoff excludes.
 
 ---
 

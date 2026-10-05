@@ -2886,6 +2886,110 @@
       }
     },
     {
+      "id": "chain_gap_linked_seq4",
+      "type": "validation",
+      "kind": "actor_chain",
+      "description": "CAROL seq 4 linked to seq 2 across the abandoned seq 3",
+      "note": "Receive accepted_seq1_cose, then accepted_seq2_cose, then cose_sign1. All three are accepted; the Have Vector keeps the hole: CAROL 1..2 plus 4..4.",
+      "inputs": {
+        "accepted_seq1_cose": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a0589fa7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48030104f6055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc51806582c4dd85825362439c8e0cc06be7de0a147073dfa0869091441ec2830928ff8e13873145f9f61ad1cd487e7ea815840006bcbc4432511ee53a5fce412083d91764875ce676bfe691a931d1547a8068c4bfba3182be1bddd5d5983f8f55c0859b1004214bcee6ec545f2c034c1d77b04"
+        },
+        "accepted_seq2_cose": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058c7a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4803020458209b0c864dbee938ab1f0a106d32947004c7bb444d2924211fede31f8bcf411743055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518065833ffa816bf70cb8b6b20a71f548931cfd4fd3354a40482afcc00619056f4d9336aae232e2896cca615f0c95af65017f9f54b5d415840b3e1ffc12943909458141fd17e7eca388e398d9618423aec26f8d873b7b2bb2cbe1714ff59317d950467ad8dc0320b9bc7e5dc2f34682229b126db35cc44430e"
+        },
+        "signer": "CAROL",
+        "dek": "dek1",
+        "cose_sign1": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058c7a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480304045820b025bf1e23739dbdd9aa7ae78c9707d0f9a2013997cdb5dd8ecc2f80f5a72480055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518065833f653cf1d443bf60b29ebacf7706a49d11ccce0d839b70ed8559c973dfdde381204a243b47b6d1c21730e6f67ff41b3c6ec1e1758400bc7d15111a7b1935226f44557e3562f8693b4ecc22727c56192ab9c7ba623a9020e676fe4baf5887f3fe09bf48dd1b772e0617a35fcdbce74c1b5af1875840f"
+        }
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "chain_prev_unknown_seq4",
+      "type": "validation",
+      "kind": "actor_chain",
+      "description": "CAROL seq 4 whose previous names a unit the receiver does not have",
+      "note": "Receive accepted_seq1_cose, then accepted_seq2_cose, then cose_sign1: it is held (reported), not merged.",
+      "inputs": {
+        "accepted_seq1_cose": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a0589fa7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48030104f6055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc51806582c4dd85825362439c8e0cc06be7de0a147073dfa0869091441ec2830928ff8e13873145f9f61ad1cd487e7ea815840006bcbc4432511ee53a5fce412083d91764875ce676bfe691a931d1547a8068c4bfba3182be1bddd5d5983f8f55c0859b1004214bcee6ec545f2c034c1d77b04"
+        },
+        "accepted_seq2_cose": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058c7a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4803020458209b0c864dbee938ab1f0a106d32947004c7bb444d2924211fede31f8bcf411743055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518065833ffa816bf70cb8b6b20a71f548931cfd4fd3354a40482afcc00619056f4d9336aae232e2896cca615f0c95af65017f9f54b5d415840b3e1ffc12943909458141fd17e7eca388e398d9618423aec26f8d873b7b2bb2cbe1714ff59317d950467ad8dc0320b9bc7e5dc2f34682229b126db35cc44430e"
+        },
+        "signer": "CAROL",
+        "dek": "dek1",
+        "cose_sign1": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058c7a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4803040458208b461442e191edcc675e3a44112f60fb702cfaecb4db802a0bc6c44d0c24356e055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518065833f653cf1d443bf60b29ebacf7706a49d11ccce0d839b70ed8559c973dfdde381204a243dc9609538f0c00ee19c4fb96714088645840ae20ffbd26c5c332b4f678228804fbab777c3f344f778ecc8735fa5a82e0562c6cba99ba0e57238d09919152c27116635ffa405c8e3a66138a5c43145051f200"
+        }
+      },
+      "derivation": {
+        "base_case": "chain_gap_linked_seq4",
+        "mutation": {
+          "field": "previous Data Unit (payload field 4)",
+          "from": {
+            "hex": "b025bf1e23739dbdd9aa7ae78c9707d0f9a2013997cdb5dd8ecc2f80f5a72480"
+          },
+          "to": {
+            "hex": "8b461442e191edcc675e3a44112f60fb702cfaecb4db802a0bc6c44d0c24356e"
+          }
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §26.2",
+          "text": "A unit links when its `previous` names the receiver's latest accepted unit of that actor [...], even when sequences lie between the two. Such a sequence gap is a hole: it never blocks the chain [...]. A unit that does not link MUST be reported to the sync engine and is held, not merged, until it links [...]"
+        },
+        "why": "Only a link to the latest accepted unit completes the chain; a link to an unknown unit waits for it."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "report"
+      }
+    },
+    {
+      "id": "invite_uri_unknown_parameter",
+      "type": "validation",
+      "kind": "invite_uri",
+      "description": "The bearer URI with an undefined query parameter",
+      "note": "It parses to the same Resource, endpoint, grant and secret as invite_uri.",
+      "inputs": {
+        "uri": "lfcp://join/yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE?endpoint=wss%3A%2F%2Fsync-a.example.test%2Fv1%2Fws&grant=p36MLOutRFjpygNr72Bs2acwU5USe2qEeeegiFBjNMI&mode=readonly#secret=owABAVggldgGjIieJIQ6Uz250jOGPA2uG9p8Mqg_0hYG1aETrAgCWCCM8_6jJsMVv8oihs_JA21mQyYyxsijAm7Cj5eIfhhBhQ"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "invite_uri_duplicate_grant",
+      "type": "validation",
+      "kind": "invite_uri",
+      "description": "The bearer URI with its grant parameter repeated",
+      "note": "Client-local rejection: no wire code.",
+      "inputs": {
+        "uri": "lfcp://join/yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE?endpoint=wss%3A%2F%2Fsync-a.example.test%2Fv1%2Fws&grant=p36MLOutRFjpygNr72Bs2acwU5USe2qEeeegiFBjNMI&grant=p36MLOutRFjpygNr72Bs2acwU5USe2qEeeegiFBjNMI#secret=owABAVggldgGjIieJIQ6Uz250jOGPA2uG9p8Mqg_0hYG1aETrAgCWCCM8_6jJsMVv8oihs_JA21mQyYyxsijAm7Cj5eIfhhBhQ"
+      },
+      "derivation": {
+        "base_case": "invite_uri_unknown_parameter",
+        "mutation": {
+          "field": "query parameter after grant",
+          "from": "mode=readonly",
+          "to": "grant=p36MLOutRFjpygNr72Bs2acwU5USe2qEeeegiFBjNMI"
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §18.2",
+          "text": "A receiver ignores query parameters this section does not define, for forward compatibility, but rejects a URI whose query is not well-formed percent-encoding, that repeats `grant`, or whose `endpoint` or `grant` values are invalid."
+        },
+        "why": "Two grant values are ambiguous: the receiver cannot tell which grant the secret is for."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject"
+      }
+    },
+    {
       "id": "ed25519_rfc8032_test1",
       "type": "validation",
       "kind": "ed25519_signature",
