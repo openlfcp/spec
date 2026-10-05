@@ -907,6 +907,10 @@ def generate():
          [bob(100, [[107, 105]]), carol], 'rule 4', '4. each sequence range MUST have `start <= end`;'),
         ('have_range_not_above_contiguous', 'SNAPSHOT-02', 'BOB extra range', [[105, 107]], [[95, 107]],
          [bob(100, [[95, 107]]), carol], 'rule 5', '5. ranges MUST be strictly above `contiguous`;'),
+        ('have_range_at_contiguous_plus_one', 'SNAPSHOT-02', 'BOB extra range', [[105, 107]], [[101, 107]],
+         [bob(100, [[101, 107]]), carol], 'rule 5',
+         '5. ranges MUST be strictly above `contiguous`; the first range MUST start at or above `contiguous + 2`, '
+         'because a range starting at `contiguous + 1` extends the contiguous prefix and is absorbed into `contiguous`;'),
         ('have_ranges_unsorted', 'SNAPSHOT-02', 'BOB extra ranges', [[105, 107]], [[110, 112], [105, 107]],
          [bob(100, [[110, 112], [105, 107]]), carol], 'rule 6',
          '6. ranges MUST be sorted by ascending `start`, then ascending `end`;'),

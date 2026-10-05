@@ -1326,6 +1326,16 @@
       },
       "expect": "pass",
       "note": "Structurally valid: the small-order key check (LFCP-WIRE-01 \u00a77, \u00a710.5.1) is semantic."
+    },
+    {
+      "rule": "snapshot",
+      "source": {
+        "case": "have_range_at_contiguous_plus_one",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: the violated rule (LFCP-WIRE-01 \u00a728.1 rule 5; \u00a728.2) is semantic."
     }
   ]
 }

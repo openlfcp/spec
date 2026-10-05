@@ -1746,7 +1746,28 @@ ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfead
 a33b9c6cc820d07e0705
 ```
 
-#### 17.10.14 have_ranges_unsorted: SNAPSHOT-02 with a frontier that violates §28.1 rule 6
+#### 17.10.14 have_range_at_contiguous_plus_one: SNAPSHOT-02 with a frontier that violates §28.1 rule 5
+
+- Base case: `SNAPSHOT-02`
+- Mutation: BOB extra range: `[[105, 107]]` → `[[101, 107]]`
+- Rule (LFCP-WIRE-01 §28.1 rule 5; §28.2): 5. ranges MUST be strictly above `contiguous`; the first range MUST start at or above `contiguous + 2`, because a range starting at `contiguous + 1` extends the contiguous prefix and is absorbed into `contiguous`; (§28.2: "A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical, with `MALFORMED_MESSAGE`.")
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
+- Why: Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier.
+
+cose_sign1:
+
+```text
+845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058eca7005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56
+ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfeadb0951b1d3f8726c4
+9afefd724b182dddc5180582a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5
+0118640281821865186ba2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101
+065825a4c0b8bc8173d8df3ebc22780f532125084f7008cebde4ee92ea77a3d9e16d13ea48af216058407ad3affd259f
+e2656ada3ffa5fd2a9dcf9da05e8ce1b5d863b6221a6b2ec6684cc35ba5505e778006a32f73d0587a2d835b195010967
+bb542e45e5b4ce4b8e06
+```
+
+#### 17.10.15 have_ranges_unsorted: SNAPSHOT-02 with a frontier that violates §28.1 rule 6
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra ranges: `[[105, 107]]` → `[[110, 112], [105, 107]]`
@@ -1767,7 +1788,7 @@ aebf4ca511cb59476bc4fd9eb253e20037b2dbb9938a69ee5abf0a527ba44b2dafe326d7b1b1f77a
 7c74dd4e873586c032de197f36c502
 ```
 
-#### 17.10.15 have_ranges_overlapping: SNAPSHOT-02 with a frontier that violates §28.1 rule 7
+#### 17.10.16 have_ranges_overlapping: SNAPSHOT-02 with a frontier that violates §28.1 rule 7
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra ranges: `[[105, 107]]` → `[[105, 107], [106, 110]]`
@@ -1788,7 +1809,7 @@ deb4c1fba57b7a45baab536c503d402384fdc308d03187d6d4a4bd5f8b64c425a389bea6642e4604
 6fc47ab6eb65793a7a1ad8e2d9340a
 ```
 
-#### 17.10.16 have_ranges_adjacent: SNAPSHOT-02 with a frontier that violates §28.1 rule 8
+#### 17.10.17 have_ranges_adjacent: SNAPSHOT-02 with a frontier that violates §28.1 rule 8
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra ranges: `[[105, 107]]` → `[[105, 107], [108, 110]]`
@@ -1809,7 +1830,7 @@ fb9cfc983227edf07424b793252c2734b5a29b8ed43beaec78df2013f6d59bcf5467443a2126dd77
 ad913da8fe178f8710eb70ac104209
 ```
 
-#### 17.10.17 frontier_duplicate_principal: SNAPSHOT-01 with a frontier that violates §28.1 rule 9
+#### 17.10.18 frontier_duplicate_principal: SNAPSHOT-01 with a frontier that violates §28.1 rule 9
 
 - Base case: `SNAPSHOT-01`
 - Mutation: BOB entries in the frontier: `1` → `2`
@@ -1830,7 +1851,7 @@ c50102a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c501
 f670bfde1440c720608227c380d2a5283876991f6fb5ecdc791619400db9201a2175b6f654cea15e0e
 ```
 
-#### 17.10.18 frontier_unsorted: SNAPSHOT-01 with CAROL listed before BOB
+#### 17.10.19 frontier_unsorted: SNAPSHOT-01 with CAROL listed before BOB
 
 - Base case: `SNAPSHOT-01`
 - Mutation: frontier entry order: `"BOB, CAROL"` → `"CAROL, BOB"`
@@ -1851,7 +1872,7 @@ f02562f989f3df39c026b58d2403a61a96305a9cd69d48e65ffb71ea7317884f8680f732fa65bb75
 c50d
 ```
 
-#### 17.10.19 stale_epoch_absent_actor: CAROL Data Unit in closed epoch 0, where C6 records no CAROL entry
+#### 17.10.20 stale_epoch_absent_actor: CAROL Data Unit in closed epoch 0, where C6 records no CAROL entry
 
 - Base case: `D4_carol_epoch1_seq1`
 - Mutation: Data Epoch (payload field 1): `1` → `0`
@@ -1870,7 +1891,7 @@ c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820a6e402
 2107385908a18154b908b383efd0341d9c959f92161e468633724abc0b
 ```
 
-#### 17.10.20 noncanonical_payload_D1: D1 payload with a non-shortest integer encoding, re-signed
+#### 17.10.21 noncanonical_payload_D1: D1 payload with a non-shortest integer encoding, re-signed
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: payload encoding of the data epoch (0): `00` → `1800`
@@ -1889,7 +1910,7 @@ f8376ef326715840c61e8713b42895fc0f64fc0e7573e7dbd2770dc5235b911a6c08a8c19668eb4e
 228151836168012f2d970f6c0fb45d725d7ffc7b8b782106
 ```
 
-#### 17.10.21 descriptor_extra_field: BOB Principal Descriptor with an additional field 3
+#### 17.10.22 descriptor_extra_field: BOB Principal Descriptor with an additional field 3
 
 - Base case: `principal_bob`
 - Mutation: descriptor fields: `"0, 1, 2"` → `"0, 1, 2, 3 (empty bstr)"`
@@ -1905,7 +1926,7 @@ a40058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c501582019
 ca7528fdd5eefb94f26c0340
 ```
 
-#### 17.10.22 small_order_r_signature_D1: D1 signed with a small-order R that cofactored (ZIP-215) verification accepts
+#### 17.10.23 small_order_r_signature_D1: D1 signed with a small-order R that cofactored (ZIP-215) verification accepts
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: signature R (first 32 bytes): `8adb5052b4f93358a1d5397fd05f591b47b20724afd186d42368caba11bd1f7e` → `0100000000000000000000000000000000000000000000000000000000000000`
@@ -1924,7 +1945,7 @@ f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca3
 751ac3391a14c8e56ce49382f409343d2f5dc2941f2d08
 ```
 
-#### 17.10.23 descriptor_small_order_key: Principal Descriptor whose Ed25519 key is a point of small order
+#### 17.10.24 descriptor_small_order_key: Principal Descriptor whose Ed25519 key is a point of small order
 
 - Base case: `principal_bob`
 - Mutation: Ed25519 public key (field 1), with the ID recomputed: `1953f4ada1cb4e0f8662108152c82e7e074cbf4859c487461cbe41e5d623e3c2` → `0000000000000000000000000000000000000000000000000000000000000000`

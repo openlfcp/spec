@@ -1220,7 +1220,7 @@ Ranges MUST be normalized:
 - sorted ascending;
 - non-overlapping;
 - non-adjacent;
-- strictly above `contiguous`.
+- strictly above `contiguous`, and not adjacent to it: a range that would start at `contiguous + 1` extends the contiguous prefix instead.
 
 A missing range is inferred from the difference between two peers' Have Vectors.
 
@@ -1232,7 +1232,7 @@ Whenever an `actor-have` value is used inside a persistent LFCP object or crypto
 2. key `2` MUST be omitted when there are no extra ranges;
 3. key `2` MUST be present when there is at least one extra range;
 4. each sequence range MUST have `start <= end`;
-5. ranges MUST be strictly above `contiguous`;
+5. ranges MUST be strictly above `contiguous`; the first range MUST start at or above `contiguous + 2`, because a range starting at `contiguous + 1` extends the contiguous prefix and is absorbed into `contiguous`;
 6. ranges MUST be sorted by ascending `start`, then ascending `end`;
 7. ranges MUST be non-overlapping;
 8. ranges MUST be non-adjacent;

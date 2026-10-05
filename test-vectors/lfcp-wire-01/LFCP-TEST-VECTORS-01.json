@@ -1571,6 +1571,47 @@
       }
     },
     {
+      "id": "have_range_at_contiguous_plus_one",
+      "type": "validation",
+      "kind": "snapshot",
+      "description": "SNAPSHOT-02 with a frontier that violates §28.1 rule 5",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058eca7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180582a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50118640281821865186ba2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101065825a4c0b8bc8173d8df3ebc22780f532125084f7008cebde4ee92ea77a3d9e16d13ea48af216058407ad3affd259fe2656ada3ffa5fd2a9dcf9da05e8ce1b5d863b6221a6b2ec6684cc35ba5505e778006a32f73d0587a2d835b195010967bb542e45e5b4ce4b8e06"
+        }
+      },
+      "derivation": {
+        "base_case": "SNAPSHOT-02",
+        "mutation": {
+          "field": "BOB extra range",
+          "from": [
+            [
+              105,
+              107
+            ]
+          ],
+          "to": [
+            [
+              101,
+              107
+            ]
+          ]
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §28.1 rule 5; §28.2",
+          "text": "5. ranges MUST be strictly above `contiguous`; the first range MUST start at or above `contiguous + 2`, because a range starting at `contiguous + 1` extends the contiguous prefix and is absorbed into `contiguous`; (§28.2: \"A Snapshot verifier MUST reject a Snapshot whose frontier is not canonical, with `MALFORMED_MESSAGE`.\")"
+        },
+        "why": "Snapshot AAD and signature cover the frontier bytes, so replicas must agree on exactly one encoding of a frontier."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE"
+        }
+      }
+    },
+    {
       "id": "have_ranges_unsorted",
       "type": "validation",
       "kind": "snapshot",
