@@ -668,7 +668,7 @@ For non-loopback network communication, endpoints MUST use `wss://`.
 
 `ws://` MAY be used for local development or loopback-only deployments.
 
-These rules apply to every endpoint URL and Control Coordinator URL in a Control Record (Sections 15, 20 and 22). A sender uses `wss://`, except `ws://` for a loopback address. A receiver MUST reject a record carrying such a URL with any scheme other than `ws` or `wss` with `MALFORMED_MESSAGE`.
+These rules apply to every endpoint URL and Control Coordinator URL in a Control Record (Sections 15, 20 and 22). A sender uses `wss://`, except `ws://` for a loopback address. A receiver MUST reject a record carrying such a URL with any scheme other than `ws` or `wss` with `MALFORMED_MESSAGE`. The scheme is compared case-insensitively (RFC 3986 §3.1), so `WSS://` is `wss://`, and it MUST be followed by `://`: a URL without an authority component, such as `wss:host`, is rejected the same way.
 
 ---
 
@@ -760,7 +760,7 @@ The inviter generates an ephemeral Principal called the **Invitation Principal**
 
 The owner then creates a Capability Grant to that Principal.
 
-Formally, an **Invitation Principal** is the subject of a Capability Grant that includes `invite/claim`, and such a grant is an **invitation grant**. Only an invitation grant with a `claim_limit` can be claimed: one without `claim_limit` is not claimable.
+Formally, an **Invitation Principal** is the subject of a Capability Grant that includes `invite/claim`, and such a grant is an **invitation grant**. Only an invitation grant with a `claim_limit` can be claimed: one without `claim_limit` is not claimable. Not being claimable affects claims only: an active invitation grant without `claim_limit` still confers `invite/claim`, so its subject still qualifies for the Key Package exception of Section 25.2.
 
 A typical invite grant contains:
 
@@ -1549,7 +1549,7 @@ Servers MUST reject a session if no supported LFCP subprotocol is negotiated.
 - WebSocket fragmentation MAY be used by the transport implementation.
 - A receiver MUST treat a text WebSocket message as a protocol error: it sends `ERROR(MALFORMED_MESSAGE)` and closes the connection.
 - A receiver MUST reject malformed CBOR.
-- A receiver MUST enforce its advertised maximum message size.
+- A receiver MUST enforce its advertised maximum message size. A message above it is rejected with `MESSAGE_TOO_LARGE` and the receiver closes the connection: having dropped the message, it can no longer trust the stream's framing.
 
 The default maximum LFCP message size is **8 MiB** unless the server advertises another value in `READY`.
 
@@ -1785,6 +1785,8 @@ pong-body = {
 `PONG` echoes the payload.
 
 Heartbeat is transport liveness only and has no Resource semantics.
+
+When `READY` advertises a heartbeat interval `h` greater than `0`, a peer that receives no LFCP message for `3 × h` milliseconds MAY treat the connection as dead and close it. Every LFCP message counts, `PING` and `PONG` included; WebSocket control frames (ping, pong, close) and partial frames do not. A peer keeps the connection alive by sending `PING` at least every `h` milliseconds when it has nothing else to send. With `h = 0` there is no idle timeout.
 
 ---
 
@@ -2310,6 +2312,8 @@ Before `READY`, a server MUST reject Resource, Control, Data, Key and Snapshot m
 
 `PING`, `PONG` and `ERROR` are allowed in every state, before `READY` as well.
 
+Any other message out of order is a protocol violation: a handshake message in the wrong state (for example `AUTH` before `CHALLENGE`, a second `HELLO`, or `HELLO` or `AUTH` on a `READY` session), or a message a server never accepts from a client (`CHALLENGE`, `READY`). The receiver sends `ERROR(MALFORMED_MESSAGE)` and closes the connection. `CLOSED` is final.
+
 ---
 
 ## 65. Per-resource client sync state machine
@@ -2338,6 +2342,8 @@ stateDiagram-v2
 ```
 
 Every state moves to `CLOSED` on `RESOURCE_CLOSE` or when the connection is lost.
+
+There is no `CLOSED → CLOSED` transition; it is illegal. A Resource that is already `CLOSED` does not run its close handling again.
 
 A local Resource replica remains available to the application even if network sync is not `LIVE`.
 
