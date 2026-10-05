@@ -5,7 +5,12 @@ full WIRE-01 conformance, documents remain Working Drafts.**
 
 This file answers one question: *what exactly do I implement against for
 MVP 0.1?* The answer is every file listed below, at the Git tag
-`mvp-0.1-baseline` of this repository.
+`mvp-0.1-baseline.2` of this repository.
+
+| Tag | Status |
+| --- | --- |
+| mvp-0.1-baseline.2 | **Current.** Adds the editorial clarifications CB1–CB3, P1, P2 and K1 (ADR 0001). No published vector value changed; one negative vector was added. |
+| mvp-0.1-baseline | Superseded by `mvp-0.1-baseline.2`. Never moved. |
 
 - The listed specifications are Working Drafts. They keep their identifiers
   (`LFCP-WIRE-01`, `SHARED-OBJECTS-PROFILE-01`, …); nothing is renamed or
@@ -18,12 +23,12 @@ MVP 0.1?* The answer is every file listed below, at the Git tag
 
 ## Pinning
 
-Implementations pin the tag `mvp-0.1-baseline` of `openlfcp/spec`, never a
-branch. sdk-ts consumes the vectors at this tag (LFCP-017); other
+Implementations pin the current tag, `mvp-0.1-baseline.2`, of
+`openlfcp/spec`, never a branch. sdk-ts consumes the vectors at this tag (LFCP-017); other
 implementations do the same.
 
 A later approved Working Draft correction does not move the tag. It
-produces a new tag, such as `mvp-0.1-baseline.2`, with an updated copy of
+produces a new tag, such as `mvp-0.1-baseline.3`, with an updated copy of
 this file. Implementations move to it deliberately.
 
 ## Canonical files
@@ -82,8 +87,9 @@ directory).
 
 ## Project documents in `openlfcp/.github`
 
-These belong to the baseline at commit `.github@89c0b01` (tag
-`mvp-0.1-baseline` in that repository):
+These belong to the baseline at commit `.github@174e6e4` (tag
+`mvp-0.1-baseline.2` in that repository; `mvp-0.1-baseline` there marks
+`89c0b01`):
 
 - `docs/MVP-0.1-PROTOCOL-SCOPE.md`: the required MVP 0.1 subset of
   LFCP-WIRE-01, the deferred features and the completion gate;
