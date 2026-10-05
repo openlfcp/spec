@@ -1201,7 +1201,7 @@ data-unit-aad = [
 
 ### 26.2 Actor hash chain
 
-A writer sets `previous Data Unit` to its last published unit for the same Resource: the last unit it queued for sending, or `null` before its first one. Normally that is sequence `N-1`. A sequence can be reserved and then abandoned, for example by a crash before the unit was queued (Section 8 forbids reusing it); the next unit then links to the last published one, so after an abandoned sequence `N` the unit at `N+1` names the unit at `N-1`.
+A writer sets `previous Data Unit` to its latest own unit for the same Resource that it still holds as accepted, or `null` before its first one: a unit it published and has not itself seen excluded by a cutoff (Section 19.1) or as equivocation. Normally that is sequence `N-1`. A sequence can be reserved and then abandoned, for example by a crash before the unit was queued (Section 8 forbids reusing it); a published unit can go stale or turn out to equivocate. No receiver accepts such a unit either, so the next unit names the unit before it: after an abandoned, stale or equivocating unit at `N`, the unit at `N+1` names the unit at `N-1` (for example stale work re-applied in the current epoch, Section 19.1).
 
 For sequence `1`, `previous` MUST be `null`.
 
@@ -1873,7 +1873,7 @@ Resource-open flags:
 
 If the server stores the resource but transport policy denies the session, it returns `NACK(AUTHORIZATION_FAILED)`.
 
-A server answers `RESOURCE_OPEN` for a Resource it does not host with `NACK(RESOURCE_NOT_HOSTED)`. Opening a Resource, and reading its Control and Data Plane objects, requires the session Principal to hold `data/read`, or to be the subject of an active invitation grant (Section 18), at the Resource's accepted Control Head; otherwise the server answers `NACK(AUTHORIZATION_FAILED)` (Section 84).
+A server answers `RESOURCE_OPEN` for a Resource it does not host with `NACK(RESOURCE_NOT_HOSTED)`. Opening a Resource, and reading its Control and Data Plane objects, requires the session Principal to hold `data/read`, or to be the subject of an active invitation grant (Section 18), at the Resource's accepted Control Head; otherwise the server answers `NACK(AUTHORIZATION_FAILED)` (Section 84). An active invitation grant has the meaning of Section 25.2: a grant that includes and still confers `invite/claim`. An invitation grant whose claims are used up no longer qualifies its subject under this rule; its subject reads only through abilities it holds, such as a `data/read` the grant lists (Section 18.1).
 
 ---
 
@@ -2478,6 +2478,10 @@ Duplicate messages are expected.
 All persistent LFCP objects are immutable and content-addressed, so receiving the same exact object multiple times is harmless.
 
 Exactly-once network delivery is neither required nor assumed.
+
+A request or its answer can be lost on a connection that stays open. A client that gets no answer to a request within an implementation-chosen timeout sends the same objects again in a new message, or issues the read again, with bounded backoff; it does not wait for a reconnect. Servers MUST answer a repeated object as they answered it the first time (Section 47 for Control Records).
+
+Informative: a Have Vector (Section 28) describes accepted units only. A unit that is held for its `previous` link (Section 26.2) is not a holding, so it does not make a hole; a hole is a sequence the replica has not accepted, such as an abandoned one.
 
 ---
 
