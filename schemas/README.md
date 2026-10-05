@@ -91,9 +91,71 @@ never required to emit identical changes.
 
 ## Checks
 
-`./scripts/validate.sh` validates every suite against the schema. It also
-checks the fixtures in [`fixtures/`](fixtures/): every `valid-*.json` must
-validate and every `invalid-*.json` must be rejected.
+`./scripts/validate.sh` runs `scripts/validate-vectors.mjs`, the protocol
+vector validator. It checks every published suite against the schema and
+then runs the checks in
+[`scripts/lib/vector-checks.mjs`](../scripts/lib/vector-checks.mjs). It also
+checks the format excerpts in [`fixtures/`](fixtures/) against the schema:
+every `valid-*.json` must validate and every `invalid-*.json` must be
+rejected.
 
-Checks beyond the schema, such as recomputing hashes or cross-checking
-references, belong to the protocol vector validator (LFCP-007).
+### Problem lines
+
+Each problem is printed on one line:
+
+```text
+<suite> <case-id|-> <json-pointer> <reason>
+```
+
+`<reason>` starts with a stable code:
+
+- `schema/<keyword>`: a schema violation, reported against the case's own
+  type branch;
+- `duplicate-key`, `duplicate-id`, `bad-hex`, `bad-b64url`, `hash-mismatch`,
+  `encoding-mismatch`, `unresolved-ref`: the checks beyond the schema.
+
+### Coverage
+
+Each requirement is enforced in exactly one place.
+
+| Requirement | Enforced by |
+| --- | --- |
+| Conforms to the vector schema | schema |
+| Required suite metadata | schema (`suite` required fields) |
+| Required per-case fields by type | schema (type branches) |
+| Hex: lowercase, even length, no `0x` | schema (`{"hex"}` pattern); validator `bad-hex` for free-form `*_hex` fixture strings |
+| Base64url structurally valid | schema (character set); validator `bad-b64url` (decodes, unpadded, re-encodes identically) |
+| Unique case IDs | validator `duplicate-id` |
+| Unique keys, including fixture keys | validator `duplicate-key` (JSON.parse would hide repeats) |
+| Expected hashes reproduced | validator `hash-mismatch` (table below) |
+| Deterministic encodings reproduced | validator `encoding-mismatch` |
+| References resolve | validator `unresolved-ref` |
+| Behavioral cases not forced into byte shape | schema (`behavioral` branch has no byte requirements) |
+| Byte-exact cases carry expected bytes | schema (`bytes` branch: `expected` with at least one value) |
+| Wire and Shared Objects suites accepted | both suites validate in CI |
+
+### Hash recomputation
+
+Only plain SHA-256 hashes over bytes present in the vector are recomputed,
+and only where the formula is stated in the specification. Run
+`node scripts/validate-vectors.mjs --report` for the table: each formula with
+its section, verified counts per suite, and every hash-like field that is
+deliberately not verified, with the reason. Signatures, AEAD, HPKE and key
+derivation are implementation work, not spec-repository checks.
+
+### Validator self-tests
+
+[`fixtures/validator/`](fixtures/validator/) holds deliberately invalid
+suites. They are not part of the normative corpus. Each must produce exactly
+the problem lines listed in
+[`fixtures/validator/expected.json`](fixtures/validator/expected.json). They
+cover:
+
+- malformed hex (inside a wrapper and in a free-form fixture);
+- malformed base64url;
+- a missing required field;
+- a duplicate case ID;
+- a duplicate key;
+- a wrong hash;
+- an unknown case type;
+- an unresolved reference.
