@@ -1839,6 +1839,34 @@
           "code": "MALFORMED_MESSAGE"
         }
       }
+    },
+    {
+      "id": "descriptor_extra_field",
+      "type": "validation",
+      "kind": "principal",
+      "description": "BOB Principal Descriptor with an additional field 3",
+      "inputs": {
+        "descriptor_cbor": {
+          "hex": "a40058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50158201953f4ada1cb4e0f8662108152c82e7e074cbf4859c487461cbe41e5d623e3c2025820b5a22f5f5cbdc3a6f8742ec8b2bc9665d0170478bf5aca7528fdd5eefb94f26c0340"
+        }
+      },
+      "derivation": {
+        "base_case": "principal_bob",
+        "mutation": {
+          "field": "descriptor fields",
+          "from": "0, 1, 2",
+          "to": "0, 1, 2, 3 (empty bstr)"
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §7",
+          "text": "A Principal Descriptor with any field other than `0`, `1` and `2` is invalid; the map is closed, as the CDDL above defines it."
+        },
+        "why": "An open descriptor would let two byte forms describe one Principal and carry unauthenticated data next to its keys."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject"
+      }
     }
   ]
 }

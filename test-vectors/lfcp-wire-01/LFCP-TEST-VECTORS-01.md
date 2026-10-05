@@ -1889,6 +1889,22 @@ f8376ef326715840c61e8713b42895fc0f64fc0e7573e7dbd2770dc5235b911a6c08a8c19668eb4e
 228151836168012f2d970f6c0fb45d725d7ffc7b8b782106
 ```
 
+#### 17.10.21 descriptor_extra_field: BOB Principal Descriptor with an additional field 3
+
+- Base case: `principal_bob`
+- Mutation: descriptor fields: `"0, 1, 2"` → `"0, 1, 2, 3 (empty bstr)"`
+- Rule (LFCP-WIRE-01 §7): A Principal Descriptor with any field other than `0`, `1` and `2` is invalid; the map is closed, as the CDDL above defines it.
+- Expected: invalid, reject, no error code specified
+- Why: An open descriptor would let two byte forms describe one Principal and carry unauthenticated data next to its keys.
+
+descriptor_cbor:
+
+```text
+a40058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50158201953f4ada1cb4e0f86
+62108152c82e7e074cbf4859c487461cbe41e5d623e3c2025820b5a22f5f5cbdc3a6f8742ec8b2bc9665d0170478bf5a
+ca7528fdd5eefb94f26c0340
+```
+
 ## 18. Snapshot vectors
 
 `SNAPSHOT-01` and `SNAPSHOT-02` are byte-exact Snapshots under the consolidated `LFCP-WIRE-01` rules. Both are published by BOB, who owns the Resource after C4 and therefore holds `snapshot/publish` (§29.2), in Data Epoch 1 at Control Head C6, using DEK1. The plaintext is opaque test bytes: Snapshot plaintext framing belongs to the application profile, not to the Wire suite.

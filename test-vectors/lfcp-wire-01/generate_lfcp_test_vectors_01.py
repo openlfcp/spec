@@ -918,6 +918,19 @@ def generate():
         {'valid': False, 'disposition': 'reject', 'error': {'code': 'MALFORMED_MESSAGE'}},
         cddl=('data-unit', 'pass'))
 
+    # 14. Principal Descriptor with an extra field (SPEC-PATCH-02 / P1): BOB's
+    #     descriptor plus field 3. No code: §7 names codes only for an ID
+    #     mismatch, which depends on the receiving context (P2).
+    extra_descriptor = cbor({**BOB.descriptor(), 3: b''})
+    neg('descriptor_extra_field', 'principal', 'BOB Principal Descriptor with an additional field 3',
+        'principal_bob', 'descriptor fields', '0, 1, 2', '0, 1, 2, 3 (empty bstr)',
+        'LFCP-WIRE-01 §7',
+        'A Principal Descriptor with any field other than `0`, `1` and `2` is invalid; the map is closed, as the CDDL above defines it.',
+        'An open descriptor would let two byte forms describe one Principal and carry unauthenticated data next to its keys.',
+        {'descriptor_cbor': hexv(extra_descriptor)},
+        {'valid': False, 'disposition': 'reject'},
+        cddl=('principal-descriptor', 'fail'))
+
     fixtures = {
         'meta': {
             'wire_spec': 'LFCP-WIRE-01',

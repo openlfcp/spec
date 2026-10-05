@@ -1296,6 +1296,16 @@
       },
       "expect": "pass",
       "note": "Structurally valid: non-canonical encoding is invisible to CDDL, which validates decoded data (LFCP-WIRE-01 \u00a75.2)."
+    },
+    {
+      "rule": "principal-descriptor",
+      "source": {
+        "case": "descriptor_extra_field",
+        "field": "descriptor_cbor",
+        "from": "inputs"
+      },
+      "expect": "fail",
+      "note": "The \u00a77 descriptor map is closed: field 3 is not allowed (SPEC-PATCH-02 / P1)."
     }
   ]
 }
