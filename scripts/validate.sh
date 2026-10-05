@@ -5,7 +5,9 @@
 # 2. the vector suites and format fixtures match the lfcp-vector-format/1
 #    schema (scripts/validate-vectors.mjs);
 # 3. the lfcp-vector-format/1 migration changed no vector value
-#    (scripts/check-vector-migration.mjs; needs full Git history);
+#    (scripts/check-vector-migration.mjs; needs full Git history), and no
+#    vector value changed since the previous MVP baseline tag except the
+#    approved ones (scripts/check-baseline-changes.mjs; needs the tags);
 # 4. wire/LFCP-WIRE-01*.cddl match the CDDL blocks of wire/LFCP-WIRE-01.md
 #    (scripts/extract-cddl.mjs --check);
 # 5. the Wire CDDL compiles, agrees with its Part XXVIII summary and accepts
@@ -40,6 +42,7 @@ echo "spec: ${count} JSON file(s) parsed"
 
 node scripts/validate-vectors.mjs
 node scripts/check-vector-migration.mjs
+node scripts/check-baseline-changes.mjs
 node scripts/extract-cddl.mjs --check
 bundle exec ruby scripts/check-cddl.rb
 node scripts/validate-shared-objects.mjs
