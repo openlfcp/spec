@@ -7,6 +7,10 @@ This repository contains no production application logic.
 
 ## Source of truth
 
+For MVP 0.1, [MVP-0.1-BASELINE.md](MVP-0.1-BASELINE.md) lists the exact files to
+implement against, at the tag `mvp-0.1-baseline`. It is an implementation
+baseline of Working Drafts, not a Stable publication.
+
 Higher entries win. A lower artifact never overrides a higher one; a
 conflict between them is a specification gap to report, not something to
 resolve in code.

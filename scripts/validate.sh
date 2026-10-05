@@ -13,7 +13,9 @@
 #    (scripts/check-cddl.rb, with the cddl gem);
 # 6. the Shared Objects structural contract accepts its valid fixtures,
 #    rejects its invalid ones at the expected fields, and agrees with the
-#    Shared Objects vectors (scripts/validate-shared-objects.mjs).
+#    Shared Objects vectors (scripts/validate-shared-objects.mjs);
+# 7. MVP-0.1-BASELINE.md lists exactly the canonical files
+#    (scripts/check-baseline.mjs).
 #
 # Run `pnpm install --frozen-lockfile` and `bundle install` first.
 set -euo pipefail
@@ -41,3 +43,4 @@ node scripts/check-vector-migration.mjs
 node scripts/extract-cddl.mjs --check
 bundle exec ruby scripts/check-cddl.rb
 node scripts/validate-shared-objects.mjs
+node scripts/check-baseline.mjs
