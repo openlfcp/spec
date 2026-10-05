@@ -1,0 +1,222 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:openlfcp:schema:lfcp-vector-format:1",
+  "title": "OpenLFCP test-vector suite (lfcp-vector-format/1)",
+  "description": "Machine-readable interoperability vector suite shared by the LFCP Wire and Shared Objects Profile vector sets. See schemas/README.md.",
+  "type": "object",
+  "required": ["format", "suite", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "description": "Vector format identifier and major version.",
+      "const": "lfcp-vector-format/1"
+    },
+    "suite": { "$ref": "#/$defs/suite" },
+    "fixtures": {
+      "description": "Named deterministic inputs shared by several cases. Structure is suite-specific.",
+      "type": "object"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/case" }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+    },
+    "snake_name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "code": {
+      "description": "Stable machine-readable error category or code.",
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]*$"
+    },
+    "suite": {
+      "type": "object",
+      "required": ["id", "version", "specification", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "version": {
+          "description": "Version of this vector suite.",
+          "type": "string",
+          "minLength": 1
+        },
+        "specification": {
+          "description": "The specification or profile the suite tests.",
+          "type": "object",
+          "required": ["id", "revision"],
+          "additionalProperties": false,
+          "properties": {
+            "id": { "$ref": "#/$defs/identifier" },
+            "profile": {
+              "description": "Profile identifier, for application-profile suites.",
+              "type": "string",
+              "minLength": 1
+            },
+            "revision": {
+              "description": "Specification revision. Working Drafts use \"working-draft\" and are versioned by Git history.",
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "description": { "type": "string", "minLength": 1 },
+        "depends_on": {
+          "description": "Other specifications this suite relies on.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/identifier" }
+        },
+        "conventions": {
+          "description": "Encoding and environment conventions the suite assumes.",
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "warning": { "type": "string" },
+        "conformance": {
+          "description": "Suite-level conformance obligations, including cross-implementation acceptance rules.",
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [
+              { "type": "string" },
+              { "type": "array", "items": { "type": "string" } }
+            ]
+          }
+        }
+      }
+    },
+    "hex": {
+      "description": "Bytes as lowercase hexadecimal, two digits per byte.",
+      "type": "object",
+      "required": ["hex"],
+      "additionalProperties": false,
+      "properties": {
+        "hex": { "type": "string", "pattern": "^([0-9a-f]{2})*$" }
+      }
+    },
+    "b64url": {
+      "description": "Bytes as unpadded base64url (RFC 4648 section 5).",
+      "type": "object",
+      "required": ["b64url"],
+      "additionalProperties": false,
+      "properties": {
+        "b64url": { "type": "string", "pattern": "^[A-Za-z0-9_-]*$" }
+      }
+    },
+    "value": {
+      "description": "A deterministic value: bytes (hex or b64url), an exact string, an integer or a boolean.",
+      "anyOf": [
+        { "$ref": "#/$defs/hex" },
+        { "$ref": "#/$defs/b64url" },
+        { "type": "string" },
+        { "type": "integer" },
+        { "type": "boolean" }
+      ]
+    },
+    "values": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/value" }
+    },
+    "case_common": {
+      "type": "object",
+      "required": ["id", "type", "kind"],
+      "properties": {
+        "id": {
+          "description": "Stable vector ID, unique within the suite.",
+          "$ref": "#/$defs/identifier"
+        },
+        "type": { "enum": ["bytes", "validation", "behavioral"] },
+        "kind": {
+          "description": "What the case exercises, for example control_record or actor_id.",
+          "$ref": "#/$defs/snake_name"
+        },
+        "description": { "type": "string" },
+        "note": { "type": "string" }
+      }
+    },
+    "case": {
+      "oneOf": [
+        { "$ref": "#/$defs/bytes_case" },
+        { "$ref": "#/$defs/validation_case" },
+        { "$ref": "#/$defs/behavioral_case" }
+      ]
+    },
+    "bytes_case": {
+      "description": "Byte-exact case: the same inputs MUST produce exactly the expected values in every implementation.",
+      "type": "object",
+      "$ref": "#/$defs/case_common",
+      "required": ["expected"],
+      "properties": {
+        "type": { "const": "bytes" },
+        "inputs": { "$ref": "#/$defs/values" },
+        "expected": {
+          "type": "object",
+          "$ref": "#/$defs/values",
+          "minProperties": 1
+        }
+      },
+      "unevaluatedProperties": false
+    },
+    "validation_case": {
+      "description": "Accept/reject case: an implementation MUST reach the expected validity, and on rejection report the expected error code.",
+      "type": "object",
+      "$ref": "#/$defs/case_common",
+      "required": ["inputs", "expected"],
+      "properties": {
+        "type": { "const": "validation" },
+        "inputs": { "type": "object" },
+        "expected": {
+          "type": "object",
+          "required": ["valid"],
+          "additionalProperties": false,
+          "properties": {
+            "valid": { "type": "boolean" },
+            "error": {
+              "type": "object",
+              "additionalProperties": false,
+              "minProperties": 1,
+              "properties": {
+                "code": { "$ref": "#/$defs/code" },
+                "diagnostic": { "$ref": "#/$defs/code" },
+                "detail": {
+                  "description": "Human-readable explanation. Never compared by test runners.",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "if": { "type": "object", "properties": { "valid": { "const": true } } },
+          "then": { "type": "object", "properties": { "error": false } }
+        }
+      },
+      "unevaluatedProperties": false
+    },
+    "behavioral_case": {
+      "description": "Behavioral case: implementations MUST reach the expected logical state and conflict visibility; independently produced bytes need not match.",
+      "type": "object",
+      "$ref": "#/$defs/case_common",
+      "required": ["inputs", "expected"],
+      "properties": {
+        "type": { "const": "behavioral" },
+        "inputs": {
+          "description": "Starting state and the operations applied to it.",
+          "type": "object"
+        },
+        "expected": {
+          "description": "Expected logical state, conflict sets and acceptance after convergence.",
+          "type": "object"
+        },
+        "assertions": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "unevaluatedProperties": false
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "format": "lfcp-vector-format/1",
+  "suite": {
+    "id": "FORMAT-FIXTURE-INVALID-ERROR",
+    "version": "1",
+    "specification": {
+      "id": "LFCP-WIRE-01",
+      "revision": "working-draft"
+    },
+    "description": "Must FAIL: an error code must be a machine-readable code, not free text."
+  },
+  "cases": [
+    {
+      "id": "stale_epoch",
+      "type": "validation",
+      "kind": "data_unit",
+      "inputs": {
+        "unit_id": {
+          "hex": "39c10fe1e07c34d052b71c8196e53e8b42c3d2e06b5bb94ae3a3c0ada55b4683"
+        }
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "STALE_DATA_EPOCH / quarantine because Bob cutoff at epoch 0 is seq=2"
+        }
+      }
+    }
+  ]
+}

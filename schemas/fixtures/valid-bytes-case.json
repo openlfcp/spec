@@ -1,0 +1,33 @@
+{
+  "format": "lfcp-vector-format/1",
+  "suite": {
+    "id": "FORMAT-FIXTURE-BYTES",
+    "version": "1",
+    "specification": {
+      "id": "SHARED-OBJECTS-PROFILE-01",
+      "profile": "org.openlfcp.shared-objects.v1",
+      "revision": "working-draft"
+    },
+    "description": "Format fixture: one byte-exact success case (copy of SHARED-OBJECTS-TEST-VECTORS-01 D01)."
+  },
+  "cases": [
+    {
+      "id": "D01-actor-andrey-resource-a",
+      "type": "bytes",
+      "kind": "actor_id",
+      "inputs": {
+        "resource_hex": {
+          "hex": "1081b3b99d4f5d39d86d07bef0849a9ba40f00d0ca9a295a51f0fa65500f9f84"
+        },
+        "principal_hex": {
+          "hex": "bd07952a86218f6f57a360520c0403acd3c72f275907e8cb38a3d6362ab4c9f4"
+        }
+      },
+      "expected": {
+        "actor_id": {
+          "hex": "6c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583"
+        }
+      }
+    }
+  ]
+}

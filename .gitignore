@@ -4,6 +4,8 @@ __pycache__/
 
 # Local Python environment for the vector generators
 .venv/
+
+# Node validation tooling
 node_modules/
 
 # OS / editor

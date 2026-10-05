@@ -1,0 +1,26 @@
+{
+  "format": "lfcp-vector-format/1",
+  "suite": {
+    "id": "FORMAT-FIXTURE-VALIDATION-ACCEPT",
+    "version": "1",
+    "specification": {
+      "id": "SHARED-OBJECTS-PROFILE-01",
+      "profile": "org.openlfcp.shared-objects.v1",
+      "revision": "working-draft"
+    },
+    "description": "Format fixture: one structural success case (copy of SHARED-OBJECTS-TEST-VECTORS-01 D06)."
+  },
+  "cases": [
+    {
+      "id": "D06-uuidv7-valid",
+      "type": "validation",
+      "kind": "object_id_validation",
+      "inputs": {
+        "object_id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad"
+      },
+      "expected": {
+        "valid": true
+      }
+    }
+  ]
+}

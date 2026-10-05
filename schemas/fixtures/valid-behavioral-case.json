@@ -1,0 +1,59 @@
+{
+  "format": "lfcp-vector-format/1",
+  "suite": {
+    "id": "FORMAT-FIXTURE-BEHAVIORAL",
+    "version": "1",
+    "specification": {
+      "id": "SHARED-OBJECTS-PROFILE-01",
+      "profile": "org.openlfcp.shared-objects.v1",
+      "revision": "working-draft"
+    },
+    "description": "Format fixture: one behavioral expected-state case (copy of SHARED-OBJECTS-TEST-VECTORS-01 S06)."
+  },
+  "cases": [
+    {
+      "id": "S06",
+      "type": "behavioral",
+      "kind": "shared_object_scenario",
+      "description": "Tag add/add union",
+      "inputs": {
+        "base_state": {
+          "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+          "type": "task",
+          "lifecycle": "active",
+          "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
+          "created_at": "2026-10-04T05:30:00Z",
+          "title": "Prepare API contract",
+          "status": "todo",
+          "priority": "normal",
+          "tags": {},
+          "assignees": {},
+          "extensions": {}
+        },
+        "branches": [
+          {
+            "actor": "andrey",
+            "from": "base",
+            "intent": "task.add_tag",
+            "tag": "backend"
+          },
+          {
+            "actor": "pavel",
+            "from": "base",
+            "intent": "task.add_tag",
+            "tag": "important"
+          }
+        ]
+      },
+      "expected": {
+        "tags": [
+          "backend",
+          "important"
+        ]
+      },
+      "assertions": [
+        "Both tags are present after convergence."
+      ]
+    }
+  ]
+}

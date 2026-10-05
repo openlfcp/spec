@@ -1,0 +1,33 @@
+{
+  "format": "lfcp-vector-format/1",
+  "suite": {
+    "id": "FORMAT-FIXTURE-INVALID-HEX",
+    "version": "1",
+    "specification": {
+      "id": "SHARED-OBJECTS-PROFILE-01",
+      "profile": "org.openlfcp.shared-objects.v1",
+      "revision": "working-draft"
+    },
+    "description": "Must FAIL: hex bytes must be lowercase."
+  },
+  "cases": [
+    {
+      "id": "D01-actor-andrey-resource-a",
+      "type": "bytes",
+      "kind": "actor_id",
+      "inputs": {
+        "resource_hex": {
+          "hex": "1081b3b99d4f5d39d86d07bef0849a9ba40f00d0ca9a295a51f0fa65500f9f84"
+        },
+        "principal_hex": {
+          "hex": "bd07952a86218f6f57a360520c0403acd3c72f275907e8cb38a3d6362ab4c9f4"
+        }
+      },
+      "expected": {
+        "actor_id": {
+          "hex": "6C9E962E697F0691BA727DDC378CC21F9B1D580E67F7B1E7F9612EBDAB63C583"
+        }
+      }
+    }
+  ]
+}

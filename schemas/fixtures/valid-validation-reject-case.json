@@ -1,0 +1,31 @@
+{
+  "format": "lfcp-vector-format/1",
+  "suite": {
+    "id": "FORMAT-FIXTURE-VALIDATION-REJECT",
+    "version": "1",
+    "specification": {
+      "id": "LFCP-WIRE-01",
+      "revision": "working-draft"
+    },
+    "description": "Format fixture: one expected-failure case with a registry error code (copy of LFCP-TEST-VECTORS-01 stale_epoch)."
+  },
+  "cases": [
+    {
+      "id": "stale_epoch",
+      "type": "validation",
+      "kind": "data_unit",
+      "inputs": {
+        "unit_id": {
+          "hex": "39c10fe1e07c34d052b71c8196e53e8b42c3d2e06b5bb94ae3a3c0ada55b4683"
+        }
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "STALE_DATA_EPOCH",
+          "detail": "STALE_DATA_EPOCH / quarantine because Bob cutoff at epoch 0 is seq=2"
+        }
+      }
+    }
+  ]
+}
