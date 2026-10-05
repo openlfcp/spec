@@ -1571,6 +1571,8 @@ Servers MUST reject a session if no supported LFCP subprotocol is negotiated.
 
 The default maximum LFCP message size is **8 MiB** unless the server advertises another value in `READY`.
 
+A client keeps a local maximum message size of at least 8 MiB. A larger value advertised in `READY` never raises the client's receive limit above its local maximum. The client either closes the session or keeps its local maximum, rejecting a larger received message as above (`MESSAGE_TOO_LARGE`, then it closes). A server can otherwise make a client accept messages of any size.
+
 Attachments and arbitrary large blob transfer are outside LFCP-WIRE-01.
 
 ---
