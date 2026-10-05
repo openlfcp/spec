@@ -616,6 +616,8 @@ def generate():
          wire_msg(5, mid('PING'), {0: ping_payload})),
         ('PONG', 'message type 6; echoes the PING payload (§38)',
          wire_msg(6, mid('PONG'), {0: ping_payload}, correlation=mid('PING'))),
+        ('ACK_DATA_PUT_D1_D2', 'message type 90; acknowledges DATA_PUT_D1_D2: field 0 = 33 (DATA_PUT), the accepted D1 and D2 IDs, durable (§59)',
+         wire_msg(90, mid('ACK'), {0: 33, 1: [D1['id'], D2['id']], 2: True}, correlation=dp_mid)),
     ]
 
     # Negative: actor equivocation, same tuple Bob seq 2 but different plaintext and valid signature.
@@ -894,6 +896,26 @@ def generate():
         {'cose_sign1': hexv(D_ABSENT['cose'])},
         {'valid': False, 'disposition': 'quarantine', 'error': {'code': 'STALE_DATA_EPOCH'}},
         context={'cutoff_record': ref('C6_key_epoch_1', 'record_id'), 'closed_epoch': 0},
+        cddl=('data-unit', 'pass'))
+
+    # 13. Non-canonical signed payload (SPEC-PATCH-01 / N7): D1's payload with
+    #     the data epoch 0 encoded as 0x18 0x00 instead of 0x00, re-signed by
+    #     BOB. The decoded value, AAD and ciphertext are unchanged.
+    canonical_payload = D1['payload']
+    epoch_at = 1 + 1 + 2 + 32  # map head, key 0, bstr head, resource id
+    assert canonical_payload[epoch_at:epoch_at + 2] == b'\x01\x00'
+    noncanon_payload = canonical_payload[:epoch_at + 1] + b'\x18\x00' + canonical_payload[epoch_at + 2:]
+    protected_bob = cbor({COSE_HDR_ALG: COSE_ALG_EDDSA, COSE_HDR_KID: BOB.pid})
+    nc_sig = BOB.ed_sk.sign(cbor(['Signature1', protected_bob, b'', noncanon_payload]))
+    du_nc_payload = cbor([protected_bob, {}, noncanon_payload, nc_sig])
+    neg('noncanonical_payload_D1', 'data_unit', 'D1 payload with a non-shortest integer encoding, re-signed',
+        'D1_bob_epoch0_seq1', 'payload encoding of the data epoch (0)', hexv(b'\x00'), hexv(b'\x18\x00'),
+        'LFCP-WIRE-01 §5.2, §10.3',
+        'A receiver MUST also reject a persistent signed object whose protected-header bytes or payload bytes are not '
+        'the deterministic encoding of their own decoded value. [...] any difference is rejected with `MALFORMED_MESSAGE`.',
+        'Two byte forms of one payload would be two objects with different IDs for the same content.',
+        {'cose_sign1': hexv(du_nc_payload)},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'MALFORMED_MESSAGE'}},
         cddl=('data-unit', 'pass'))
 
     fixtures = {
@@ -1575,7 +1597,7 @@ def generate_markdown(f: dict):
     a('')
     a('### 17.9 Non-deterministic CBOR signed object')
     a('')
-    a('Re-encode any signed payload using a non-preferred integer width or non-deterministic map ordering and sign those different bytes. Even with a mathematically valid Ed25519 signature, the receiver MUST reject the object with `MALFORMED_MESSAGE`: it re-encodes the decoded payload and the bytes differ (LFCP-WIRE-01 §5.2).')
+    a('Re-encode any signed payload using a non-preferred integer width or non-deterministic map ordering and sign those different bytes. Even with a mathematically valid Ed25519 signature, the receiver MUST reject the object with `MALFORMED_MESSAGE`: it re-encodes the decoded payload and the bytes differ (LFCP-WIRE-01 §5.2). Machine-readable vector: `noncanonical_payload_D1` (Section 17.10).')
     a('')
     a('### 17.10 Machine-readable negative vectors')
     a('')

@@ -843,6 +843,14 @@
       "expect": "pass"
     },
     {
+      "rule": "lfcp-message",
+      "source": {
+        "case": "ACK_DATA_PUT_D1_D2",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
       "rule": "typed-lfcp-message",
       "source": {
         "case": "HELLO",
@@ -1059,6 +1067,14 @@
       "expect": "pass"
     },
     {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "ACK_DATA_PUT_D1_D2",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
       "rule": "auth-transcript",
       "source": {
         "case": "AUTH",
@@ -1270,6 +1286,16 @@
       },
       "expect": "pass",
       "note": "Structurally valid: the violated rule (LFCP-WIRE-01 \u00a719.1; \u00a788 step 7; \u00a775) is semantic."
+    },
+    {
+      "rule": "data-unit",
+      "source": {
+        "case": "noncanonical_payload_D1",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: non-canonical encoding is invisible to CDDL, which validates decoded data (LFCP-WIRE-01 \u00a75.2)."
     }
   ]
 }

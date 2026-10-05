@@ -1397,6 +1397,14 @@ a400060150fd1d0ba6ee1c1095ae762568181571dc0250d857a31e2d9b308199d996caa1c8d58a04
 31578c
 ```
 
+### 16.28 ACK_DATA_PUT_D1_D2: message type 90; acknowledges DATA_PUT_D1_D2: field 0 = 33 (DATA_PUT), the accepted D1 and D2 IDs, durable (§59)
+
+```text
+a400185a01508ac4864fe4688aa6a179eb03270c48500250a5a47a4b7da601a9134c89630314f58c04a3001821018258
+20708b5a5f1ab7b7c9146b3bd7e4902831aa6666913608502c13b1d32c3650be9f58207745a3beb83838797591a1121e
+932799a5fb28b83890a3a9377f6c0d5cc34cd102f5
+```
+
 ## 17. Negative test vectors
 
 ### 17.1 Principal descriptor ID mismatch
@@ -1458,7 +1466,7 @@ After C3 consumes the C2 invitation grant with `claim_limit=1`, a second `CAPABI
 
 ### 17.9 Non-deterministic CBOR signed object
 
-Re-encode any signed payload using a non-preferred integer width or non-deterministic map ordering and sign those different bytes. Even with a mathematically valid Ed25519 signature, the receiver MUST reject the object with `MALFORMED_MESSAGE`: it re-encodes the decoded payload and the bytes differ (LFCP-WIRE-01 §5.2).
+Re-encode any signed payload using a non-preferred integer width or non-deterministic map ordering and sign those different bytes. Even with a mathematically valid Ed25519 signature, the receiver MUST reject the object with `MALFORMED_MESSAGE`: it re-encodes the decoded payload and the bytes differ (LFCP-WIRE-01 §5.2). Machine-readable vector: `noncanonical_payload_D1` (Section 17.10).
 
 ### 17.10 Machine-readable negative vectors
 
@@ -1860,6 +1868,25 @@ c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820a6e402
 26c49afefd724b182dddc51806582c0799992a22830a7795a36ac1d55e602ce79871deee577330216419ce71e44aa101
 4ca2efa24fb1b0fdc554755840ae4947fc9b1adfe571f7c826432c9a7316b8d6be5c694a4c336d590df66b71bb284d5c
 2107385908a18154b908b383efd0341d9c959f92161e468633724abc0b
+```
+
+#### 17.10.20 noncanonical_payload_D1: D1 payload with a non-shortest integer encoding, re-signed
+
+- Base case: `D1_bob_epoch0_seq1`
+- Mutation: payload encoding of the data epoch (0): `00` → `1800`
+- Rule (LFCP-WIRE-01 §5.2, §10.3): A receiver MUST also reject a persistent signed object whose protected-header bytes or payload bytes are not the deterministic encoding of their own decoded value. [...] any difference is rejected with `MALFORMED_MESSAGE`.
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
+- Why: Two byte forms of one payload would be two objects with different IDs for the same content.
+
+cose_sign1:
+
+```text
+845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a0589aa7005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410118000258203ddf22ff145274bcc59c
+56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030104f6055820c8c476e22f99108b17034bea13fd7ad7a66d5b
+c1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca31e51d9b62a572b
+f8376ef326715840c61e8713b42895fc0f64fc0e7573e7dbd2770dc5235b911a6c08a8c19668eb4e7db6128e8caafc4b
+228151836168012f2d970f6c0fb45d725d7ffc7b8b782106
 ```
 
 ## 18. Snapshot vectors

@@ -1031,6 +1031,16 @@
       }
     },
     {
+      "id": "ACK_DATA_PUT_D1_D2",
+      "type": "bytes",
+      "kind": "wire_message",
+      "expected": {
+        "message_cbor": {
+          "hex": "a400185a01508ac4864fe4688aa6a179eb03270c48500250a5a47a4b7da601a9134c89630314f58c04a300182101825820708b5a5f1ab7b7c9146b3bd7e4902831aa6666913608502c13b1d32c3650be9f58207745a3beb83838797591a1121e932799a5fb28b83890a3a9377f6c0d5cc34cd102f5"
+        }
+      }
+    },
+    {
       "id": "actor_equivocation",
       "type": "validation",
       "kind": "data_unit",
@@ -1792,6 +1802,41 @@
         "disposition": "quarantine",
         "error": {
           "code": "STALE_DATA_EPOCH"
+        }
+      }
+    },
+    {
+      "id": "noncanonical_payload_D1",
+      "type": "validation",
+      "kind": "data_unit",
+      "description": "D1 payload with a non-shortest integer encoding, re-signed",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a0589aa7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410118000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5030104f6055820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca31e51d9b62a572bf8376ef326715840c61e8713b42895fc0f64fc0e7573e7dbd2770dc5235b911a6c08a8c19668eb4e7db6128e8caafc4b228151836168012f2d970f6c0fb45d725d7ffc7b8b782106"
+        }
+      },
+      "derivation": {
+        "base_case": "D1_bob_epoch0_seq1",
+        "mutation": {
+          "field": "payload encoding of the data epoch (0)",
+          "from": {
+            "hex": "00"
+          },
+          "to": {
+            "hex": "1800"
+          }
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §5.2, §10.3",
+          "text": "A receiver MUST also reject a persistent signed object whose protected-header bytes or payload bytes are not the deterministic encoding of their own decoded value. [...] any difference is rejected with `MALFORMED_MESSAGE`."
+        },
+        "why": "Two byte forms of one payload would be two objects with different IDs for the same content."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE"
         }
       }
     }
