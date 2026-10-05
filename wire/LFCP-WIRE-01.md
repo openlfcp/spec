@@ -954,7 +954,9 @@ It does **not** serialize Data Plane writes.
                  concurrent CRDT updates
 ```
 
-A server that is not the current Control Coordinator MUST reject ordinary `CONTROL_PUT` requests with `NOT_CONTROL_COORDINATOR` and SHOULD return the currently known coordinator URL.
+A server that is not the current Control Coordinator MUST reject ordinary `CONTROL_PUT` requests with `NOT_CONTROL_COORDINATOR` and SHOULD return the currently known coordinator URL, as a text string in the `NACK` details (Section 60, field `2`).
+
+Informative: a server usually recognizes itself as a Resource's Control Coordinator by comparing the coordinator URL of the Resource's route with the public URLs it is configured with.
 
 ### 21.1 Why the coordinator exists
 
@@ -1217,7 +1219,7 @@ If two differently hashed valid signatures exist for the same `(resource, actor,
 
 The client MUST NOT silently choose one.
 
-Valid here means signature-valid: two Data Units with the same `(resource, actor, seq)`, different Data Unit IDs and signatures that verify under the actor's key are equivocation, whatever their authorization or decryptability. Servers and clients both detect it; a server reports `ACTOR_EQUIVOCATION`.
+Valid here means signature-valid: two Data Units with the same `(resource, actor, seq)`, different Data Unit IDs and signatures that verify under the actor's key are equivocation, whatever their authorization or decryptability. Servers and clients both detect it. A server answers a `DATA_PUT` that equivocates with `NACK(ACTOR_EQUIVOCATION)`, keeps both units as evidence, and never pushes the equivocating unit live.
 
 Neither unit of an equivocating pair stays merged. When the receiver had already merged one of them, it excludes both: it rebuilds its state without them (Section 19.1) and surfaces both to the application.
 
@@ -1871,6 +1873,8 @@ Resource-open flags:
 
 If the server stores the resource but transport policy denies the session, it returns `NACK(AUTHORIZATION_FAILED)`.
 
+A server answers `RESOURCE_OPEN` for a Resource it does not host with `NACK(RESOURCE_NOT_HOSTED)`. Opening a Resource, and reading its Control and Data Plane objects, requires the session Principal to hold `data/read`, or to be the subject of an active invitation grant (Section 18), at the Resource's accepted Control Head; otherwise the server answers `NACK(AUTHORIZATION_FAILED)` (Section 84).
+
 ---
 
 ## 42. RESOURCE_OPENED
@@ -1906,7 +1910,7 @@ resource-close-body = {
 }
 ```
 
-After close, the server SHOULD stop live pushes for that Resource on the session.
+After close, the server SHOULD stop live pushes for that Resource on the session. The server answers `RESOURCE_CLOSE` with an `ACK` whose request type is `14`.
 
 ---
 
@@ -1940,6 +1944,8 @@ control-get-body = {
 ```
 
 A peer MUST return every Control Record it possesses in that range, including all competing records if the chain is forked.
+
+A range whose end is below its start is rejected with `MALFORMED_MESSAGE`.
 
 ---
 
@@ -1992,6 +1998,8 @@ The `NACK` carries the current head's Control Record ID as its details (field `2
 
 The coordinator MUST NOT ACK before the record has reached the durability level promised by that ACK.
 
+A `CONTROL_PUT` of a record the coordinator has already committed is answered with the same `ACK` again; it changes nothing. A proposal that loses the compare-and-swap is not committed and is not stored as fork evidence.
+
 `COORDINATOR_RECOVERY` is the exception described earlier.
 
 ---
@@ -2031,6 +2039,8 @@ data-get-body = {
 A request SHOULD contain no more than 256 ranges.
 
 A peer MAY answer in multiple `DATA_BATCH` messages.
+
+A range whose end is below its start is rejected with `MALFORMED_MESSAGE`.
 
 ---
 
@@ -2076,6 +2086,8 @@ A server MAY additionally evaluate Resource capability authorization.
 
 Clients MUST NOT rely on server-side authorization as their only authorization check.
 
+A `DATA_PUT` is all-or-nothing: when any of its units is refused, the server accepts none of them and answers with one `NACK`.
+
 ---
 
 # Part XII. Key Package Messages
@@ -2090,7 +2102,7 @@ key-package-get-body = {
 }
 ```
 
-A server SHOULD return every matching Key Package it stores.
+A server SHOULD return every matching Key Package it stores. It serves a Key Package only to a session authenticated as that package's recipient.
 
 ---
 
@@ -2130,6 +2142,8 @@ snapshot-get-body = {
 ```
 
 If Snapshot ID is omitted, the server SHOULD return its preferred latest Snapshot.
+
+When no stored Snapshot matches, the server answers `NACK(MISSING_DEPENDENCY)`.
 
 ---
 
@@ -2234,6 +2248,8 @@ nack-body = {
 
 Diagnostics MUST NOT contain secret key material.
 
+Field `2` is defined only where a rule says so: the current Control Head for `CONTROL_HEAD_MISMATCH` (Section 47) and the coordinator URL for `NOT_CONTROL_COORDINATOR` (Section 21). Data Plane `NACK`s carry no details.
+
 ---
 
 ## 61. ERROR
@@ -2286,6 +2302,8 @@ Where a rule rejects a record or message without naming a code, the code follows
 
 Error codes `23..127` are reserved for LFCP core.
 
+Servers do not use `RESOURCE_NOT_FOUND` in this version: a Resource a server does not host is `RESOURCE_NOT_HOSTED` (Section 41).
+
 ---
 
 # Part XVI. Connection State Machines
@@ -2328,7 +2346,9 @@ Before `READY`, a server MUST reject Resource, Control, Data, Key and Snapshot m
 
 `PING`, `PONG` and `ERROR` are allowed in every state, before `READY` as well.
 
-Any other message out of order is a protocol violation: a handshake message in the wrong state (for example `AUTH` before `CHALLENGE`, a second `HELLO`, or `HELLO` or `AUTH` on a `READY` session), or a message a server never accepts from a client (`CHALLENGE`, `READY`). The receiver sends `ERROR(MALFORMED_MESSAGE)` and closes the connection. `CLOSED` is final.
+Any other message out of order is a protocol violation: a handshake message in the wrong state (for example `AUTH` before `CHALLENGE`, a second `HELLO`, or `HELLO` or `AUTH` on a `READY` session), or a message a server never accepts from a client (only `CHALLENGE` and `READY`). The receiver sends `ERROR(MALFORMED_MESSAGE)` and closes the connection. `CLOSED` is final.
+
+A message that cannot be decoded before `READY` also closes the connection; the server may send `ERROR(MALFORMED_MESSAGE)` first.
 
 ---
 
@@ -2444,6 +2464,8 @@ When a session has live Data Plane subscription enabled, a server SHOULD push ne
 A client MUST still periodically exchange `DATA_HAVE` because push delivery is not guaranteed.
 
 LFCP uses anti-entropy, not push delivery, as the convergence mechanism.
+
+After each Control Record it commits, a server re-checks the read authority (Section 41) of the sessions subscribed to the Resource and stops pushing to sessions that no longer hold it.
 
 ---
 
@@ -2852,6 +2874,8 @@ Recommended server checks:
 - message limits.
 
 A server MAY allow read access to encrypted Data Plane objects more broadly than clients would, because ciphertext remains end-to-end encrypted, but this leaks metadata and consumes bandwidth. Production deployments SHOULD enforce read authorization.
+
+The MVP read authorization is the rule of Section 41: `data/read`, or being the subject of an active invitation grant, at the Resource's accepted Control Head.
 
 ---
 
