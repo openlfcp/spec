@@ -282,8 +282,63 @@ vectors['conformance'] = {
   ]
 }
 
+# Machine-readable output in lfcp-vector-format/1 (spec: schemas/). Values are
+# copied unchanged from `vectors`; only their placement differs.
+def to_vector_format(v):
+    def hexv(x): return {'hex': x}
+    cases = []
+    for d in v['deterministic_vectors']:
+        case = {'id': d['id'], 'kind': d['kind']}
+        if d['kind'] == 'actor_id':
+            case.update(type='bytes',
+                        inputs={'resource_hex': hexv(d['input']['resource_hex']), 'principal_hex': hexv(d['input']['principal_hex'])},
+                        expected={'actor_id': hexv(d['expected_hex'])})
+        elif d['kind'] == 'principal_ref':
+            case.update(type='bytes', inputs={'principal_id': hexv(d['input_hex'])}, expected={'principal_ref': d['expected']})
+        elif d['kind'] == 'profile_change_framing':
+            case.update(type='bytes', note=d['note'], inputs={'automerge_change_hex': hexv(d['automerge_change_hex'])},
+                        expected={'framed_cbor': hexv(d['expected_cbor_hex']), 'sha256': hexv(d['expected_sha256'])})
+        elif d['kind'] == 'profile_snapshot_framing':
+            case.update(type='bytes', note=d['note'], inputs={'automerge_save_hex': hexv(d['automerge_save_hex'])},
+                        expected={'framed_cbor': hexv(d['expected_cbor_hex']), 'sha256': hexv(d['expected_sha256'])})
+        elif d['kind'] == 'object_id_validation':
+            expected = {'valid': d['expected_valid']}
+            if 'error' in d:
+                expected['error'] = {'code': d['error']}
+            case.update(type='validation', inputs={'object_id': d['input']}, expected=expected)
+        else:
+            raise ValueError('unmapped deterministic vector kind: ' + d['kind'])
+        cases.append({k: case[k] for k in ('id', 'type', 'kind', 'note', 'inputs', 'expected') if k in case})
+    for sc_ in v['behavioral_scenarios']:
+        case = {'id': sc_['id'], 'type': 'behavioral', 'kind': 'shared_object_scenario', 'description': sc_['title']}
+        if 'notes' in sc_:
+            case['note'] = sc_['notes']
+        case['inputs'] = {'base_state': sc_['base_state'], 'branches': sc_['branches']}
+        case['expected'] = sc_['expected']
+        case['assertions'] = sc_['assertions']
+        cases.append(case)
+    for ic in v['invalid_cases']:
+        cases.append({'id': ic['id'], 'type': 'validation', 'kind': 'profile_validation',
+                      'inputs': {'mutation': ic['mutation']},
+                      'expected': {'valid': False, 'error': {'code': ic['expected'], 'diagnostic': ic['diagnostic']}}})
+    return {
+        'format': 'lfcp-vector-format/1',
+        'suite': {
+            'id': v['suite'],
+            'version': '01',
+            'specification': {'id': 'SHARED-OBJECTS-PROFILE-01', 'profile': v['profile'], 'revision': 'working-draft'},
+            'description': 'Shared Objects Profile interoperability vectors: byte-exact identifier and framing '
+                           'vectors, validation cases and behavioral Automerge scenarios.',
+            'depends_on': v['wire_dependency'],
+            'conventions': {'automerge_reference_target': v['automerge_reference_target']},
+            'conformance': {'rule': v['normative_rule'], **v['conformance']},
+        },
+        'fixtures': v['fixtures'],
+        'cases': cases,
+    }
+
 json_path = OUT/'SHARED-OBJECTS-TEST-VECTORS-01.json'
-json_path.write_text(json.dumps(vectors, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+json_path.write_text(json.dumps(to_vector_format(vectors), indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
 
 # JS reference corpus generator, intentionally dependent on official package; not executed by this Python generator.
 js = r'''// SHARED-OBJECTS-TEST-VECTORS-01 Automerge reference corpus generator

@@ -647,8 +647,142 @@ def generate():
         'stale_epoch_expected': 'STALE_DATA_EPOCH / quarantine because Bob cutoff at epoch 0 is seq=2',
     }
 
-    OUT_JSON.write_text(json.dumps(fixtures, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+    OUT_JSON.write_text(json.dumps(to_vector_format(fixtures), indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
     return fixtures
+
+
+# -----------------------------------------------------------------------------
+# Machine-readable output in lfcp-vector-format/1 (spec: schemas/).
+# -----------------------------------------------------------------------------
+
+def to_vector_format(fixtures: dict) -> dict:
+    """Arrange the generated fixture values as an lfcp-vector-format/1 suite.
+
+    Values are copied unchanged; only their placement differs from the internal
+    `fixtures` dict that the Markdown generator consumes.
+    """
+    def hexv(v: str) -> dict:
+        return {'hex': v}
+
+    def b64v(v: str) -> dict:
+        return {'b64url': v}
+
+    def bytes_case(case_id: str, kind: str, inputs: dict | None, expected: dict) -> dict:
+        case = {'id': case_id, 'type': 'bytes', 'kind': kind}
+        if inputs:
+            case['inputs'] = inputs
+        case['expected'] = expected
+        return case
+
+    meta = fixtures['meta']
+    cases = []
+
+    principal_inputs = ('ed25519_seed', 'x25519_private')
+    for label, p in fixtures['principals'].items():
+        cases.append(bytes_case(
+            f'principal_{label}', 'principal',
+            {k: hexv(p[k]) for k in principal_inputs},
+            {k: hexv(v) for k, v in p.items() if k not in principal_inputs},
+        ))
+
+    r = fixtures['resource']
+    cases.append(bytes_case('dek_commitments', 'dek_commitment', None, {
+        'dek0_commitment': hexv(r['dek0_commitment']),
+        'dek1_commitment': hexv(r['dek1_commitment']),
+    }))
+
+    for name, c in fixtures['control'].items():
+        cases.append(bytes_case(
+            name, 'control_record',
+            {'signer': c['signer']},
+            {k: hexv(v) for k, v in c.items() if k != 'signer'},
+        ))
+
+    t = fixtures['transfers']
+    cases.append(bytes_case(
+        'owner_transfer', 'owner_transfer',
+        {'nonce': hexv(t['nonce'])},
+        {k: hexv(v) for k, v in t.items() if k != 'nonce'},
+    ))
+
+    for name, k in fixtures['key_packages'].items():
+        cases.append(bytes_case(
+            name, 'key_package',
+            {'hpke_ephemeral_private': hexv(k['hpke_ephemeral_private'])},
+            {f: hexv(v) for f, v in k.items() if f != 'hpke_ephemeral_private'},
+        ))
+
+    for name, d in fixtures['data_units'].items():
+        cases.append(bytes_case(
+            name, 'data_unit',
+            {'plaintext_utf8': d['plaintext_utf8'], 'plaintext_hex': hexv(d['plaintext_hex'])},
+            {f: hexv(v) for f, v in d.items() if f not in ('plaintext_utf8', 'plaintext_hex')},
+        ))
+
+    inv = fixtures['invite']
+    cases.append(bytes_case('invite_uri', 'invite_uri', None, {
+        'secret_cbor': hexv(inv['secret_cbor']),
+        'secret_b64url': b64v(inv['secret_b64url']),
+        'resource_b64url': b64v(inv['resource_b64url']),
+        'grant_id_b64url': b64v(inv['grant_id_b64url']),
+        'uri': inv['uri'],
+    }))
+
+    w = fixtures['wire']
+    session_fields = ('client_nonce', 'server_nonce', 'session_id', 'server_id')
+    for name in ('HELLO', 'CHALLENGE', 'AUTH', 'READY', 'RESOURCE_OPEN', 'DATA_HAVE_with_hole', 'DATA_PUT_D1_D2'):
+        expected = {}
+        if name == 'AUTH':
+            expected['auth_transcript_cbor'] = hexv(w['auth_transcript_cbor'])
+            expected['auth_proof_cose_sign1'] = hexv(w['auth_proof_cose_sign1'])
+        expected['message_cbor'] = hexv(w[name])
+        cases.append(bytes_case(name, 'wire_message', None, expected))
+
+    n = fixtures['negative']
+    cases.append({
+        'id': 'actor_equivocation', 'type': 'validation', 'kind': 'data_unit',
+        'inputs': {
+            'original_D2_id': hexv(n['actor_equivocation_original_D2_id']),
+            'conflicting_D2_id': hexv(n['actor_equivocation_conflicting_D2_id']),
+            'conflicting_D2_cose': hexv(n['actor_equivocation_conflicting_D2_cose']),
+        },
+        # LFCP-WIRE-01 section 62, error code 16.
+        'expected': {'valid': False, 'error': {'code': 'ACTOR_EQUIVOCATION'}},
+    })
+    cases.append({
+        'id': 'tampered_D1', 'type': 'validation', 'kind': 'data_unit',
+        'inputs': {'cose_sign1': hexv(n['tampered_D1_cose'])},
+        # No error code is specified for this rejection yet.
+        'expected': {'valid': False},
+    })
+    cases.append({
+        'id': 'stale_epoch', 'type': 'validation', 'kind': 'data_unit',
+        'inputs': {'unit_id': hexv(n['stale_epoch_unit_id'])},
+        # LFCP-WIRE-01 section 62, error code 14.
+        'expected': {'valid': False, 'error': {'code': 'STALE_DATA_EPOCH', 'detail': n['stale_epoch_expected']}},
+    })
+
+    return {
+        'format': 'lfcp-vector-format/1',
+        'suite': {
+            'id': meta['vector_spec'],
+            'version': '01',
+            'specification': {'id': meta['wire_spec'], 'revision': 'working-draft'},
+            'description': 'Byte-exact LFCP Wire interoperability vectors: Principals, Control Records, '
+                           'ownership transfer, Key Packages, Data Units, invitation URI, session '
+                           'messages and negative validation cases.',
+            'conventions': {
+                'cose_sign1_tag_policy': meta['cose_sign1_tag_policy'],
+                'cbor_profile': meta['cbor_profile'],
+            },
+            'warning': meta['warning'],
+        },
+        'fixtures': {
+            'resource': {k: hexv(r[k]) for k in ('id', 'dek0', 'dek1')},
+            'session': {k: hexv(w[k]) for k in session_fields},
+        },
+        'cases': cases,
+    }
 
 # -----------------------------------------------------------------------------
 # Markdown formatting.

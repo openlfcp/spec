@@ -59,12 +59,31 @@ test-vectors/  Interoperability vectors and their generators
 ## Validate from a clean checkout
 
 ```sh
+pnpm install --frozen-lockfile
 ./scripts/validate.sh
 ```
 
-Requires Node.js 24 or later. The script is a placeholder: today it only
-checks that every JSON file parses. Schema and vector checks arrive with
-LFCP-004.
+Requires Node.js 24 or later and pnpm 10. The script checks that every JSON
+file parses and that both vector suites and the format fixtures match the
+[`lfcp-vector-format/1`](schemas/README.md) schema. It also proves that the
+migration to that format changed no vector value (see
+[migrations/vector-format-1/](migrations/vector-format-1/)); that check reads
+the pre-migration files from Git, so it needs the full history, not a shallow
+clone.
+
+## Regenerate the vectors
+
+Both generators write next to themselves by default (`--out-dir` overrides)
+and reproduce the committed `.json` and `.md` files byte-for-byte.
+
+```sh
+# Shared Objects suite: Python 3 standard library only
+python3 test-vectors/shared-objects-01/generate_shared_objects_test_vectors_01.py
+
+# LFCP Wire suite: needs the `cryptography` package, e.g. in a local venv
+uv venv .venv && uv pip install --python .venv/bin/python cryptography
+.venv/bin/python test-vectors/lfcp-wire-01/generate_lfcp_test_vectors_01.py
+```
 
 ## License
 

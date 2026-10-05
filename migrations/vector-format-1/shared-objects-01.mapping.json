@@ -1,0 +1,56 @@
+{
+  "description": "Where every value of the pre-migration SHARED-OBJECTS-TEST-VECTORS-01.json lives in lfcp-vector-format/1. Read by scripts/check-vector-migration.mjs.",
+  "suite_file": "test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.json",
+  "baseline_commit": "8f1cc79785775abca39111f44c3d052ab66d6ccb",
+  "moves": [
+    ["suite", "suite.id"],
+    ["profile", "suite.specification.profile"],
+    ["wire_dependency", "suite.depends_on"],
+    ["automerge_reference_target", "suite.conventions.automerge_reference_target"],
+    ["normative_rule", "suite.conformance.rule"],
+    ["conformance", "suite.conformance"],
+    ["fixtures", "fixtures"],
+
+    ["deterministic_vectors[id=*].id", "cases[id=$1].id"],
+    ["deterministic_vectors[id=*].kind", "cases[id=$1].kind"],
+    ["deterministic_vectors[id=*].note", "cases[id=$1].note"],
+    ["deterministic_vectors[id=*].input.resource_hex", "cases[id=$1].inputs.resource_hex.hex"],
+    ["deterministic_vectors[id=*].input.principal_hex", "cases[id=$1].inputs.principal_hex.hex"],
+    ["deterministic_vectors[id=*].input", "cases[id=$1].inputs.object_id"],
+    ["deterministic_vectors[id=*].input_hex", "cases[id=$1].inputs.principal_id.hex"],
+    ["deterministic_vectors[id=*].expected_hex", "cases[id=$1].expected.actor_id.hex"],
+    ["deterministic_vectors[id=*].expected", "cases[id=$1].expected.principal_ref"],
+    ["deterministic_vectors[id=*].automerge_change_hex", "cases[id=$1].inputs.automerge_change_hex.hex"],
+    ["deterministic_vectors[id=*].automerge_save_hex", "cases[id=$1].inputs.automerge_save_hex.hex"],
+    ["deterministic_vectors[id=*].expected_cbor_hex", "cases[id=$1].expected.framed_cbor.hex"],
+    ["deterministic_vectors[id=*].expected_sha256", "cases[id=$1].expected.sha256.hex"],
+    ["deterministic_vectors[id=*].expected_valid", "cases[id=$1].expected.valid"],
+    ["deterministic_vectors[id=*].error", "cases[id=$1].expected.error.code"],
+
+    ["behavioral_scenarios[id=*].id", "cases[id=$1].id"],
+    ["behavioral_scenarios[id=*].title", "cases[id=$1].description"],
+    ["behavioral_scenarios[id=*].notes", "cases[id=$1].note"],
+    ["behavioral_scenarios[id=*].base_state", "cases[id=$1].inputs.base_state"],
+    ["behavioral_scenarios[id=*].branches", "cases[id=$1].inputs.branches"],
+    ["behavioral_scenarios[id=*].expected", "cases[id=$1].expected"],
+    ["behavioral_scenarios[id=*].assertions", "cases[id=$1].assertions"],
+
+    ["invalid_cases[id=*].id", "cases[id=$1].id"],
+    ["invalid_cases[id=*].mutation", "cases[id=$1].inputs.mutation"],
+    ["invalid_cases[id=*].expected", "cases[id=$1].expected.error.code"],
+    ["invalid_cases[id=*].diagnostic", "cases[id=$1].expected.error.diagnostic"]
+  ],
+  "structural": [
+    { "path": "deterministic_vectors[id=*].deterministic_bytes", "value": true, "rule": "Encoded by the case type: bytes for D01-D05; validation (exact accept/reject) for D06-D08." }
+  ],
+  "added": [
+    { "path": "format", "rule": "Vector format identifier." },
+    { "path": "suite.version", "rule": "Suite version, taken from the -01 suffix of the suite ID." },
+    { "path": "suite.specification.id", "rule": "The specification document the profile identifier belongs to." },
+    { "path": "suite.specification.revision", "rule": "SHARED-OBJECTS-PROFILE-01 is a Working Draft." },
+    { "path": "suite.description", "rule": "Prose summary of the suite." },
+    { "path": "cases[*].type", "rule": "Case type: bytes (D01-D05), validation (D06-D08, I01-I07), behavioral (S01-S14)." },
+    { "path": "cases[*].kind", "rule": "Kind for old sections without one: shared_object_scenario (S01-S14), profile_validation (I01-I07)." },
+    { "path": "cases[*].expected.valid", "value": false, "rule": "Every old invalid_cases entry describes a profile-invalid state." }
+  ]
+}

@@ -1,11 +1,37 @@
 {
-  "suite": "SHARED-OBJECTS-TEST-VECTORS-01",
-  "profile": "org.openlfcp.shared-objects.v1",
-  "wire_dependency": [
-    "LFCP-WIRE-01"
-  ],
-  "automerge_reference_target": "3.5.0",
-  "normative_rule": "Byte equality is required only where this suite marks a vector deterministic_bytes=true. Automerge semantic scenarios require cross-implementation apply/merge compatibility and identical logical/conflict outcomes, not identical independently-generated change bytes.",
+  "format": "lfcp-vector-format/1",
+  "suite": {
+    "id": "SHARED-OBJECTS-TEST-VECTORS-01",
+    "version": "01",
+    "specification": {
+      "id": "SHARED-OBJECTS-PROFILE-01",
+      "profile": "org.openlfcp.shared-objects.v1",
+      "revision": "working-draft"
+    },
+    "description": "Shared Objects Profile interoperability vectors: byte-exact identifier and framing vectors, validation cases and behavioral Automerge scenarios.",
+    "depends_on": [
+      "LFCP-WIRE-01"
+    ],
+    "conventions": {
+      "automerge_reference_target": "3.5.0"
+    },
+    "conformance": {
+      "rule": "Byte equality is required only where this suite marks a vector deterministic_bytes=true. Automerge semantic scenarios require cross-implementation apply/merge compatibility and identical logical/conflict outcomes, not identical independently-generated change bytes.",
+      "deterministic": [
+        "All Dxx expected bytes/strings must match exactly.",
+        "Actor IDs are exactly 32 bytes from the domain-separated SHA-256 formula.",
+        "PrincipalRef is lowercase prefix p: plus unpadded base64url of raw 32-byte principal id.",
+        "Change/snapshot outer framing must match deterministic CBOR vectors exactly."
+      ],
+      "automerge_interop": [
+        "A valid change produced by implementation A must be accepted by implementation B when dependencies are present.",
+        "Applying the same complete change set in any valid order must converge to the same logical state.",
+        "Conflict sets required by S03/S05/S10 must remain discoverable.",
+        "A full-save image produced by implementation A must load in implementation B for the declared Automerge compatibility target.",
+        "Independent implementations are not required to generate byte-identical changes or save images for the same semantic intent."
+      ]
+    }
+  },
   "fixtures": {
     "resource_a_hex": "1081b3b99d4f5d39d86d07bef0849a9ba40f00d0ca9a295a51f0fa65500f9f84",
     "resource_b_hex": "95fd348d7d0f25fe9a03d5230acc6370f0f6e873ec920cf9c205041aff825099",
@@ -33,100 +59,160 @@
       "unknown_1": "019a2f85-7b31-7c42-9f24-8f933f2a91c0"
     }
   },
-  "deterministic_vectors": [
+  "cases": [
     {
       "id": "D01-actor-andrey-resource-a",
+      "type": "bytes",
       "kind": "actor_id",
-      "deterministic_bytes": true,
-      "input": {
-        "resource_hex": "1081b3b99d4f5d39d86d07bef0849a9ba40f00d0ca9a295a51f0fa65500f9f84",
-        "principal_hex": "bd07952a86218f6f57a360520c0403acd3c72f275907e8cb38a3d6362ab4c9f4"
+      "inputs": {
+        "resource_hex": {
+          "hex": "1081b3b99d4f5d39d86d07bef0849a9ba40f00d0ca9a295a51f0fa65500f9f84"
+        },
+        "principal_hex": {
+          "hex": "bd07952a86218f6f57a360520c0403acd3c72f275907e8cb38a3d6362ab4c9f4"
+        }
       },
-      "expected_hex": "6c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583"
+      "expected": {
+        "actor_id": {
+          "hex": "6c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583"
+        }
+      }
     },
     {
       "id": "D02-actor-andrey-resource-b",
+      "type": "bytes",
       "kind": "actor_id",
-      "deterministic_bytes": true,
-      "input": {
-        "resource_hex": "95fd348d7d0f25fe9a03d5230acc6370f0f6e873ec920cf9c205041aff825099",
-        "principal_hex": "bd07952a86218f6f57a360520c0403acd3c72f275907e8cb38a3d6362ab4c9f4"
+      "inputs": {
+        "resource_hex": {
+          "hex": "95fd348d7d0f25fe9a03d5230acc6370f0f6e873ec920cf9c205041aff825099"
+        },
+        "principal_hex": {
+          "hex": "bd07952a86218f6f57a360520c0403acd3c72f275907e8cb38a3d6362ab4c9f4"
+        }
       },
-      "expected_hex": "24f209777a84a134f5eb527ef26b00732dc123ab582bf58c4cf2ef3bc3c70cd4"
+      "expected": {
+        "actor_id": {
+          "hex": "24f209777a84a134f5eb527ef26b00732dc123ab582bf58c4cf2ef3bc3c70cd4"
+        }
+      }
     },
     {
       "id": "D03-principal-ref-andrey",
+      "type": "bytes",
       "kind": "principal_ref",
-      "deterministic_bytes": true,
-      "input_hex": "bd07952a86218f6f57a360520c0403acd3c72f275907e8cb38a3d6362ab4c9f4",
-      "expected": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ"
+      "inputs": {
+        "principal_id": {
+          "hex": "bd07952a86218f6f57a360520c0403acd3c72f275907e8cb38a3d6362ab4c9f4"
+        }
+      },
+      "expected": {
+        "principal_ref": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ"
+      }
     },
     {
       "id": "D04-change-frame",
+      "type": "bytes",
       "kind": "profile_change_framing",
-      "deterministic_bytes": true,
       "note": "Synthetic bytes test framing only; payload is intentionally not claimed to be a valid Automerge change.",
-      "automerge_change_hex": "00010203a0ff",
-      "expected_cbor_hex": "82014600010203a0ff",
-      "expected_sha256": "8b04fa1dc8dc3cc339215889b2b6083059a10e81a35a61af9255a2457f662b99"
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "00010203a0ff"
+        }
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82014600010203a0ff"
+        },
+        "sha256": {
+          "hex": "8b04fa1dc8dc3cc339215889b2b6083059a10e81a35a61af9255a2457f662b99"
+        }
+      }
     },
     {
       "id": "D05-snapshot-frame",
+      "type": "bytes",
       "kind": "profile_snapshot_framing",
-      "deterministic_bytes": true,
       "note": "Synthetic bytes test framing only; payload is intentionally not claimed to be a valid Automerge save image.",
-      "automerge_save_hex": "aabbccddeeff00112233",
-      "expected_cbor_hex": "82014aaabbccddeeff00112233",
-      "expected_sha256": "d6e1b96b61dd66a7b2092e517d3536029da0a5042452fbba1a9c9cc3dee580cb"
+      "inputs": {
+        "automerge_save_hex": {
+          "hex": "aabbccddeeff00112233"
+        }
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82014aaabbccddeeff00112233"
+        },
+        "sha256": {
+          "hex": "d6e1b96b61dd66a7b2092e517d3536029da0a5042452fbba1a9c9cc3dee580cb"
+        }
+      }
     },
     {
       "id": "D06-uuidv7-valid",
+      "type": "validation",
       "kind": "object_id_validation",
-      "deterministic_bytes": true,
-      "input": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
-      "expected_valid": true
+      "inputs": {
+        "object_id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad"
+      },
+      "expected": {
+        "valid": true
+      }
     },
     {
       "id": "D07-uuid-invalid-uppercase",
+      "type": "validation",
       "kind": "object_id_validation",
-      "deterministic_bytes": true,
-      "input": "019A2F85-7B31-7C42-B85A-FC843E2F40AD",
-      "expected_valid": false,
-      "error": "INVALID_OBJECT_ID"
+      "inputs": {
+        "object_id": "019A2F85-7B31-7C42-B85A-FC843E2F40AD"
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "INVALID_OBJECT_ID"
+        }
+      }
     },
     {
       "id": "D08-uuid-invalid-version",
+      "type": "validation",
       "kind": "object_id_validation",
-      "deterministic_bytes": true,
-      "input": "019a2f85-7b31-6c42-b85a-fc843e2f40ad",
-      "expected_valid": false,
-      "error": "INVALID_OBJECT_ID"
-    }
-  ],
-  "behavioral_scenarios": [
+      "inputs": {
+        "object_id": "019a2f85-7b31-6c42-b85a-fc843e2f40ad"
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "INVALID_OBJECT_ID"
+        }
+      }
+    },
     {
       "id": "S01",
-      "title": "Create Task",
-      "base_state": {},
-      "branches": [
-        {
-          "actor": "andrey",
-          "intent": "task.create",
-          "args": {
-            "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
-            "type": "task",
-            "lifecycle": "active",
-            "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
-            "created_at": "2026-10-04T05:30:00Z",
-            "title": "Prepare API contract",
-            "status": "todo",
-            "priority": "normal",
-            "tags": {},
-            "assignees": {},
-            "extensions": {}
+      "type": "behavioral",
+      "kind": "shared_object_scenario",
+      "description": "Create Task",
+      "inputs": {
+        "base_state": {},
+        "branches": [
+          {
+            "actor": "andrey",
+            "intent": "task.create",
+            "args": {
+              "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+              "type": "task",
+              "lifecycle": "active",
+              "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
+              "created_at": "2026-10-04T05:30:00Z",
+              "title": "Prepare API contract",
+              "status": "todo",
+              "priority": "normal",
+              "tags": {},
+              "assignees": {},
+              "extensions": {}
+            }
           }
-        }
-      ],
+        ]
+      },
       "expected": {
         "objects": {
           "019a2f85-7b31-7c42-b85a-fc843e2f40ad": {
@@ -152,39 +238,43 @@
     },
     {
       "id": "S02",
-      "title": "Independent field concurrency",
-      "base_state": {
-        "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
-        "type": "task",
-        "lifecycle": "active",
-        "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
-        "created_at": "2026-10-04T05:30:00Z",
-        "title": "Prepare API contract",
-        "status": "todo",
-        "priority": "normal",
-        "tags": {},
-        "assignees": {},
-        "extensions": {}
-      },
-      "branches": [
-        {
-          "actor": "andrey",
-          "from": "base",
-          "intent": "task.complete",
-          "writes": {
-            "status": "done",
-            "completion_date": "2026-10-08"
-          }
+      "type": "behavioral",
+      "kind": "shared_object_scenario",
+      "description": "Independent field concurrency",
+      "inputs": {
+        "base_state": {
+          "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+          "type": "task",
+          "lifecycle": "active",
+          "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
+          "created_at": "2026-10-04T05:30:00Z",
+          "title": "Prepare API contract",
+          "status": "todo",
+          "priority": "normal",
+          "tags": {},
+          "assignees": {},
+          "extensions": {}
         },
-        {
-          "actor": "pavel",
-          "from": "base",
-          "intent": "task.set_title",
-          "writes": {
-            "title": "Prepare final API contract"
+        "branches": [
+          {
+            "actor": "andrey",
+            "from": "base",
+            "intent": "task.complete",
+            "writes": {
+              "status": "done",
+              "completion_date": "2026-10-08"
+            }
+          },
+          {
+            "actor": "pavel",
+            "from": "base",
+            "intent": "task.set_title",
+            "writes": {
+              "title": "Prepare final API contract"
+            }
           }
-        }
-      ],
+        ]
+      },
       "expected": {
         "title": "Prepare final API contract",
         "status": "done",
@@ -197,39 +287,43 @@
     },
     {
       "id": "S03",
-      "title": "Concurrent status conflict",
-      "base_state": {
-        "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
-        "type": "task",
-        "lifecycle": "active",
-        "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
-        "created_at": "2026-10-04T05:30:00Z",
-        "title": "Prepare API contract",
-        "status": "todo",
-        "priority": "normal",
-        "tags": {},
-        "assignees": {},
-        "extensions": {}
-      },
-      "branches": [
-        {
-          "actor": "andrey",
-          "from": "base",
-          "intent": "task.complete",
-          "writes": {
-            "status": "done",
-            "completion_date": "2026-10-08"
-          }
+      "type": "behavioral",
+      "kind": "shared_object_scenario",
+      "description": "Concurrent status conflict",
+      "inputs": {
+        "base_state": {
+          "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+          "type": "task",
+          "lifecycle": "active",
+          "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
+          "created_at": "2026-10-04T05:30:00Z",
+          "title": "Prepare API contract",
+          "status": "todo",
+          "priority": "normal",
+          "tags": {},
+          "assignees": {},
+          "extensions": {}
         },
-        {
-          "actor": "pavel",
-          "from": "base",
-          "intent": "task.cancel",
-          "writes": {
-            "status": "cancelled"
+        "branches": [
+          {
+            "actor": "andrey",
+            "from": "base",
+            "intent": "task.complete",
+            "writes": {
+              "status": "done",
+              "completion_date": "2026-10-08"
+            }
+          },
+          {
+            "actor": "pavel",
+            "from": "base",
+            "intent": "task.cancel",
+            "writes": {
+              "status": "cancelled"
+            }
           }
-        }
-      ],
+        ]
+      },
       "expected": {
         "status_conflict_set": [
           "cancelled",
@@ -247,20 +341,24 @@
     },
     {
       "id": "S04",
-      "title": "Resolve status conflict",
-      "base_state": {
-        "derived_from": "S03 merged state"
-      },
-      "branches": [
-        {
-          "actor": "masha",
-          "from": "merged",
-          "intent": "task.resolve_status_conflict",
-          "writes": {
-            "status": "done"
+      "type": "behavioral",
+      "kind": "shared_object_scenario",
+      "description": "Resolve status conflict",
+      "inputs": {
+        "base_state": {
+          "derived_from": "S03 merged state"
+        },
+        "branches": [
+          {
+            "actor": "masha",
+            "from": "merged",
+            "intent": "task.resolve_status_conflict",
+            "writes": {
+              "status": "done"
+            }
           }
-        }
-      ],
+        ]
+      },
       "expected": {
         "status": "done",
         "status_conflict_set": [
@@ -274,38 +372,42 @@
     },
     {
       "id": "S05",
-      "title": "Concurrent due-date conflict",
-      "base_state": {
-        "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
-        "type": "task",
-        "lifecycle": "active",
-        "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
-        "created_at": "2026-10-04T05:30:00Z",
-        "title": "Prepare API contract",
-        "status": "todo",
-        "priority": "normal",
-        "tags": {},
-        "assignees": {},
-        "extensions": {}
-      },
-      "branches": [
-        {
-          "actor": "andrey",
-          "from": "base",
-          "intent": "task.set_due",
-          "writes": {
-            "due": "2026-10-10"
-          }
+      "type": "behavioral",
+      "kind": "shared_object_scenario",
+      "description": "Concurrent due-date conflict",
+      "inputs": {
+        "base_state": {
+          "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+          "type": "task",
+          "lifecycle": "active",
+          "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
+          "created_at": "2026-10-04T05:30:00Z",
+          "title": "Prepare API contract",
+          "status": "todo",
+          "priority": "normal",
+          "tags": {},
+          "assignees": {},
+          "extensions": {}
         },
-        {
-          "actor": "pavel",
-          "from": "base",
-          "intent": "task.set_due",
-          "writes": {
-            "due": "2026-10-12"
+        "branches": [
+          {
+            "actor": "andrey",
+            "from": "base",
+            "intent": "task.set_due",
+            "writes": {
+              "due": "2026-10-10"
+            }
+          },
+          {
+            "actor": "pavel",
+            "from": "base",
+            "intent": "task.set_due",
+            "writes": {
+              "due": "2026-10-12"
+            }
           }
-        }
-      ],
+        ]
+      },
       "expected": {
         "due_conflict_set": [
           "2026-10-10",
@@ -319,34 +421,38 @@
     },
     {
       "id": "S06",
-      "title": "Tag add/add union",
-      "base_state": {
-        "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
-        "type": "task",
-        "lifecycle": "active",
-        "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
-        "created_at": "2026-10-04T05:30:00Z",
-        "title": "Prepare API contract",
-        "status": "todo",
-        "priority": "normal",
-        "tags": {},
-        "assignees": {},
-        "extensions": {}
-      },
-      "branches": [
-        {
-          "actor": "andrey",
-          "from": "base",
-          "intent": "task.add_tag",
-          "tag": "backend"
+      "type": "behavioral",
+      "kind": "shared_object_scenario",
+      "description": "Tag add/add union",
+      "inputs": {
+        "base_state": {
+          "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+          "type": "task",
+          "lifecycle": "active",
+          "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
+          "created_at": "2026-10-04T05:30:00Z",
+          "title": "Prepare API contract",
+          "status": "todo",
+          "priority": "normal",
+          "tags": {},
+          "assignees": {},
+          "extensions": {}
         },
-        {
-          "actor": "pavel",
-          "from": "base",
-          "intent": "task.add_tag",
-          "tag": "important"
-        }
-      ],
+        "branches": [
+          {
+            "actor": "andrey",
+            "from": "base",
+            "intent": "task.add_tag",
+            "tag": "backend"
+          },
+          {
+            "actor": "pavel",
+            "from": "base",
+            "intent": "task.add_tag",
+            "tag": "important"
+          }
+        ]
+      },
       "expected": {
         "tags": [
           "backend",
@@ -359,39 +465,43 @@
     },
     {
       "id": "S07",
-      "title": "Tag concurrent add/remove is add-wins",
-      "base_state": {
-        "task": {
-          "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
-          "type": "task",
-          "lifecycle": "active",
-          "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
-          "created_at": "2026-10-04T05:30:00Z",
-          "title": "Prepare API contract",
-          "status": "todo",
-          "priority": "normal",
-          "tags": {
-            "backend": true
-          },
-          "assignees": {},
-          "extensions": {}
-        }
-      },
-      "branches": [
-        {
-          "actor": "andrey",
-          "from": "base",
-          "intent": "task.remove_tag",
-          "tag": "backend"
+      "type": "behavioral",
+      "kind": "shared_object_scenario",
+      "description": "Tag concurrent add/remove is add-wins",
+      "inputs": {
+        "base_state": {
+          "task": {
+            "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+            "type": "task",
+            "lifecycle": "active",
+            "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
+            "created_at": "2026-10-04T05:30:00Z",
+            "title": "Prepare API contract",
+            "status": "todo",
+            "priority": "normal",
+            "tags": {
+              "backend": true
+            },
+            "assignees": {},
+            "extensions": {}
+          }
         },
-        {
-          "actor": "pavel",
-          "from": "base",
-          "intent": "task.add_tag",
-          "tag": "backend",
-          "fresh_write": true
-        }
-      ],
+        "branches": [
+          {
+            "actor": "andrey",
+            "from": "base",
+            "intent": "task.remove_tag",
+            "tag": "backend"
+          },
+          {
+            "actor": "pavel",
+            "from": "base",
+            "intent": "task.add_tag",
+            "tag": "backend",
+            "fresh_write": true
+          }
+        ]
+      },
       "expected": {
         "tags": [
           "backend"
@@ -403,39 +513,43 @@
     },
     {
       "id": "S08",
-      "title": "Assignee concurrent add/remove is add-wins",
-      "base_state": {
-        "task": {
-          "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
-          "type": "task",
-          "lifecycle": "active",
-          "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
-          "created_at": "2026-10-04T05:30:00Z",
-          "title": "Prepare API contract",
-          "status": "todo",
-          "priority": "normal",
-          "tags": {},
-          "assignees": {
-            "p:66ZYp_TRzK3S0uRmWMhToLGf5YfzVeiEXxcNJIrCu-o": true
-          },
-          "extensions": {}
-        }
-      },
-      "branches": [
-        {
-          "actor": "andrey",
-          "from": "base",
-          "intent": "task.unassign",
-          "principal": "p:66ZYp_TRzK3S0uRmWMhToLGf5YfzVeiEXxcNJIrCu-o"
+      "type": "behavioral",
+      "kind": "shared_object_scenario",
+      "description": "Assignee concurrent add/remove is add-wins",
+      "inputs": {
+        "base_state": {
+          "task": {
+            "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+            "type": "task",
+            "lifecycle": "active",
+            "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
+            "created_at": "2026-10-04T05:30:00Z",
+            "title": "Prepare API contract",
+            "status": "todo",
+            "priority": "normal",
+            "tags": {},
+            "assignees": {
+              "p:66ZYp_TRzK3S0uRmWMhToLGf5YfzVeiEXxcNJIrCu-o": true
+            },
+            "extensions": {}
+          }
         },
-        {
-          "actor": "masha",
-          "from": "base",
-          "intent": "task.assign",
-          "principal": "p:66ZYp_TRzK3S0uRmWMhToLGf5YfzVeiEXxcNJIrCu-o",
-          "fresh_write": true
-        }
-      ],
+        "branches": [
+          {
+            "actor": "andrey",
+            "from": "base",
+            "intent": "task.unassign",
+            "principal": "p:66ZYp_TRzK3S0uRmWMhToLGf5YfzVeiEXxcNJIrCu-o"
+          },
+          {
+            "actor": "masha",
+            "from": "base",
+            "intent": "task.assign",
+            "principal": "p:66ZYp_TRzK3S0uRmWMhToLGf5YfzVeiEXxcNJIrCu-o",
+            "fresh_write": true
+          }
+        ]
+      },
       "expected": {
         "assignees": [
           "p:66ZYp_TRzK3S0uRmWMhToLGf5YfzVeiEXxcNJIrCu-o"
@@ -447,38 +561,42 @@
     },
     {
       "id": "S09",
-      "title": "Delete versus independent title edit",
-      "base_state": {
-        "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
-        "type": "task",
-        "lifecycle": "active",
-        "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
-        "created_at": "2026-10-04T05:30:00Z",
-        "title": "Prepare API contract",
-        "status": "todo",
-        "priority": "normal",
-        "tags": {},
-        "assignees": {},
-        "extensions": {}
-      },
-      "branches": [
-        {
-          "actor": "andrey",
-          "from": "base",
-          "intent": "task.delete",
-          "writes": {
-            "lifecycle": "deleted"
-          }
+      "type": "behavioral",
+      "kind": "shared_object_scenario",
+      "description": "Delete versus independent title edit",
+      "inputs": {
+        "base_state": {
+          "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+          "type": "task",
+          "lifecycle": "active",
+          "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
+          "created_at": "2026-10-04T05:30:00Z",
+          "title": "Prepare API contract",
+          "status": "todo",
+          "priority": "normal",
+          "tags": {},
+          "assignees": {},
+          "extensions": {}
         },
-        {
-          "actor": "pavel",
-          "from": "base",
-          "intent": "task.set_title",
-          "writes": {
-            "title": "Final API contract"
+        "branches": [
+          {
+            "actor": "andrey",
+            "from": "base",
+            "intent": "task.delete",
+            "writes": {
+              "lifecycle": "deleted"
+            }
+          },
+          {
+            "actor": "pavel",
+            "from": "base",
+            "intent": "task.set_title",
+            "writes": {
+              "title": "Final API contract"
+            }
           }
-        }
-      ],
+        ]
+      },
       "expected": {
         "lifecycle": "deleted",
         "title": "Final API contract",
@@ -491,38 +609,42 @@
     },
     {
       "id": "S10",
-      "title": "Delete versus restore conflict",
-      "base_state": {
-        "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
-        "type": "task",
-        "lifecycle": "active",
-        "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
-        "created_at": "2026-10-04T05:30:00Z",
-        "title": "Prepare API contract",
-        "status": "todo",
-        "priority": "normal",
-        "tags": {},
-        "assignees": {},
-        "extensions": {}
-      },
-      "branches": [
-        {
-          "actor": "andrey",
-          "from": "base",
-          "intent": "task.delete",
-          "writes": {
-            "lifecycle": "deleted"
-          }
+      "type": "behavioral",
+      "kind": "shared_object_scenario",
+      "description": "Delete versus restore conflict",
+      "inputs": {
+        "base_state": {
+          "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+          "type": "task",
+          "lifecycle": "active",
+          "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
+          "created_at": "2026-10-04T05:30:00Z",
+          "title": "Prepare API contract",
+          "status": "todo",
+          "priority": "normal",
+          "tags": {},
+          "assignees": {},
+          "extensions": {}
         },
-        {
-          "actor": "pavel",
-          "from": "base",
-          "intent": "task.restore",
-          "writes": {
-            "lifecycle": "active"
+        "branches": [
+          {
+            "actor": "andrey",
+            "from": "base",
+            "intent": "task.delete",
+            "writes": {
+              "lifecycle": "deleted"
+            }
+          },
+          {
+            "actor": "pavel",
+            "from": "base",
+            "intent": "task.restore",
+            "writes": {
+              "lifecycle": "active"
+            }
           }
-        }
-      ],
+        ]
+      },
       "expected": {
         "lifecycle_conflict_set": [
           "active",
@@ -536,37 +658,41 @@
     },
     {
       "id": "S11",
-      "title": "Unknown field preservation",
-      "base_state": {
-        "task": {
-          "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
-          "type": "task",
-          "lifecycle": "active",
-          "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
-          "created_at": "2026-10-04T05:30:00Z",
-          "title": "Prepare API contract",
-          "status": "todo",
-          "priority": "normal",
-          "tags": {},
-          "assignees": {},
-          "extensions": {
-            "com.example.tracker": {
-              "ticket": "ABC-42"
-            }
-          },
-          "x_future_scalar": "future-value"
-        }
-      },
-      "branches": [
-        {
-          "actor": "pavel",
-          "from": "base",
-          "intent": "task.set_status",
-          "writes": {
-            "status": "in_progress"
+      "type": "behavioral",
+      "kind": "shared_object_scenario",
+      "description": "Unknown field preservation",
+      "inputs": {
+        "base_state": {
+          "task": {
+            "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+            "type": "task",
+            "lifecycle": "active",
+            "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
+            "created_at": "2026-10-04T05:30:00Z",
+            "title": "Prepare API contract",
+            "status": "todo",
+            "priority": "normal",
+            "tags": {},
+            "assignees": {},
+            "extensions": {
+              "com.example.tracker": {
+                "ticket": "ABC-42"
+              }
+            },
+            "x_future_scalar": "future-value"
           }
-        }
-      ],
+        },
+        "branches": [
+          {
+            "actor": "pavel",
+            "from": "base",
+            "intent": "task.set_status",
+            "writes": {
+              "status": "in_progress"
+            }
+          }
+        ]
+      },
       "expected": {
         "status": "in_progress",
         "preserve": {
@@ -580,28 +706,32 @@
     },
     {
       "id": "S12",
-      "title": "Unknown object type preservation",
-      "base_state": {
-        "objects": {
-          "019a2f85-7b31-7c42-9f24-8f933f2a91c0": {
-            "id": "019a2f85-7b31-7c42-9f24-8f933f2a91c0",
-            "type": "com.example.poll",
-            "lifecycle": "active",
-            "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
-            "extensions": {},
-            "question": "Ship on Friday?",
-            "answers": {
-              "yes": 1
+      "type": "behavioral",
+      "kind": "shared_object_scenario",
+      "description": "Unknown object type preservation",
+      "inputs": {
+        "base_state": {
+          "objects": {
+            "019a2f85-7b31-7c42-9f24-8f933f2a91c0": {
+              "id": "019a2f85-7b31-7c42-9f24-8f933f2a91c0",
+              "type": "com.example.poll",
+              "lifecycle": "active",
+              "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
+              "extensions": {},
+              "question": "Ship on Friday?",
+              "answers": {
+                "yes": 1
+              }
             }
           }
-        }
+        },
+        "branches": [
+          {
+            "actor": "pavel",
+            "operation": "load-save-roundtrip-without-understanding-type"
+          }
+        ]
       },
-      "branches": [
-        {
-          "actor": "pavel",
-          "operation": "load-save-roundtrip-without-understanding-type"
-        }
-      ],
       "expected": {
         "objects": {
           "019a2f85-7b31-7c42-9f24-8f933f2a91c0": {
@@ -623,48 +753,52 @@
     },
     {
       "id": "S13",
-      "title": "Object ID collision detection",
-      "base_state": {
-        "objects": {}
-      },
-      "branches": [
-        {
-          "actor": "andrey",
-          "from": "base",
-          "operation": "create",
-          "object": {
-            "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
-            "type": "task",
-            "lifecycle": "active",
-            "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
-            "created_at": "2026-10-04T05:30:00Z",
-            "title": "A",
-            "status": "todo",
-            "priority": "normal",
-            "tags": {},
-            "assignees": {},
-            "extensions": {}
-          }
+      "type": "behavioral",
+      "kind": "shared_object_scenario",
+      "description": "Object ID collision detection",
+      "inputs": {
+        "base_state": {
+          "objects": {}
         },
-        {
-          "actor": "pavel",
-          "from": "base",
-          "operation": "create",
-          "object": {
-            "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
-            "type": "task",
-            "lifecycle": "active",
-            "created_by": "p:66ZYp_TRzK3S0uRmWMhToLGf5YfzVeiEXxcNJIrCu-o",
-            "created_at": "2026-10-04T05:30:00Z",
-            "title": "B",
-            "status": "todo",
-            "priority": "normal",
-            "tags": {},
-            "assignees": {},
-            "extensions": {}
+        "branches": [
+          {
+            "actor": "andrey",
+            "from": "base",
+            "operation": "create",
+            "object": {
+              "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+              "type": "task",
+              "lifecycle": "active",
+              "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
+              "created_at": "2026-10-04T05:30:00Z",
+              "title": "A",
+              "status": "todo",
+              "priority": "normal",
+              "tags": {},
+              "assignees": {},
+              "extensions": {}
+            }
+          },
+          {
+            "actor": "pavel",
+            "from": "base",
+            "operation": "create",
+            "object": {
+              "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+              "type": "task",
+              "lifecycle": "active",
+              "created_by": "p:66ZYp_TRzK3S0uRmWMhToLGf5YfzVeiEXxcNJIrCu-o",
+              "created_at": "2026-10-04T05:30:00Z",
+              "title": "B",
+              "status": "todo",
+              "priority": "normal",
+              "tags": {},
+              "assignees": {},
+              "extensions": {}
+            }
           }
-        }
-      ],
+        ]
+      },
       "expected": {
         "profile_error": "OBJECT_ID_COLLISION",
         "must_not_silently_treat_as_same_object": true
@@ -675,23 +809,28 @@
     },
     {
       "id": "S14",
-      "title": "Snapshot plus post-snapshot change",
-      "base_state": {
-        "build": "Apply S01 then S06 and save full Automerge image"
-      },
-      "branches": [
-        {
-          "operation": "snapshot_save_load_roundtrip"
+      "type": "behavioral",
+      "kind": "shared_object_scenario",
+      "description": "Snapshot plus post-snapshot change",
+      "note": "Snapshot bytes need not be independently byte-identical; logical state and acceptance are normative.",
+      "inputs": {
+        "base_state": {
+          "build": "Apply S01 then S06 and save full Automerge image"
         },
-        {
-          "actor": "pavel",
-          "after_snapshot": true,
-          "intent": "task.set_status",
-          "writes": {
-            "status": "in_progress"
+        "branches": [
+          {
+            "operation": "snapshot_save_load_roundtrip"
+          },
+          {
+            "actor": "pavel",
+            "after_snapshot": true,
+            "intent": "task.set_status",
+            "writes": {
+              "status": "in_progress"
+            }
           }
-        }
-      ],
+        ]
+      },
       "expected": {
         "task_status": "in_progress",
         "snapshot_roundtrip_preserves_objects": true
@@ -699,110 +838,155 @@
       "assertions": [
         "Snapshot full-save image loads successfully.",
         "Changes after snapshot frontier apply normally."
-      ],
-      "notes": "Snapshot bytes need not be independently byte-identical; logical state and acceptance are normative."
-    }
-  ],
-  "invalid_cases": [
+      ]
+    },
     {
       "id": "I01",
-      "mutation": {
-        "object_key": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
-        "field": "id",
-        "value": "019a2f85-7b31-7c42-a43c-4b693e77d36b"
+      "type": "validation",
+      "kind": "profile_validation",
+      "inputs": {
+        "mutation": {
+          "object_key": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+          "field": "id",
+          "value": "019a2f85-7b31-7c42-a43c-4b693e77d36b"
+        }
       },
-      "expected": "PROFILE_INVALID",
-      "diagnostic": "OBJECT_ID_MISMATCH"
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "OBJECT_ID_MISMATCH"
+        }
+      }
     },
     {
       "id": "I02",
-      "mutation": {
-        "object_key": "NOT-A-UUID",
-        "value": {
-          "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
-          "type": "task",
-          "lifecycle": "active",
-          "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
-          "created_at": "2026-10-04T05:30:00Z",
-          "title": "Prepare API contract",
-          "status": "todo",
-          "priority": "normal",
-          "tags": {},
-          "assignees": {},
-          "extensions": {}
+      "type": "validation",
+      "kind": "profile_validation",
+      "inputs": {
+        "mutation": {
+          "object_key": "NOT-A-UUID",
+          "value": {
+            "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+            "type": "task",
+            "lifecycle": "active",
+            "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
+            "created_at": "2026-10-04T05:30:00Z",
+            "title": "Prepare API contract",
+            "status": "todo",
+            "priority": "normal",
+            "tags": {},
+            "assignees": {},
+            "extensions": {}
+          }
         }
       },
-      "expected": "PROFILE_INVALID",
-      "diagnostic": "INVALID_OBJECT_ID"
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_OBJECT_ID"
+        }
+      }
     },
     {
       "id": "I03",
-      "mutation": {
-        "object_key": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
-        "field": "title",
-        "value": 42
+      "type": "validation",
+      "kind": "profile_validation",
+      "inputs": {
+        "mutation": {
+          "object_key": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+          "field": "title",
+          "value": 42
+        }
       },
-      "expected": "PROFILE_INVALID",
-      "diagnostic": "INVALID_FIELD_TYPE"
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_FIELD_TYPE"
+        }
+      }
     },
     {
       "id": "I04",
-      "mutation": {
-        "object_key": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
-        "field": "due",
-        "value": "2026-13-50"
+      "type": "validation",
+      "kind": "profile_validation",
+      "inputs": {
+        "mutation": {
+          "object_key": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+          "field": "due",
+          "value": "2026-13-50"
+        }
       },
-      "expected": "PROFILE_INVALID",
-      "diagnostic": "INVALID_LOCAL_DATE"
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_LOCAL_DATE"
+        }
+      }
     },
     {
       "id": "I05",
-      "mutation": {
-        "object_key": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
-        "field": "tags",
-        "value": [
-          "backend"
-        ]
+      "type": "validation",
+      "kind": "profile_validation",
+      "inputs": {
+        "mutation": {
+          "object_key": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+          "field": "tags",
+          "value": [
+            "backend"
+          ]
+        }
       },
-      "expected": "PROFILE_INVALID",
-      "diagnostic": "INVALID_COLLECTION_REPRESENTATION"
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_COLLECTION_REPRESENTATION"
+        }
+      }
     },
     {
       "id": "I06",
-      "mutation": {
-        "object_key": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
-        "field": "assignees",
-        "value": {
-          "not-a-principal": true
+      "type": "validation",
+      "kind": "profile_validation",
+      "inputs": {
+        "mutation": {
+          "object_key": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+          "field": "assignees",
+          "value": {
+            "not-a-principal": true
+          }
         }
       },
-      "expected": "PROFILE_INVALID",
-      "diagnostic": "INVALID_PRINCIPAL_REF"
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_PRINCIPAL_REF"
+        }
+      }
     },
     {
       "id": "I07",
-      "mutation": {
-        "object_key": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
-        "field": "type",
-        "value": "decision"
+      "type": "validation",
+      "kind": "profile_validation",
+      "inputs": {
+        "mutation": {
+          "object_key": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+          "field": "type",
+          "value": "decision"
+        }
       },
-      "expected": "PROFILE_INVALID",
-      "diagnostic": "IMMUTABLE_FIELD_MUTATED"
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "IMMUTABLE_FIELD_MUTATED"
+        }
+      }
     }
-  ],
-  "conformance": {
-    "deterministic": [
-      "All Dxx expected bytes/strings must match exactly.",
-      "Actor IDs are exactly 32 bytes from the domain-separated SHA-256 formula.",
-      "PrincipalRef is lowercase prefix p: plus unpadded base64url of raw 32-byte principal id.",
-      "Change/snapshot outer framing must match deterministic CBOR vectors exactly."
-    ],
-    "automerge_interop": [
-      "A valid change produced by implementation A must be accepted by implementation B when dependencies are present.",
-      "Applying the same complete change set in any valid order must converge to the same logical state.",
-      "Conflict sets required by S03/S05/S10 must remain discoverable.",
-      "A full-save image produced by implementation A must load in implementation B for the declared Automerge compatibility target.",
-      "Independent implementations are not required to generate byte-identical changes or save images for the same semantic intent."
-    ]
-  }
+  ]
 }

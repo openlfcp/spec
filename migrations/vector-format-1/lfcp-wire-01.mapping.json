@@ -1,0 +1,69 @@
+{
+  "description": "Where every value of the pre-migration LFCP-TEST-VECTORS-01.json lives in lfcp-vector-format/1. Read by scripts/check-vector-migration.mjs.",
+  "suite_file": "test-vectors/lfcp-wire-01/LFCP-TEST-VECTORS-01.json",
+  "baseline_commit": "8f1cc79785775abca39111f44c3d052ab66d6ccb",
+  "moves": [
+    ["meta.vector_spec", "suite.id"],
+    ["meta.wire_spec", "suite.specification.id"],
+    ["meta.cose_sign1_tag_policy", "suite.conventions.cose_sign1_tag_policy"],
+    ["meta.cbor_profile", "suite.conventions.cbor_profile"],
+    ["meta.warning", "suite.warning"],
+
+    ["principals.*.ed25519_seed", "cases[id=principal_$1].inputs.ed25519_seed.hex"],
+    ["principals.*.x25519_private", "cases[id=principal_$1].inputs.x25519_private.hex"],
+    ["principals.*.*", "cases[id=principal_$1].expected.$2.hex"],
+
+    ["resource.id", "fixtures.resource.id.hex"],
+    ["resource.dek0", "fixtures.resource.dek0.hex"],
+    ["resource.dek1", "fixtures.resource.dek1.hex"],
+    ["resource.dek0_commitment", "cases[id=dek_commitments].expected.dek0_commitment.hex"],
+    ["resource.dek1_commitment", "cases[id=dek_commitments].expected.dek1_commitment.hex"],
+
+    ["control.*.signer", "cases[id=$1].inputs.signer"],
+    ["control.*.*", "cases[id=$1].expected.$2.hex"],
+
+    ["transfers.nonce", "cases[id=owner_transfer].inputs.nonce.hex"],
+    ["transfers.*", "cases[id=owner_transfer].expected.$1.hex"],
+
+    ["key_packages.*.hpke_ephemeral_private", "cases[id=$1].inputs.hpke_ephemeral_private.hex"],
+    ["key_packages.*.*", "cases[id=$1].expected.$2.hex"],
+
+    ["data_units.*.plaintext_utf8", "cases[id=$1].inputs.plaintext_utf8"],
+    ["data_units.*.plaintext_hex", "cases[id=$1].inputs.plaintext_hex.hex"],
+    ["data_units.*.*", "cases[id=$1].expected.$2.hex"],
+
+    ["invite.secret_cbor", "cases[id=invite_uri].expected.secret_cbor.hex"],
+    ["invite.secret_b64url", "cases[id=invite_uri].expected.secret_b64url.b64url"],
+    ["invite.resource_b64url", "cases[id=invite_uri].expected.resource_b64url.b64url"],
+    ["invite.grant_id_b64url", "cases[id=invite_uri].expected.grant_id_b64url.b64url"],
+    ["invite.uri", "cases[id=invite_uri].expected.uri"],
+
+    ["wire.client_nonce", "fixtures.session.client_nonce.hex"],
+    ["wire.server_nonce", "fixtures.session.server_nonce.hex"],
+    ["wire.session_id", "fixtures.session.session_id.hex"],
+    ["wire.server_id", "fixtures.session.server_id.hex"],
+    ["wire.auth_transcript_cbor", "cases[id=AUTH].expected.auth_transcript_cbor.hex"],
+    ["wire.auth_proof_cose_sign1", "cases[id=AUTH].expected.auth_proof_cose_sign1.hex"],
+    ["wire.*", "cases[id=$1].expected.message_cbor.hex"],
+
+    ["negative.actor_equivocation_original_D2_id", "cases[id=actor_equivocation].inputs.original_D2_id.hex"],
+    ["negative.actor_equivocation_conflicting_D2_id", "cases[id=actor_equivocation].inputs.conflicting_D2_id.hex"],
+    ["negative.actor_equivocation_conflicting_D2_cose", "cases[id=actor_equivocation].inputs.conflicting_D2_cose.hex"],
+    ["negative.tampered_D1_cose", "cases[id=tampered_D1].inputs.cose_sign1.hex"],
+    ["negative.stale_epoch_unit_id", "cases[id=stale_epoch].inputs.unit_id.hex"],
+    ["negative.stale_epoch_expected", "cases[id=stale_epoch].expected.error.detail"]
+  ],
+  "structural": [],
+  "added": [
+    { "path": "format", "rule": "Vector format identifier." },
+    { "path": "suite.version", "rule": "Suite version, taken from the -01 suffix of the suite ID." },
+    { "path": "suite.specification.revision", "rule": "LFCP-WIRE-01 is a Working Draft." },
+    { "path": "suite.description", "rule": "Prose summary of the suite." },
+    { "path": "cases[*].id", "rule": "Case ID, taken from the old object key (principal_<key> for principals; dek_commitments, owner_transfer, invite_uri, actor_equivocation, tampered_D1, stale_epoch for single-object sections)." },
+    { "path": "cases[*].type", "rule": "Case type: bytes for every old positive section, validation for every old negative entry." },
+    { "path": "cases[*].kind", "rule": "Case kind, named after the old top-level section." },
+    { "path": "cases[*].expected.valid", "value": false, "rule": "Every old negative entry describes an object that must be rejected." },
+    { "path": "cases[id=actor_equivocation].expected.error.code", "value": "ACTOR_EQUIVOCATION", "rule": "LFCP-WIRE-01 section 62 error code 16; LFCP-TEST-VECTORS-01.md section 17.3 names this expected result." },
+    { "path": "cases[id=stale_epoch].expected.error.code", "value": "STALE_DATA_EPOCH", "rule": "LFCP-WIRE-01 section 62 error code 14; the old free-text value starts with this code and is kept verbatim in error.detail." }
+  ]
+}
