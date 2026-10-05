@@ -84,6 +84,7 @@ directory).
 | File | Role |
 | --- | --- |
 | `adr/0001-mvp-0.1-protocol-decisions.md` | Project-owner decisions of 2026-10-05 applied to the Working Drafts |
+| `adr/0002-mvp-0.1-protocol-decisions-2.md` | Second batch of project-owner decisions of 2026-10-05 (SPEC-PATCH-03) |
 
 ## Project documents in `openlfcp/.github`
 
