@@ -8,11 +8,17 @@ importers:
 
   .:
     devDependencies:
+      '@automerge/automerge':
+        specifier: 3.5.0
+        version: 3.5.0
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
 
 packages:
+
+  '@automerge/automerge@3.5.0':
+    resolution: {integrity: sha512-ejbqJWfXWM2QbTcUK/5ugYiQiyOP7LYVAp/RuSvthCc07oek0FClMxEuouuhjrLjVPDSI34RP1ftGc45PF7WRA==}
 
   ajv@8.20.0:
     resolution: {integrity: sha512-Thbli+OlOj+iMPYFBVBfJ3OmCAnaSyNn4M1vz9T6Gka5Jt9ba/HIR56joy65tY6kx/FCF5VXNB819Y7/GUrBGA==}
@@ -31,6 +37,8 @@ packages:
     engines: {node: '>=0.10.0'}
 
 snapshots:
+
+  '@automerge/automerge@3.5.0': {}
 
   ajv@8.20.0:
     dependencies:

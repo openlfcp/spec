@@ -9,6 +9,11 @@
     {
       "suite_file": "test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.json",
       "changed": []
+    },
+    {
+      "suite_file": "test-vectors/shared-objects-01/SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json",
+      "previous": "absent",
+      "changed": []
     }
   ]
 }

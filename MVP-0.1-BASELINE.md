@@ -9,6 +9,7 @@ MVP 0.1?* The answer is every file listed below, at the Git tag
 
 | Tag | Status |
 | --- | --- |
+| mvp-0.1-baseline.4 | **In preparation, not tagged.** Adds the Automerge reference corpus (SPEC-CORPUS); further approved decisions will join it. No published vector value has changed (`migrations/mvp-0.1-baseline.4/value-changes.json`). |
 | mvp-0.1-baseline.3 | **Current.** Applies the second batch of project-owner decisions (SPEC-PATCH-03, ADR 0002): strict Ed25519, capability authority and revocation rules, named error codes, message and state-machine edges. The Key Package vectors are regenerated from published `ikmE` (G-KP2) and `descriptor_extra_field` now names `MALFORMED_MESSAGE` (V2); every changed value is listed in `migrations/mvp-0.1-baseline.3/value-changes.json`. New positive and negative vectors are added. |
 | mvp-0.1-baseline.2 | Superseded by `mvp-0.1-baseline.3`, because the approved SPEC-PATCH-03 decisions change normative rules and the Key Package vector values. Never moved. |
 | mvp-0.1-baseline | Superseded by `mvp-0.1-baseline.2`. Never moved. |
@@ -58,7 +59,8 @@ directory).
 | `test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.json` | Shared Objects vectors, machine-readable: deterministic, validation and behavioral cases |
 | `test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.md` | Shared Objects vectors, human-readable |
 | `test-vectors/shared-objects-01/generate_shared_objects_test_vectors_01.py` | Generator; reproduces both Shared Objects vector files byte for byte |
-| `test-vectors/shared-objects-01/generate_automerge_reference_01.mjs` | Supplementary Automerge reference-corpus generator (not normative bytes) |
+| `test-vectors/shared-objects-01/SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json` | Automerge reference corpus for S01–S14: exact changes, save images, logical states and conflict sets (supplementary; bytes not normative) |
+| `test-vectors/shared-objects-01/generate_automerge_reference_01.mjs` | Corpus generator; with the pinned `@automerge/automerge` 3.5.0 it reproduces the corpus byte for byte |
 
 ### Wire CDDL
 
@@ -117,10 +119,13 @@ The checks:
 
 - vector schema and validator;
 - vector migration;
-- vector values against the previous baseline tag
-  (`migrations/mvp-0.1-baseline.3/value-changes.json`);
+- vector values against the previous baseline tag (the newest
+  `migrations/mvp-0.1-baseline.N/value-changes.json`);
+- the Automerge reference corpus, regenerated with the pinned
+  `@automerge/automerge`;
 - CDDL extraction and fixtures;
 - Shared Objects contract;
 - this manifest's file list.
 
-Both generators must reproduce the committed vector files byte for byte.
+Both vector generators must reproduce the committed vector files byte for
+byte, and the corpus generator the committed corpus.

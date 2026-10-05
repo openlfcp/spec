@@ -10,4 +10,7 @@ newest `mvp-0.1-baseline.N` directory; see
 [`../mvp-0.1-baseline.3/`](../mvp-0.1-baseline.3/README.md) for how the
 check works.
 
-No existing value has changed so far.
+The Automerge reference corpus,
+`test-vectors/shared-objects-01/SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json`,
+is new in this baseline (SPEC-CORPUS) and is marked `"previous": "absent"`:
+every value in it counts as added. No existing value has changed so far.
