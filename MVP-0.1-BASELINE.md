@@ -5,11 +5,12 @@ full WIRE-01 conformance, documents remain Working Drafts.**
 
 This file answers one question: *what exactly do I implement against for
 MVP 0.1?* The answer is every file listed below, at the Git tag
-`mvp-0.1-baseline.2` of this repository.
+`mvp-0.1-baseline.3` of this repository.
 
 | Tag | Status |
 | --- | --- |
-| mvp-0.1-baseline.2 | **Current.** Adds the editorial clarifications CB1–CB3, P1, P2 and K1 (ADR 0001). No published vector value changed; one negative vector was added. |
+| mvp-0.1-baseline.3 | **Current.** Applies the second batch of project-owner decisions (SPEC-PATCH-03, ADR 0002): strict Ed25519, capability authority and revocation rules, named error codes, message and state-machine edges. The Key Package vectors are regenerated from published `ikmE` (G-KP2) and `descriptor_extra_field` now names `MALFORMED_MESSAGE` (V2); every changed value is listed in `migrations/mvp-0.1-baseline.3/value-changes.json`. New positive and negative vectors are added. |
+| mvp-0.1-baseline.2 | Superseded by `mvp-0.1-baseline.3`, because the approved SPEC-PATCH-03 decisions change normative rules and the Key Package vector values. Never moved. |
 | mvp-0.1-baseline | Superseded by `mvp-0.1-baseline.2`. Never moved. |
 
 - The listed specifications are Working Drafts. They keep their identifiers
@@ -19,16 +20,17 @@ MVP 0.1?* The answer is every file listed below, at the Git tag
   subset of LFCP-WIRE-01". It must not claim full LFCP-WIRE-01 conformance
   (`.github: docs/MVP-0.1-PROTOCOL-SCOPE.md` §5).
 - The protocol decisions applied for this baseline are recorded in
-  [ADR 0001](adr/0001-mvp-0.1-protocol-decisions.md).
+  [ADR 0001](adr/0001-mvp-0.1-protocol-decisions.md) and
+  [ADR 0002](adr/0002-mvp-0.1-protocol-decisions-2.md).
 
 ## Pinning
 
-Implementations pin the current tag, `mvp-0.1-baseline.2`, of
+Implementations pin the current tag, `mvp-0.1-baseline.3`, of
 `openlfcp/spec`, never a branch. sdk-ts consumes the vectors at this tag (LFCP-017); other
 implementations do the same.
 
 A later approved Working Draft correction does not move the tag. It
-produces a new tag, such as `mvp-0.1-baseline.3`, with an updated copy of
+produces a new tag, such as `mvp-0.1-baseline.4`, with an updated copy of
 this file. Implementations move to it deliberately.
 
 ## Canonical files
@@ -88,9 +90,9 @@ directory).
 
 ## Project documents in `openlfcp/.github`
 
-These belong to the baseline at commit `.github@174e6e4` (tag
-`mvp-0.1-baseline.2` in that repository; `mvp-0.1-baseline` there marks
-`89c0b01`):
+These belong to the baseline at commit `.github@0cfa217` (tag
+`mvp-0.1-baseline.3` in that repository; `mvp-0.1-baseline.2` there marks
+`174e6e4` and `mvp-0.1-baseline` marks `89c0b01`):
 
 - `docs/MVP-0.1-PROTOCOL-SCOPE.md`: the required MVP 0.1 subset of
   LFCP-WIRE-01, the deferred features and the completion gate;
@@ -115,6 +117,8 @@ The checks:
 
 - vector schema and validator;
 - vector migration;
+- vector values against the previous baseline tag
+  (`migrations/mvp-0.1-baseline.3/value-changes.json`);
 - CDDL extraction and fixtures;
 - Shared Objects contract;
 - this manifest's file list.
