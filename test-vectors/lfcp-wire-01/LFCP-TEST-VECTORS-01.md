@@ -6,7 +6,7 @@
 
 This document defines deterministic byte-level fixtures for independent LFCP implementations. A conforming implementation should be able to reproduce or consume these values exactly, subject to the clarifications in Section 2.
 
-> **Security warning:** every private key and DEK in this document is public test material. They MUST NOT be reused in production.
+> **Security warning:** every private key, DEK and derived key in this document is public test material. They MUST NOT be reused in production and MUST NOT be used as production defaults.
 
 ## 1. What these vectors test
 

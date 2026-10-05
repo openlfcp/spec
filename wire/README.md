@@ -12,7 +12,7 @@ directory make its structural grammar machine-checkable.
 | `LFCP-WIRE-01.summary.cddl` | **Generated.** The Part XXVIII "Full CDDL Summary" block. It restates body rules, so it is kept out of the main schema and checked for agreement instead. |
 | `LFCP-WIRE-01.supplement.cddl` | Hand-maintained complements, each citing the WIRE-01 sentence it encodes (see below). |
 | `fixtures/manifest.json` | Table of fixtures: rule → published vector value or hand-built file → expected pass/fail. |
-| `fixtures/*.diag` | Hand-built, **non-normative** CBOR diagnostic-notation fixtures (Snapshot shapes, structural mismatches). |
+| `fixtures/*.diag` | Hand-built, **non-normative** CBOR diagnostic-notation fixtures for structural mismatches that must fail. Snapshots are checked with the real SNAPSHOT-01 and SNAPSHOT-02 bytes. |
 
 Never edit the generated files. Change the prose and run:
 
