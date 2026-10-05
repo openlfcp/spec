@@ -6,7 +6,7 @@
 //   node test-vectors/shared-objects-01/generate_automerge_reference_01.mjs [--out-dir DIR]
 //
 // Writes SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json next to this script (or
-// into DIR). For every behavioral scenario S01-S14 of
+// into DIR). For every behavioral scenario S01-S16 of
 // SHARED-OBJECTS-TEST-VECTORS-01.json it records the exact Automerge changes
 // that build the scenario, in an order in which each change's dependencies
 // precede it, the full-save image of the converged document, its logical
@@ -397,6 +397,74 @@ corpus.negatives.push(
     expected: { valid: false, disposition: "reject", error: bytesError },
   },
 );
+
+// SPEC-PATCH-06 (SHARED-OBJECTS-PROFILE-01 §30, §74.1, SO-STRINGS): save
+// images whose strings are collaborative Text somewhere, with every problem a
+// validator reports: INVALID_FIELD_TYPE at the Text value's own pointer, by
+// precedence over the field's own rule; the root profile as Text is
+// INVALID_ROOT. Plain JS strings are written as Text here on purpose; scalar
+// strings are ImmutableString. Mirrors sdk-rs 8cb872b and sdk-ts eb35817.
+const K = fixtures.objects.task_1;
+const textEdit = (label, f) => {
+  const d = A.change(A.clone(s01, { actor: actorOf("andrey") }), { message: label, time: 0 }, f);
+  return A.save(d);
+};
+const invalid = (pointer, diagnostic) => ({ pointer, code: "PROFILE_INVALID", diagnostic });
+corpus.validations = [
+  {
+    id: "SO-STRINGS-text-anywhere",
+    description:
+      "The S01 Task with Text inside extensions (a map value and a list item), in an unknown field, in status and in due",
+    rule: "SHARED-OBJECTS-PROFILE-01 §30, §74.1: every string in any object is a scalar string; Text is INVALID_FIELD_TYPE at its own pointer, before the field's own rule.",
+    base_scenario: "S01",
+    save_hex: hex(
+      textEdit("SO-STRINGS.text-anywhere", (d) => {
+        const o = d.objects[K];
+        o.extensions = {
+          "org.example.app": {
+            note: "n",
+            ok: new A.ImmutableString("scalar"),
+            list: [new A.ImmutableString("s"), "l"],
+          },
+        };
+        o.x_unknown = "u";
+        o.status = "todo";
+        o.due = "2026-10-05";
+      }),
+    ),
+    expected_problems: [
+      invalid(`/objects/${K}/due`, "INVALID_FIELD_TYPE"),
+      invalid(`/objects/${K}/extensions/org.example.app/list/1`, "INVALID_FIELD_TYPE"),
+      invalid(`/objects/${K}/extensions/org.example.app/note`, "INVALID_FIELD_TYPE"),
+      invalid(`/objects/${K}/status`, "INVALID_FIELD_TYPE"),
+      invalid(`/objects/${K}/x_unknown`, "INVALID_FIELD_TYPE"),
+    ],
+  },
+  {
+    id: "SO-STRINGS-text-tag-member",
+    description: "The S01 Task with a tags member whose value is Text",
+    rule: "SHARED-OBJECTS-PROFILE-01 §30, §74.1: INVALID_FIELD_TYPE comes before INVALID_COLLECTION_REPRESENTATION at the same pointer.",
+    base_scenario: "S01",
+    save_hex: hex(
+      textEdit("SO-STRINGS.text-tag-member", (d) => {
+        d.objects[K].tags.backend = "yes";
+      }),
+    ),
+    expected_problems: [invalid(`/objects/${K}/tags/backend`, "INVALID_FIELD_TYPE")],
+  },
+  {
+    id: "SO-STRINGS-text-root-profile",
+    description: "The S01 document whose root profile value is Text",
+    rule: "SHARED-OBJECTS-PROFILE-01 §15, §30, §74.1: the root profile must be the scalar profile identifier; otherwise INVALID_ROOT.",
+    base_scenario: "S01",
+    save_hex: hex(
+      textEdit("SO-STRINGS.text-root-profile", (d) => {
+        d.profile = PROFILE;
+      }),
+    ),
+    expected_problems: [invalid("/profile", "INVALID_ROOT")],
+  },
+];
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
 fs.writeFileSync(path.join(OUT_DIR, OUT_NAME), JSON.stringify(corpus, null, 2) + "\n");

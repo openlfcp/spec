@@ -843,6 +843,89 @@
       ]
     },
     {
+      "id": "S15",
+      "type": "behavioral",
+      "kind": "shared_object_scenario",
+      "description": "Concurrent title conflict",
+      "inputs": {
+        "base_state": {
+          "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+          "type": "task",
+          "lifecycle": "active",
+          "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
+          "created_at": "2026-10-04T05:30:00Z",
+          "title": "Prepare API contract",
+          "status": "todo",
+          "priority": "normal",
+          "tags": {},
+          "assignees": {},
+          "extensions": {}
+        },
+        "branches": [
+          {
+            "actor": "andrey",
+            "from": "base",
+            "intent": "task.set_title",
+            "writes": {
+              "title": "API contract (Andrey)"
+            }
+          },
+          {
+            "actor": "pavel",
+            "from": "base",
+            "intent": "task.set_title",
+            "writes": {
+              "title": "API contract (Pavel)"
+            }
+          }
+        ]
+      },
+      "expected": {
+        "title_conflict_set": [
+          "API contract (Andrey)",
+          "API contract (Pavel)"
+        ],
+        "must_report_conflict": true
+      },
+      "assertions": [
+        "Both titles remain discoverable through Automerge conflict APIs.",
+        "The concurrent values are scalar strings: the object stays profile-valid (SHARED-OBJECTS-PROFILE-01 §30, §45)."
+      ]
+    },
+    {
+      "id": "S16",
+      "type": "behavioral",
+      "kind": "shared_object_scenario",
+      "description": "Write to an object with a scalar conflict",
+      "inputs": {
+        "base_state": {
+          "derived_from": "S15 merged state"
+        },
+        "branches": [
+          {
+            "actor": "masha",
+            "from": "merged",
+            "intent": "task.add_tag",
+            "tag": "backend"
+          }
+        ]
+      },
+      "expected": {
+        "tags": [
+          "backend"
+        ],
+        "title_conflict_set": [
+          "API contract (Andrey)",
+          "API contract (Pavel)"
+        ],
+        "must_report_conflict": true
+      },
+      "assertions": [
+        "A concurrent scalar conflict does not make the object profile-invalid, so a later intent on another field succeeds.",
+        "The unrelated write does not resolve the title conflict."
+      ]
+    },
+    {
       "id": "I01",
       "type": "validation",
       "kind": "profile_validation",
