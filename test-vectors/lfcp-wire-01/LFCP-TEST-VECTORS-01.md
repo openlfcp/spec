@@ -166,6 +166,8 @@ The signature input is the deterministic CBOR encoding of:
 
 ## 8. Control Chain vectors
 
+C0 to C6 form the main chain. C7 to C10 continue it to pin the delegation and revocation rules of LFCP-WIRE-01 §17.2 and §17.3 (SPEC-PATCH-03); the session and transport messages in Section 16 still describe the Resource at head C6.
+
 ### 8.1 C0_genesis: GENESIS, owner=OWNER, profile=org.lfcp.test.raw.v1, epoch=0, route A
 
 Record ID: `3b141a9d660b274f73a042dbe47dcb1fe5b9f1d8d96f782cc8e4728695704adc`  
@@ -467,6 +469,162 @@ f8e9cedbeb788bf0a9c505a4000101582027df3173462d19512f2224f54bdc894a8c7e81c212301e
 510281a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c501020303584071b309
 518143fd640aff64033ba76503c985f1509398202ff6dfa1e4315ed29f06e305774d467adb142a8fbeec0a10eae2b390
 eac527d92b7849a60e85cf520f
+```
+
+### 8.8 C7_grant_carol_delegator: CAPABILITY_GRANT by owner BOB: CAROL gets read, write, capability/grant and capability/revoke, may delegate read and capability/grant
+
+Record ID: `f83d37d02a85b9a624d0b50af3ea201f2fbb77c739fccbf1f039e2689d15f2a6`  
+Signer fixture: `BOB`
+
+Payload CBOR:
+
+```text
+a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410107025820e67fb23dc53025
+2680216aecfeadb0951b1d3f8726c49afefd724b182dddc51803010458203ddf22ff145274bcc59c56ffddaab8c123ff
+ea4ac95ff8e9cedbeb788bf0a9c505a300a3005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe94
+3c1282da48015820e85e0878a5ef3cac47224c5ad65466d1d9ce8f5da0531bcfd44f4801eca9d862025820f0a5fba7ce
+3f994d3225a96a6e7a2a93a0f49bdffa27587faabbcf885dc6406201840102040502820104
+```
+
+Sig_structure CBOR:
+
+```text
+846a5369676e6174757265315826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb78
+8bf0a9c54058e5a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410107025820
+e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc51803010458203ddf22ff145274bcc59c56
+ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c505a300a3005820a6e402657a505a183a2c2685ecc3a0457fef86d4
+e251abd48efe943c1282da48015820e85e0878a5ef3cac47224c5ad65466d1d9ce8f5da0531bcfd44f4801eca9d86202
+5820f0a5fba7ce3f994d3225a96a6e7a2a93a0f49bdffa27587faabbcf885dc6406201840102040502820104
+```
+
+Exact COSE_Sign1:
+
+```text
+845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e5a6005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410107025820e67fb23dc530252680216a
+ecfeadb0951b1d3f8726c49afefd724b182dddc51803010458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95f
+f8e9cedbeb788bf0a9c505a300a3005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da
+48015820e85e0878a5ef3cac47224c5ad65466d1d9ce8f5da0531bcfd44f4801eca9d862025820f0a5fba7ce3f994d32
+25a96a6e7a2a93a0f49bdffa27587faabbcf885dc640620184010204050282010458401624ae69c1f616c92f6dc45540
+7d6518d3100626786809b4c2e7ba11b68cf5489428b8380ca8cfc4b038395cb7c63072b219edbfd76bd3c5aea705824d
+bf2307
+```
+
+### 8.9 C8_grant_owner_delegated: CAPABILITY_GRANT by CAROL, parent C7: OWNER (former owner) gets read and capability/grant, may delegate read
+
+Record ID: `dac2a5acd8bf2118a8a21ffa0d7334fa2484fde5988f32a609f95d75b5086f20`  
+Signer fixture: `CAROL`
+
+Payload CBOR:
+
+```text
+a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410108025820f83d37d02a85b9
+a624d0b50af3ea201f2fbb77c739fccbf1f039e2689d15f2a60301045820a6e402657a505a183a2c2685ecc3a0457fef
+86d4e251abd48efe943c1282da4805a400a3005820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e9
+06cd80121d015820f6fb6b8184ca17efdf2ca12486d3ba89fd4253efe9e1ae746fe0f93817c8851a02582053e766cd91
+0b4dbc67f0d850bdcf235402f5e708e85b5223a307f65cb92e4f0a01820104028101035820f83d37d02a85b9a624d0b5
+0af3ea201f2fbb77c739fccbf1f039e2689d15f2a6
+```
+
+Sig_structure CBOR:
+
+```text
+846a5369676e6174757265315826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c
+1282da4840590105a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101080258
+20f83d37d02a85b9a624d0b50af3ea201f2fbb77c739fccbf1f039e2689d15f2a60301045820a6e402657a505a183a2c
+2685ecc3a0457fef86d4e251abd48efe943c1282da4805a400a3005820172d2fc24d2192ed5703279a49d5db9f7fe893
+5b0125093976f6e906cd80121d015820f6fb6b8184ca17efdf2ca12486d3ba89fd4253efe9e1ae746fe0f93817c8851a
+02582053e766cd910b4dbc67f0d850bdcf235402f5e708e85b5223a307f65cb92e4f0a01820104028101035820f83d37
+d02a85b9a624d0b50af3ea201f2fbb77c739fccbf1f039e2689d15f2a6
+```
+
+Exact COSE_Sign1:
+
+```text
+845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a0590105a60058
+20c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410108025820f83d37d02a85b9a624d0
+b50af3ea201f2fbb77c739fccbf1f039e2689d15f2a60301045820a6e402657a505a183a2c2685ecc3a0457fef86d4e2
+51abd48efe943c1282da4805a400a3005820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80
+121d015820f6fb6b8184ca17efdf2ca12486d3ba89fd4253efe9e1ae746fe0f93817c8851a02582053e766cd910b4dbc
+67f0d850bdcf235402f5e708e85b5223a307f65cb92e4f0a01820104028101035820f83d37d02a85b9a624d0b50af3ea
+201f2fbb77c739fccbf1f039e2689d15f2a65840a51d3294b0682f283a72282bbf67f2c821592aeeb42cb5617966a922
+bf983f8f3d5ec75b10c75b9e89b92d5fe268da756b4083f7bd945e5428a9c6e000120908
+```
+
+### 8.10 C9_grant_invite_grandchild: CAPABILITY_GRANT by OWNER, parent C8: INVITE gets read (a grandchild of C7)
+
+Record ID: `bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce20475ef4d6599684a7`  
+Signer fixture: `OWNER`
+
+Payload CBOR:
+
+```text
+a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410109025820dac2a5acd8bf21
+18a8a21ffa0d7334fa2484fde5988f32a609f95d75b5086f200301045820172d2fc24d2192ed5703279a49d5db9f7fe8
+935b0125093976f6e906cd80121d05a400a3005820fd11cff30b5f51be630be47798a656119335d5ef0a41ebc0032335
+a6b2f6d6ba0158203bcc05261bc40609f528e983a23cd356af2e739b36787ab6ccf58e4befaeb133025820da9ae6b26e
+5e3618bb6b6e7380c00f8995bd31a34115425ea65bfcac1ea17f390181010280035820dac2a5acd8bf2118a8a21ffa0d
+7334fa2484fde5988f32a609f95d75b5086f20
+```
+
+Sig_structure CBOR:
+
+```text
+846a5369676e6174757265315826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906
+cd80121d40590103a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101090258
+20dac2a5acd8bf2118a8a21ffa0d7334fa2484fde5988f32a609f95d75b5086f200301045820172d2fc24d2192ed5703
+279a49d5db9f7fe8935b0125093976f6e906cd80121d05a400a3005820fd11cff30b5f51be630be47798a656119335d5
+ef0a41ebc0032335a6b2f6d6ba0158203bcc05261bc40609f528e983a23cd356af2e739b36787ab6ccf58e4befaeb133
+025820da9ae6b26e5e3618bb6b6e7380c00f8995bd31a34115425ea65bfcac1ea17f390181010280035820dac2a5acd8
+bf2118a8a21ffa0d7334fa2484fde5988f32a609f95d75b5086f20
+```
+
+Exact COSE_Sign1:
+
+```text
+845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da0590103a60058
+20c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410109025820dac2a5acd8bf2118a8a2
+1ffa0d7334fa2484fde5988f32a609f95d75b5086f200301045820172d2fc24d2192ed5703279a49d5db9f7fe8935b01
+25093976f6e906cd80121d05a400a3005820fd11cff30b5f51be630be47798a656119335d5ef0a41ebc0032335a6b2f6
+d6ba0158203bcc05261bc40609f528e983a23cd356af2e739b36787ab6ccf58e4befaeb133025820da9ae6b26e5e3618
+bb6b6e7380c00f8995bd31a34115425ea65bfcac1ea17f390181010280035820dac2a5acd8bf2118a8a21ffa0d7334fa
+2484fde5988f32a609f95d75b5086f20584077940d0c5329d33aa31957b86ab1d45748f7d133609cb9f7aa0692ce3d18
+fdaf8c7ff6c8a5f2fd41b7ed71f8c63f292f703ec9a0843484f25c6f95812c79360d
+```
+
+### 8.11 C10_revoke_grandchild: CAPABILITY_REVOKE by CAROL of C9, covered because C9 descends from C8, which CAROL issued
+
+Record ID: `5627266b4519cd29dc193640281e5a3f673dc4d86c1c573e805f2c6ee1557e8a`  
+Signer fixture: `CAROL`
+
+Payload CBOR:
+
+```text
+a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc241010a025820bad796e7efe2e1
+5c1a792152b39dfaf21ede4a480e55ce20475ef4d6599684a70302045820a6e402657a505a183a2c2685ecc3a0457fef
+86d4e251abd48efe943c1282da4805a1005820bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce20475ef4d659
+9684a7
+```
+
+Sig_structure CBOR:
+
+```text
+846a5369676e6174757265315826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c
+1282da48405893a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc241010a025820
+bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce20475ef4d6599684a70302045820a6e402657a505a183a2c26
+85ecc3a0457fef86d4e251abd48efe943c1282da4805a1005820bad796e7efe2e15c1a792152b39dfaf21ede4a480e55
+ce20475ef4d6599684a7
+```
+
+Exact COSE_Sign1:
+
+```text
+845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a05893a6005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc241010a025820bad796e7efe2e15c1a7921
+52b39dfaf21ede4a480e55ce20475ef4d6599684a70302045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251
+abd48efe943c1282da4805a1005820bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce20475ef4d6599684a758
+40d486bcb84a9ef7fa3b0f7901849d6c2fe5024811e040801e30dcabb274278a7011fb82bb7b8d279ecac380e070731b
+a26f028d5a29f8c184874aceab48032c05
 ```
 
 ## 9. Ownership transfer standalone objects
@@ -1683,7 +1841,86 @@ ad5d6ac486092ed662c2f9f9fc36563f5f07848e73ac4b88542fffacd02e607e77f06da272f195ac
 7c8c06
 ```
 
-#### 17.10.10 actor_seq_zero_D1: D1 re-issued with actor sequence 0
+#### 17.10.10 grant_duplicate_ability_C1: C1 with the ability code 2 listed twice
+
+- Base case: `C1_grant_bob`
+- Mutation: body field 1: abilities: `[1, 2, 3]` → `[1, 2, 2]`
+- Rule (LFCP-WIRE-01 §17.1): An ability list (the abilities and the delegable abilities of a grant, and the abilities of a claim) MUST NOT repeat a code; a record whose list repeats a code is rejected with `MALFORMED_MESSAGE`.
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
+- Why: A repeated code makes one grant expressible in several byte forms with different record IDs.
+
+cose_sign1:
+
+```text
+845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e2a6005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203b141a9d660b274f73a042
+dbe47dcb1fe5b9f1d8d96f782cc8e4728695704adc0301045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125
+093976f6e906cd80121d05a300a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9
+c50158201953f4ada1cb4e0f8662108152c82e7e074cbf4859c487461cbe41e5d623e3c2025820b5a22f5f5cbdc3a6f8
+742ec8b2bc9665d0170478bf5aca7528fdd5eefb94f26c0183010202028058409aec9f8360153c29d8c71046b868d214
+e668b5a410a02378423c2257ee08d3eb4b76b36fae20d5a658550ae74968f7e0e236986cf528cd6affe64a232cccce09
+```
+
+#### 17.10.11 grant_escalation_C9: C9 granting data/write, which the parent grant C8 cannot delegate
+
+- Base case: `C9_grant_invite_grandchild`
+- Mutation: body field 1: abilities: `[1]` → `[2]`
+- Rule (LFCP-WIRE-01 §17.2): If `parent grant id` is present: [...] every granted ability MUST be included in the parent's delegable abilities;
+- Expected: invalid, reject, no error code specified
+- Why: Delegation can only narrow authority; a child granting more than its parent may delegate would escalate it.
+
+cose_sign1:
+
+```text
+845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da0590103a60058
+20c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410109025820dac2a5acd8bf2118a8a2
+1ffa0d7334fa2484fde5988f32a609f95d75b5086f200301045820172d2fc24d2192ed5703279a49d5db9f7fe8935b01
+25093976f6e906cd80121d05a400a3005820fd11cff30b5f51be630be47798a656119335d5ef0a41ebc0032335a6b2f6
+d6ba0158203bcc05261bc40609f528e983a23cd356af2e739b36787ab6ccf58e4befaeb133025820da9ae6b26e5e3618
+bb6b6e7380c00f8995bd31a34115425ea65bfcac1ea17f390181020280035820dac2a5acd8bf2118a8a21ffa0d7334fa
+2484fde5988f32a609f95d75b5086f205840807ea22df38f50bd6012d908aca8d2c2c6f45c63d180318305f464b7a608
+c71323d3731fb5e1b95580c3c9937704fdc98e48336eed6b03984dad5b98f43e350f
+```
+
+#### 17.10.12 revoke_received_grant: CAROL revokes C7, the grant she received, instead of C9
+
+- Base case: `C10_revoke_grandchild`
+- Mutation: body field 0: revoked grant: `bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce20475ef4d6599684a7` → `f83d37d02a85b9a624d0b50af3ea201f2fbb77c739fccbf1f039e2689d15f2a6`
+- Rule (LFCP-WIRE-01 §17.3): The owner may revoke any grant. Otherwise, revoke authority **covers** a grant when the revoker issued it, or when it was delegated, directly or through further delegations, from a grant the revoker issued. A grant the revoker received is not covered unless the revoker also issued one of its ancestors.
+- Expected: invalid, reject, no error code specified
+- Why: Holding capability/revoke lets a member undo what it delegated, not the grants others gave it.
+
+cose_sign1:
+
+```text
+845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a05893a6005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc241010a025820bad796e7efe2e15c1a7921
+52b39dfaf21ede4a480e55ce20475ef4d6599684a70302045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251
+abd48efe943c1282da4805a1005820f83d37d02a85b9a624d0b50af3ea201f2fbb77c739fccbf1f039e2689d15f2a658
+40065c99c1c4afaf71bfb605a6253d69635e3aab8492192993c54929f1c24de5e3c16fae8f8e617a0732f5241b7c4471
+d273e8e809080d7cb768055eb80af20c02
+```
+
+#### 17.10.13 revoke_already_revoked: CAROL revokes C9 a second time, after C10
+
+- Base case: `C10_revoke_grandchild`
+- Mutation: position: Control Sequence and previous record: `"seq 10 after C9"` → `"seq 11 after C10"`
+- Rule (LFCP-WIRE-01 §17.3): Revoking a grant that is already revoked is rejected with `AUTHORIZATION_FAILED`.
+- Expected: invalid, reject, error code `AUTHORIZATION_FAILED`
+- Why: A second revocation has no effect to apply; rejecting it keeps every committed record meaningful.
+
+cose_sign1:
+
+```text
+845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a05893a6005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc241010b0258205627266b4519cd29dc1936
+40281e5a3f673dc4d86c1c573e805f2c6ee1557e8a0302045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251
+abd48efe943c1282da4805a1005820bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce20475ef4d6599684a758
+40cee1a376f6f5d4085bfd46a45a9f904c33ad57874691623322a488e3ad5b1107a7aa2a9ab7e990e587714557e7e1e3
+55a2ef7f55cf70ef7c78ef17d806799e03
+```
+
+#### 17.10.14 actor_seq_zero_D1: D1 re-issued with actor sequence 0
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: actor sequence (payload field 3): `1` → `0`
@@ -1702,7 +1939,7 @@ f0687ed06a036656e41594b8065826aeaeda7927384999a4de8d68689695ee07c6f89482faed18c8
 dc90959e0a0c1dde00b5d61c9559b183a8f389b18e9904
 ```
 
-#### 17.10.11 actor_seq1_prev_not_null_D1: D1 with a previous-unit reference although it is sequence 1
+#### 17.10.15 actor_seq1_prev_not_null_D1: D1 with a previous-unit reference although it is sequence 1
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: previous Data Unit (payload field 4): `null` → `7745a3beb83838797591a1121e932799a5fb28b83890a3a9377f6c0d5cc34cd1`
@@ -1722,7 +1959,7 @@ a219b447656a69cd313e1eacbecd2e52bad5b1f0188c8b2c2e24d79c0eb07866c67a6b249e6a845c
 1449c7fdc85bcb04
 ```
 
-#### 17.10.12 hpke_recipient_mismatch_KP0: KP0 payload names CAROL as recipient but is sealed to BOB
+#### 17.10.16 hpke_recipient_mismatch_KP0: KP0 payload names CAROL as recipient but is sealed to BOB
 
 - Base case: `KP0_bob_epoch0`
 - Mutation: recipient (payload field 2): `3ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5` → `a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48`
@@ -1743,7 +1980,7 @@ d7c02370983a342861c610aaf228f512ee439d8a44c806c6917b27daeeff585a3cd0c3d11a819ff8
 e53c07
 ```
 
-#### 17.10.13 kp_enc_wrong_size_KP0: KP0 with a 31-byte HPKE enc
+#### 17.10.17 kp_enc_wrong_size_KP0: KP0 with a 31-byte HPKE enc
 
 - Base case: `KP0_bob_epoch0`
 - Mutation: HPKE enc length (payload field 5): `32` → `31`
@@ -1764,7 +2001,7 @@ ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50358200b5dc558b8104686d5d6b0063629f1cf
 9a03
 ```
 
-#### 17.10.14 have_empty_extra_list: SNAPSHOT-01 with a frontier that violates §28.1 rule 2
+#### 17.10.18 have_empty_extra_list: SNAPSHOT-01 with a frontier that violates §28.1 rule 2
 
 - Base case: `SNAPSHOT-01`
 - Mutation: CAROL entry key 2: `"absent"` → `"[] (present and empty)"`
@@ -1785,7 +2022,7 @@ f4f6208b1daa2c8f0589916e0e7c68103ca43327922202cada2e6d19bb677f9ace7f5840c39f6693
 9543e804
 ```
 
-#### 17.10.15 have_range_reversed: SNAPSHOT-02 with a frontier that violates §28.1 rule 4
+#### 17.10.19 have_range_reversed: SNAPSHOT-02 with a frontier that violates §28.1 rule 4
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra range: `[[105, 107]]` → `[[107, 105]]`
@@ -1806,7 +2043,7 @@ ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfead
 c655677cb30e1b573901
 ```
 
-#### 17.10.16 have_range_not_above_contiguous: SNAPSHOT-02 with a frontier that violates §28.1 rule 5
+#### 17.10.20 have_range_not_above_contiguous: SNAPSHOT-02 with a frontier that violates §28.1 rule 5
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra range: `[[105, 107]]` → `[[95, 107]]`
@@ -1827,7 +2064,7 @@ ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfead
 a33b9c6cc820d07e0705
 ```
 
-#### 17.10.17 have_range_at_contiguous_plus_one: SNAPSHOT-02 with a frontier that violates §28.1 rule 5
+#### 17.10.21 have_range_at_contiguous_plus_one: SNAPSHOT-02 with a frontier that violates §28.1 rule 5
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra range: `[[105, 107]]` → `[[101, 107]]`
@@ -1848,7 +2085,7 @@ e2656ada3ffa5fd2a9dcf9da05e8ce1b5d863b6221a6b2ec6684cc35ba5505e778006a32f73d0587
 bb542e45e5b4ce4b8e06
 ```
 
-#### 17.10.18 have_ranges_unsorted: SNAPSHOT-02 with a frontier that violates §28.1 rule 6
+#### 17.10.22 have_ranges_unsorted: SNAPSHOT-02 with a frontier that violates §28.1 rule 6
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra ranges: `[[105, 107]]` → `[[110, 112], [105, 107]]`
@@ -1869,7 +2106,7 @@ aebf4ca511cb59476bc4fd9eb253e20037b2dbb9938a69ee5abf0a527ba44b2dafe326d7b1b1f77a
 7c74dd4e873586c032de197f36c502
 ```
 
-#### 17.10.19 have_ranges_overlapping: SNAPSHOT-02 with a frontier that violates §28.1 rule 7
+#### 17.10.23 have_ranges_overlapping: SNAPSHOT-02 with a frontier that violates §28.1 rule 7
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra ranges: `[[105, 107]]` → `[[105, 107], [106, 110]]`
@@ -1890,7 +2127,7 @@ deb4c1fba57b7a45baab536c503d402384fdc308d03187d6d4a4bd5f8b64c425a389bea6642e4604
 6fc47ab6eb65793a7a1ad8e2d9340a
 ```
 
-#### 17.10.20 have_ranges_adjacent: SNAPSHOT-02 with a frontier that violates §28.1 rule 8
+#### 17.10.24 have_ranges_adjacent: SNAPSHOT-02 with a frontier that violates §28.1 rule 8
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra ranges: `[[105, 107]]` → `[[105, 107], [108, 110]]`
@@ -1911,7 +2148,7 @@ fb9cfc983227edf07424b793252c2734b5a29b8ed43beaec78df2013f6d59bcf5467443a2126dd77
 ad913da8fe178f8710eb70ac104209
 ```
 
-#### 17.10.21 frontier_duplicate_principal: SNAPSHOT-01 with a frontier that violates §28.1 rule 9
+#### 17.10.25 frontier_duplicate_principal: SNAPSHOT-01 with a frontier that violates §28.1 rule 9
 
 - Base case: `SNAPSHOT-01`
 - Mutation: BOB entries in the frontier: `1` → `2`
@@ -1932,7 +2169,7 @@ c50102a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c501
 f670bfde1440c720608227c380d2a5283876991f6fb5ecdc791619400db9201a2175b6f654cea15e0e
 ```
 
-#### 17.10.22 frontier_unsorted: SNAPSHOT-01 with CAROL listed before BOB
+#### 17.10.26 frontier_unsorted: SNAPSHOT-01 with CAROL listed before BOB
 
 - Base case: `SNAPSHOT-01`
 - Mutation: frontier entry order: `"BOB, CAROL"` → `"CAROL, BOB"`
@@ -1953,7 +2190,7 @@ f02562f989f3df39c026b58d2403a61a96305a9cd69d48e65ffb71ea7317884f8680f732fa65bb75
 c50d
 ```
 
-#### 17.10.23 stale_epoch_absent_actor: CAROL Data Unit in closed epoch 0, where C6 records no CAROL entry
+#### 17.10.27 stale_epoch_absent_actor: CAROL Data Unit in closed epoch 0, where C6 records no CAROL entry
 
 - Base case: `D4_carol_epoch1_seq1`
 - Mutation: Data Epoch (payload field 1): `1` → `0`
@@ -1972,7 +2209,7 @@ c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820a6e402
 2107385908a18154b908b383efd0341d9c959f92161e468633724abc0b
 ```
 
-#### 17.10.24 noncanonical_payload_D1: D1 payload with a non-shortest integer encoding, re-signed
+#### 17.10.28 noncanonical_payload_D1: D1 payload with a non-shortest integer encoding, re-signed
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: payload encoding of the data epoch (0): `00` → `1800`
@@ -1991,7 +2228,7 @@ f8376ef326715840c61e8713b42895fc0f64fc0e7573e7dbd2770dc5235b911a6c08a8c19668eb4e
 228151836168012f2d970f6c0fb45d725d7ffc7b8b782106
 ```
 
-#### 17.10.25 descriptor_extra_field: BOB Principal Descriptor with an additional field 3
+#### 17.10.29 descriptor_extra_field: BOB Principal Descriptor with an additional field 3
 
 - Base case: `principal_bob`
 - Mutation: descriptor fields: `"0, 1, 2"` → `"0, 1, 2, 3 (empty bstr)"`
@@ -2007,7 +2244,7 @@ a40058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c501582019
 ca7528fdd5eefb94f26c0340
 ```
 
-#### 17.10.26 small_order_r_signature_D1: D1 signed with a small-order R that cofactored (ZIP-215) verification accepts
+#### 17.10.30 small_order_r_signature_D1: D1 signed with a small-order R that cofactored (ZIP-215) verification accepts
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: signature R (first 32 bytes): `8adb5052b4f93358a1d5397fd05f591b47b20724afd186d42368caba11bd1f7e` → `0100000000000000000000000000000000000000000000000000000000000000`
@@ -2026,7 +2263,7 @@ f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca3
 751ac3391a14c8e56ce49382f409343d2f5dc2941f2d08
 ```
 
-#### 17.10.27 descriptor_small_order_key: Principal Descriptor whose Ed25519 key is a point of small order
+#### 17.10.31 descriptor_small_order_key: Principal Descriptor whose Ed25519 key is a point of small order
 
 - Base case: `principal_bob`
 - Mutation: Ed25519 public key (field 1), with the ID recomputed: `1953f4ada1cb4e0f8662108152c82e7e074cbf4859c487461cbe41e5d623e3c2` → `0000000000000000000000000000000000000000000000000000000000000000`
@@ -2253,7 +2490,7 @@ ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfead
 | CBOR | Principal Descriptor, every Control payload, wire envelopes |
 | Principal | all four Principal IDs |
 | COSE | C0..C6, ownership offer/accept, Key Packages, D1/D2/D4, AUTH proof |
-| Control | linear chain C0→C6, owner transition at C4, route transition at C5 |
+| Control | linear chain C0→C10, owner transition at C4, route transition at C5, delegation and covered revocation at C7..C10 |
 | HPKE | RFC 9180 A.2.1 self-test + all three LFCP Key Packages |
 | Data crypto | D1/D2/D4 decrypt; D3 decrypts cryptographically but is rejected semantically |
 | Anti-entropy | Have Vector hole 101..104 inferred correctly |

@@ -1366,6 +1366,142 @@
       },
       "expect": "fail",
       "note": "A 31-byte HPKE enc violates `5 => bstr .size 32` (LFCP-WIRE-01 \u00a725, SPEC-PATCH-03 / G-KP3)."
+    },
+    {
+      "rule": "control-record",
+      "source": {
+        "case": "grant_duplicate_ability_C1",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: a repeated ability code (LFCP-WIRE-01 \u00a717.1) is semantic."
+    },
+    {
+      "rule": "control-record",
+      "source": {
+        "case": "grant_escalation_C9",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: delegation limits (LFCP-WIRE-01 \u00a717.2) is semantic."
+    },
+    {
+      "rule": "control-record",
+      "source": {
+        "case": "revoke_received_grant",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: revoke coverage (LFCP-WIRE-01 \u00a717.3) is semantic."
+    },
+    {
+      "rule": "control-record",
+      "source": {
+        "case": "revoke_already_revoked",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "pass",
+      "note": "Structurally valid: a second revocation (LFCP-WIRE-01 \u00a717.3) is semantic."
+    },
+    {
+      "rule": "control-record-payload",
+      "source": {
+        "case": "C7_grant_carol_delegator",
+        "field": "payload_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-control-record-payload",
+      "source": {
+        "case": "C7_grant_carol_delegator",
+        "field": "payload_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "control-record",
+      "source": {
+        "case": "C7_grant_carol_delegator",
+        "field": "cose_sign1"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "control-record-payload",
+      "source": {
+        "case": "C8_grant_owner_delegated",
+        "field": "payload_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-control-record-payload",
+      "source": {
+        "case": "C8_grant_owner_delegated",
+        "field": "payload_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "control-record",
+      "source": {
+        "case": "C8_grant_owner_delegated",
+        "field": "cose_sign1"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "control-record-payload",
+      "source": {
+        "case": "C9_grant_invite_grandchild",
+        "field": "payload_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-control-record-payload",
+      "source": {
+        "case": "C9_grant_invite_grandchild",
+        "field": "payload_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "control-record",
+      "source": {
+        "case": "C9_grant_invite_grandchild",
+        "field": "cose_sign1"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "control-record-payload",
+      "source": {
+        "case": "C10_revoke_grandchild",
+        "field": "payload_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-control-record-payload",
+      "source": {
+        "case": "C10_revoke_grandchild",
+        "field": "payload_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "control-record",
+      "source": {
+        "case": "C10_revoke_grandchild",
+        "field": "cose_sign1"
+      },
+      "expect": "pass"
     }
   ]
 }

@@ -343,6 +343,106 @@
       }
     },
     {
+      "id": "C7_grant_carol_delegator",
+      "type": "bytes",
+      "kind": "control_record",
+      "inputs": {
+        "signer": "BOB"
+      },
+      "expected": {
+        "payload_cbor": {
+          "hex": "a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410107025820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc51803010458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c505a300a3005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48015820e85e0878a5ef3cac47224c5ad65466d1d9ce8f5da0531bcfd44f4801eca9d862025820f0a5fba7ce3f994d3225a96a6e7a2a93a0f49bdffa27587faabbcf885dc6406201840102040502820104"
+        },
+        "protected_header_cbor": {
+          "hex": "a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5"
+        },
+        "sig_structure_cbor": {
+          "hex": "846a5369676e6174757265315826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c54058e5a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410107025820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc51803010458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c505a300a3005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48015820e85e0878a5ef3cac47224c5ad65466d1d9ce8f5da0531bcfd44f4801eca9d862025820f0a5fba7ce3f994d3225a96a6e7a2a93a0f49bdffa27587faabbcf885dc6406201840102040502820104"
+        },
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e5a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410107025820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc51803010458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c505a300a3005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48015820e85e0878a5ef3cac47224c5ad65466d1d9ce8f5da0531bcfd44f4801eca9d862025820f0a5fba7ce3f994d3225a96a6e7a2a93a0f49bdffa27587faabbcf885dc640620184010204050282010458401624ae69c1f616c92f6dc455407d6518d3100626786809b4c2e7ba11b68cf5489428b8380ca8cfc4b038395cb7c63072b219edbfd76bd3c5aea705824dbf2307"
+        },
+        "record_id": {
+          "hex": "f83d37d02a85b9a624d0b50af3ea201f2fbb77c739fccbf1f039e2689d15f2a6"
+        }
+      }
+    },
+    {
+      "id": "C8_grant_owner_delegated",
+      "type": "bytes",
+      "kind": "control_record",
+      "inputs": {
+        "signer": "CAROL"
+      },
+      "expected": {
+        "payload_cbor": {
+          "hex": "a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410108025820f83d37d02a85b9a624d0b50af3ea201f2fbb77c739fccbf1f039e2689d15f2a60301045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4805a400a3005820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d015820f6fb6b8184ca17efdf2ca12486d3ba89fd4253efe9e1ae746fe0f93817c8851a02582053e766cd910b4dbc67f0d850bdcf235402f5e708e85b5223a307f65cb92e4f0a01820104028101035820f83d37d02a85b9a624d0b50af3ea201f2fbb77c739fccbf1f039e2689d15f2a6"
+        },
+        "protected_header_cbor": {
+          "hex": "a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48"
+        },
+        "sig_structure_cbor": {
+          "hex": "846a5369676e6174757265315826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4840590105a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410108025820f83d37d02a85b9a624d0b50af3ea201f2fbb77c739fccbf1f039e2689d15f2a60301045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4805a400a3005820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d015820f6fb6b8184ca17efdf2ca12486d3ba89fd4253efe9e1ae746fe0f93817c8851a02582053e766cd910b4dbc67f0d850bdcf235402f5e708e85b5223a307f65cb92e4f0a01820104028101035820f83d37d02a85b9a624d0b50af3ea201f2fbb77c739fccbf1f039e2689d15f2a6"
+        },
+        "cose_sign1": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a0590105a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410108025820f83d37d02a85b9a624d0b50af3ea201f2fbb77c739fccbf1f039e2689d15f2a60301045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4805a400a3005820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d015820f6fb6b8184ca17efdf2ca12486d3ba89fd4253efe9e1ae746fe0f93817c8851a02582053e766cd910b4dbc67f0d850bdcf235402f5e708e85b5223a307f65cb92e4f0a01820104028101035820f83d37d02a85b9a624d0b50af3ea201f2fbb77c739fccbf1f039e2689d15f2a65840a51d3294b0682f283a72282bbf67f2c821592aeeb42cb5617966a922bf983f8f3d5ec75b10c75b9e89b92d5fe268da756b4083f7bd945e5428a9c6e000120908"
+        },
+        "record_id": {
+          "hex": "dac2a5acd8bf2118a8a21ffa0d7334fa2484fde5988f32a609f95d75b5086f20"
+        }
+      }
+    },
+    {
+      "id": "C9_grant_invite_grandchild",
+      "type": "bytes",
+      "kind": "control_record",
+      "inputs": {
+        "signer": "OWNER"
+      },
+      "expected": {
+        "payload_cbor": {
+          "hex": "a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410109025820dac2a5acd8bf2118a8a21ffa0d7334fa2484fde5988f32a609f95d75b5086f200301045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a400a3005820fd11cff30b5f51be630be47798a656119335d5ef0a41ebc0032335a6b2f6d6ba0158203bcc05261bc40609f528e983a23cd356af2e739b36787ab6ccf58e4befaeb133025820da9ae6b26e5e3618bb6b6e7380c00f8995bd31a34115425ea65bfcac1ea17f390181010280035820dac2a5acd8bf2118a8a21ffa0d7334fa2484fde5988f32a609f95d75b5086f20"
+        },
+        "protected_header_cbor": {
+          "hex": "a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d"
+        },
+        "sig_structure_cbor": {
+          "hex": "846a5369676e6174757265315826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d40590103a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410109025820dac2a5acd8bf2118a8a21ffa0d7334fa2484fde5988f32a609f95d75b5086f200301045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a400a3005820fd11cff30b5f51be630be47798a656119335d5ef0a41ebc0032335a6b2f6d6ba0158203bcc05261bc40609f528e983a23cd356af2e739b36787ab6ccf58e4befaeb133025820da9ae6b26e5e3618bb6b6e7380c00f8995bd31a34115425ea65bfcac1ea17f390181010280035820dac2a5acd8bf2118a8a21ffa0d7334fa2484fde5988f32a609f95d75b5086f20"
+        },
+        "cose_sign1": {
+          "hex": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da0590103a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410109025820dac2a5acd8bf2118a8a21ffa0d7334fa2484fde5988f32a609f95d75b5086f200301045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a400a3005820fd11cff30b5f51be630be47798a656119335d5ef0a41ebc0032335a6b2f6d6ba0158203bcc05261bc40609f528e983a23cd356af2e739b36787ab6ccf58e4befaeb133025820da9ae6b26e5e3618bb6b6e7380c00f8995bd31a34115425ea65bfcac1ea17f390181010280035820dac2a5acd8bf2118a8a21ffa0d7334fa2484fde5988f32a609f95d75b5086f20584077940d0c5329d33aa31957b86ab1d45748f7d133609cb9f7aa0692ce3d18fdaf8c7ff6c8a5f2fd41b7ed71f8c63f292f703ec9a0843484f25c6f95812c79360d"
+        },
+        "record_id": {
+          "hex": "bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce20475ef4d6599684a7"
+        }
+      }
+    },
+    {
+      "id": "C10_revoke_grandchild",
+      "type": "bytes",
+      "kind": "control_record",
+      "inputs": {
+        "signer": "CAROL"
+      },
+      "expected": {
+        "payload_cbor": {
+          "hex": "a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc241010a025820bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce20475ef4d6599684a70302045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4805a1005820bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce20475ef4d6599684a7"
+        },
+        "protected_header_cbor": {
+          "hex": "a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48"
+        },
+        "sig_structure_cbor": {
+          "hex": "846a5369676e6174757265315826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48405893a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc241010a025820bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce20475ef4d6599684a70302045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4805a1005820bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce20475ef4d6599684a7"
+        },
+        "cose_sign1": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a05893a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc241010a025820bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce20475ef4d6599684a70302045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4805a1005820bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce20475ef4d6599684a75840d486bcb84a9ef7fa3b0f7901849d6c2fe5024811e040801e30dcabb274278a7011fb82bb7b8d279ecac380e070731ba26f028d5a29f8c184874aceab48032c05"
+        },
+        "record_id": {
+          "hex": "5627266b4519cd29dc193640281e5a3f673dc4d86c1c573e805f2c6ee1557e8a"
+        }
+      }
+    },
+    {
       "id": "owner_transfer",
       "type": "bytes",
       "kind": "owner_transfer",
@@ -1436,6 +1536,164 @@
         "disposition": "reject",
         "error": {
           "code": "MALFORMED_MESSAGE"
+        }
+      }
+    },
+    {
+      "id": "grant_duplicate_ability_C1",
+      "type": "validation",
+      "kind": "control_record",
+      "description": "C1 with the ability code 2 listed twice",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e2a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203b141a9d660b274f73a042dbe47dcb1fe5b9f1d8d96f782cc8e4728695704adc0301045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a300a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50158201953f4ada1cb4e0f8662108152c82e7e074cbf4859c487461cbe41e5d623e3c2025820b5a22f5f5cbdc3a6f8742ec8b2bc9665d0170478bf5aca7528fdd5eefb94f26c0183010202028058409aec9f8360153c29d8c71046b868d214e668b5a410a02378423c2257ee08d3eb4b76b36fae20d5a658550ae74968f7e0e236986cf528cd6affe64a232cccce09"
+        }
+      },
+      "context": {
+        "previous_record": {
+          "case": "C0_genesis",
+          "field": "record_id"
+        }
+      },
+      "derivation": {
+        "base_case": "C1_grant_bob",
+        "mutation": {
+          "field": "body field 1: abilities",
+          "from": [
+            1,
+            2,
+            3
+          ],
+          "to": [
+            1,
+            2,
+            2
+          ]
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §17.1",
+          "text": "An ability list (the abilities and the delegable abilities of a grant, and the abilities of a claim) MUST NOT repeat a code; a record whose list repeats a code is rejected with `MALFORMED_MESSAGE`."
+        },
+        "why": "A repeated code makes one grant expressible in several byte forms with different record IDs."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE"
+        }
+      }
+    },
+    {
+      "id": "grant_escalation_C9",
+      "type": "validation",
+      "kind": "control_record",
+      "description": "C9 granting data/write, which the parent grant C8 cannot delegate",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da0590103a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410109025820dac2a5acd8bf2118a8a21ffa0d7334fa2484fde5988f32a609f95d75b5086f200301045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a400a3005820fd11cff30b5f51be630be47798a656119335d5ef0a41ebc0032335a6b2f6d6ba0158203bcc05261bc40609f528e983a23cd356af2e739b36787ab6ccf58e4befaeb133025820da9ae6b26e5e3618bb6b6e7380c00f8995bd31a34115425ea65bfcac1ea17f390181020280035820dac2a5acd8bf2118a8a21ffa0d7334fa2484fde5988f32a609f95d75b5086f205840807ea22df38f50bd6012d908aca8d2c2c6f45c63d180318305f464b7a608c71323d3731fb5e1b95580c3c9937704fdc98e48336eed6b03984dad5b98f43e350f"
+        }
+      },
+      "context": {
+        "previous_record": {
+          "case": "C8_grant_owner_delegated",
+          "field": "record_id"
+        }
+      },
+      "derivation": {
+        "base_case": "C9_grant_invite_grandchild",
+        "mutation": {
+          "field": "body field 1: abilities",
+          "from": [
+            1
+          ],
+          "to": [
+            2
+          ]
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §17.2",
+          "text": "If `parent grant id` is present: [...] every granted ability MUST be included in the parent's delegable abilities;"
+        },
+        "why": "Delegation can only narrow authority; a child granting more than its parent may delegate would escalate it."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject"
+      }
+    },
+    {
+      "id": "revoke_received_grant",
+      "type": "validation",
+      "kind": "control_record",
+      "description": "CAROL revokes C7, the grant she received, instead of C9",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a05893a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc241010a025820bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce20475ef4d6599684a70302045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4805a1005820f83d37d02a85b9a624d0b50af3ea201f2fbb77c739fccbf1f039e2689d15f2a65840065c99c1c4afaf71bfb605a6253d69635e3aab8492192993c54929f1c24de5e3c16fae8f8e617a0732f5241b7c4471d273e8e809080d7cb768055eb80af20c02"
+        }
+      },
+      "context": {
+        "previous_record": {
+          "case": "C9_grant_invite_grandchild",
+          "field": "record_id"
+        }
+      },
+      "derivation": {
+        "base_case": "C10_revoke_grandchild",
+        "mutation": {
+          "field": "body field 0: revoked grant",
+          "from": {
+            "hex": "bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce20475ef4d6599684a7"
+          },
+          "to": {
+            "hex": "f83d37d02a85b9a624d0b50af3ea201f2fbb77c739fccbf1f039e2689d15f2a6"
+          }
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §17.3",
+          "text": "The owner may revoke any grant. Otherwise, revoke authority **covers** a grant when the revoker issued it, or when it was delegated, directly or through further delegations, from a grant the revoker issued. A grant the revoker received is not covered unless the revoker also issued one of its ancestors."
+        },
+        "why": "Holding capability/revoke lets a member undo what it delegated, not the grants others gave it."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject"
+      }
+    },
+    {
+      "id": "revoke_already_revoked",
+      "type": "validation",
+      "kind": "control_record",
+      "description": "CAROL revokes C9 a second time, after C10",
+      "inputs": {
+        "cose_sign1": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a05893a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc241010b0258205627266b4519cd29dc193640281e5a3f673dc4d86c1c573e805f2c6ee1557e8a0302045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4805a1005820bad796e7efe2e15c1a792152b39dfaf21ede4a480e55ce20475ef4d6599684a75840cee1a376f6f5d4085bfd46a45a9f904c33ad57874691623322a488e3ad5b1107a7aa2a9ab7e990e587714557e7e1e355a2ef7f55cf70ef7c78ef17d806799e03"
+        }
+      },
+      "context": {
+        "previous_record": {
+          "case": "C10_revoke_grandchild",
+          "field": "record_id"
+        }
+      },
+      "derivation": {
+        "base_case": "C10_revoke_grandchild",
+        "mutation": {
+          "field": "position: Control Sequence and previous record",
+          "from": "seq 10 after C9",
+          "to": "seq 11 after C10"
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §17.3",
+          "text": "Revoking a grant that is already revoked is rejected with `AUTHORIZATION_FAILED`."
+        },
+        "why": "A second revocation has no effect to apply; rejecting it keeps every committed record meaningful."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "AUTHORIZATION_FAILED"
         }
       }
     },

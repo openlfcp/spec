@@ -526,6 +526,20 @@ def generate():
     key_epoch_body = {0: 1, 1: dek_commitment(1, DEK1), 2: [actor_have_bob2], 3: 3}
     C6 = control_record(6, C5['id'], 4, BOB, key_epoch_body)
 
+    # C7-C10: a continuation of the chain for the delegation and revocation
+    # decisions (SPEC-PATCH-03 / G-CAP4, DV4). BOB (owner) lets CAROL
+    # delegate; CAROL delegates to OWNER (the former owner, who holds no
+    # implicit authority any more); OWNER delegates further to INVITE;
+    # CAROL then revokes that grandchild, which her revoke authority covers.
+    grant_carol_body = {0: CAROL.descriptor(), 1: [1, 2, 4, 5], 2: [1, 4]}
+    C7 = control_record(7, C6['id'], 1, BOB, grant_carol_body)
+    grant_owner_body = {0: OWNER.descriptor(), 1: [1, 4], 2: [1], 3: C7['id']}
+    C8 = control_record(8, C7['id'], 1, CAROL, grant_owner_body)
+    grant_invite_body = {0: INVITE.descriptor(), 1: [1], 2: [], 3: C8['id']}
+    C9 = control_record(9, C8['id'], 1, OWNER, grant_invite_body)
+    revoke_c9_body = {0: C9['id']}
+    C10 = control_record(10, C9['id'], 2, CAROL, revoke_c9_body)
+
     # Cryptographically valid but stale unit after strict cutoff.
     D3_STALE = data_unit(BOB, 0, 3, D2['id'], C3['id'], b'LFCP stale offline unit #3', DEK0)
 
@@ -877,6 +891,52 @@ def generate():
             context={'previous_record': ref('C5_route_update', 'record_id')},
             cddl=('control-record', 'pass'))
 
+    # 7c. Capability decisions (SPEC-PATCH-03 / G-CP6, G-CAP4, DV3, DV4),
+    #     each on top of the record its context names.
+    dup_c1 = control_record(1, C0['id'], 1, OWNER, {**grant_bob_body, 1: [1, 2, 2]})
+    neg('grant_duplicate_ability_C1', 'control_record', 'C1 with the ability code 2 listed twice',
+        'C1_grant_bob', 'body field 1: abilities', [1, 2, 3], [1, 2, 2],
+        'LFCP-WIRE-01 §17.1',
+        'An ability list (the abilities and the delegable abilities of a grant, and the abilities of a claim) MUST NOT repeat '
+        'a code; a record whose list repeats a code is rejected with `MALFORMED_MESSAGE`.',
+        'A repeated code makes one grant expressible in several byte forms with different record IDs.',
+        {'cose_sign1': hexv(dup_c1['cose'])},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'MALFORMED_MESSAGE'}},
+        context={'previous_record': ref('C0_genesis', 'record_id')},
+        cddl=('control-record', 'pass'))
+    escalated = control_record(9, C8['id'], 1, OWNER, {**grant_invite_body, 1: [2]})
+    neg('grant_escalation_C9', 'control_record', 'C9 granting data/write, which the parent grant C8 cannot delegate',
+        'C9_grant_invite_grandchild', 'body field 1: abilities', [1], [2],
+        'LFCP-WIRE-01 §17.2',
+        'If `parent grant id` is present: [...] every granted ability MUST be included in the parent\'s delegable abilities;',
+        'Delegation can only narrow authority; a child granting more than its parent may delegate would escalate it.',
+        {'cose_sign1': hexv(escalated['cose'])},
+        {'valid': False, 'disposition': 'reject'},
+        context={'previous_record': ref('C8_grant_owner_delegated', 'record_id')},
+        cddl=('control-record', 'pass'))
+    revoke_received = control_record(10, C9['id'], 2, CAROL, {0: C7['id']})
+    neg('revoke_received_grant', 'control_record', 'CAROL revokes C7, the grant she received, instead of C9',
+        'C10_revoke_grandchild', 'body field 0: revoked grant', hexv(C9['id']), hexv(C7['id']),
+        'LFCP-WIRE-01 §17.3',
+        'The owner may revoke any grant. Otherwise, revoke authority **covers** a grant when the revoker issued it, or when '
+        'it was delegated, directly or through further delegations, from a grant the revoker issued. A grant the revoker '
+        'received is not covered unless the revoker also issued one of its ancestors.',
+        'Holding capability/revoke lets a member undo what it delegated, not the grants others gave it.',
+        {'cose_sign1': hexv(revoke_received['cose'])},
+        {'valid': False, 'disposition': 'reject'},
+        context={'previous_record': ref('C9_grant_invite_grandchild', 'record_id')},
+        cddl=('control-record', 'pass'))
+    revoke_again = control_record(11, C10['id'], 2, CAROL, revoke_c9_body)
+    neg('revoke_already_revoked', 'control_record', 'CAROL revokes C9 a second time, after C10',
+        'C10_revoke_grandchild', 'position: Control Sequence and previous record', 'seq 10 after C9', 'seq 11 after C10',
+        'LFCP-WIRE-01 §17.3',
+        'Revoking a grant that is already revoked is rejected with `AUTHORIZATION_FAILED`.',
+        'A second revocation has no effect to apply; rejecting it keeps every committed record meaningful.',
+        {'cose_sign1': hexv(revoke_again['cose'])},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'AUTHORIZATION_FAILED'}},
+        context={'previous_record': ref('C10_revoke_grandchild', 'record_id')},
+        cddl=('control-record', 'pass'))
+
     # 8. Bad actor sequence.
     D_SEQ0 = data_unit(BOB, 0, 0, None, C3['id'], D1_plain, DEK0)
     neg('actor_seq_zero_D1', 'data_unit', 'D1 re-issued with actor sequence 0',
@@ -1143,6 +1203,10 @@ def generate():
     add_ctrl('C4_owner_transfer_commit', C4)
     add_ctrl('C5_route_update', C5)
     add_ctrl('C6_key_epoch_1', C6)
+    add_ctrl('C7_grant_carol_delegator', C7)
+    add_ctrl('C8_grant_owner_delegated', C8)
+    add_ctrl('C9_grant_invite_grandchild', C9)
+    add_ctrl('C10_revoke_grandchild', C10)
 
     fixtures['transfers'] = {
         'offer_payload_cbor': hx(offer_payload),
@@ -1540,6 +1604,8 @@ def generate_markdown(f: dict):
 
     a('## 8. Control Chain vectors')
     a('')
+    a('C0 to C6 form the main chain. C7 to C10 continue it to pin the delegation and revocation rules of LFCP-WIRE-01 §17.2 and §17.3 (SPEC-PATCH-03); the session and transport messages in Section 16 still describe the Resource at head C6.')
+    a('')
     ctrl_desc = [
         ('C0_genesis', 'GENESIS, owner=OWNER, profile=org.lfcp.test.raw.v1, epoch=0, route A'),
         ('C1_grant_bob', 'CAPABILITY_GRANT, BOB gets data/read + data/write + snapshot/publish'),
@@ -1548,6 +1614,10 @@ def generate_markdown(f: dict):
         ('C4_owner_transfer_commit', 'OWNER_TRANSFER_COMMIT, ownership moves OWNER -> BOB'),
         ('C5_route_update', 'ROUTE_UPDATE, route version 1, coordinator moves to Server B'),
         ('C6_key_epoch_1', 'KEY_EPOCH, epoch 1, old epoch cutoff BOB<=2'),
+        ('C7_grant_carol_delegator', 'CAPABILITY_GRANT by owner BOB: CAROL gets read, write, capability/grant and capability/revoke, may delegate read and capability/grant'),
+        ('C8_grant_owner_delegated', 'CAPABILITY_GRANT by CAROL, parent C7: OWNER (former owner) gets read and capability/grant, may delegate read'),
+        ('C9_grant_invite_grandchild', 'CAPABILITY_GRANT by OWNER, parent C8: INVITE gets read (a grandchild of C7)'),
+        ('C10_revoke_grandchild', 'CAPABILITY_REVOKE by CAROL of C9, covered because C9 descends from C8, which CAROL issued'),
     ]
     for idx, (name, desc) in enumerate(ctrl_desc):
         x = C[name]
@@ -1846,7 +1916,7 @@ def generate_markdown(f: dict):
         ('CBOR','Principal Descriptor, every Control payload, wire envelopes'),
         ('Principal','all four Principal IDs'),
         ('COSE','C0..C6, ownership offer/accept, Key Packages, D1/D2/D4, AUTH proof'),
-        ('Control','linear chain C0→C6, owner transition at C4, route transition at C5'),
+        ('Control','linear chain C0→C10, owner transition at C4, route transition at C5, delegation and covered revocation at C7..C10'),
         ('HPKE','RFC 9180 A.2.1 self-test + all three LFCP Key Packages'),
         ('Data crypto','D1/D2/D4 decrypt; D3 decrypts cryptographically but is rejected semantically'),
         ('Anti-entropy','Have Vector hole 101..104 inferred correctly'),

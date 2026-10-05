@@ -539,7 +539,7 @@ control-record-payload = {
 }
 ```
 
-The payload is signed with COSE_Sign1.
+The payload is signed with COSE_Sign1 by the issuer: the protected-header `kid` MUST equal field `4`, and a record whose `kid` is any other Principal is rejected with `INVALID_SIGNATURE` (Section 10.5).
 
 The resulting record ID is the SHA-256 hash of the exact COSE bytes.
 
@@ -597,6 +597,8 @@ Unknown core Control Record types MUST cause validation failure.
 
 Unknown extension types MAY be retained but MUST NOT be interpreted unless the implementation declares support for the extension.
 
+A Control Record of an extension type (`32` or above) requires owner authority: its issuer MUST be the Resource owner at the record's position in the chain, whether or not the receiver supports the extension.
+
 ---
 
 ## 15. Genesis Record
@@ -624,6 +626,8 @@ genesis-body = {
 The Genesis Record MUST be signed by the owner Principal contained in the body.
 
 The owner Principal has implicit authority over the Resource and does not require an explicit Capability Grant.
+
+Genesis implies route version `0` for its initial route set; Route Update versions (Section 20) count up from it.
 
 ---
 
@@ -672,11 +676,13 @@ Capabilities are established by Control Records.
 | 6 | `key/distribute` |
 | 7 | `key/rotate` |
 | 8 | `route/update` |
-| 9 | `owner/transfer-offer` |
+| 9 | `owner/transfer-offer` (reserved; confers nothing in WIRE-01, see Section 23.1) |
 | 10 | `resource/tombstone` |
 | 11 | `invite/claim` |
 
 The owner implicitly has all standard abilities.
+
+An ability list (the abilities and the delegable abilities of a grant, and the abilities of a claim) MUST NOT repeat a code; a record whose list repeats a code is rejected with `MALFORMED_MESSAGE`. A code that is not in the table above is kept as received and confers nothing.
 
 ### 17.2 Capability Grant
 
@@ -692,13 +698,18 @@ capability-grant-body = {
 
 A non-owner issuer MUST prove authority to grant every requested ability.
 
+The owner MAY grant any abilities without a parent grant. A non-owner issuer MUST hold `capability/grant` and MUST reference a parent grant; it proves its authority through that parent.
+
 If `parent grant id` is present:
 
 - the parent grant MUST be active;
 - the issuer MUST be the subject of the parent grant;
-- every granted ability MUST be included in the parent's delegable abilities.
+- every granted ability MUST be included in the parent's delegable abilities;
+- every delegable ability of the new grant MUST also be included in the parent's delegable abilities.
 
 A capability grant is identified by the Control Record ID that created it.
+
+A grant is **active** while it has not been revoked and, when it has a parent grant, while that parent is active. Revoking a grant therefore also deactivates every grant delegated from it, directly or through further delegations.
 
 ### 17.3 Capability Revocation
 
@@ -713,6 +724,10 @@ The issuer MUST either:
 - be the Resource owner; or
 - possess `capability/revoke` authority that covers the target grant.
 
+The owner may revoke any grant. Otherwise, revoke authority **covers** a grant when the revoker issued it, or when it was delegated, directly or through further delegations, from a grant the revoker issued. A grant the revoker received is not covered unless the revoker also issued one of its ancestors.
+
+Revoking a grant that is already revoked is rejected with `AUTHORIZATION_FAILED`.
+
 Revocation does not make recipients forget data they already decrypted.
 
 For security-sensitive removal, the owner SHOULD also rotate the Data Epoch.
@@ -726,6 +741,8 @@ LFCP link invitations are implemented without a global account service.
 The inviter generates an ephemeral Principal called the **Invitation Principal**.
 
 The owner then creates a Capability Grant to that Principal.
+
+Formally, an **Invitation Principal** is the subject of a Capability Grant that includes `invite/claim`, and such a grant is an **invitation grant**. Only an invitation grant with a `claim_limit` can be claimed: one without `claim_limit` is not claimable.
 
 A typical invite grant contains:
 
@@ -767,6 +784,10 @@ A successful claim:
 - creates a new capability grant to the claimant;
 - consumes one claim from the Invitation Grant;
 - when the limit reaches zero, the Invitation Grant is no longer usable for further claims.
+
+The grant a claim creates is identified by the claim record's Control Record ID (Section 17.2). Its subject is the claimant and its abilities are the claimed abilities; it has no parent grant and an empty delegable list, so revoking the Invitation Grant later does not revoke it.
+
+Claims are counted in Control Chain order. An Invitation Grant whose claims are used up confers no `invite/claim`; its other abilities stay active until it is revoked.
 
 For `claim_limit = 1`, only one claimant can win at the Control Coordinator.
 
@@ -877,6 +898,8 @@ The Control Coordinator URL SHOULD name one of the listed endpoints.
 
 The issuer MUST possess `route/update`.
 
+Each Route Update MUST carry a route version strictly greater than the current one: `0` after Genesis (Section 15), otherwise the version of the last committed Route Update.
+
 The update becomes authoritative only after it is committed to the Control Chain.
 
 ---
@@ -966,6 +989,8 @@ owner-transfer-offer-payload = {
 
 The offer is signed by the current owner using COSE_Sign1.
 
+Only the current owner creates offers. Ability `9` (`owner/transfer-offer`, Section 17.1) is reserved and confers nothing in WIRE-01.
+
 ### 23.2 Transfer Accept
 
 The proposed new owner signs:
@@ -1000,7 +1025,9 @@ A verifier MUST confirm:
 5. the commit itself is signed by that Principal;
 6. the expected next Control Sequence matches the commit sequence.
 
-After commit, the accepting Principal becomes the Resource owner.
+A commit that fails any of these checks is rejected with `AUTHORIZATION_FAILED`, except that an offer or acceptance whose signature does not verify is rejected with `INVALID_SIGNATURE`.
+
+After commit, the accepting Principal becomes the Resource owner. The former owner keeps no implicit authority; the Capability Grants it issued stay active.
 
 A key rotation is RECOMMENDED immediately after ownership transfer and REQUIRED if the previous owner is being removed from future access.
 
@@ -1078,7 +1105,7 @@ After decryption, the recipient MUST verify the DEK against the `dek_commitment`
 
 The package signer MUST have had `key/distribute` authority at the referenced Control Head.
 
-The recipient MUST have had `data/read` authority at that Control Head, except for an Invitation Principal explicitly authorized by an active invite grant.
+The recipient MUST have had `data/read` authority at that Control Head, except for an Invitation Principal explicitly authorized by an active invite grant: a recipient that is the subject of an active grant that includes and still confers `invite/claim` (Section 18) may receive the package without `data/read`.
 
 A server MAY store multiple Key Packages for the same `(resource, epoch, recipient)` tuple.
 
