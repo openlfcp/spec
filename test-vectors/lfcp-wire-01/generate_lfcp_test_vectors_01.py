@@ -566,6 +566,58 @@ def generate():
     dh_mid = msgid('DATA-HAVE')
     DATA_HAVE = wire_msg(30, dh_mid, data_have_body)
 
+    # Further message vectors (LFCP-WIRE-01 §33 registry), built only from the
+    # fixtures above. Responses correlate to their request (§32).
+    def mid(label):
+        return msgid(label)
+    control_head_c6 = {0: 6, 1: C6['id']}
+    ping_payload = h('LFCP-TV-PING-PAYLOAD')[:8]
+    MESSAGES = [
+        ('RESOURCE_HOST', 'message type 10; exact Genesis C0 COSE bytes (§39)',
+         wire_msg(10, mid('RESOURCE-HOST'), {0: C0['cose']})),
+        ('RESOURCE_HOSTED', 'message type 11; durability level 2 as advertised in READY (§40)',
+         wire_msg(11, mid('RESOURCE-HOSTED'), {0: RESOURCE, 1: 2}, correlation=mid('RESOURCE-HOST'))),
+        ('RESOURCE_OPENED', 'message type 13; head C6, BOB 1..2 and CAROL 1, SNAPSHOT-01 summary, route version 1 and coordinator from C5 (§42)',
+         wire_msg(13, mid('RESOURCE-OPENED'), {
+             0: RESOURCE, 1: [control_head_c6], 2: [actor_have(BOB.pid, 2), actor_have(CAROL.pid, 1)],
+             3: {0: S1['id'], 1: 1, 2: S1['frontier']}, 4: 1, 5: COORD_B}, correlation=ro_mid)),
+        ('RESOURCE_CLOSE', 'message type 14 (§43)',
+         wire_msg(14, mid('RESOURCE-CLOSE'), {0: RESOURCE})),
+        ('CONTROL_HAVE', 'message type 20; head C6 (§44)',
+         wire_msg(20, mid('CONTROL-HAVE'), {0: RESOURCE, 1: [control_head_c6]})),
+        ('CONTROL_GET', 'message type 21; Control Sequences 0..6 (§45)',
+         wire_msg(21, mid('CONTROL-GET'), {0: RESOURCE, 1: 0, 2: 6})),
+        ('CONTROL_BATCH', 'message type 22; exact C0..C6 COSE bytes, answering CONTROL_GET (§46)',
+         wire_msg(22, mid('CONTROL-BATCH'), {0: RESOURCE, 1: [C['cose'] for C in (C0, C1, C2, C3, C4, C5, C6)]},
+                  correlation=mid('CONTROL-GET'))),
+        ('CONTROL_PUT', 'message type 23; C6 with expected current head C5 (§47)',
+         wire_msg(23, mid('CONTROL-PUT'), {0: RESOURCE, 1: C5['id'], 2: C6['cose']})),
+        ('DATA_GET', 'message type 31; BOB sequences 1..2 (§49)',
+         wire_msg(31, mid('DATA-GET'), {0: RESOURCE, 1: [{0: BOB.pid, 1: 1, 2: 2}]})),
+        ('DATA_BATCH', 'message type 32; exact D1 and D2 COSE bytes, answering DATA_GET (§50)',
+         wire_msg(32, mid('DATA-BATCH'), {0: RESOURCE, 1: [D1['cose'], D2['cose']]}, correlation=mid('DATA-GET'))),
+        ('KEY_PACKAGE_GET', 'message type 40; CAROL, Data Epoch 1 (§52)',
+         wire_msg(40, mid('KEY-PACKAGE-GET'), {0: RESOURCE, 1: CAROL.pid, 2: [1]})),
+        ('KEY_PACKAGE_BATCH', 'message type 41; exact KPC_carol_epoch1 COSE bytes, answering KEY_PACKAGE_GET (§53)',
+         wire_msg(41, mid('KEY-PACKAGE-BATCH'), {0: RESOURCE, 1: [KPC_cose]}, correlation=mid('KEY-PACKAGE-GET'))),
+        ('KEY_PACKAGE_PUT', 'message type 42; exact KPC_carol_epoch1 COSE bytes (§54)',
+         wire_msg(42, mid('KEY-PACKAGE-PUT'), {0: RESOURCE, 1: [KPC_cose]})),
+        ('SNAPSHOT_GET', 'message type 50; SNAPSHOT-01 ID (§55)',
+         wire_msg(50, mid('SNAPSHOT-GET'), {0: RESOURCE, 1: S1['id']})),
+        ('SNAPSHOT', 'message type 51; exact SNAPSHOT-01 COSE bytes, answering SNAPSHOT_GET (§56)',
+         wire_msg(51, mid('SNAPSHOT'), {0: RESOURCE, 1: S1['cose']}, correlation=mid('SNAPSHOT-GET'))),
+        ('SNAPSHOT_PUT', 'message type 52; exact SNAPSHOT-01 COSE bytes (§57)',
+         wire_msg(52, mid('SNAPSHOT-PUT'), {0: RESOURCE, 1: S1['cose']})),
+        ('NACK_STALE_DATA_EPOCH', 'message type 91; error code 14 STALE_DATA_EPOCH (§60, §62)',
+         wire_msg(91, mid('NACK'), {0: 14})),
+        ('ERROR_AUTH_FAILED', 'message type 4; error code 3 AUTH_FAILED (§61, §62)',
+         wire_msg(4, mid('ERROR'), {0: 3})),
+        ('PING', 'message type 5; 8-byte payload (§38)',
+         wire_msg(5, mid('PING'), {0: ping_payload})),
+        ('PONG', 'message type 6; echoes the PING payload (§38)',
+         wire_msg(6, mid('PONG'), {0: ping_payload}, correlation=mid('PING'))),
+    ]
+
     # Negative: actor equivocation, same tuple Bob seq 2 but different plaintext and valid signature.
     D2_EQ = data_unit(BOB, 0, 2, D1['id'], C3['id'], b'LFCP DIFFERENT unit #2', DEK0)
     assert D2_EQ['id'] != D2['id']
@@ -729,6 +781,7 @@ def generate():
         'DATA_HAVE_with_hole': hx(DATA_HAVE),
         'DATA_PUT_D1_D2': hx(DATA_PUT),
     }
+    fixtures['messages'] = {name: {'description': desc, 'message_cbor': hx(m)} for name, desc, m in MESSAGES}
 
     fixtures['negative'] = {
         'actor_equivocation_original_D2_id': hx(D2['id']),
@@ -847,6 +900,8 @@ def to_vector_format(fixtures: dict) -> dict:
             expected['auth_proof_cose_sign1'] = hexv(w['auth_proof_cose_sign1'])
         expected['message_cbor'] = hexv(w[name])
         cases.append(bytes_case(name, 'wire_message', None, expected))
+    for name, m in fixtures['messages'].items():
+        cases.append(bytes_case(name, 'wire_message', None, {'message_cbor': hexv(m['message_cbor'])}))
 
     n = fixtures['negative']
     cases.append({
@@ -926,7 +981,7 @@ def generate_markdown(f: dict):
     a('')
     a('## 1. What these vectors test')
     a('')
-    a('The suite covers deterministic CBOR, Principal IDs, LFCP DEK commitments, COSE_Sign1, Control Chain records, capability invitation and claim, ownership transfer, route migration, HPKE Key Packages, Data Unit encryption, actor hash chaining, strict epoch cutoff, invitation URIs, session handshake messages, resource opening, Have Vectors, batched DATA_PUT, encrypted signed Snapshots with canonical frontiers, and negative validation cases.')
+    a('The suite covers deterministic CBOR, Principal IDs, LFCP DEK commitments, COSE_Sign1, Control Chain records, capability invitation and claim, ownership transfer, route migration, HPKE Key Packages, Data Unit encryption, actor hash chaining, strict epoch cutoff, invitation URIs, session handshake messages, Resource, Control, Data, Key Package and Snapshot transport messages, PING/PONG, NACK and ERROR, Have Vectors, encrypted signed Snapshots with canonical frontiers, and negative validation cases.')
     a('')
     a('The test profile uses `org.lfcp.test.raw.v1`; its decrypted Data Unit plaintext is opaque bytes and has no application-level merge semantics. This isolates Wire Protocol interoperability from Automerge/Yjs behavior.')
     a('')
@@ -1192,6 +1247,11 @@ def generate_markdown(f: dict):
         a('')
         a(code_hex(W[name]))
         a('')
+    for idx,(name,m) in enumerate(f['messages'].items(), start=len(wire_desc)+1):
+        a(f'### 16.{idx} {name}: {m["description"]}')
+        a('')
+        a(code_hex(m['message_cbor']))
+        a('')
 
     a('## 17. Negative test vectors')
     a('')
@@ -1294,7 +1354,7 @@ def generate_markdown(f: dict):
         ('Anti-entropy','Have Vector hole 101..104 inferred correctly'),
         ('Snapshot','SNAPSHOT-01/02 canonical frontier, exact AAD, key, nonce, decrypt, signature, Snapshot ID'),
         ('Invitation','URI decode, Principal reconstruction, C2 subject match, C3 claim'),
-        ('Wire','HELLO→CHALLENGE→AUTH→READY exact decoding and signature verification'),
+        ('Wire','HELLO→CHALLENGE→AUTH→READY exact decoding and signature verification; every Section 16 message decodes to its §33 body'),
         ('Negative','tamper, wrong recipient, equivocation, stale epoch, CAS mismatch, double claim'),
     ]
     for x,y in matrix:
