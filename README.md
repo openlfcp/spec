@@ -5,6 +5,14 @@ and ADR/RFC material for OpenLFCP.
 
 This repository contains no production application logic.
 
+## Scope
+
+These are Working Drafts. The tag `mvp-0.1-baseline.6` is the MVP 0.1
+implementation baseline ([MVP-0.1-BASELINE.md](MVP-0.1-BASELINE.md)), not a
+Stable LFCP-WIRE-01. MVP 0.1 software implements a subset of it; the
+deferred features are listed in `.github: docs/release/deferred-wire-01-features.md`
+(in [openlfcp/.github](https://github.com/openlfcp/.github)).
+
 ## Source of truth
 
 For MVP 0.1, [MVP-0.1-BASELINE.md](MVP-0.1-BASELINE.md) lists the exact files to
