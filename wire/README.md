@@ -34,7 +34,8 @@ checkable wholes:
   the payload (§10.3) instead of treating them as opaque bytes;
 - `typed-control-record-payload`, which binds each §14 Control Record type to
   its body rule, with Genesis fixed to `control_seq = 0` and
-  `prev_control_id = null` (§13.1);
+  `prev_control_id = null` (§13.1), and admits extension types 32 and above
+  with an untyped body (§14); reserved core codes 9–31 match no alternative;
 - `typed-lfcp-message`, which binds each §33 message type to its body rule.
 
 ## What the CDDL proves
@@ -76,18 +77,20 @@ and the Wire decoder (LFCP-016), not to CDDL:
 - **Canonical Have Vectors and frontiers** (§28.1, §28.2): sorted,
   non-overlapping, non-adjacent ranges above `contiguous`; key `2` omitted
   when empty; frontier sorted by Principal ID with no duplicates.
-- **Value constraints stated only in prose**: `wss://` endpoint URLs (§16),
-  text limits of 256 UTF-8 bytes (§22, §24), `flags` currently 0 (§32),
-  extension and reserved code ranges (§14, §33).
-- **Envelope extensibility** (§32): keys above 15 MAY be ignored, but
-  `lfcp-message` as written is a closed map. This is listed as a
-  specification gap.
+- **Value constraints stated only in prose**: `ws`/`wss` endpoint and
+  coordinator URLs (§16), writer-side text limits of 256 UTF-8 bytes (§22,
+  §24), `flags` sent as 0 and ignored on receipt (§32), owner authority for
+  extension Control Records (§14), strict Ed25519 and descriptor key checks
+  (§7, §10.5.1).
 
-The negative vectors in LFCP-TEST-VECTORS-01 demonstrate this: every one
-except the tag-18 object is listed in `fixtures/manifest.json` as a
-structurally valid object that must pass the CDDL. That covers flipped
-signatures, wrong `kid`, AEAD failure, non-canonical frontiers, stale epochs
-and Control forks. Non-canonical CBOR encoding is likewise invisible, because
+Most negative vectors in LFCP-TEST-VECTORS-01 demonstrate this: they are
+listed in `fixtures/manifest.json` as structurally valid objects that must
+pass the CDDL. That covers flipped signatures, wrong `kid`, small-order
+keys and signatures, AEAD failure, non-canonical frontiers, stale epochs,
+Control forks and authority failures. The exceptions are listed as
+must-fail: the tag-18 object, the descriptor with an extra field, the Key
+Package with a wrong-size `enc`, the reserved core Control Record type, the
+unassigned message type and the null expected Control Head. Non-canonical CBOR encoding is likewise invisible, because
 the tool validates decoded data.
 
 ## Checks
