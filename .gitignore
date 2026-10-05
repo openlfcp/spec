@@ -1,6 +1,9 @@
 # Generator scratch output
 __pycache__/
 *.pyc
+
+# Local Python environment for the vector generators
+.venv/
 node_modules/
 
 # OS / editor

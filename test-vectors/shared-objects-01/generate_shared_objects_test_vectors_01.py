@@ -1,7 +1,14 @@
-import hashlib, json, base64, struct, zipfile, os
+import argparse, hashlib, json, base64, struct, zipfile, os
 from pathlib import Path
 
-OUT = Path('/mnt/data')
+_parser = argparse.ArgumentParser(description='Generate SHARED-OBJECTS-TEST-VECTORS-01 JSON, Markdown and the Automerge reference script.')
+_parser.add_argument('--out-dir', type=Path, default=Path(__file__).resolve().parent,
+                     help="directory to write the vector files into (default: this script's directory)")
+_parser.add_argument('--bundle', action='store_true',
+                     help='also write SHARED-OBJECTS-TEST-VECTORS-01-bundle.zip (not committed to the repository)')
+_args = _parser.parse_args()
+OUT = _args.out_dir
+OUT.mkdir(parents=True, exist_ok=True)
 
 
 def sha256(b: bytes) -> bytes:
@@ -1311,12 +1318,14 @@ regardless of which conforming editor, SDK, or LFCP server transported those cha
 md_path = OUT/'SHARED-OBJECTS-TEST-VECTORS-01.md'
 md_path.write_text(md,encoding='utf-8')
 
-# Bundle
-bundle=OUT/'SHARED-OBJECTS-TEST-VECTORS-01-bundle.zip'
-with zipfile.ZipFile(bundle,'w',zipfile.ZIP_DEFLATED) as z:
-    for name in ['SHARED-OBJECTS-TEST-VECTORS-01.md','SHARED-OBJECTS-TEST-VECTORS-01.json','generate_shared_objects_test_vectors_01.py','generate_automerge_reference_01.mjs']:
-        z.write(OUT/name, arcname=name)
-
 print('MD', md_path, len(md.splitlines()), md_path.stat().st_size, hashlib.sha256(md_path.read_bytes()).hexdigest())
 print('JSON', json_path, json_path.stat().st_size, hashlib.sha256(json_path.read_bytes()).hexdigest())
-print('BUNDLE', bundle, bundle.stat().st_size, hashlib.sha256(bundle.read_bytes()).hexdigest())
+
+# Optional distribution bundle; zips are not committed to the repository.
+if _args.bundle:
+    bundle=OUT/'SHARED-OBJECTS-TEST-VECTORS-01-bundle.zip'
+    with zipfile.ZipFile(bundle,'w',zipfile.ZIP_DEFLATED) as z:
+        for name in ['SHARED-OBJECTS-TEST-VECTORS-01.md','SHARED-OBJECTS-TEST-VECTORS-01.json','generate_automerge_reference_01.mjs']:
+            z.write(OUT/name, arcname=name)
+        z.write(Path(__file__).resolve(), arcname='generate_shared_objects_test_vectors_01.py')
+    print('BUNDLE', bundle, bundle.stat().st_size, hashlib.sha256(bundle.read_bytes()).hexdigest())

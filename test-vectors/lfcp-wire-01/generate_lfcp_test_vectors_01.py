@@ -10,6 +10,7 @@ DO NOT reuse any test private keys in production.
 
 from __future__ import annotations
 
+import argparse
 import base64
 import hashlib
 import hmac
@@ -24,8 +25,9 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey,
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, X25519PublicKey
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 
-OUT_MD = Path('/mnt/data/LFCP-TEST-VECTORS-01.md')
-OUT_JSON = Path('/mnt/data/LFCP-TEST-VECTORS-01.json')
+# Output paths; main() points them at --out-dir (default: this script's directory).
+OUT_MD = Path(__file__).resolve().parent / 'LFCP-TEST-VECTORS-01.md'
+OUT_JSON = Path(__file__).resolve().parent / 'LFCP-TEST-VECTORS-01.json'
 
 # -----------------------------------------------------------------------------
 # Deterministic CBOR: RFC 8949 preferred deterministic serialization subset.
@@ -1040,8 +1042,20 @@ def generate_markdown(f: dict):
 
     OUT_MD.write_text('\n'.join(lines) + '\n', encoding='utf-8')
 
-if __name__ == '__main__':
+def main() -> None:
+    global OUT_MD, OUT_JSON
+    parser = argparse.ArgumentParser(description='Generate LFCP-TEST-VECTORS-01 JSON and Markdown.')
+    parser.add_argument('--out-dir', type=Path, default=Path(__file__).resolve().parent,
+                        help='directory to write the vector files into (default: this script\'s directory)')
+    args = parser.parse_args()
+    args.out_dir.mkdir(parents=True, exist_ok=True)
+    OUT_MD = args.out_dir / 'LFCP-TEST-VECTORS-01.md'
+    OUT_JSON = args.out_dir / 'LFCP-TEST-VECTORS-01.json'
     fixtures = generate()
     generate_markdown(fixtures)
     print(OUT_MD)
     print(OUT_JSON)
+
+
+if __name__ == '__main__':
+    main()
