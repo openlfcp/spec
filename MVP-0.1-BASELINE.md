@@ -91,6 +91,7 @@ directory).
 | `adr/0001-mvp-0.1-protocol-decisions.md` | Project-owner decisions of 2026-10-05 applied to the Working Drafts |
 | `adr/0002-mvp-0.1-protocol-decisions-2.md` | Second batch of project-owner decisions of 2026-10-05 (SPEC-PATCH-03) |
 | `adr/0003-mvp-0.1-protocol-decisions-3.md` | Third batch of project-owner decisions of 2026-10-05 (SPEC-PATCH-04) |
+| `adr/0004-mvp-0.1-protocol-decisions-4.md` | Fourth batch (SPEC-PATCH-05): G-DP1-GAP approved by the project owner; the other items are orchestrator decisions pending owner review |
 
 ## Project documents in `openlfcp/.github`
 
