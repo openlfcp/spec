@@ -1369,6 +1369,23 @@
           "diagnostic": "INVALID_AUTOMERGE_BYTES"
         }
       }
+    },
+    {
+      "id": "SO-UNKNOWN-ACTOR",
+      "description": "andrey's next change on S01 whose predecessor list names an operation of an actor S01 does not know",
+      "rule": "SHARED-OBJECTS-PROFILE-01 §11.1: every other actor of a change is already an actor of the document; otherwise INVALID_AUTOMERGE_BYTES before the engine.",
+      "base_scenario": "S01",
+      "signer": "andrey",
+      "signer_actor_hex": "6c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583",
+      "plaintext_hex": "820158d6856f4a831d9bb8f101cb01010f737136bdf197d0613ebaf03c0b332f5d7338f74ee15d1aa2b7432f65a4615c206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c58303100010534f2d554e4b4e4f574e2d4143544f520120cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc0c0102020411041307150c340242045604570470047105730605007f0404100002030000017e001102017f087072696f72697479000401047f0404017f000416686967687f0204017e010004017d010a760300",
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_AUTOMERGE_BYTES"
+        }
+      }
     }
   ],
   "validations": [
@@ -1461,7 +1478,7 @@
     "limits": {
       "change": {
         "max_rows": 16384,
-        "max_group_sum": 16384,
+        "max_group_sum": 262144,
         "max_string_bytes": 4194304,
         "max_deps": 1024,
         "max_actors": 1024
@@ -1519,20 +1536,35 @@
         }
       },
       {
-        "id": "EXP-change-preds-at-limit",
+        "id": "EXP-change-preds-per-op-at-limit",
         "kind": "change",
-        "description": "one operation with 16,384 predecessors",
+        "description": "one operation with 2 predecessors of 2 actors (its own and one other)",
         "rule": "SHARED-OBJECTS-PROFILE-01 §11.1: exact change limits, checked before the engine",
-        "bytes_hex": "856f4a83f23a1bd7016a0164216dc9d546ffb21a1cca664060ce4703b42329e8d3aef26273a1614a221d9b206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c58302020000000715033401420256027004710473047f016b017f017f007f8080018080010080800101",
-        "sha256": "66272e4157cc64e71b611a0a2fc0a3af43af0954b08bbab9e3b09996684a9aab",
+        "bytes_hex": "856f4a832f81f8e90187010164216dc9d546ffb21a1cca664060ce4703b42329e8d3aef26273a1614a221d9b206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020200000120cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc0715033401420256027002710373037f016b017f017f007f027e00017e0100",
+        "sha256": "b7c1192bcbf8cd748973b590ea1a9e94ad914b95db7ad4beeeba370f7631f241",
         "expected": {
           "within_limits": true
         }
       },
       {
-        "id": "EXP-change-preds-over-limit",
+        "id": "EXP-change-preds-per-op-over-limit",
         "kind": "change",
-        "description": "one operation with 16,385 predecessors",
+        "description": "one operation with 2 predecessors and no other actor",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.1: exact change limits, checked before the engine",
+        "bytes_hex": "856f4a83eaa54d8501640164216dc9d546ffb21a1cca664060ce4703b42329e8d3aef26273a1614a221d9b206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c58302020000000715033401420256027002710273027f016b017f017f007f0202000201",
+        "sha256": "758a0cc64f6fe8b63d56e15e3b0b0dbf4bbc3e7f6a54a2d69f64e663cf64371a",
+        "expected": {
+          "within_limits": false,
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "EXP-change-preds-bomb",
+        "kind": "change",
+        "description": "one operation with 16,385 predecessors of one actor",
         "rule": "SHARED-OBJECTS-PROFILE-01 §11.1: exact change limits, checked before the engine",
         "bytes_hex": "856f4a83660e0bfc016a0164216dc9d546ffb21a1cca664060ce4703b42329e8d3aef26273a1614a221d9b206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c58302020000000715033401420256027004710473047f016b017f017f007f8180018180010081800101",
         "sha256": "ba100ae20741e13d46e3bd93b42230c20dd2d46a455b1becd6f5738a6fd7afed",
@@ -1644,6 +1676,36 @@
         "rule": "SHARED-OBJECTS-PROFILE-01 §13, §13.1: exactly one document chunk, nothing after it",
         "bytes_hex": "856f4a832464c66600930401206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010f737136bdf197d0613ebaf03c0b332f5d7338f74ee15d1aa2b7432f65a4615c08010203021303230235144003430256020a010402061599012102230834014210561757ab01800102020002017e030c02007e0c70726f66696c652e696e6974055330312e317e00017f00020700030c0000037f020b04710a657874656e73696f6e73076f626a656374730770726f66696c652430313961326638352d376233312d376334322d623835612d6663383433653266343061640961737369676e6565730a637265617465645f61740a637265617465645f62790a657874656e73696f6e73026964096c6966656379636c65087072696f72697479067374617475730474616773057469746c6504747970650f007f03027f7f030b010f02007f01020002017f0004017f00020102007fe60302007cc602d60500c60402667c4600c602466f72672e6f70656e6c6663702e7368617265642d6f626a656374732e7631323032362d31302d30345430353a33303a30305a703a765165564b6f59686a3239586f32425344415144724e50484c79645a422d6a4c4f4b50574e69713079665130313961326638352d376233312d376334322d623835612d6663383433653266343061646163746976656e6f726d616c746f646f507265706172652041504920636f6e74726163747461736b0f0001856f4a832816e18d015c0164216dc9d546ffb21a1cca664060ce4703b42329e8d3aef26273a1614a221d9b206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020200000005150334014202560270027f016b017f017f007f00",
         "sha256": "0f5ac072ab749367b864573687195ed12c76affd27c74eb92cef5403583ffe83",
+        "expected": {
+          "within_limits": false,
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "EXP-change-duplicate-column",
+        "kind": "change",
+        "description": "a valid change with its first column listed twice",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.1 (7): no two columns share a specification",
+        "bytes_hex": "856f4a8324d1520601610164216dc9d546ffb21a1cca664060ce4703b42329e8d3aef26273a1614a221d9b206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c58302020000000615031503340142025602700203016b03016b03030103000300",
+        "sha256": "462759cd15546651905b6289b358234937cc83b3cc88fc90510ea94d8e591273",
+        "expected": {
+          "within_limits": false,
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "EXP-change-actor-index",
+        "kind": "change",
+        "description": "a change whose object actor column names actor index 1 with no other actors",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.1 (8): an actor index is less than one plus the number of other actors",
+        "bytes_hex": "856f4a8385f1d14f0171013dc7704fb0ff9ba5b67a3019126025741d5925faeb5fcef366b94e88f22b72e6206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830202000a4558502e6e657374656400080102020215033401420256025701700201017f017f0178017f017f14017f00",
+        "sha256": "254549681413f3db6b1e29fc82fc3be405a63d6d6681038d3850c74924a4801f",
         "expected": {
           "within_limits": false,
           "error": {

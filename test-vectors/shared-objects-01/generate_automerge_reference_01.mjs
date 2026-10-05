@@ -639,7 +639,7 @@ const documentChunk = (columns) =>
 const ACTION_INT = (4 << 4) | 2;
 const RAW_DEFLATED = (5 << 4) | 0x08 | 7;
 const rleRun = (n) => Uint8Array.from([...sleb(n), ...leb(1)]);
-const LIMITS = { change: { max_rows: 16384, max_group_sum: 16384, max_string_bytes: 4194304, max_deps: 1024, max_actors: 1024 }, snapshot_floor: { max_rows: 262144, max_group_sum: 262144, max_string_bytes: 33554432, max_inflated_bytes: 33554432, max_actors: 1024, max_heads: 1024 } };
+const LIMITS = { change: { max_rows: 16384, max_group_sum: 262144, max_string_bytes: 4194304, max_deps: 1024, max_actors: 1024 }, snapshot_floor: { max_rows: 262144, max_group_sum: 262144, max_string_bytes: 33554432, max_inflated_bytes: 33554432, max_actors: 1024, max_heads: 1024 } };
 const expansion = (id, kind, description, rule, bytes, within) => ({
   id,
   kind,
@@ -663,8 +663,9 @@ corpus.expansion = {
     expansion("EXP-change-ops-at-limit", "change", "16,384 operations: the limit", CHANGE_RULE, nullSets(16384), true),
     expansion("EXP-change-ops-over-limit", "change", "16,385 operations", CHANGE_RULE, nullSets(16385), false),
     expansion("EXP-change-rle-bomb", "change", "1,000,000 operations in about 112 bytes (Automerge's own encoder)", CHANGE_RULE, nullSets(1_000_000), false),
-    expansion("EXP-change-preds-at-limit", "change", "one operation with 16,384 predecessors", CHANGE_RULE, nullSets(1, "k", predsOf(16384)), true),
-    expansion("EXP-change-preds-over-limit", "change", "one operation with 16,385 predecessors", CHANGE_RULE, nullSets(1, "k", predsOf(16385)), false),
+    expansion("EXP-change-preds-per-op-at-limit", "change", "one operation with 2 predecessors of 2 actors (its own and one other)", CHANGE_RULE, nullSets(1, "k", [`1@${EXP_ACTOR}`, `1@${"cc".repeat(32)}`]), true),
+    expansion("EXP-change-preds-per-op-over-limit", "change", "one operation with 2 predecessors and no other actor", CHANGE_RULE, nullSets(1, "k", predsOf(2)), false),
+    expansion("EXP-change-preds-bomb", "change", "one operation with 16,385 predecessors of one actor", CHANGE_RULE, nullSets(1, "k", predsOf(16385)), false),
     expansion("EXP-change-strings-at-limit", "change", "16,384 rows of a 256-byte key: 4 MiB of strings", CHANGE_RULE, nullSets(16384, "x".repeat(256)), true),
     expansion("EXP-change-strings-over-limit", "change", "16,384 rows of a 257-byte key", CHANGE_RULE, nullSets(16384, "x".repeat(257)), false),
     expansion("EXP-change-compressed", "change", "a valid change as a compressed chunk (type 2)", "SHARED-OBJECTS-PROFILE-01 §11: a change is an uncompressed chunk (type 1)", compressed(nullSets(3)), false),
@@ -675,6 +676,129 @@ corpus.expansion = {
     expansion("EXP-snapshot-trailing-chunk", "snapshot", "the S01 save followed by a change chunk", "SHARED-OBJECTS-PROFILE-01 §13, §13.1: exactly one document chunk, nothing after it", Uint8Array.from([...save01, ...nullSets(1)]), false),
   ],
 };
+/** Rebuilds a change chunk with its operation columns replaced by `mutate(columns)`. */
+function rebuildChange(change, mutate) {
+  let pos = 9;
+  const u = () => {
+    let v = 0;
+    let scale = 1;
+    for (;;) {
+      const b = change[pos++];
+      v += (b & 0x7f) * scale;
+      if ((b & 0x80) === 0) return v;
+      scale *= 128;
+    }
+  };
+  const s = () => {
+    let v = 0;
+    let scale = 1;
+    for (;;) {
+      const b = change[pos++];
+      v += (b & 0x7f) * scale;
+      scale *= 128;
+      if ((b & 0x80) === 0) return b & 0x40 ? v - scale : v;
+    }
+  };
+  u(); // chunk length
+  const start = pos;
+  const skip = (n) => {
+    pos += n;
+  };
+  skip(u() * 32); // deps
+  skip(u()); // actor
+  u(); // seq
+  u(); // start op
+  s(); // time
+  skip(u()); // message
+  const others = u();
+  for (let i = 0; i < others; i++) skip(u());
+  const headerEnd = pos;
+  const metas = Array.from({ length: u() }, () => [u(), u()]);
+  const columns = metas.map(([spec, length]) => {
+    const data = change.subarray(pos, pos + length);
+    pos += length;
+    return [spec, data];
+  });
+  const extra = change.subarray(pos);
+  const next = mutate(columns);
+  return chunk(1, Uint8Array.from([
+    ...change.subarray(start, headerEnd),
+    ...leb(next.length),
+    ...next.flatMap(([spec, data]) => [...leb(spec), ...leb(data.length)]),
+    ...next.flatMap(([, data]) => [...data]),
+    ...extra,
+  ]));
+}
+// A change with an object actor column: a set inside a map the base change created.
+const nested = (() => {
+  const doc = A.change(A.init({ actor: EXP_ACTOR }), { message: "EXP.map", time: 0 }, (d) => {
+    d.m = {};
+  });
+  const next = A.change(doc, { message: "EXP.nested", time: 0 }, (d) => {
+    d.m.x = 1;
+  });
+  return A.getLastLocalChange(next);
+})();
+const OBJ_ACTOR = (0 << 4) | 1;
+corpus.expansion.cases.push(
+  expansion(
+    "EXP-change-duplicate-column",
+    "change",
+    "a valid change with its first column listed twice",
+    "SHARED-OBJECTS-PROFILE-01 §11.1 (7): no two columns share a specification",
+    rebuildChange(nullSets(3), (cols) => [cols[0], ...cols]),
+    false,
+  ),
+  expansion(
+    "EXP-change-actor-index",
+    "change",
+    "a change whose object actor column names actor index 1 with no other actors",
+    "SHARED-OBJECTS-PROFILE-01 §11.1 (8): an actor index is less than one plus the number of other actors",
+    rebuildChange(nested, (cols) =>
+      cols.map(([spec, data]) => (spec === OBJ_ACTOR ? [spec, Uint8Array.from([...sleb(1), ...leb(1)])] : [spec, data])),
+    ),
+    false,
+  ),
+);
+if (checkStructure(nested) !== "ok") throw new Error("the nested base change must be structurally valid");
+/** The base of the actor-index case has an object actor column at index 0. */
+function checkStructure(change) {
+  let ok = false;
+  rebuildChange(change, (cols) => {
+    ok = cols.some(([spec]) => spec === OBJ_ACTOR);
+    return cols;
+  });
+  return ok ? "ok" : "no object actor column";
+}
+
+// SHARED-OBJECTS-PROFILE-01 §11.1: a change naming an actor the document
+// does not know. Automerge panics applying it (JS: PanicError; automerge-rs:
+// an unwrap); a receiver rejects it before the engine.
+{
+  const stranger = "cc".repeat(32);
+  const own = A.decodeChange(
+    A.getLastLocalChange(
+      A.change(A.clone(s01, { actor: actorOf("andrey") }), { message: "SO-UNKNOWN-ACTOR", time: 0 }, (d) => {
+        d.objects[K].priority = "high";
+      }),
+    ),
+  );
+  const forged = A.encodeChange({
+    ...own,
+    ops: own.ops.map((o) => ({ ...o, pred: [...o.pred, `1@${stranger}`] })),
+  });
+  corpus.negatives.push({
+    id: "SO-UNKNOWN-ACTOR",
+    description: "andrey's next change on S01 whose predecessor list names an operation of an actor S01 does not know",
+    rule: "SHARED-OBJECTS-PROFILE-01 §11.1: every other actor of a change is already an actor of the document; otherwise INVALID_AUTOMERGE_BYTES before the engine.",
+    base_scenario: "S01",
+    signer: "andrey",
+    signer_actor_hex: actorOf("andrey"),
+    plaintext_hex: hex(frame(forged)),
+    expected: { valid: false, disposition: "reject", error: { code: "PROFILE_INVALID", diagnostic: "INVALID_AUTOMERGE_BYTES" } },
+  });
+}
+
 // The compressed case is a real compressed change: Automerge itself decodes it.
 if (A.decodeChange(compressed(nullSets(3))).ops.length !== 3) throw new Error("compressed() is wrong");
 

@@ -308,8 +308,8 @@ The limits are exact: whether a change is accepted decides the replica state (Se
 
 | Limit | Value |
 | --- | --- |
-| Values in any one column | 16,384 |
-| Sum of the values of all group columns | 16,384 |
+| Values in any one column, except a column holding a group's entries | 16,384 |
+| Sum of the values of all group columns | 262,144 |
 | Expanded string bytes | 4,194,304 (4 MiB) |
 | Dependencies (the change's `deps`) | 1,024 |
 | Other actors | 1,024 |
@@ -323,12 +323,25 @@ The counts come from the chunk's structure and the run headers of its columns, w
    - types 0 (group), 1 (actor), 2 (integer), 3 (delta integer), 5 (string) and 6 (value metadata) are run-length encoded: a signed LEB128 header `n`; `n > 0` is a run of `n` copies of the one value that follows; `n < 0` is a literal run of `-n` values that follow; `n = 0` is a null run whose ULEB128 length follows. Each run adds its length to the count. Values are ULEB128 numbers, signed LEB128 numbers for type 3, and ULEB128 length-prefixed UTF-8 for type 5;
    - type 4 (boolean) is a sequence of ULEB128 run lengths; each adds to the count;
    - type 7 (raw value bytes) has no count.
-5. A group column's sum is the total of its values, each value counted once per row it occupies (a run of `n` copies of `v` adds `n * v`). These are the entries of the operations' predecessor lists.
+5. A group column's sum is the total of its values, each value counted once per row it occupies (a run of `n` copies of `v` adds `n * v`). These are the entries of the operations' predecessor lists. The other columns that share the group column's id (the predecessors' actors and counters) hold those entries: their value counts are bounded by the group limit, not by the per-column limit.
 6. Expanded string bytes are the lengths of the string values of all type-5 columns, each counted once per row it occupies (a run of `n` copies of a `k`-byte string adds `n * k`).
+
+The same walk also rejects a change whose structure an Automerge engine may not survive:
+
+7. two columns with the same specification;
+8. a value of an actor column (type 1) that is not less than one plus the number of other actors (index 0 is the change's own actor, index `i` the `i`-th other actor);
+9. a value of a group column greater than one plus the number of other actors. An operation's predecessors are the concurrent values it replaces, and concurrent operations have distinct actors, so a valid operation never has more predecessors than the change has actors. The total of rule 5 bounds what a change may list over all its operations: a merged replica overwriting 500 keys that 40 replicas set concurrently writes 20,000 predecessor entries.
 
 A change's operation count is the value count of its action column (column 4, type 2), so it is within the first limit. The check runs in time linear in the chunk's length. A receiver reads numbers of 2^53 or more as above every limit.
 
 A writer that commits one application transaction per change (Section 10) stays far below these limits: a Shared Objects intent is tens of operations.
+
+A writer frames the raw, uncompressed change bytes. Some Automerge libraries compress a change when they serialize it (automerge-rs `Change::bytes()` above 256 bytes); the writer uses the uncompressed form instead (`Change::raw_bytes()` there). Automerge JS emits uncompressed changes.
+
+When every dependency of a change is in the document (Section 14.1), two more rules apply before the engine sees it:
+
+- every other actor the change lists is already an actor of the document: the actor of a change the document holds. A valid change refers only to operations in its own history, so its other actors are known there;
+- if the engine still fails while applying the change (it returns an error, or it aborts and the receiver catches the abort), the change is `PROFILE_INVALID` with the diagnostic `INVALID_AUTOMERGE_BYTES`, and the receiver's document is as it was before the change. A receiver does not keep an engine document that failed in the middle of an apply; it restores the document it had.
 
 ---
 
@@ -375,7 +388,7 @@ After loading a Snapshot, the client applies all LFCP Data Units beyond the Snap
 
 A document chunk's columns are run-length encoded and MAY also be deflated (the deflate bit of the column specification), so a small Snapshot can expand far beyond its size. A receiver MUST check a Snapshot against its local limits BEFORE its Automerge engine loads it. The counts are those of Section 11.1, read from the document chunk's structure:
 
-1. the chunk is one document chunk (chunk type 0) with nothing after it;
+1. the chunk is one document chunk (chunk type 0) with nothing after it, with no two columns of the same specification and no actor column value that is not less than the number of actors;
 2. the document header is read in order: actor count and actors, head count and head hashes, the change column metadata, the operation column metadata, then the change column data and the operation column data in metadata order. The rest of the chunk (the head indices) is not counted;
 3. a column with the deflate bit set is raw DEFLATE (RFC 1951) data, and its value count is read from the inflated bytes. A receiver inflates with a running cap: it stops and rejects as soon as the inflated column data of the whole chunk passes its limit, so it never holds more than the limit.
 
@@ -1763,7 +1776,7 @@ Every profile validation failure is reported with the code `PROFILE_INVALID` and
 | `INVALID_TAG` | a tag is empty or starts with `#` | §40 |
 | `IMMUTABLE_FIELD_MUTATED` | `id`, `type` or `created_by` changed | §75 |
 | `CHANGE_ACTOR_MISMATCH` | a Data Unit carries an Automerge change whose actor is not the §8 actor of the unit's signer; the change is not merged | §8, §11 |
-| `INVALID_AUTOMERGE_BYTES` | a Data Unit or Snapshot plaintext is not the §11 or §13 framing, or its Automerge bytes are not a valid chunk of the required type with a matching checksum, or cannot be parsed or loaded, or the change skips a sequence number of its actor, or the chunk exceeds the change expansion limits (§11.1) or the receiver's Snapshot expansion limits (§13.1); nothing is merged | §11, §11.1, §13, §13.1, §14.1 |
+| `INVALID_AUTOMERGE_BYTES` | a Data Unit or Snapshot plaintext is not the §11 or §13 framing, or its Automerge bytes are not a valid chunk of the required type with a matching checksum, or cannot be parsed or loaded, or the change skips a sequence number of its actor, or the chunk exceeds the change expansion limits (§11.1) or the receiver's Snapshot expansion limits (§13.1), or it is structurally inconsistent or names an actor the document does not know (§11.1), or the engine fails applying it (§11.1); nothing is merged | §11, §11.1, §13, §13.1, §14.1 |
 
 When one value breaks several rules, its diagnostic is the first that applies in the order of this table: structure and value rules first, `IMMUTABLE_FIELD_MUTATED` last. Precedence applies within one value only. A changed `id` that is also not a UUIDv7, for example, is `INVALID_OBJECT_ID`.
 
