@@ -1,5 +1,5 @@
 {
-  "description": "CDDL validation fixtures for LFCP-WIRE-01. Each entry validates one CBOR item against one rule of wire/LFCP-WIRE-01.cddl + wire/LFCP-WIRE-01.supplement.cddl. A \"case\" source decodes the hex value of a published LFCP-TEST-VECTORS-01 case (field of \"expected\" unless \"from\" says otherwise; \"prefix_hex\" is prepended first). A \"diag\" source is a hand-built, non-normative CBOR diagnostic-notation file in this directory. Run by scripts/check-cddl.rb.",
+  "description": "CDDL validation fixtures for LFCP-WIRE-01. Each entry validates one CBOR item against one rule of wire/LFCP-WIRE-01.cddl + wire/LFCP-WIRE-01.supplement.cddl. A \"case\" source decodes the hex value of a published LFCP-TEST-VECTORS-01 case (field of \"expected\" unless \"from\" says otherwise; \"prefix_hex\" is prepended first). A \"diag\" source is a hand-built, non-normative CBOR diagnostic-notation file in this directory (only must-fail structural mismatches remain). Run by scripts/check-cddl.rb.",
   "fixtures": [
     {
       "rule": "principal-descriptor",
@@ -524,23 +524,98 @@
       "note": "A Principal descriptor is not a protected header."
     },
     {
-      "rule": "snapshot-payload",
+      "rule": "canonical-frontier",
       "source": {
-        "diag": "snapshot-payload.diag"
+        "case": "SNAPSHOT-01",
+        "field": "frontier_cbor"
       },
       "expect": "pass"
     },
     {
       "rule": "snapshot-aad",
       "source": {
-        "diag": "snapshot-aad.diag"
+        "case": "SNAPSHOT-01",
+        "field": "aad_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "snapshot-payload",
+      "source": {
+        "case": "SNAPSHOT-01",
+        "field": "payload_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "lfcp-protected-header",
+      "source": {
+        "case": "SNAPSHOT-01",
+        "field": "protected_header_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "sig-structure",
+      "source": {
+        "case": "SNAPSHOT-01",
+        "field": "sig_structure_cbor"
       },
       "expect": "pass"
     },
     {
       "rule": "snapshot",
       "source": {
-        "diag": "snapshot-signed.diag"
+        "case": "SNAPSHOT-01",
+        "field": "cose_sign1"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "canonical-frontier",
+      "source": {
+        "case": "SNAPSHOT-02",
+        "field": "frontier_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "snapshot-aad",
+      "source": {
+        "case": "SNAPSHOT-02",
+        "field": "aad_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "snapshot-payload",
+      "source": {
+        "case": "SNAPSHOT-02",
+        "field": "payload_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "lfcp-protected-header",
+      "source": {
+        "case": "SNAPSHOT-02",
+        "field": "protected_header_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "sig-structure",
+      "source": {
+        "case": "SNAPSHOT-02",
+        "field": "sig_structure_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "snapshot",
+      "source": {
+        "case": "SNAPSHOT-02",
+        "field": "cose_sign1"
       },
       "expect": "pass"
     },
@@ -608,6 +683,166 @@
       "expect": "pass"
     },
     {
+      "rule": "lfcp-message",
+      "source": {
+        "case": "RESOURCE_HOST",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "lfcp-message",
+      "source": {
+        "case": "RESOURCE_HOSTED",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "lfcp-message",
+      "source": {
+        "case": "RESOURCE_OPENED",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "lfcp-message",
+      "source": {
+        "case": "RESOURCE_CLOSE",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "lfcp-message",
+      "source": {
+        "case": "CONTROL_HAVE",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "lfcp-message",
+      "source": {
+        "case": "CONTROL_GET",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "lfcp-message",
+      "source": {
+        "case": "CONTROL_BATCH",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "lfcp-message",
+      "source": {
+        "case": "CONTROL_PUT",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "lfcp-message",
+      "source": {
+        "case": "DATA_GET",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "lfcp-message",
+      "source": {
+        "case": "DATA_BATCH",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "lfcp-message",
+      "source": {
+        "case": "KEY_PACKAGE_GET",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "lfcp-message",
+      "source": {
+        "case": "KEY_PACKAGE_BATCH",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "lfcp-message",
+      "source": {
+        "case": "KEY_PACKAGE_PUT",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "lfcp-message",
+      "source": {
+        "case": "SNAPSHOT_GET",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "lfcp-message",
+      "source": {
+        "case": "SNAPSHOT",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "lfcp-message",
+      "source": {
+        "case": "SNAPSHOT_PUT",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "lfcp-message",
+      "source": {
+        "case": "NACK_STALE_DATA_EPOCH",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "lfcp-message",
+      "source": {
+        "case": "ERROR_AUTH_FAILED",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "lfcp-message",
+      "source": {
+        "case": "PING",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "lfcp-message",
+      "source": {
+        "case": "PONG",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
       "rule": "typed-lfcp-message",
       "source": {
         "case": "HELLO",
@@ -659,6 +894,166 @@
       "rule": "typed-lfcp-message",
       "source": {
         "case": "DATA_PUT_D1_D2",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "RESOURCE_HOST",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "RESOURCE_HOSTED",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "RESOURCE_OPENED",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "RESOURCE_CLOSE",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "CONTROL_HAVE",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "CONTROL_GET",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "CONTROL_BATCH",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "CONTROL_PUT",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "DATA_GET",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "DATA_BATCH",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "KEY_PACKAGE_GET",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "KEY_PACKAGE_BATCH",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "KEY_PACKAGE_PUT",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "SNAPSHOT_GET",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "SNAPSHOT",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "SNAPSHOT_PUT",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "NACK_STALE_DATA_EPOCH",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "ERROR_AUTH_FAILED",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "PING",
+        "field": "message_cbor"
+      },
+      "expect": "pass"
+    },
+    {
+      "rule": "typed-lfcp-message",
+      "source": {
+        "case": "PONG",
         "field": "message_cbor"
       },
       "expect": "pass"

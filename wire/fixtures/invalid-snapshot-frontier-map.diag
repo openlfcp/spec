@@ -1,5 +1,6 @@
 / NON-NORMATIVE structural fixture for LFCP-005. Synthetic bytes: not a test vector,
-  not encrypted, not signed. A byte-exact SNAPSHOT-01 vector is LFCP-008 work. /
+  not encrypted, not signed. The byte-exact Snapshots are SNAPSHOT-01/02 in
+  LFCP-TEST-VECTORS-01. /
 / MUST FAIL against snapshot-payload: field 5 (canonical-frontier) is a map
   instead of an array of actor-have maps /
 {
