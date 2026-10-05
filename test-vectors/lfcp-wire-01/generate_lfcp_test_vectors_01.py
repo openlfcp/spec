@@ -291,6 +291,44 @@ def ed_secret_scalar(seed: bytes) -> int:
     a &= (1 << 254) - 8
     return a | (1 << 254)
 
+
+def ed_encode(P) -> bytes:
+    x, y = P
+    return (y | ((x & 1) << 255)).to_bytes(32, 'little')
+
+
+def ed_try_decode(b: bytes):
+    try:
+        return ed_decode(b)
+    except AssertionError:
+        return None
+
+
+def ed_verify_strict(pk: bytes, msg: bytes, sig: bytes) -> bool:
+    """LFCP-WIRE-01 §10.5.1, rules 1-4, in the stated order."""
+    if len(pk) != 32 or len(sig) != 64:
+        return False
+    A, R = ed_try_decode(pk), ed_try_decode(sig[:32])  # rule 2
+    if A is None or R is None:
+        return False
+    S = int.from_bytes(sig[32:], 'little')
+    if S >= ED_L:  # rule 1
+        return False
+    if ed_small_order(A) or ed_small_order(R):  # rule 3
+        return False
+    k = int.from_bytes(hashlib.sha512(sig[:32] + pk + msg).digest(), 'little') % ED_L
+    return ed_mul(S, ED_B) == ed_add(R, ed_mul(k, A))  # rule 4, cofactorless
+
+
+def ed_verify_cofactored(pk: bytes, msg: bytes, sig: bytes) -> bool:
+    """The cofactored equation with canonical decoding: what §10.5.1 is stricter than."""
+    A, R = ed_try_decode(pk), ed_try_decode(sig[:32])
+    S = int.from_bytes(sig[32:], 'little')
+    if A is None or R is None or S >= ED_L:
+        return False
+    k = int.from_bytes(hashlib.sha512(sig[:32] + pk + msg).digest(), 'little') % ED_L
+    return ed_mul(8, ed_mul(S, ED_B)) == ed_mul(8, ed_add(R, ed_mul(k, A)))
+
 # -----------------------------------------------------------------------------
 # HPKE RFC 9180 Base mode, suite X25519/HKDF-SHA256/ChaCha20Poly1305.
 # -----------------------------------------------------------------------------
@@ -1084,7 +1122,11 @@ def generate():
         'fork or extend the chain with records other replicas cannot evaluate.',
         {'cose_sign1': hexv(extension_record['cose'])},
         {'valid': False, 'disposition': 'reject', 'error': {'code': 'AUTHORIZATION_FAILED'}},
-        context={'previous_record': ref('C0_genesis', 'record_id')},
+        # SPEC-PATCH-04: at C0 no Control Record describes BOB, so the context
+        # carries his descriptor; without it a receiver stops at
+        # MISSING_DEPENDENCY (§10.5) before the owner rule.
+        context={'previous_record': ref('C0_genesis', 'record_id'),
+                 'issuer_descriptor': ref('principal_bob', 'descriptor_cbor')},
         cddl=('control-record', 'pass'),
         note='Structurally valid: the typed CDDL admits extension types 32 and above (SPEC-PATCH-03 / W2). '
              'The owner-authority failure is AUTHORIZATION_FAILED (SPEC-PATCH-04 / general code rule).')
@@ -1109,19 +1151,27 @@ def generate():
         {'valid': False, 'disposition': 'report'},
         cddl=('data-unit', 'pass'))
 
-    # 10. HPKE recipient binding: KP0 relabelled for CAROL, sealed to BOB.
-    kp_wrong_obj = {**kp0_payload_obj, 2: CAROL.pid}
-    KP_WRONG = cose_sign1(kp_wrong_obj, OWNER)[0]
+    # 10. HPKE recipient binding (SPEC-PATCH-04 / KP-1): a package that names
+    #     CAROL at C3, where she holds data/read through her claim and OWNER
+    #     still owns the Resource, so every §25.2 authority check passes; its
+    #     DEK is sealed with CAROL's info and the C3 AAD, but to BOB's X25519
+    #     key. Only the HPKE open with CAROL's key fails.
     carol_info = cbor(['LFCP-KEY-v1', RESOURCE, 0, CAROL.pid])
+    c3_aad = cbor([RESOURCE, 0, C3['id']])
+    hp_wrong = hpke_seal_with_ephemeral(BOB.x_pk, hpke_derive_key_pair_x25519(h('LFCP-TV-HPKE-RECIPIENT-MISMATCH-IKM')),
+                                        carol_info, c3_aad, DEK0)
+    assert hpke_open(BOB.x_sk_raw, hp_wrong['enc'], carol_info, c3_aad, hp_wrong['ct']) == DEK0
+    kp_wrong_obj = {**kp0_payload_obj, 2: CAROL.pid, 3: C3['id'], 5: hp_wrong['enc'], 6: hp_wrong['ct']}
+    KP_WRONG = cose_sign1(kp_wrong_obj, OWNER)[0]
     try:
-        hpke_open(CAROL.x_sk_raw, hp0['enc'], carol_info, kp0_aad, hp0['ct'])
+        hpke_open(CAROL.x_sk_raw, hp_wrong['enc'], carol_info, c3_aad, hp_wrong['ct'])
         raise AssertionError('HPKE recipient vector unexpectedly opens')
     except AssertionError:
         raise
     except Exception:
         pass
-    neg('hpke_recipient_mismatch_KP0', 'key_package', 'KP0 payload names CAROL as recipient but is sealed to BOB',
-        'KP0_bob_epoch0', 'recipient (payload field 2)', hexv(BOB.pid), hexv(CAROL.pid),
+    neg('hpke_recipient_mismatch_KP0', 'key_package', 'A package naming CAROL at C3, where she is authorized, sealed to BOB',
+        'KP0_bob_epoch0', 'recipient and Control Head (payload fields 2 and 3), sealed to BOB', 'BOB at C1', 'CAROL at C3',
         'LFCP-WIRE-01 §25.1, §25.2',
         'The HPKE `info` value is deterministic CBOR encoding of ["LFCP-KEY-v1", resource-id, data epoch, recipient]. '
         '[...] A package that does not open for its named recipient, or whose DEK does not match the commitment, '
@@ -1507,6 +1557,115 @@ def generate():
         'stale_epoch_expected': 'STALE_DATA_EPOCH / quarantine because Bob cutoff at epoch 0 is seq=2',
     }
 
+    # 17. Strict Ed25519 edge cases (SPEC-PATCH-04 / shared Ed25519 vectors):
+    #     plain (public key, message, signature) triples for LFCP-WIRE-01
+    #     §10.5.1, so every implementation can test its verifier directly.
+    #     RFC 8032 TEST 1 is the valid anchor; the derived cases change one
+    #     part of it. The two constructed cases are the ones a cofactored
+    #     verifier accepts; they use the same scalars, nonces and messages as
+    #     the sdk-ts strict-verification tests, so the bytes are shared.
+    ED: list[dict[str, Any]] = []
+
+    def ed_case(case_id, title, pk, msg, sig, valid, rule_section, rule_text, why,
+                derivation=None, note=None):
+        assert ed_verify_strict(pk, msg, sig) is valid, case_id
+        ED.append({
+            'id': case_id, 'description': title, 'note': note,
+            'inputs': {'public_key': hexv(pk), 'message': hexv(msg), 'signature': hexv(sig)},
+            'derivation': derivation,
+            'expected': ({'valid': True} if valid else
+                         {'valid': False, 'disposition': 'reject', 'error': {'code': 'INVALID_SIGNATURE'}}),
+            'rule': {'section': rule_section, 'text': rule_text}, 'why': why,
+        })
+
+    t1_seed = bytes.fromhex('9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60')
+    t1_key = Ed25519PrivateKey.from_private_bytes(t1_seed)
+    t1_pk = t1_key.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
+    t1_msg = b''
+    t1_sig = t1_key.sign(t1_msg)
+    assert t1_pk.hex() == 'd75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a'
+    assert t1_sig.hex() == ('e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b')
+    ED_RULE = 'LFCP-WIRE-01 §10.5.1'
+    ed_case('ed25519_rfc8032_test1', 'RFC 8032 §7.1 TEST 1: a valid signature over the empty message',
+            t1_pk, t1_msg, t1_sig, True, ED_RULE,
+            'A verifier accepts the signature only when none of rules 1-4 rejects it.',
+            'The anchor for the derived cases below; every strict verifier accepts it.',
+            note='External standard vector (RFC 8032 §7.1 TEST 1).')
+
+    def derived(case_id, title, field, old, new, pk, sig, rule_text, why):
+        ed_case(case_id, title, pk, t1_msg, sig, False, ED_RULE, rule_text, why, derivation={
+            'base_case': 'ed25519_rfc8032_test1',
+            'mutation': {'field': field, 'from': hexv(old), 'to': hexv(new)},
+            'rule': {'section': ED_RULE, 'text': rule_text},
+            'why': why,
+        })
+
+    R1, S1 = t1_sig[:32], t1_sig[32:]
+    L_le = ED_L.to_bytes(32, 'little')
+    s_plus_l = (int.from_bytes(S1, 'little') + ED_L).to_bytes(32, 'little')
+    y_ge_p = (ED_P + 1).to_bytes(32, 'little')  # y = p + 1, a non-canonical encoding of y = 1
+    x0_sign = bytes([1]) + bytes(30) + bytes([0x80])  # y = 1 (x = 0) with the sign bit set
+    identity = ed_encode(ED_IDENTITY)
+    RULE1 = '1. `S` is not less than the group order `L`;'
+    RULE2 = '2. `A` or `R` is not a canonical point encoding: its `y` coordinate is not less than `p`, it is not a point of the curve, or `x = 0` with the sign bit set;'
+    RULE3 = '3. `A` or `R` is a point of small order;'
+    derived('ed25519_s_equals_l', 'TEST 1 with S = L', 'S (signature bytes 32..63)', S1, L_le,
+            t1_pk, R1 + L_le, RULE1, 'S must be reduced: S = L would let one signature have several encodings.')
+    derived('ed25519_s_plus_l', 'TEST 1 with S + L in place of S', 'S (signature bytes 32..63)', S1, s_plus_l,
+            t1_pk, R1 + s_plus_l, RULE1, 'S + L satisfies the equation like S; accepting it makes signatures malleable.')
+    derived('ed25519_a_y_ge_p', 'TEST 1 with the public key A encoded as y = p + 1', 'public key A', t1_pk, y_ge_p,
+            y_ge_p, t1_sig, RULE2, 'A non-canonical key encoding gives one Principal several key byte strings.')
+    derived('ed25519_r_y_ge_p', 'TEST 1 with R encoded as y = p + 1', 'R (signature bytes 0..31)', R1, y_ge_p,
+            t1_pk, y_ge_p + S1, RULE2, 'A non-canonical R gives one signature several byte strings.')
+    derived('ed25519_a_x0_sign_bit', 'TEST 1 with the public key A = (x = 0, y = 1) and the sign bit set',
+            'public key A', t1_pk, x0_sign, x0_sign, t1_sig, RULE2,
+            'x = 0 has no sign; a set sign bit is a second encoding of the same point.')
+    derived('ed25519_r_x0_sign_bit', 'TEST 1 with R = (x = 0, y = 1) and the sign bit set',
+            'R (signature bytes 0..31)', R1, x0_sign, t1_pk, x0_sign + S1, RULE2,
+            'x = 0 has no sign; a set sign bit is a second encoding of the same point.')
+    derived('ed25519_small_order_a', 'TEST 1 with the public key A = the neutral element', 'public key A',
+            t1_pk, identity, identity, t1_sig, RULE3,
+            'A small-order key admits signatures that verify for many messages.')
+
+    # Constructed: secret scalar a, A = [a]B, nonce r = 7777.
+    ed_a = 0x1234567890abcdef * 977 % ED_L
+    ed_A = ed_mul(ed_a, ED_B)
+    T8 = ed_decode(bytes.fromhex('c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a'))
+    assert ed_small_order(T8) and ed_mul(4, T8) != ED_IDENTITY  # a point of order 8
+    A_mixed = ed_encode(ed_add(ed_A, T8))
+    assert not ed_small_order(ed_decode(A_mixed))
+    R_r = ed_encode(ed_mul(7777, ED_B))
+    m = 0
+    while True:
+        msg_mixed = f'mixed-order {m}'.encode()
+        k_mixed = int.from_bytes(hashlib.sha512(R_r + A_mixed + msg_mixed).digest(), 'little') % ED_L
+        if k_mixed % 8:
+            break
+        m += 1
+    sig_mixed = R_r + ((7777 + k_mixed * ed_a) % ED_L).to_bytes(32, 'little')
+    assert ed_verify_cofactored(A_mixed, msg_mixed, sig_mixed)
+    ed_case('ed25519_mixed_order_a', 'A mixed-order key A = [a]B + T8 that the cofactored equation accepts',
+            A_mixed, msg_mixed, sig_mixed, False, ED_RULE,
+            '4. the cofactorless equation `[S]B = R + [k]A` does not hold, where `k` is SHA-512 of the exact `R` '
+            'bytes, the exact `A` bytes and the message, reduced mod `L`.',
+            'With k mod 8 != 0 only the cofactored equation holds; strict verification must reject it so all '
+            'implementations agree.',
+            note='Constructed: a = 0x1234567890abcdef * 977 mod L, T8 a point of order 8, R = [7777]B, the first '
+                 'message "mixed-order N" with k mod 8 != 0, S = 7777 + k*a mod L. A is not itself of small order; '
+                 'cofactored verification accepts it.')
+    A_enc = ed_encode(ed_A)
+    msg_small = b'small-order R'
+    k_small = int.from_bytes(hashlib.sha512(identity + A_enc + msg_small).digest(), 'little') % ED_L
+    sig_small = identity + (k_small * ed_a % ED_L).to_bytes(32, 'little')
+    assert ed_verify_cofactored(A_enc, msg_small, sig_small)
+    assert ed_mul(int.from_bytes(sig_small[32:], 'little'), ED_B) == ed_add(ED_IDENTITY, ed_mul(k_small, ed_A))
+    ed_case('ed25519_small_order_r', 'R = the neutral element with S = k*a, which both equations accept',
+            A_enc, msg_small, sig_small, False, ED_RULE, RULE3,
+            'Both the cofactorless and the cofactored equations hold; only the small-order rule rejects it.',
+            note='Constructed: a = 0x1234567890abcdef * 977 mod L, A = [a]B, R = the neutral element, '
+                 'S = k*a mod L for the message "small-order R".')
+    fixtures['ed25519'] = ED
+
     fixtures['negatives'] = NEG
     OUT_JSON.write_text(json.dumps(to_vector_format(fixtures), indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
     return fixtures
@@ -1651,6 +1810,16 @@ def to_vector_format(fixtures: dict) -> dict:
         if x['context']:
             case['context'] = x['context']
         case['derivation'] = x['derivation']
+        case['expected'] = x['expected']
+        cases.append(case)
+
+    for x in fixtures['ed25519']:
+        case = {'id': x['id'], 'type': 'validation', 'kind': 'ed25519_signature', 'description': x['description']}
+        if x['note']:
+            case['note'] = x['note']
+        case['inputs'] = x['inputs']
+        if x['derivation']:
+            case['derivation'] = x['derivation']
         case['expected'] = x['expected']
         cases.append(case)
 
@@ -2120,6 +2289,27 @@ def generate_markdown(f: dict):
             a(f'{k}:')
             a('')
             a(code_hex(v['hex']))
+            a('')
+
+    a('### 17.11 Strict Ed25519 edge cases')
+    a('')
+    a('Plain `(public key, message, signature)` triples for the strict verification of `LFCP-WIRE-01` §10.5.1, as `validation` cases of kind `ed25519_signature`. RFC 8032 §7.1 TEST 1 is the valid anchor; each derived case changes one part of it. The two constructed cases are accepted by the cofactored equation and must still be rejected. Every invalid case expects `INVALID_SIGNATURE`.')
+    a('')
+    a('| Case | Expected | Rule | Why |')
+    a('|---|---|---|---|')
+    for x in f['ed25519']:
+        a(f'| `{x["id"]}` | {"valid" if x["expected"]["valid"] else "invalid, `INVALID_SIGNATURE`"} | {x["rule"]["text"]} | {x["why"]} |')
+    a('')
+    for x in f['ed25519']:
+        a(f'#### {x["id"]}: {x["description"]}')
+        a('')
+        if x['note']:
+            a(x['note'])
+            a('')
+        for k, v in x['inputs'].items():
+            a(f'{k}:')
+            a('')
+            a(code_hex(v['hex']) if v['hex'] else '(empty)')
             a('')
 
     a('## 18. Snapshot vectors')

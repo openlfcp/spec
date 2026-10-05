@@ -3495,7 +3495,8 @@ The reference repository MUST publish deterministic vectors for:
 - HPKE Key Package encryption/decryption;
 - DEK commitment verification;
 - Snapshot encryption/signing;
-- ownership transfer offer/accept/commit.
+- ownership transfer offer/accept/commit;
+- strict Ed25519 verification (Section 10.5.1): a valid signature and the edge cases each rule rejects, including signatures a cofactored verifier accepts.
 
 Each vector SHOULD include:
 

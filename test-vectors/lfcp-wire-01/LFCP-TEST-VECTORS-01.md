@@ -2168,10 +2168,10 @@ a219b447656a69cd313e1eacbecd2e52bad5b1f0188c8b2c2e24d79c0eb07866c67a6b249e6a845c
 1449c7fdc85bcb04
 ```
 
-#### 17.10.26 hpke_recipient_mismatch_KP0: KP0 payload names CAROL as recipient but is sealed to BOB
+#### 17.10.26 hpke_recipient_mismatch_KP0: A package naming CAROL at C3, where she is authorized, sealed to BOB
 
 - Base case: `KP0_bob_epoch0`
-- Mutation: recipient (payload field 2): `3ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5` → `a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48`
+- Mutation: recipient and Control Head (payload fields 2 and 3), sealed to BOB: `"BOB at C1"` → `"CAROL at C3"`
 - Rule (LFCP-WIRE-01 §25.1, §25.2): The HPKE `info` value is deterministic CBOR encoding of ["LFCP-KEY-v1", resource-id, data epoch, recipient]. [...] A package that does not open for its named recipient, or whose DEK does not match the commitment, is ignored and SHOULD be surfaced to the application. This is a client-local decision [...]
 - Expected: invalid, reject, no error code specified
 - Why: HPKE info binds the recipient; a package that does not open for its named recipient delivers no key.
@@ -2181,12 +2181,12 @@ cose_sign1:
 ```text
 845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e5a7005820
 c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820a6e402657a505a183a2c26
-85ecc3a0457fef86d4e251abd48efe943c1282da480358200b5dc558b8104686d5d6b0063629f1cfaf48049dee3580ca
-6e253d27f3359e33045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d0558205f40
-06c8c21101bbed5d4ad8e7811e0f9e538d25cdaa2a23e7a27b1bba274d400658304477414eb8cf8ec3ff550d73a05870
-b42b7a4af7f49ebd081f0b619c50a98a92e93b3dd2c105f6d7d1949316546a876458402ac79e0ca77f4e468c21b2eed0
-d7c02370983a342861c610aaf228f512ee439d8a44c806c6917b27daeeff585a3cd0c3d11a819ff8dc3aa1f87bea0135
-e53c07
+85ecc3a0457fef86d4e251abd48efe943c1282da48035820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed0
+6a036656e41594b8045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d0558201dc1
+f92b62f4031e20deeadd0ded91833efabb80ab64660428cbc31bd808210c065830f486c82ebd093e7979aaa7e33d7923
+18c754dc57af909ab2cd9cc20b7c5ed9f8f0117794dd3219b348eef790e947e68a58407d4425005027f1aa6c0c71a30b
+5736337bbafa60bb272a51e3f1ae8bb4661b91ec5b2a8c97fe80edb99e34c8bbb1caa338936aa4c3a78a1e96d83dcefc
+52f209
 ```
 
 #### 17.10.27 kp_enc_wrong_size_KP0: KP0 with a 31-byte HPKE enc
@@ -2527,6 +2527,223 @@ descriptor_cbor:
 a3005820e7e0dcffbc581b52a548f8113efbcb3f96458217a57ab55019dafe9ab02f74b3015820000000000000000000
 0000000000000000000000000000000000000000000000025820b5a22f5f5cbdc3a6f8742ec8b2bc9665d0170478bf5a
 ca7528fdd5eefb94f26c
+```
+
+### 17.11 Strict Ed25519 edge cases
+
+Plain `(public key, message, signature)` triples for the strict verification of `LFCP-WIRE-01` §10.5.1, as `validation` cases of kind `ed25519_signature`. RFC 8032 §7.1 TEST 1 is the valid anchor; each derived case changes one part of it. The two constructed cases are accepted by the cofactored equation and must still be rejected. Every invalid case expects `INVALID_SIGNATURE`.
+
+| Case | Expected | Rule | Why |
+|---|---|---|---|
+| `ed25519_rfc8032_test1` | valid | A verifier accepts the signature only when none of rules 1-4 rejects it. | The anchor for the derived cases below; every strict verifier accepts it. |
+| `ed25519_s_equals_l` | invalid, `INVALID_SIGNATURE` | 1. `S` is not less than the group order `L`; | S must be reduced: S = L would let one signature have several encodings. |
+| `ed25519_s_plus_l` | invalid, `INVALID_SIGNATURE` | 1. `S` is not less than the group order `L`; | S + L satisfies the equation like S; accepting it makes signatures malleable. |
+| `ed25519_a_y_ge_p` | invalid, `INVALID_SIGNATURE` | 2. `A` or `R` is not a canonical point encoding: its `y` coordinate is not less than `p`, it is not a point of the curve, or `x = 0` with the sign bit set; | A non-canonical key encoding gives one Principal several key byte strings. |
+| `ed25519_r_y_ge_p` | invalid, `INVALID_SIGNATURE` | 2. `A` or `R` is not a canonical point encoding: its `y` coordinate is not less than `p`, it is not a point of the curve, or `x = 0` with the sign bit set; | A non-canonical R gives one signature several byte strings. |
+| `ed25519_a_x0_sign_bit` | invalid, `INVALID_SIGNATURE` | 2. `A` or `R` is not a canonical point encoding: its `y` coordinate is not less than `p`, it is not a point of the curve, or `x = 0` with the sign bit set; | x = 0 has no sign; a set sign bit is a second encoding of the same point. |
+| `ed25519_r_x0_sign_bit` | invalid, `INVALID_SIGNATURE` | 2. `A` or `R` is not a canonical point encoding: its `y` coordinate is not less than `p`, it is not a point of the curve, or `x = 0` with the sign bit set; | x = 0 has no sign; a set sign bit is a second encoding of the same point. |
+| `ed25519_small_order_a` | invalid, `INVALID_SIGNATURE` | 3. `A` or `R` is a point of small order; | A small-order key admits signatures that verify for many messages. |
+| `ed25519_mixed_order_a` | invalid, `INVALID_SIGNATURE` | 4. the cofactorless equation `[S]B = R + [k]A` does not hold, where `k` is SHA-512 of the exact `R` bytes, the exact `A` bytes and the message, reduced mod `L`. | With k mod 8 != 0 only the cofactored equation holds; strict verification must reject it so all implementations agree. |
+| `ed25519_small_order_r` | invalid, `INVALID_SIGNATURE` | 3. `A` or `R` is a point of small order; | Both the cofactorless and the cofactored equations hold; only the small-order rule rejects it. |
+
+#### ed25519_rfc8032_test1: RFC 8032 §7.1 TEST 1: a valid signature over the empty message
+
+External standard vector (RFC 8032 §7.1 TEST 1).
+
+public_key:
+
+```text
+d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a
+```
+
+message:
+
+(empty)
+
+signature:
+
+```text
+e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46b
+d25bf5f0595bbe24655141438e7a100b
+```
+
+#### ed25519_s_equals_l: TEST 1 with S = L
+
+public_key:
+
+```text
+d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a
+```
+
+message:
+
+(empty)
+
+signature:
+
+```text
+e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e06522490155edd3f55c1a631258d69cf7a2def9de14
+00000000000000000000000000000010
+```
+
+#### ed25519_s_plus_l: TEST 1 with S + L in place of S
+
+public_key:
+
+```text
+d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a
+```
+
+message:
+
+(empty)
+
+signature:
+
+```text
+e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901554c8c7872aa064e049dbb3013fbf29380
+d25bf5f0595bbe24655141438e7a101b
+```
+
+#### ed25519_a_y_ge_p: TEST 1 with the public key A encoded as y = p + 1
+
+public_key:
+
+```text
+eeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f
+```
+
+message:
+
+(empty)
+
+signature:
+
+```text
+e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46b
+d25bf5f0595bbe24655141438e7a100b
+```
+
+#### ed25519_r_y_ge_p: TEST 1 with R encoded as y = p + 1
+
+public_key:
+
+```text
+d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a
+```
+
+message:
+
+(empty)
+
+signature:
+
+```text
+eeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f5fb8821590a33bacc61e39701cf9b46b
+d25bf5f0595bbe24655141438e7a100b
+```
+
+#### ed25519_a_x0_sign_bit: TEST 1 with the public key A = (x = 0, y = 1) and the sign bit set
+
+public_key:
+
+```text
+0100000000000000000000000000000000000000000000000000000000000080
+```
+
+message:
+
+(empty)
+
+signature:
+
+```text
+e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46b
+d25bf5f0595bbe24655141438e7a100b
+```
+
+#### ed25519_r_x0_sign_bit: TEST 1 with R = (x = 0, y = 1) and the sign bit set
+
+public_key:
+
+```text
+d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a
+```
+
+message:
+
+(empty)
+
+signature:
+
+```text
+01000000000000000000000000000000000000000000000000000000000000805fb8821590a33bacc61e39701cf9b46b
+d25bf5f0595bbe24655141438e7a100b
+```
+
+#### ed25519_small_order_a: TEST 1 with the public key A = the neutral element
+
+public_key:
+
+```text
+0100000000000000000000000000000000000000000000000000000000000000
+```
+
+message:
+
+(empty)
+
+signature:
+
+```text
+e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46b
+d25bf5f0595bbe24655141438e7a100b
+```
+
+#### ed25519_mixed_order_a: A mixed-order key A = [a]B + T8 that the cofactored equation accepts
+
+Constructed: a = 0x1234567890abcdef * 977 mod L, T8 a point of order 8, R = [7777]B, the first message "mixed-order N" with k mod 8 != 0, S = 7777 + k*a mod L. A is not itself of small order; cofactored verification accepts it.
+
+public_key:
+
+```text
+df631b69abead1f01a821d3924490bbc8934dd067537b00afd038cb0e98701d3
+```
+
+message:
+
+```text
+6d697865642d6f726465722030
+```
+
+signature:
+
+```text
+d26703e41c1ce4a720da2fb853c13b7d568a3f93c4a41df55554e59be395291b831edbdc69b2dd24324a3f1a16696967
+87f9660173253a52e42fc3aaa95b2e0e
+```
+
+#### ed25519_small_order_r: R = the neutral element with S = k*a, which both equations accept
+
+Constructed: a = 0x1234567890abcdef * 977 mod L, A = [a]B, R = the neutral element, S = k*a mod L for the message "small-order R".
+
+public_key:
+
+```text
+1119cc864ef1146b3654b6feb1d3bfed7e323920e8fb47874d7d711d09cb3e3d
+```
+
+message:
+
+```text
+736d616c6c2d6f726465722052
+```
+
+signature:
+
+```text
+010000000000000000000000000000000000000000000000000000000000000064889286fb79d180af8808c4f760895f
+6ffd89dc74bad3c9a688b7ea2c714708
 ```
 
 ## 18. Snapshot vectors

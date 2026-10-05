@@ -34,6 +34,48 @@
           "from": "Structurally valid: the typed CDDL admits extension types 32 and above (SPEC-PATCH-03 / W2). No error code is named for this rejection.",
           "to": "Structurally valid: the typed CDDL admits extension types 32 and above (SPEC-PATCH-03 / W2). The owner-authority failure is AUTHORIZATION_FAILED (SPEC-PATCH-04 / general code rule).",
           "rule": "SPEC-PATCH-04 / general code rule (approved by the project owner, 2026-10-05): an authority failure is AUTHORIZATION_FAILED, a structural failure MALFORMED_MESSAGE; codeless negatives now name their code."
+        },
+        {
+          "path": "cases[id=hpke_recipient_mismatch_KP0].description",
+          "from": "KP0 payload names CAROL as recipient but is sealed to BOB",
+          "to": "A package naming CAROL at C3, where she is authorized, sealed to BOB",
+          "rule": "SPEC-PATCH-04 / KP-1 (approved by the project owner, 2026-10-05): the package names CAROL at C3, where she holds data/read and OWNER may distribute, and is sealed to BOB, so only the HPKE open fails."
+        },
+        {
+          "path": "cases[id=hpke_recipient_mismatch_KP0].inputs.cose_sign1.hex",
+          "from": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e5a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480358200b5dc558b8104686d5d6b0063629f1cfaf48049dee3580ca6e253d27f3359e33045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d0558205f4006c8c21101bbed5d4ad8e7811e0f9e538d25cdaa2a23e7a27b1bba274d400658304477414eb8cf8ec3ff550d73a05870b42b7a4af7f49ebd081f0b619c50a98a92e93b3dd2c105f6d7d1949316546a876458402ac79e0ca77f4e468c21b2eed0d7c02370983a342861c610aaf228f512ee439d8a44c806c6917b27daeeff585a3cd0c3d11a819ff8dc3aa1f87bea0135e53c07",
+          "to": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e5a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48035820c8c476e22f99108b17034bea13fd7ad7a66d5bc1f0687ed06a036656e41594b8045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d0558201dc1f92b62f4031e20deeadd0ded91833efabb80ab64660428cbc31bd808210c065830f486c82ebd093e7979aaa7e33d792318c754dc57af909ab2cd9cc20b7c5ed9f8f0117794dd3219b348eef790e947e68a58407d4425005027f1aa6c0c71a30b5736337bbafa60bb272a51e3f1ae8bb4661b91ec5b2a8c97fe80edb99e34c8bbb1caa338936aa4c3a78a1e96d83dcefc52f209",
+          "rule": "SPEC-PATCH-04 / KP-1 (approved by the project owner, 2026-10-05): the package names CAROL at C3, where she holds data/read and OWNER may distribute, and is sealed to BOB, so only the HPKE open fails."
+        },
+        {
+          "path": "cases[id=hpke_recipient_mismatch_KP0].derivation.mutation.field",
+          "from": "recipient (payload field 2)",
+          "to": "recipient and Control Head (payload fields 2 and 3), sealed to BOB",
+          "rule": "SPEC-PATCH-04 / KP-1 (approved by the project owner, 2026-10-05): the package names CAROL at C3, where she holds data/read and OWNER may distribute, and is sealed to BOB, so only the HPKE open fails."
+        },
+        {
+          "path": "cases[id=hpke_recipient_mismatch_KP0].derivation.mutation.from.hex",
+          "from": "3ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5",
+          "to": null,
+          "rule": "SPEC-PATCH-04 / KP-1 (approved by the project owner, 2026-10-05): the package names CAROL at C3, where she holds data/read and OWNER may distribute, and is sealed to BOB, so only the HPKE open fails."
+        },
+        {
+          "path": "cases[id=hpke_recipient_mismatch_KP0].derivation.mutation.to.hex",
+          "from": "a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48",
+          "to": null,
+          "rule": "SPEC-PATCH-04 / KP-1 (approved by the project owner, 2026-10-05): the package names CAROL at C3, where she holds data/read and OWNER may distribute, and is sealed to BOB, so only the HPKE open fails."
+        },
+        {
+          "path": "cases[id=extension_type_non_owner_C1].context.issuer_descriptor.case",
+          "from": null,
+          "to": "principal_bob",
+          "rule": "SPEC-PATCH-04 / extension_type_non_owner_C1 (approved by the project owner, 2026-10-05): the context carries BOB's descriptor, which no record describes at C0, so the case reaches the §14 owner rule."
+        },
+        {
+          "path": "cases[id=extension_type_non_owner_C1].context.issuer_descriptor.field",
+          "from": null,
+          "to": "descriptor_cbor",
+          "rule": "SPEC-PATCH-04 / extension_type_non_owner_C1 (approved by the project owner, 2026-10-05): the context carries BOB's descriptor, which no record describes at C0, so the case reaches the §14 owner rule."
         }
       ]
     },
