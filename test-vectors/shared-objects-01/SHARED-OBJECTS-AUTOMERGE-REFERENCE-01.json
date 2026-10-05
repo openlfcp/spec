@@ -1138,6 +1138,53 @@
           "diagnostic": "CHANGE_ACTOR_MISMATCH"
         }
       }
+    },
+    {
+      "id": "SO-BYTES-change-checksum",
+      "description": "andrey's own change on S01 with its first checksum byte flipped",
+      "note": "change is the change before corruption; plaintext_hex frames the corrupted bytes. Automerge 3.5.0 parses them without checking the checksum.",
+      "rule": "SHARED-OBJECTS-PROFILE-01 §11, §13, §74.1: a receiver MUST verify the chunk type and checksum and rejects invalid Automerge bytes with PROFILE_INVALID and the diagnostic INVALID_AUTOMERGE_BYTES.",
+      "base_scenario": "S01",
+      "signer": "andrey",
+      "signer_actor_hex": "6c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583",
+      "change": {
+        "label": "SO-BYTES.own",
+        "actor": "andrey",
+        "actor_hex": "6c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583",
+        "seq": 3,
+        "hash": "ad4df9eecf4b49458b087555e7397f41d219870a8583e2477eced0095fc96f77",
+        "deps": [
+          "0f737136bdf197d0613ebaf03c0b332f5d7338f74ee15d1aa2b7432f65a4615c"
+        ],
+        "change_hex": "856f4a83ad4df9ee019e01010f737136bdf197d0613ebaf03c0b332f5d7338f74ee15d1aa2b7432f65a4615c206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830310000c534f2d42595445532e6f776e000a010202021507340142025603571f7002710273027f007f047f057469746c65017f017ff60341206368616e6765207769746820612062726f6b656e20636865636b73756d7f017f007f0e",
+        "change_sha256": "ec9915f030beacc9068367cf96af06919629911fbaecb18758e49c1dafa9ab86"
+      },
+      "plaintext_hex": "820158a9856f4a83ac4df9ee019e01010f737136bdf197d0613ebaf03c0b332f5d7338f74ee15d1aa2b7432f65a4615c206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830310000c534f2d42595445532e6f776e000a010202021507340142025603571f7002710273027f007f047f057469746c65017f017ff60341206368616e6765207769746820612062726f6b656e20636865636b73756d7f017f007f0e",
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_AUTOMERGE_BYTES"
+        }
+      }
+    },
+    {
+      "id": "SO-BYTES-document-chunk",
+      "description": "A Data Unit plaintext that frames S01's full save (a document chunk) instead of a change",
+      "rule": "SHARED-OBJECTS-PROFILE-01 §11, §13, §74.1: a receiver MUST verify the chunk type and checksum and rejects invalid Automerge bytes with PROFILE_INVALID and the diagnostic INVALID_AUTOMERGE_BYTES.",
+      "base_scenario": "S01",
+      "signer": "andrey",
+      "signer_actor_hex": "6c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583",
+      "plaintext_hex": "820159021e856f4a832464c66600930401206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010f737136bdf197d0613ebaf03c0b332f5d7338f74ee15d1aa2b7432f65a4615c08010203021303230235144003430256020a010402061599012102230834014210561757ab01800102020002017e030c02007e0c70726f66696c652e696e6974055330312e317e00017f00020700030c0000037f020b04710a657874656e73696f6e73076f626a656374730770726f66696c652430313961326638352d376233312d376334322d623835612d6663383433653266343061640961737369676e6565730a637265617465645f61740a637265617465645f62790a657874656e73696f6e73026964096c6966656379636c65087072696f72697479067374617475730474616773057469746c6504747970650f007f03027f7f030b010f02007f01020002017f0004017f00020102007fe60302007cc602d60500c60402667c4600c602466f72672e6f70656e6c6663702e7368617265642d6f626a656374732e7631323032362d31302d30345430353a33303a30305a703a765165564b6f59686a3239586f32425344415144724e50484c79645a422d6a4c4f4b50574e69713079665130313961326638352d376233312d376334322d623835612d6663383433653266343061646163746976656e6f726d616c746f646f507265706172652041504920636f6e74726163747461736b0f0001",
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_AUTOMERGE_BYTES"
+        }
+      }
     }
   ]
 }

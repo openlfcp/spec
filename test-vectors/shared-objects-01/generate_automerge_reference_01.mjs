@@ -357,6 +357,47 @@ corpus.negatives = [
   },
 ];
 
+// SPEC-PATCH-05 (SHARED-OBJECTS-PROFILE-01 §11, §13, §74.1): plaintexts
+// whose Automerge bytes fail the chunk checks are PROFILE_INVALID with the
+// diagnostic INVALID_AUTOMERGE_BYTES. The signer is the change's own actor,
+// so only the bytes are wrong.
+const own = new History();
+const asAndrey = A.clone(s01, { actor: actorOf("andrey") });
+own.change(asAndrey, "SO-BYTES.own", "andrey", (d) => {
+  d.objects[fixtures.objects.task_1].title = new A.ImmutableString("A change with a broken checksum");
+});
+const [ownChange] = own.changes;
+const corrupted = Buffer.from(ownChange.change_hex, "hex");
+corrupted[4] ^= 0x01; // the first checksum byte (magic, then 4 checksum bytes)
+const BYTES_RULE =
+  "SHARED-OBJECTS-PROFILE-01 §11, §13, §74.1: a receiver MUST verify the chunk type and checksum and rejects " +
+  "invalid Automerge bytes with PROFILE_INVALID and the diagnostic INVALID_AUTOMERGE_BYTES.";
+const bytesError = { code: "PROFILE_INVALID", diagnostic: "INVALID_AUTOMERGE_BYTES" };
+corpus.negatives.push(
+  {
+    id: "SO-BYTES-change-checksum",
+    description: "andrey's own change on S01 with its first checksum byte flipped",
+    note: "change is the change before corruption; plaintext_hex frames the corrupted bytes. Automerge 3.5.0 parses them without checking the checksum.",
+    rule: BYTES_RULE,
+    base_scenario: "S01",
+    signer: "andrey",
+    signer_actor_hex: actorOf("andrey"),
+    change: ownChange,
+    plaintext_hex: hex(frame(corrupted)),
+    expected: { valid: false, disposition: "reject", error: bytesError },
+  },
+  {
+    id: "SO-BYTES-document-chunk",
+    description: "A Data Unit plaintext that frames S01's full save (a document chunk) instead of a change",
+    rule: BYTES_RULE,
+    base_scenario: "S01",
+    signer: "andrey",
+    signer_actor_hex: actorOf("andrey"),
+    plaintext_hex: hex(frame(A.save(s01))),
+    expected: { valid: false, disposition: "reject", error: bytesError },
+  },
+);
+
 fs.mkdirSync(OUT_DIR, { recursive: true });
 fs.writeFileSync(path.join(OUT_DIR, OUT_NAME), JSON.stringify(corpus, null, 2) + "\n");
 console.log(`wrote ${path.join(OUT_DIR, OUT_NAME)}`);

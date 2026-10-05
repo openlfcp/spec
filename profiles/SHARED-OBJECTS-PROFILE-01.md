@@ -292,7 +292,7 @@ A receiver MUST reject profile plaintext that:
 - uses an unsupported framing version;
 - contains invalid Automerge change bytes.
 
-The second element MUST be an Automerge change chunk: a storage chunk whose chunk type is a change (an uncompressed or a compressed change), not a document chunk (a full save belongs in a Snapshot, Section 13). A receiver MUST verify the chunk checksum (the first four bytes of the chunk's hash, which the chunk header carries) and MUST reject a chunk whose checksum does not match, even when its Automerge library would parse it. These are "invalid Automerge change bytes".
+The second element MUST be an Automerge change chunk: a storage chunk whose chunk type is a change (an uncompressed or a compressed change), not a document chunk (a full save belongs in a Snapshot, Section 13). A receiver MUST verify the chunk checksum (the first four bytes of the chunk's hash, which the chunk header carries) and MUST reject a chunk whose checksum does not match, even when its Automerge library would parse it. These are "invalid Automerge change bytes". A receiver rejects any of the plaintexts above with `PROFILE_INVALID` and the diagnostic `INVALID_AUTOMERGE_BYTES` (Section 74.1).
 
 The change's Automerge actor MUST be the actor of the Data Unit's signer for this Resource (Section 8). A receiver MUST NOT merge a change of any other actor; it rejects the plaintext with `PROFILE_INVALID` and the diagnostic `CHANGE_ACTOR_MISMATCH` (Section 74.1).
 
@@ -333,7 +333,7 @@ shared-objects-snapshot = [
 ]
 ```
 
-The second element MUST be an Automerge document chunk (a full save), not a change chunk; a receiver MUST verify the chunk checksum as for Data Units (Section 11) and MUST reject a Snapshot plaintext that fails either check, or that its Automerge library cannot load.
+The second element MUST be an Automerge document chunk (a full save), not a change chunk; a receiver MUST verify the chunk checksum as for Data Units (Section 11) and MUST reject a Snapshot plaintext that fails either check, or that its Automerge library cannot load, with `PROFILE_INVALID` and the diagnostic `INVALID_AUTOMERGE_BYTES` (Section 74.1). The framing rules of Section 11 apply to the Snapshot plaintext as well.
 
 A client loads the second element using the corresponding Automerge full-document load operation.
 
@@ -735,7 +735,7 @@ type TaskObject = {
 
 The actual Automerge representation uses maps and scalar registers with the concurrency semantics specified below.
 
-Every string value of the profile (`id`, `type`, `lifecycle`, `created_by`, `created_at`, `title`, `status`, dates, `priority`, and string values in object maps) is an Automerge scalar string, never collaborative Automerge Text. A string field held as Text is profile-invalid with the diagnostic `INVALID_FIELD_TYPE` (Section 74.1).
+Every string value the profile writes is an Automerge scalar string, never collaborative Automerge Text: the root `profile` and every string in any object, including `id`, `type`, `lifecycle`, `created_by`, `created_at`, `title`, `status`, dates, `priority`, and the string values inside object maps and `extensions`. A string field held as Text is profile-invalid with the diagnostic `INVALID_FIELD_TYPE` (Section 74.1).
 
 ---
 
@@ -1686,7 +1686,7 @@ A valid Task additionally requires the required Task fields defined above.
 
 ### 74.1 Validation codes and diagnostics
 
-Every profile validation failure is reported with the code `PROFILE_INVALID` and exactly one diagnostic from this registry, naming what is wrong:
+Every profile validation failure is reported with the code `PROFILE_INVALID` and exactly one diagnostic from this registry, naming what is wrong. A failure is one failing value: one field of one object, the root, or one received plaintext. An object with several failing fields reports one failure per field; an object has no single diagnostic of its own.
 
 | Diagnostic | Meaning | Rule |
 |---|---|---|
@@ -1704,10 +1704,11 @@ Every profile validation failure is reported with the code `PROFILE_INVALID` and
 | `INVALID_TAG` | a tag is empty or starts with `#` | §40 |
 | `IMMUTABLE_FIELD_MUTATED` | `id`, `type` or `created_by` changed | §75 |
 | `CHANGE_ACTOR_MISMATCH` | a Data Unit carries an Automerge change whose actor is not the §8 actor of the unit's signer; the change is not merged | §8, §11 |
+| `INVALID_AUTOMERGE_BYTES` | a Data Unit or Snapshot plaintext is not the §11 or §13 framing, or its Automerge bytes are not a valid chunk of the required type with a matching checksum, or cannot be parsed or loaded; nothing is merged | §11, §13 |
 
-When one value breaks several rules, its diagnostic is the first that applies in the order of this table: structure and value rules first, `IMMUTABLE_FIELD_MUTATED` last. A changed `id` that is also not a UUIDv7, for example, is `INVALID_OBJECT_ID`.
+When one value breaks several rules, its diagnostic is the first that applies in the order of this table: structure and value rules first, `IMMUTABLE_FIELD_MUTATED` last. Precedence applies within one value only. A changed `id` that is also not a UUIDv7, for example, is `INVALID_OBJECT_ID`.
 
-A field with concurrent values (Section 45) is valid only if every one of its values is valid. Otherwise the object is profile-invalid with the diagnostic of the first invalid value, in the order of this table.
+A field with concurrent values (Section 45) is valid only if every one of its values is valid. Otherwise that field fails once, with the diagnostic that comes first in the order of this table among its invalid values, and its object is profile-invalid.
 
 These are profile-level codes reported to the application. They are not LFCP Wire error codes.
 
