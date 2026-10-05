@@ -14,7 +14,7 @@ resolve in code.
 | # | Artifact | Location | Status |
 | --- | --- | --- | --- |
 | 1 | LFCP protocol architecture | `.github: docs/PROJECT-NARRATIVE.md`, `.github: docs/AGENT-OPERATING-GUIDE.md` | Context |
-| 2 | LFCP Wire | [wire/LFCP-WIRE-01.md](wire/LFCP-WIRE-01.md) | Normative, Working Draft |
+| 2 | LFCP Wire | [wire/LFCP-WIRE-01.md](wire/LFCP-WIRE-01.md); CDDL extracted from it in [wire/](wire/README.md) | Normative, Working Draft |
 | 3 | LFCP Wire test vectors | [test-vectors/lfcp-wire-01/LFCP-TEST-VECTORS-01.md](test-vectors/lfcp-wire-01/LFCP-TEST-VECTORS-01.md), [.json](test-vectors/lfcp-wire-01/LFCP-TEST-VECTORS-01.json) | Test vectors |
 | 4 | Shared Objects Profile | [profiles/SHARED-OBJECTS-PROFILE-01.md](profiles/SHARED-OBJECTS-PROFILE-01.md) | Normative, Working Draft |
 | 5 | Shared Objects test vectors | [test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.md](test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.md), [.json](test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.json) | Test vectors |
@@ -48,7 +48,7 @@ Each vector directory also holds the generator that produced it:
 ## Layout
 
 ```text
-wire/          LFCP Wire specification
+wire/          LFCP Wire specification, its extracted CDDL and CDDL fixtures
 profiles/      Shared Objects Profile and other application profiles
 integration/   Editor-integration formats (Markdown refs)
 test-vectors/  Interoperability vectors and their generators
@@ -63,16 +63,24 @@ scripts/       Validation entry point and checks
 
 ```sh
 pnpm install --frozen-lockfile
+bundle install
 ./scripts/validate.sh
 ```
 
-Requires Node.js 24 or later and pnpm 10. The script checks that every JSON
-file parses and that both vector suites and the format fixtures match the
+Requires Node.js 24 or later, pnpm 10, Ruby 4.0 and Bundler. Gems install
+into the project-local, gitignored `vendor/bundle` (set in `.bundle/config`).
+The script checks that every JSON file parses and that both vector suites
+and the format fixtures match the
 [`lfcp-vector-format/1`](schemas/README.md) schema. It also proves that the
 migration to that format changed no vector value (see
 [migrations/vector-format-1/](migrations/vector-format-1/)); that check reads
 the pre-migration files from Git, so it needs the full history, not a shallow
 clone.
+
+It also checks the LFCP Wire CDDL: the extracted `.cddl` files must match
+the prose, the schema must compile with the cddl tool, and every fixture
+must validate as listed. See [wire/README.md](wire/README.md) for what the
+CDDL does and does not prove.
 
 ## Regenerate the vectors
 
