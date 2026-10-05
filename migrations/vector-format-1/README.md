@@ -11,7 +11,8 @@ Each `*.mapping.json` file lists, for one suite:
 - `structural`: old values the new format expresses as structure instead
   (for example `deterministic_bytes: true` became the case type);
 - `changed`: later, explicitly approved changes to a migrated value, with old
-  value, new value and approval (only the `suite.warning` wording so far);
+  value, new value and approval (the `suite.warning` wording, the SPEC-PATCH-01
+  error-code moves, and the SPEC-PATCH-03 / G-KP2 Key Package values);
 - `added`: every new value, with its source. These are the format metadata,
   case IDs taken from old object keys, and the error codes mapped from
   LFCP-WIRE-01 §62.

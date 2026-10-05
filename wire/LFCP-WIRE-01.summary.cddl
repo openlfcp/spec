@@ -2,7 +2,7 @@
 ; Regenerate with: node scripts/extract-cddl.mjs
 ; Contents: Part XXVIII (Full CDDL Summary), which restates body rules.
 
-; --- wire/LFCP-WIRE-01.md:3191 (Part XXVIII. Full CDDL Summary) ---
+; --- wire/LFCP-WIRE-01.md:3194 (Part XXVIII. Full CDDL Summary) ---
 resource-id = bstr .size 32
 principal-id = bstr .size 32
 hash32 = bstr .size 32
@@ -126,8 +126,8 @@ key-package-payload = {
   2 => principal-id,
   3 => hash32,
   4 => principal-id,
-  5 => bstr,
-  6 => bstr
+  5 => bstr .size 32,
+  6 => bstr .size 48
 }
 
 data-unit-payload = {

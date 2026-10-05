@@ -293,6 +293,7 @@ LFCP-WIRE-01 fixes the following profile for interoperability:
 | HPKE KEM | DHKEM(X25519, HKDF-SHA256) |
 | HPKE KDF | HKDF-SHA256 |
 | HPKE AEAD | ChaCha20-Poly1305 |
+| HPKE mode | Base (`mode_base`, RFC 9180 §5.1.1) |
 | Signed object container | COSE_Sign1 |
 | Structured encoding | Deterministic CBOR |
 
@@ -1030,7 +1031,7 @@ It only states that the Resource should no longer accept normal future mutations
 
 A Key Package delivers a Resource DEK to an authorized Principal using HPKE.
 
-The payload is signed with COSE_Sign1. The Key Package ID is the Section 10.6 object ID of the Key Package's exact COSE_Sign1 bytes.
+The payload is signed with COSE_Sign1 by the sender: the protected-header `kid` MUST equal field `4`, and a package whose `kid` is any other Principal is rejected with `INVALID_SIGNATURE` (Section 10.5). The Key Package ID is the Section 10.6 object ID of the Key Package's exact COSE_Sign1 bytes.
 
 ```cddl
 key-package-payload = {
@@ -1039,10 +1040,12 @@ key-package-payload = {
   2 => principal-id,          ; recipient
   3 => hash32,                ; Control Head used for authorization
   4 => principal-id,          ; sender
-  5 => bstr,                  ; HPKE enc
-  6 => bstr                   ; HPKE ciphertext
+  5 => bstr .size 32,         ; HPKE enc
+  6 => bstr .size 48          ; HPKE ciphertext: 32-byte DEK and 16-byte tag
 }
 ```
+
+The DEK is sealed with HPKE in Base mode (RFC 9180 §5.1.1, single-shot `SealBase`) to the recipient's X25519 public key, with the suite of Section 9. A sender MUST use a fresh ephemeral key pair for every package. With that suite `enc` is the 32-byte ephemeral X25519 public key, and the ciphertext is the 32-byte DEK followed by the 16-byte Poly1305 tag.
 
 ### 25.1 HPKE info
 
@@ -1071,7 +1074,7 @@ key-package-hpke-aad = [
 
 ### 25.2 Key Package validation
 
-After decryption, the recipient MUST verify the DEK against the `dek_commitment` for that epoch.
+After decryption, the recipient MUST verify the DEK against the `dek_commitment` for that epoch. A decrypted plaintext that is not exactly 32 bytes long is a DEK that does not match the commitment.
 
 The package signer MUST have had `key/distribute` authority at the referenced Control Head.
 
@@ -3312,8 +3315,8 @@ key-package-payload = {
   2 => principal-id,
   3 => hash32,
   4 => principal-id,
-  5 => bstr,
-  6 => bstr
+  5 => bstr .size 32,
+  6 => bstr .size 48
 }
 
 data-unit-payload = {

@@ -35,7 +35,7 @@ The byte-exact Snapshot vectors `SNAPSHOT-01` and `SNAPSHOT-02` (Section 18) fol
 - COSE protected headers are `{1: -8, 4: principal_id}`, where `1` is `alg`, `-8` is EdDSA, and `4` is `kid`.
 - COSE unprotected headers are the empty map `{}`; external AAD is empty.
 - HPKE is Base mode with `DHKEM(X25519, HKDF-SHA256)`, `HKDF-SHA256`, and `ChaCha20Poly1305`.
-- Production HPKE uses fresh randomness. The vectors expose a fixed ephemeral private key solely so sender-side output is reproducible.
+- Production HPKE uses fresh randomness. The vectors publish a fixed ephemeral input keying material `ikmE` solely so sender-side output is reproducible; the ephemeral private key is `DeriveKeyPair(ikmE)` (RFC 9180 §7.1.3), as in RFC 9180 Appendix A.
 
 ## 4. Deterministic fixture inputs
 
@@ -521,16 +521,22 @@ The `C4_owner_transfer_commit` record in Section 8 embeds the exact offer and ac
 
 ## 10. HPKE self-test against RFC 9180
 
-The generator first verifies its HPKE implementation against RFC 9180 Appendix A.2.1, Base mode for X25519/HKDF-SHA256/ChaCha20Poly1305. Generation aborts if `enc`, shared secret, key, base nonce, or first ciphertext differ from the RFC fixture. This prevents LFCP-specific vectors from being built on an unverified HPKE implementation.
+The generator first verifies its HPKE implementation against RFC 9180 Appendix A.2.1, Base mode for X25519/HKDF-SHA256/ChaCha20Poly1305. Generation aborts if `DeriveKeyPair(ikmE)`, `enc`, shared secret, key, base nonce, or first ciphertext differ from the RFC fixture. This prevents LFCP-specific vectors from being built on an unverified HPKE implementation.
 
 ## 11. Key Package vectors
 
 ### 11.1 KP0_bob_epoch0: OWNER -> BOB, epoch 0, authorized at C1
 
-**HPKE ephemeral private key:**
+**HPKE ephemeral input keying material (ikmE):**
 
 ```text
-d41da26f3cf0c33fdd0fa389a430cb23ad8cc83bceba6bd63aa1b822b8b7e68d
+9ca01f75dd467ecd5e2f2b9fa7414c50d6141a8a072bdec11f861f511a49e57a
+```
+
+**HPKE ephemeral private key, DeriveKeyPair(ikmE):**
+
+```text
+243fa6ef67e518c25fb3cc9ea6336cec76f0a4db728530c907ba07b62e923011
 ```
 
 **HPKE `info` CBOR:**
@@ -550,37 +556,37 @@ b0063629f1cfaf48049dee3580ca6e253d27f3359e33
 **HPKE `enc`:**
 
 ```text
-90ca4ed22f5b693d842711cd8c3d692e1002a3a84730926abd4e3eed9342ee0a
+5f4006c8c21101bbed5d4ad8e7811e0f9e538d25cdaa2a23e7a27b1bba274d40
 ```
 
 **HPKE shared secret:**
 
 ```text
-a77ac04b6a0e22c138f1b560b552dd8ec69e9023f71b8506a14c1e2077d416e8
+cad515cc3a73b28319df71807bc77efbfbfb0b7d61a44f185623e89f9e534a5a
 ```
 
 **HPKE key:**
 
 ```text
-c252bf85e3ccca7d122774fd510a230b2a3d6de1746b0670a589a761ce4e6144
+27ded717d6527b4dfc267b41c36a01a9360ea304f4e8739dade1d0a507e0c35a
 ```
 
 **HPKE base nonce:**
 
 ```text
-c1e83f680bb6c43a308ab96c
+2d22baec3da469923fede62f
 ```
 
 **HPKE ciphertext:**
 
 ```text
-e7a2257711c7244d0f333986ceab7baabdace14b42d179d3768648c535b3abed0ca41207be0e7157c31d6c073106e037
+4477414eb8cf8ec3ff550d73a05870b42b7a4af7f49ebd081f0b619c50a98a92e93b3dd2c105f6d7d1949316546a8764
 ```
 
 **Key Package ID:**
 
 ```text
-d1e2e34aa2f426588dbcdd91b51d9fdc1c714a8d4f6e76022dbe24bdbc26289f
+4270e133a595acff8a31cc54531913d82439b40b87d4ed82c09bb182af952df9
 ```
 
 Key Package payload CBOR:
@@ -589,8 +595,8 @@ Key Package payload CBOR:
 a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274
 bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50358200b5dc558b8104686d5d6b0063629f1cfaf48049d
 ee3580ca6e253d27f3359e33045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05
-582090ca4ed22f5b693d842711cd8c3d692e1002a3a84730926abd4e3eed9342ee0a065830e7a2257711c7244d0f3339
-86ceab7baabdace14b42d179d3768648c535b3abed0ca41207be0e7157c31d6c073106e037
+58205f4006c8c21101bbed5d4ad8e7811e0f9e538d25cdaa2a23e7a27b1bba274d400658304477414eb8cf8ec3ff550d
+73a05870b42b7a4af7f49ebd081f0b619c50a98a92e93b3dd2c105f6d7d1949316546a8764
 ```
 
 Exact signed Key Package COSE_Sign1:
@@ -599,19 +605,25 @@ Exact signed Key Package COSE_Sign1:
 845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e5a7005820
 c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56
 ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50358200b5dc558b8104686d5d6b0063629f1cfaf48049dee3580ca
-6e253d27f3359e33045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05582090ca
-4ed22f5b693d842711cd8c3d692e1002a3a84730926abd4e3eed9342ee0a065830e7a2257711c7244d0f333986ceab7b
-aabdace14b42d179d3768648c535b3abed0ca41207be0e7157c31d6c073106e03758400c177d41281146bdadfd8a2a08
-bdcc8a9c40741ac1c1baec2e7766be4dc3c50f4e8c52c650e79c8857a076718c9c10d2b5abd6004f265f3cd1874f21cc
-5fb604
+6e253d27f3359e33045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d0558205f40
+06c8c21101bbed5d4ad8e7811e0f9e538d25cdaa2a23e7a27b1bba274d400658304477414eb8cf8ec3ff550d73a05870
+b42b7a4af7f49ebd081f0b619c50a98a92e93b3dd2c105f6d7d1949316546a87645840c582942775adc6d0b6c6ba2571
+61529df3f4abedae1dd5d21c88c37f00907f49b015f2c95f74131514e2a27f0641afa7dba3d6c4106e0241e15e5807bc
+8d280e
 ```
 
 ### 11.2 KPI_invite_epoch0: OWNER -> Invitation Principal, epoch 0, authorized at C2
 
-**HPKE ephemeral private key:**
+**HPKE ephemeral input keying material (ikmE):**
 
 ```text
-bc2d8b31d46be8409d241394a6253e796de6ed023a8e92f28959335b65237394
+ccf1c7dfa5982e7239e7f21297dc03a9a883519e2578558730cad3397100189c
+```
+
+**HPKE ephemeral private key, DeriveKeyPair(ikmE):**
+
+```text
+0061ee6a80264558859767b66d0f502abdf84db86c986e08f75ccbaf949edfb1
 ```
 
 **HPKE `info` CBOR:**
@@ -631,37 +643,37 @@ bc2d8b31d46be8409d241394a6253e796de6ed023a8e92f28959335b65237394
 **HPKE `enc`:**
 
 ```text
-7935c81b8976b4a0dde4c0a3bbcbfb8c550d2ea43b03b6b1d91b58b78368506f
+803bdfb4600c2b565a5e8aa38a5125eea8a445577b9ae712240c81794279cc4f
 ```
 
 **HPKE shared secret:**
 
 ```text
-30d4ff96ea74674046badd1efca17b20255c525028435920adc04554f2df7eb0
+deaf90a00ef35a02a2c1479fff9b0c995dfbd75152649863b07aff40d902544b
 ```
 
 **HPKE key:**
 
 ```text
-2995fc7e5ee45ca7ac76b1eea4bc3740c83af52735cebeaec09a9adae9e7a43f
+66519a0726a876a22f5fc893feac9a68aebf8f3b9a59b520dcf2010b164c3758
 ```
 
 **HPKE base nonce:**
 
 ```text
-073031f66918efd13a013cf1
+ad2f3a94274143919addf8e5
 ```
 
 **HPKE ciphertext:**
 
 ```text
-fd3038c8f6ae0a7c64d9d779ad89589e58df6b62f9142e33c7cf43cab145361b4a21a7477058992c9a85d763479f8e68
+11149154e2f39912f728b7a3f7c554b1847c8c6dd01270caed8611a2f53d0038b0ca944351e3eaca3c3275556dde07e2
 ```
 
 **Key Package ID:**
 
 ```text
-b9ed6bb754518a4e75fd2a72f4d5f5af31a65da8d1a797bfaeb9f5df458ee700
+21f0caf89d574ece8e3ff45548c953958ce0ef02168e27ab0b082a09e16a2d62
 ```
 
 Key Package payload CBOR:
@@ -670,8 +682,8 @@ Key Package payload CBOR:
 a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820fd11cff30b5f51
 be630be47798a656119335d5ef0a41ebc0032335a6b2f6d6ba035820a77e8c2cebad4458e9ca036bef606cd9a7305395
 127b6a8479e7a088506334c2045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05
-58207935c81b8976b4a0dde4c0a3bbcbfb8c550d2ea43b03b6b1d91b58b78368506f065830fd3038c8f6ae0a7c64d9d7
-79ad89589e58df6b62f9142e33c7cf43cab145361b4a21a7477058992c9a85d763479f8e68
+5820803bdfb4600c2b565a5e8aa38a5125eea8a445577b9ae712240c81794279cc4f06583011149154e2f39912f728b7
+a3f7c554b1847c8c6dd01270caed8611a2f53d0038b0ca944351e3eaca3c3275556dde07e2
 ```
 
 Exact signed Key Package COSE_Sign1:
@@ -680,19 +692,25 @@ Exact signed Key Package COSE_Sign1:
 845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e5a7005820
 c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820fd11cff30b5f51be630be4
 7798a656119335d5ef0a41ebc0032335a6b2f6d6ba035820a77e8c2cebad4458e9ca036bef606cd9a7305395127b6a84
-79e7a088506334c2045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d0558207935
-c81b8976b4a0dde4c0a3bbcbfb8c550d2ea43b03b6b1d91b58b78368506f065830fd3038c8f6ae0a7c64d9d779ad8958
-9e58df6b62f9142e33c7cf43cab145361b4a21a7477058992c9a85d763479f8e6858403413ee0ec742a28ba2e08a5db0
-1a808685852e810307e28a90dc6ea2418856fe792d76e932280cefb25e2ee62f84dd75f36c7c72dbe52fd9adb6b695af
-9cee06
+79e7a088506334c2045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d055820803b
+dfb4600c2b565a5e8aa38a5125eea8a445577b9ae712240c81794279cc4f06583011149154e2f39912f728b7a3f7c554
+b1847c8c6dd01270caed8611a2f53d0038b0ca944351e3eaca3c3275556dde07e25840282656c1d0aa78bf7f40978a60
+22a8863ef4aeed1df126b6efc0b320d13dd2f67a148469e714d8aad0e109ba2eb12338dd0fdbb52dbce213c79285db02
+01bb02
 ```
 
 ### 11.3 KPC_carol_epoch1: BOB -> CAROL, epoch 1, authorized at C6
 
-**HPKE ephemeral private key:**
+**HPKE ephemeral input keying material (ikmE):**
 
 ```text
-1d73a2d88b669132b57b3a54672eb666201335b44f6d2b25be46121646f5077c
+cf72a9ce5d11ed7d631dc373d803a6a2fa5d2389310823796e537f0690cb091b
+```
+
+**HPKE ephemeral private key, DeriveKeyPair(ikmE):**
+
+```text
+262c9bcf148f21f3bf79d93a72435cfe8c558179327f0e92a84922b508cf8aea
 ```
 
 **HPKE `info` CBOR:**
@@ -712,37 +730,37 @@ c81b8976b4a0dde4c0a3bbcbfb8c550d2ea43b03b6b1d91b58b78368506f065830fd3038c8f6ae0a
 **HPKE `enc`:**
 
 ```text
-6974f9a0bb2d8e91e498871d820fc1db32970f30ad6a697923fc6873eef7c570
+b0329e0de36445a3e9ec232c3a20131b1fa9f3eeae5f8f4d3846d730aa9eb34b
 ```
 
 **HPKE shared secret:**
 
 ```text
-3129ae6ea0f2ef547b585e90c58f57c83588cc7b959c93d41acacdb9f51be898
+ba2f589da1813f6de98071e8790bae2bb5b3e7d1674d249f67ef5b2da4bdd06f
 ```
 
 **HPKE key:**
 
 ```text
-b96fc0f6798fb93c5196b3adb26ec4c7b539a506d5a720b1fe369c81194f8ff0
+5348486e5c04cb89c7ec99e8d23d264569af15b1405c4335339db5003ed95c3c
 ```
 
 **HPKE base nonce:**
 
 ```text
-c8362468fccecceb8da2ced2
+36bda581d42f431900473de5
 ```
 
 **HPKE ciphertext:**
 
 ```text
-4423f72dec72cb32393858fa15912acb3cdc926a414fdfc1310439c4553bc775670db33d1887436fae2b40ef595bb7e8
+04ba6a9ee798c446a6d3faa6a3f330ba921cf8db90df809a9bbbaea97e25e1e5c1377337bb5ea7c6f9c23686d0eee533
 ```
 
 **Key Package ID:**
 
 ```text
-eb0cce4209d00cc79970b7579ba88e87eb3f58c5baa5ce8316c2f5f08b6e96dc
+60e68941589545a6e509c0bbfdb71c3b543ad63e5d9cb06da3e97dda1bd1053f
 ```
 
 Key Package payload CBOR:
@@ -751,8 +769,8 @@ Key Package payload CBOR:
 a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a
 183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48035820e67fb23dc530252680216aecfeadb0951b1d3f87
 26c49afefd724b182dddc5180458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c505
-58206974f9a0bb2d8e91e498871d820fc1db32970f30ad6a697923fc6873eef7c5700658304423f72dec72cb32393858
-fa15912acb3cdc926a414fdfc1310439c4553bc775670db33d1887436fae2b40ef595bb7e8
+5820b0329e0de36445a3e9ec232c3a20131b1fa9f3eeae5f8f4d3846d730aa9eb34b06583004ba6a9ee798c446a6d3fa
+a6a3f330ba921cf8db90df809a9bbbaea97e25e1e5c1377337bb5ea7c6f9c23686d0eee533
 ```
 
 Exact signed Key Package COSE_Sign1:
@@ -761,11 +779,11 @@ Exact signed Key Package COSE_Sign1:
 845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e5a7005820
 c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c26
 85ecc3a0457fef86d4e251abd48efe943c1282da48035820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afe
-fd724b182dddc5180458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50558206974
-f9a0bb2d8e91e498871d820fc1db32970f30ad6a697923fc6873eef7c5700658304423f72dec72cb32393858fa15912a
-cb3cdc926a414fdfc1310439c4553bc775670db33d1887436fae2b40ef595bb7e8584017d44d926f540424a435e15ca6
-5ad1aca70630b88e8748d8515f237585aa5607f3dcd0036d96288c48a3fd7c8c3d83d414fead7334df8dadff39877b2d
-98980f
+fd724b182dddc5180458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5055820b032
+9e0de36445a3e9ec232c3a20131b1fa9f3eeae5f8f4d3846d730aa9eb34b06583004ba6a9ee798c446a6d3faa6a3f330
+ba921cf8db90df809a9bbbaea97e25e1e5c1377337bb5ea7c6f9c23686d0eee533584028f09ea4ce31651ddaa9caea28
+5bb879aec77a8aa8ad1e74189b21e9aed167b33300a9536dfb60651be1e3d2dfbf64a62d4704460cdca4e0d8de4c4e85
+be2b06
 ```
 
 ## 12. Data Unit vectors
@@ -1317,10 +1335,10 @@ a40018290150df8cdd67a26db8aaccf21deb7658e0fe0250d2dc2ef47790fcc8e3b2e86e5a37f4b8
 5274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e5a7005820c8c3041cd1e87009c39a3fe5a02f
 4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48e
 fe943c1282da48035820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180458203ddf22
-ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50558206974f9a0bb2d8e91e498871d820fc1db
-32970f30ad6a697923fc6873eef7c5700658304423f72dec72cb32393858fa15912acb3cdc926a414fdfc1310439c455
-3bc775670db33d1887436fae2b40ef595bb7e8584017d44d926f540424a435e15ca65ad1aca70630b88e8748d8515f23
-7585aa5607f3dcd0036d96288c48a3fd7c8c3d83d414fead7334df8dadff39877b2d98980f
+ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5055820b0329e0de36445a3e9ec232c3a20131b
+1fa9f3eeae5f8f4d3846d730aa9eb34b06583004ba6a9ee798c446a6d3faa6a3f330ba921cf8db90df809a9bbbaea97e
+25e1e5c1377337bb5ea7c6f9c23686d0eee533584028f09ea4ce31651ddaa9caea285bb879aec77a8aa8ad1e74189b21
+e9aed167b33300a9536dfb60651be1e3d2dfbf64a62d4704460cdca4e0d8de4c4e85be2b06
 ```
 
 ### 16.20 KEY_PACKAGE_PUT: message type 42; exact KPC_carol_epoch1 COSE bytes (§54)
@@ -1331,10 +1349,10 @@ aa6c0117530d4cfc3cc2410181590153845826a201270458203ddf22ff145274bcc59c56ffddaab8
 e9cedbeb788bf0a9c5a058e5a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc241
 0101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48035820e67fb23dc5302526
 80216aecfeadb0951b1d3f8726c49afefd724b182dddc5180458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac9
-5ff8e9cedbeb788bf0a9c50558206974f9a0bb2d8e91e498871d820fc1db32970f30ad6a697923fc6873eef7c5700658
-304423f72dec72cb32393858fa15912acb3cdc926a414fdfc1310439c4553bc775670db33d1887436fae2b40ef595bb7
-e8584017d44d926f540424a435e15ca65ad1aca70630b88e8748d8515f237585aa5607f3dcd0036d96288c48a3fd7c8c
-3d83d414fead7334df8dadff39877b2d98980f
+5ff8e9cedbeb788bf0a9c5055820b0329e0de36445a3e9ec232c3a20131b1fa9f3eeae5f8f4d3846d730aa9eb34b0658
+3004ba6a9ee798c446a6d3faa6a3f330ba921cf8db90df809a9bbbaea97e25e1e5c1377337bb5ea7c6f9c23686d0eee5
+33584028f09ea4ce31651ddaa9caea285bb879aec77a8aa8ad1e74189b21e9aed167b33300a9536dfb60651be1e3d2df
+bf64a62d4704460cdca4e0d8de4c4e85be2b06
 ```
 
 ### 16.21 SNAPSHOT_GET: message type 50; SNAPSHOT-01 ID (§55)
@@ -1718,14 +1736,35 @@ cose_sign1:
 845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e5a7005820
 c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820a6e402657a505a183a2c26
 85ecc3a0457fef86d4e251abd48efe943c1282da480358200b5dc558b8104686d5d6b0063629f1cfaf48049dee3580ca
-6e253d27f3359e33045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05582090ca
-4ed22f5b693d842711cd8c3d692e1002a3a84730926abd4e3eed9342ee0a065830e7a2257711c7244d0f333986ceab7b
-aabdace14b42d179d3768648c535b3abed0ca41207be0e7157c31d6c073106e03758408802ca1c0b3a00ed98f3550c67
-9e1e2d9a0d18b0b96075717cb31365c93f6e928642bb9bbc43cb7e1732172ebf5b90cbe2964d1f646aa0b5b76f120fa5
-99c003
+6e253d27f3359e33045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d0558205f40
+06c8c21101bbed5d4ad8e7811e0f9e538d25cdaa2a23e7a27b1bba274d400658304477414eb8cf8ec3ff550d73a05870
+b42b7a4af7f49ebd081f0b619c50a98a92e93b3dd2c105f6d7d1949316546a876458402ac79e0ca77f4e468c21b2eed0
+d7c02370983a342861c610aaf228f512ee439d8a44c806c6917b27daeeff585a3cd0c3d11a819ff8dc3aa1f87bea0135
+e53c07
 ```
 
-#### 17.10.13 have_empty_extra_list: SNAPSHOT-01 with a frontier that violates §28.1 rule 2
+#### 17.10.13 kp_enc_wrong_size_KP0: KP0 with a 31-byte HPKE enc
+
+- Base case: `KP0_bob_epoch0`
+- Mutation: HPKE enc length (payload field 5): `32` → `31`
+- Rule (LFCP-WIRE-01 §25): With that suite `enc` is the 32-byte ephemeral X25519 public key, and the ciphertext is the 32-byte DEK followed by the 16-byte Poly1305 tag. (CDDL: `5 => bstr .size 32` and `6 => bstr .size 48`.)
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
+- Why: With the fixed suite every enc is a 32-byte X25519 key; any other length is structurally invalid and detectable without opening the package.
+
+cose_sign1:
+
+```text
+845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e4a7005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56
+ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50358200b5dc558b8104686d5d6b0063629f1cfaf48049dee3580ca
+6e253d27f3359e33045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05581f5f40
+06c8c21101bbed5d4ad8e7811e0f9e538d25cdaa2a23e7a27b1bba274d0658304477414eb8cf8ec3ff550d73a05870b4
+2b7a4af7f49ebd081f0b619c50a98a92e93b3dd2c105f6d7d1949316546a87645840f5f8a712a6c3d717b50a285cc8ea
+40c3f0e46efa952c96d42763af8a83918f9f070835a7bcd7cb41f29a986e1d497fe8ace5889f245af61b5c2284cf664c
+9a03
+```
+
+#### 17.10.14 have_empty_extra_list: SNAPSHOT-01 with a frontier that violates §28.1 rule 2
 
 - Base case: `SNAPSHOT-01`
 - Mutation: CAROL entry key 2: `"absent"` → `"[] (present and empty)"`
@@ -1746,7 +1785,7 @@ f4f6208b1daa2c8f0589916e0e7c68103ca43327922202cada2e6d19bb677f9ace7f5840c39f6693
 9543e804
 ```
 
-#### 17.10.14 have_range_reversed: SNAPSHOT-02 with a frontier that violates §28.1 rule 4
+#### 17.10.15 have_range_reversed: SNAPSHOT-02 with a frontier that violates §28.1 rule 4
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra range: `[[105, 107]]` → `[[107, 105]]`
@@ -1767,7 +1806,7 @@ ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfead
 c655677cb30e1b573901
 ```
 
-#### 17.10.15 have_range_not_above_contiguous: SNAPSHOT-02 with a frontier that violates §28.1 rule 5
+#### 17.10.16 have_range_not_above_contiguous: SNAPSHOT-02 with a frontier that violates §28.1 rule 5
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra range: `[[105, 107]]` → `[[95, 107]]`
@@ -1788,7 +1827,7 @@ ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfead
 a33b9c6cc820d07e0705
 ```
 
-#### 17.10.16 have_range_at_contiguous_plus_one: SNAPSHOT-02 with a frontier that violates §28.1 rule 5
+#### 17.10.17 have_range_at_contiguous_plus_one: SNAPSHOT-02 with a frontier that violates §28.1 rule 5
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra range: `[[105, 107]]` → `[[101, 107]]`
@@ -1809,7 +1848,7 @@ e2656ada3ffa5fd2a9dcf9da05e8ce1b5d863b6221a6b2ec6684cc35ba5505e778006a32f73d0587
 bb542e45e5b4ce4b8e06
 ```
 
-#### 17.10.17 have_ranges_unsorted: SNAPSHOT-02 with a frontier that violates §28.1 rule 6
+#### 17.10.18 have_ranges_unsorted: SNAPSHOT-02 with a frontier that violates §28.1 rule 6
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra ranges: `[[105, 107]]` → `[[110, 112], [105, 107]]`
@@ -1830,7 +1869,7 @@ aebf4ca511cb59476bc4fd9eb253e20037b2dbb9938a69ee5abf0a527ba44b2dafe326d7b1b1f77a
 7c74dd4e873586c032de197f36c502
 ```
 
-#### 17.10.18 have_ranges_overlapping: SNAPSHOT-02 with a frontier that violates §28.1 rule 7
+#### 17.10.19 have_ranges_overlapping: SNAPSHOT-02 with a frontier that violates §28.1 rule 7
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra ranges: `[[105, 107]]` → `[[105, 107], [106, 110]]`
@@ -1851,7 +1890,7 @@ deb4c1fba57b7a45baab536c503d402384fdc308d03187d6d4a4bd5f8b64c425a389bea6642e4604
 6fc47ab6eb65793a7a1ad8e2d9340a
 ```
 
-#### 17.10.19 have_ranges_adjacent: SNAPSHOT-02 with a frontier that violates §28.1 rule 8
+#### 17.10.20 have_ranges_adjacent: SNAPSHOT-02 with a frontier that violates §28.1 rule 8
 
 - Base case: `SNAPSHOT-02`
 - Mutation: BOB extra ranges: `[[105, 107]]` → `[[105, 107], [108, 110]]`
@@ -1872,7 +1911,7 @@ fb9cfc983227edf07424b793252c2734b5a29b8ed43beaec78df2013f6d59bcf5467443a2126dd77
 ad913da8fe178f8710eb70ac104209
 ```
 
-#### 17.10.20 frontier_duplicate_principal: SNAPSHOT-01 with a frontier that violates §28.1 rule 9
+#### 17.10.21 frontier_duplicate_principal: SNAPSHOT-01 with a frontier that violates §28.1 rule 9
 
 - Base case: `SNAPSHOT-01`
 - Mutation: BOB entries in the frontier: `1` → `2`
@@ -1893,7 +1932,7 @@ c50102a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c501
 f670bfde1440c720608227c380d2a5283876991f6fb5ecdc791619400db9201a2175b6f654cea15e0e
 ```
 
-#### 17.10.21 frontier_unsorted: SNAPSHOT-01 with CAROL listed before BOB
+#### 17.10.22 frontier_unsorted: SNAPSHOT-01 with CAROL listed before BOB
 
 - Base case: `SNAPSHOT-01`
 - Mutation: frontier entry order: `"BOB, CAROL"` → `"CAROL, BOB"`
@@ -1914,7 +1953,7 @@ f02562f989f3df39c026b58d2403a61a96305a9cd69d48e65ffb71ea7317884f8680f732fa65bb75
 c50d
 ```
 
-#### 17.10.22 stale_epoch_absent_actor: CAROL Data Unit in closed epoch 0, where C6 records no CAROL entry
+#### 17.10.23 stale_epoch_absent_actor: CAROL Data Unit in closed epoch 0, where C6 records no CAROL entry
 
 - Base case: `D4_carol_epoch1_seq1`
 - Mutation: Data Epoch (payload field 1): `1` → `0`
@@ -1933,7 +1972,7 @@ c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820a6e402
 2107385908a18154b908b383efd0341d9c959f92161e468633724abc0b
 ```
 
-#### 17.10.23 noncanonical_payload_D1: D1 payload with a non-shortest integer encoding, re-signed
+#### 17.10.24 noncanonical_payload_D1: D1 payload with a non-shortest integer encoding, re-signed
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: payload encoding of the data epoch (0): `00` → `1800`
@@ -1952,7 +1991,7 @@ f8376ef326715840c61e8713b42895fc0f64fc0e7573e7dbd2770dc5235b911a6c08a8c19668eb4e
 228151836168012f2d970f6c0fb45d725d7ffc7b8b782106
 ```
 
-#### 17.10.24 descriptor_extra_field: BOB Principal Descriptor with an additional field 3
+#### 17.10.25 descriptor_extra_field: BOB Principal Descriptor with an additional field 3
 
 - Base case: `principal_bob`
 - Mutation: descriptor fields: `"0, 1, 2"` → `"0, 1, 2, 3 (empty bstr)"`
@@ -1968,7 +2007,7 @@ a40058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c501582019
 ca7528fdd5eefb94f26c0340
 ```
 
-#### 17.10.25 small_order_r_signature_D1: D1 signed with a small-order R that cofactored (ZIP-215) verification accepts
+#### 17.10.26 small_order_r_signature_D1: D1 signed with a small-order R that cofactored (ZIP-215) verification accepts
 
 - Base case: `D1_bob_epoch0_seq1`
 - Mutation: signature R (first 32 bytes): `8adb5052b4f93358a1d5397fd05f591b47b20724afd186d42368caba11bd1f7e` → `0100000000000000000000000000000000000000000000000000000000000000`
@@ -1987,7 +2026,7 @@ f0687ed06a036656e41594b80658266e3daad24229f9d890fc1eabe054c0dd46b45804aead812ca3
 751ac3391a14c8e56ce49382f409343d2f5dc2941f2d08
 ```
 
-#### 17.10.26 descriptor_small_order_key: Principal Descriptor whose Ed25519 key is a point of small order
+#### 17.10.27 descriptor_small_order_key: Principal Descriptor whose Ed25519 key is a point of small order
 
 - Base case: `principal_bob`
 - Mutation: Ed25519 public key (field 1), with the ID recomputed: `1953f4ada1cb4e0f8662108152c82e7e074cbf4859c487461cbe41e5d623e3c2` → `0000000000000000000000000000000000000000000000000000000000000000`

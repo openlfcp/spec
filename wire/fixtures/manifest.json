@@ -1356,6 +1356,16 @@
       },
       "expect": "pass",
       "note": "Structurally valid: one entry per Principal (LFCP-WIRE-01 \u00a719, \u00a728.1 rule 9) is semantic."
+    },
+    {
+      "rule": "key-package",
+      "source": {
+        "case": "kp_enc_wrong_size_KP0",
+        "field": "cose_sign1",
+        "from": "inputs"
+      },
+      "expect": "fail",
+      "note": "A 31-byte HPKE enc violates `5 => bstr .size 32` (LFCP-WIRE-01 \u00a725, SPEC-PATCH-03 / G-KP3)."
     }
   ]
 }

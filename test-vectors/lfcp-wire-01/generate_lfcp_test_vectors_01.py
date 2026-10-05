@@ -298,6 +298,13 @@ def hpke_key_schedule(shared_secret: bytes, info: bytes) -> tuple[bytes, bytes, 
     return key, base_nonce, exporter_secret, ctx
 
 
+def hpke_derive_key_pair_x25519(ikm: bytes) -> bytes:
+    """RFC 9180 §7.1.3 DeriveKeyPair for DHKEM(X25519, HKDF-SHA256): the private key."""
+    suite_id = b'KEM' + i2osp(KEM_ID, 2)
+    dkp_prk = hpke_labeled_extract(b'', suite_id, b'dkp_prk', ikm)
+    return hpke_labeled_expand(dkp_prk, suite_id, b'sk', b'', 32)
+
+
 def hpke_seal_with_ephemeral(pkR_raw: bytes, skE_raw: bytes, info: bytes, aad: bytes, pt: bytes):
     skE = X25519PrivateKey.from_private_bytes(skE_raw)
     pkE_raw = skE.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
@@ -330,7 +337,9 @@ def hpke_open(skR_raw: bytes, enc: bytes, info: bytes, aad: bytes, ct: bytes) ->
 
 def validate_hpke_against_rfc9180_a2_1():
     # RFC 9180 Appendix A.2.1 Base mode fixture.
+    ikmE = bytes.fromhex('909a9b35d3dc4713a5e72a4da274b55d3d3821a37e5d099e74a647db583a904b')
     skE = bytes.fromhex('f4ec9b33b792c372c1d2c2063507b684ef925b8c75a42dbcbf57d63ccd381600')
+    assert hpke_derive_key_pair_x25519(ikmE) == skE  # §7.1.3 DeriveKeyPair
     pkE_expected = bytes.fromhex('1afa08d3dec047a643885163f1180476fa7ddb54c6a8029ea33f95796bf2ac4a')
     skR = bytes.fromhex('8057991eef8f1f1af18f4a9491d16a1ce333f695d4db8e38da75975c4478e0fb')
     pkR = bytes.fromhex('4310ee97d88cc1f088a5576c77ab0cf5c3ac797f3d95139c6c84b5429c59662a')
@@ -523,7 +532,9 @@ def generate():
     # Key package for Bob, epoch 0 at C1.
     kp0_info = cbor(['LFCP-KEY-v1', RESOURCE, 0, BOB.pid])
     kp0_aad = cbor([RESOURCE, 0, C1['id']])
-    kp0_skE = h('LFCP-TV-HPKE-BOB-E0-EPHEMERAL')
+    # SPEC-PATCH-03 / G-KP2: the published input is ikmE; skE = DeriveKeyPair(ikmE).
+    kp0_ikmE = h('LFCP-TV-HPKE-BOB-E0-IKM')
+    kp0_skE = hpke_derive_key_pair_x25519(kp0_ikmE)
     hp0 = hpke_seal_with_ephemeral(BOB.x_pk, kp0_skE, kp0_info, kp0_aad, DEK0)
     assert hpke_open(BOB.x_sk_raw, hp0['enc'], kp0_info, kp0_aad, hp0['ct']) == DEK0
     # Negative HPKE recipient check.
@@ -535,29 +546,33 @@ def generate():
     kp0_payload_obj = {0: RESOURCE, 1: 0, 2: BOB.pid, 3: C1['id'], 4: OWNER.pid, 5: hp0['enc'], 6: hp0['ct']}
     KP0_cose, KP0_payload, KP0_prot, KP0_sig = cose_sign1(kp0_payload_obj, OWNER)
     KP0 = {'cose': KP0_cose, 'payload': KP0_payload, 'protected': KP0_prot, 'sig_structure': KP0_sig, 'id': sha256(KP0_cose), **hp0,
-           'info': kp0_info, 'aad': kp0_aad, 'ephemeral_sk': kp0_skE}
+           'info': kp0_info, 'aad': kp0_aad, 'ephemeral_ikm': kp0_ikmE, 'ephemeral_sk': kp0_skE}
 
     # Key package for Invitation Principal at C2.
     kpi_info = cbor(['LFCP-KEY-v1', RESOURCE, 0, INVITE.pid])
     kpi_aad = cbor([RESOURCE, 0, C2['id']])
-    kpi_skE = h('LFCP-TV-HPKE-INVITE-E0-EPHEMERAL')
+    # SPEC-PATCH-03 / G-KP2: the published input is ikmE; skE = DeriveKeyPair(ikmE).
+    kpi_ikmE = h('LFCP-TV-HPKE-INVITE-E0-IKM')
+    kpi_skE = hpke_derive_key_pair_x25519(kpi_ikmE)
     hpi = hpke_seal_with_ephemeral(INVITE.x_pk, kpi_skE, kpi_info, kpi_aad, DEK0)
     assert hpke_open(INVITE.x_sk_raw, hpi['enc'], kpi_info, kpi_aad, hpi['ct']) == DEK0
     kpi_payload_obj = {0: RESOURCE, 1: 0, 2: INVITE.pid, 3: C2['id'], 4: OWNER.pid, 5: hpi['enc'], 6: hpi['ct']}
     KPI_cose, KPI_payload, KPI_prot, KPI_sig = cose_sign1(kpi_payload_obj, OWNER)
     KPI = {'cose': KPI_cose, 'payload': KPI_payload, 'protected': KPI_prot, 'sig_structure': KPI_sig, 'id': sha256(KPI_cose), **hpi,
-           'info': kpi_info, 'aad': kpi_aad, 'ephemeral_sk': kpi_skE}
+           'info': kpi_info, 'aad': kpi_aad, 'ephemeral_ikm': kpi_ikmE, 'ephemeral_sk': kpi_skE}
 
     # Key package for Carol, epoch 1 at C6, sent by owner Bob.
     kpc_info = cbor(['LFCP-KEY-v1', RESOURCE, 1, CAROL.pid])
     kpc_aad = cbor([RESOURCE, 1, C6['id']])
-    kpc_skE = h('LFCP-TV-HPKE-CAROL-E1-EPHEMERAL')
+    # SPEC-PATCH-03 / G-KP2: the published input is ikmE; skE = DeriveKeyPair(ikmE).
+    kpc_ikmE = h('LFCP-TV-HPKE-CAROL-E1-IKM')
+    kpc_skE = hpke_derive_key_pair_x25519(kpc_ikmE)
     hpc = hpke_seal_with_ephemeral(CAROL.x_pk, kpc_skE, kpc_info, kpc_aad, DEK1)
     assert hpke_open(CAROL.x_sk_raw, hpc['enc'], kpc_info, kpc_aad, hpc['ct']) == DEK1
     kpc_payload_obj = {0: RESOURCE, 1: 1, 2: CAROL.pid, 3: C6['id'], 4: BOB.pid, 5: hpc['enc'], 6: hpc['ct']}
     KPC_cose, KPC_payload, KPC_prot, KPC_sig = cose_sign1(kpc_payload_obj, BOB)
     KPC = {'cose': KPC_cose, 'payload': KPC_payload, 'protected': KPC_prot, 'sig_structure': KPC_sig, 'id': sha256(KPC_cose), **hpc,
-           'info': kpc_info, 'aad': kpc_aad, 'ephemeral_sk': kpc_skE}
+           'info': kpc_info, 'aad': kpc_aad, 'ephemeral_ikm': kpc_ikmE, 'ephemeral_sk': kpc_skE}
 
     # Carol's first epoch-1 unit.
     D_C1 = data_unit(CAROL, 1, 1, None, C6['id'], b'LFCP epoch-1 unit from Carol', DEK1)
@@ -906,6 +921,19 @@ def generate():
         cddl=('key-package', 'pass'),
         note='Client-local rejection (SPEC-PATCH-01 / N5): the package is ignored and surfaced; there is no wire error code.')
 
+    # 10b. HPKE enc of the wrong size (SPEC-PATCH-03 / G-KP3): KP0 with its
+    #      enc cut to 31 bytes, re-signed by OWNER.
+    KP_SHORT_ENC = cose_sign1({**kp0_payload_obj, 5: hp0['enc'][:31]}, OWNER)[0]
+    neg('kp_enc_wrong_size_KP0', 'key_package', 'KP0 with a 31-byte HPKE enc',
+        'KP0_bob_epoch0', 'HPKE enc length (payload field 5)', 32, 31,
+        'LFCP-WIRE-01 §25',
+        'With that suite `enc` is the 32-byte ephemeral X25519 public key, and the ciphertext is the 32-byte DEK followed by '
+        'the 16-byte Poly1305 tag. (CDDL: `5 => bstr .size 32` and `6 => bstr .size 48`.)',
+        'With the fixed suite every enc is a 32-byte X25519 key; any other length is structurally invalid and detectable without opening the package.',
+        {'cose_sign1': hexv(KP_SHORT_ENC)},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'MALFORMED_MESSAGE'}},
+        cddl=('key-package', 'fail'))
+
     # 11. Malformed Have ranges inside a Snapshot frontier (re-sealed and
     #     re-signed, so only canonicality is wrong).
     def raw_snapshot(frontier, seq, plaintext):
@@ -1128,6 +1156,7 @@ def generate():
 
     def add_kp(name, K):
         fixtures['key_packages'][name] = {
+            'hpke_ephemeral_ikm': hx(K['ephemeral_ikm']),
             'hpke_ephemeral_private': hx(K['ephemeral_sk']),
             'hpke_info_cbor': hx(K['info']),
             'hpke_aad_cbor': hx(K['aad']),
@@ -1287,8 +1316,8 @@ def to_vector_format(fixtures: dict) -> dict:
     for name, k in fixtures['key_packages'].items():
         cases.append(bytes_case(
             name, 'key_package',
-            {'hpke_ephemeral_private': hexv(k['hpke_ephemeral_private'])},
-            {f: hexv(v) for f, v in k.items() if f != 'hpke_ephemeral_private'},
+            {'hpke_ephemeral_ikm': hexv(k['hpke_ephemeral_ikm'])},
+            {f: hexv(v) for f, v in k.items() if f != 'hpke_ephemeral_ikm'},
         ))
 
     for name, d in fixtures['data_units'].items():
@@ -1450,7 +1479,7 @@ def generate_markdown(f: dict):
     a('- COSE protected headers are `{1: -8, 4: principal_id}`, where `1` is `alg`, `-8` is EdDSA, and `4` is `kid`.')
     a('- COSE unprotected headers are the empty map `{}`; external AAD is empty.')
     a('- HPKE is Base mode with `DHKEM(X25519, HKDF-SHA256)`, `HKDF-SHA256`, and `ChaCha20Poly1305`.')
-    a('- Production HPKE uses fresh randomness. The vectors expose a fixed ephemeral private key solely so sender-side output is reproducible.')
+    a('- Production HPKE uses fresh randomness. The vectors publish a fixed ephemeral input keying material `ikmE` solely so sender-side output is reproducible; the ephemeral private key is `DeriveKeyPair(ikmE)` (RFC 9180 §7.1.3), as in RFC 9180 Appendix A.')
     a('')
     a('## 4. Deterministic fixture inputs')
     a('')
@@ -1570,7 +1599,7 @@ def generate_markdown(f: dict):
 
     a('## 10. HPKE self-test against RFC 9180')
     a('')
-    a('The generator first verifies its HPKE implementation against RFC 9180 Appendix A.2.1, Base mode for X25519/HKDF-SHA256/ChaCha20Poly1305. Generation aborts if `enc`, shared secret, key, base nonce, or first ciphertext differ from the RFC fixture. This prevents LFCP-specific vectors from being built on an unverified HPKE implementation.')
+    a('The generator first verifies its HPKE implementation against RFC 9180 Appendix A.2.1, Base mode for X25519/HKDF-SHA256/ChaCha20Poly1305. Generation aborts if `DeriveKeyPair(ikmE)`, `enc`, shared secret, key, base nonce, or first ciphertext differ from the RFC fixture. This prevents LFCP-specific vectors from being built on an unverified HPKE implementation.')
     a('')
 
     a('## 11. Key Package vectors')
@@ -1585,7 +1614,8 @@ def generate_markdown(f: dict):
         a(f'### 11.{idx+1} {name}: {desc}')
         a('')
         for label,key in [
-            ('HPKE ephemeral private key', 'hpke_ephemeral_private'),
+            ('HPKE ephemeral input keying material (ikmE)', 'hpke_ephemeral_ikm'),
+            ('HPKE ephemeral private key, DeriveKeyPair(ikmE)', 'hpke_ephemeral_private'),
             ('HPKE `info` CBOR','hpke_info_cbor'),
             ('HPKE AAD CBOR','hpke_aad_cbor'),
             ('HPKE `enc`','hpke_enc'),

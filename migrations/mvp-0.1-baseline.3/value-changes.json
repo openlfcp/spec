@@ -4,7 +4,188 @@
   "suites": [
     {
       "suite_file": "test-vectors/lfcp-wire-01/LFCP-TEST-VECTORS-01.json",
-      "changed": []
+      "changed": [
+        {
+          "path": "cases[id=KP0_bob_epoch0].inputs.hpke_ephemeral_private.hex",
+          "from": "d41da26f3cf0c33fdd0fa389a430cb23ad8cc83bceba6bd63aa1b822b8b7e68d",
+          "to": null,
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KP0_bob_epoch0].expected.hpke_enc.hex",
+          "from": "90ca4ed22f5b693d842711cd8c3d692e1002a3a84730926abd4e3eed9342ee0a",
+          "to": "5f4006c8c21101bbed5d4ad8e7811e0f9e538d25cdaa2a23e7a27b1bba274d40",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KP0_bob_epoch0].expected.hpke_shared_secret.hex",
+          "from": "a77ac04b6a0e22c138f1b560b552dd8ec69e9023f71b8506a14c1e2077d416e8",
+          "to": "cad515cc3a73b28319df71807bc77efbfbfb0b7d61a44f185623e89f9e534a5a",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KP0_bob_epoch0].expected.hpke_key.hex",
+          "from": "c252bf85e3ccca7d122774fd510a230b2a3d6de1746b0670a589a761ce4e6144",
+          "to": "27ded717d6527b4dfc267b41c36a01a9360ea304f4e8739dade1d0a507e0c35a",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KP0_bob_epoch0].expected.hpke_base_nonce.hex",
+          "from": "c1e83f680bb6c43a308ab96c",
+          "to": "2d22baec3da469923fede62f",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KP0_bob_epoch0].expected.hpke_ciphertext.hex",
+          "from": "e7a2257711c7244d0f333986ceab7baabdace14b42d179d3768648c535b3abed0ca41207be0e7157c31d6c073106e037",
+          "to": "4477414eb8cf8ec3ff550d73a05870b42b7a4af7f49ebd081f0b619c50a98a92e93b3dd2c105f6d7d1949316546a8764",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KP0_bob_epoch0].expected.payload_cbor.hex",
+          "from": "a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50358200b5dc558b8104686d5d6b0063629f1cfaf48049dee3580ca6e253d27f3359e33045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05582090ca4ed22f5b693d842711cd8c3d692e1002a3a84730926abd4e3eed9342ee0a065830e7a2257711c7244d0f333986ceab7baabdace14b42d179d3768648c535b3abed0ca41207be0e7157c31d6c073106e037",
+          "to": "a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50358200b5dc558b8104686d5d6b0063629f1cfaf48049dee3580ca6e253d27f3359e33045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d0558205f4006c8c21101bbed5d4ad8e7811e0f9e538d25cdaa2a23e7a27b1bba274d400658304477414eb8cf8ec3ff550d73a05870b42b7a4af7f49ebd081f0b619c50a98a92e93b3dd2c105f6d7d1949316546a8764",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KP0_bob_epoch0].expected.cose_sign1.hex",
+          "from": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e5a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50358200b5dc558b8104686d5d6b0063629f1cfaf48049dee3580ca6e253d27f3359e33045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05582090ca4ed22f5b693d842711cd8c3d692e1002a3a84730926abd4e3eed9342ee0a065830e7a2257711c7244d0f333986ceab7baabdace14b42d179d3768648c535b3abed0ca41207be0e7157c31d6c073106e03758400c177d41281146bdadfd8a2a08bdcc8a9c40741ac1c1baec2e7766be4dc3c50f4e8c52c650e79c8857a076718c9c10d2b5abd6004f265f3cd1874f21cc5fb604",
+          "to": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e5a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101000258203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50358200b5dc558b8104686d5d6b0063629f1cfaf48049dee3580ca6e253d27f3359e33045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d0558205f4006c8c21101bbed5d4ad8e7811e0f9e538d25cdaa2a23e7a27b1bba274d400658304477414eb8cf8ec3ff550d73a05870b42b7a4af7f49ebd081f0b619c50a98a92e93b3dd2c105f6d7d1949316546a87645840c582942775adc6d0b6c6ba257161529df3f4abedae1dd5d21c88c37f00907f49b015f2c95f74131514e2a27f0641afa7dba3d6c4106e0241e15e5807bc8d280e",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KP0_bob_epoch0].expected.package_id.hex",
+          "from": "d1e2e34aa2f426588dbcdd91b51d9fdc1c714a8d4f6e76022dbe24bdbc26289f",
+          "to": "4270e133a595acff8a31cc54531913d82439b40b87d4ed82c09bb182af952df9",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KPI_invite_epoch0].inputs.hpke_ephemeral_private.hex",
+          "from": "bc2d8b31d46be8409d241394a6253e796de6ed023a8e92f28959335b65237394",
+          "to": null,
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KPI_invite_epoch0].expected.hpke_enc.hex",
+          "from": "7935c81b8976b4a0dde4c0a3bbcbfb8c550d2ea43b03b6b1d91b58b78368506f",
+          "to": "803bdfb4600c2b565a5e8aa38a5125eea8a445577b9ae712240c81794279cc4f",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KPI_invite_epoch0].expected.hpke_shared_secret.hex",
+          "from": "30d4ff96ea74674046badd1efca17b20255c525028435920adc04554f2df7eb0",
+          "to": "deaf90a00ef35a02a2c1479fff9b0c995dfbd75152649863b07aff40d902544b",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KPI_invite_epoch0].expected.hpke_key.hex",
+          "from": "2995fc7e5ee45ca7ac76b1eea4bc3740c83af52735cebeaec09a9adae9e7a43f",
+          "to": "66519a0726a876a22f5fc893feac9a68aebf8f3b9a59b520dcf2010b164c3758",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KPI_invite_epoch0].expected.hpke_base_nonce.hex",
+          "from": "073031f66918efd13a013cf1",
+          "to": "ad2f3a94274143919addf8e5",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KPI_invite_epoch0].expected.hpke_ciphertext.hex",
+          "from": "fd3038c8f6ae0a7c64d9d779ad89589e58df6b62f9142e33c7cf43cab145361b4a21a7477058992c9a85d763479f8e68",
+          "to": "11149154e2f39912f728b7a3f7c554b1847c8c6dd01270caed8611a2f53d0038b0ca944351e3eaca3c3275556dde07e2",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KPI_invite_epoch0].expected.payload_cbor.hex",
+          "from": "a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820fd11cff30b5f51be630be47798a656119335d5ef0a41ebc0032335a6b2f6d6ba035820a77e8c2cebad4458e9ca036bef606cd9a7305395127b6a8479e7a088506334c2045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d0558207935c81b8976b4a0dde4c0a3bbcbfb8c550d2ea43b03b6b1d91b58b78368506f065830fd3038c8f6ae0a7c64d9d779ad89589e58df6b62f9142e33c7cf43cab145361b4a21a7477058992c9a85d763479f8e68",
+          "to": "a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820fd11cff30b5f51be630be47798a656119335d5ef0a41ebc0032335a6b2f6d6ba035820a77e8c2cebad4458e9ca036bef606cd9a7305395127b6a8479e7a088506334c2045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d055820803bdfb4600c2b565a5e8aa38a5125eea8a445577b9ae712240c81794279cc4f06583011149154e2f39912f728b7a3f7c554b1847c8c6dd01270caed8611a2f53d0038b0ca944351e3eaca3c3275556dde07e2",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KPI_invite_epoch0].expected.cose_sign1.hex",
+          "from": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e5a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820fd11cff30b5f51be630be47798a656119335d5ef0a41ebc0032335a6b2f6d6ba035820a77e8c2cebad4458e9ca036bef606cd9a7305395127b6a8479e7a088506334c2045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d0558207935c81b8976b4a0dde4c0a3bbcbfb8c550d2ea43b03b6b1d91b58b78368506f065830fd3038c8f6ae0a7c64d9d779ad89589e58df6b62f9142e33c7cf43cab145361b4a21a7477058992c9a85d763479f8e6858403413ee0ec742a28ba2e08a5db01a808685852e810307e28a90dc6ea2418856fe792d76e932280cefb25e2ee62f84dd75f36c7c72dbe52fd9adb6b695af9cee06",
+          "to": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e5a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820fd11cff30b5f51be630be47798a656119335d5ef0a41ebc0032335a6b2f6d6ba035820a77e8c2cebad4458e9ca036bef606cd9a7305395127b6a8479e7a088506334c2045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d055820803bdfb4600c2b565a5e8aa38a5125eea8a445577b9ae712240c81794279cc4f06583011149154e2f39912f728b7a3f7c554b1847c8c6dd01270caed8611a2f53d0038b0ca944351e3eaca3c3275556dde07e25840282656c1d0aa78bf7f40978a6022a8863ef4aeed1df126b6efc0b320d13dd2f67a148469e714d8aad0e109ba2eb12338dd0fdbb52dbce213c79285db0201bb02",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KPI_invite_epoch0].expected.package_id.hex",
+          "from": "b9ed6bb754518a4e75fd2a72f4d5f5af31a65da8d1a797bfaeb9f5df458ee700",
+          "to": "21f0caf89d574ece8e3ff45548c953958ce0ef02168e27ab0b082a09e16a2d62",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KPC_carol_epoch1].inputs.hpke_ephemeral_private.hex",
+          "from": "1d73a2d88b669132b57b3a54672eb666201335b44f6d2b25be46121646f5077c",
+          "to": null,
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KPC_carol_epoch1].expected.hpke_enc.hex",
+          "from": "6974f9a0bb2d8e91e498871d820fc1db32970f30ad6a697923fc6873eef7c570",
+          "to": "b0329e0de36445a3e9ec232c3a20131b1fa9f3eeae5f8f4d3846d730aa9eb34b",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KPC_carol_epoch1].expected.hpke_shared_secret.hex",
+          "from": "3129ae6ea0f2ef547b585e90c58f57c83588cc7b959c93d41acacdb9f51be898",
+          "to": "ba2f589da1813f6de98071e8790bae2bb5b3e7d1674d249f67ef5b2da4bdd06f",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KPC_carol_epoch1].expected.hpke_key.hex",
+          "from": "b96fc0f6798fb93c5196b3adb26ec4c7b539a506d5a720b1fe369c81194f8ff0",
+          "to": "5348486e5c04cb89c7ec99e8d23d264569af15b1405c4335339db5003ed95c3c",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KPC_carol_epoch1].expected.hpke_base_nonce.hex",
+          "from": "c8362468fccecceb8da2ced2",
+          "to": "36bda581d42f431900473de5",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KPC_carol_epoch1].expected.hpke_ciphertext.hex",
+          "from": "4423f72dec72cb32393858fa15912acb3cdc926a414fdfc1310439c4553bc775670db33d1887436fae2b40ef595bb7e8",
+          "to": "04ba6a9ee798c446a6d3faa6a3f330ba921cf8db90df809a9bbbaea97e25e1e5c1377337bb5ea7c6f9c23686d0eee533",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KPC_carol_epoch1].expected.payload_cbor.hex",
+          "from": "a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48035820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50558206974f9a0bb2d8e91e498871d820fc1db32970f30ad6a697923fc6873eef7c5700658304423f72dec72cb32393858fa15912acb3cdc926a414fdfc1310439c4553bc775670db33d1887436fae2b40ef595bb7e8",
+          "to": "a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48035820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5055820b0329e0de36445a3e9ec232c3a20131b1fa9f3eeae5f8f4d3846d730aa9eb34b06583004ba6a9ee798c446a6d3faa6a3f330ba921cf8db90df809a9bbbaea97e25e1e5c1377337bb5ea7c6f9c23686d0eee533",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KPC_carol_epoch1].expected.cose_sign1.hex",
+          "from": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e5a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48035820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50558206974f9a0bb2d8e91e498871d820fc1db32970f30ad6a697923fc6873eef7c5700658304423f72dec72cb32393858fa15912acb3cdc926a414fdfc1310439c4553bc775670db33d1887436fae2b40ef595bb7e8584017d44d926f540424a435e15ca65ad1aca70630b88e8748d8515f237585aa5607f3dcd0036d96288c48a3fd7c8c3d83d414fead7334df8dadff39877b2d98980f",
+          "to": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e5a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48035820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5055820b0329e0de36445a3e9ec232c3a20131b1fa9f3eeae5f8f4d3846d730aa9eb34b06583004ba6a9ee798c446a6d3faa6a3f330ba921cf8db90df809a9bbbaea97e25e1e5c1377337bb5ea7c6f9c23686d0eee533584028f09ea4ce31651ddaa9caea285bb879aec77a8aa8ad1e74189b21e9aed167b33300a9536dfb60651be1e3d2dfbf64a62d4704460cdca4e0d8de4c4e85be2b06",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KPC_carol_epoch1].expected.package_id.hex",
+          "from": "eb0cce4209d00cc79970b7579ba88e87eb3f58c5baa5ce8316c2f5f08b6e96dc",
+          "to": "60e68941589545a6e509c0bbfdb71c3b543ad63e5d9cb06da3e97dda1bd1053f",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KEY_PACKAGE_BATCH].expected.message_cbor.hex",
+          "from": "a40018290150df8cdd67a26db8aaccf21deb7658e0fe0250d2dc2ef47790fcc8e3b2e86e5a37f4b804a2005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410181590153845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e5a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48035820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50558206974f9a0bb2d8e91e498871d820fc1db32970f30ad6a697923fc6873eef7c5700658304423f72dec72cb32393858fa15912acb3cdc926a414fdfc1310439c4553bc775670db33d1887436fae2b40ef595bb7e8584017d44d926f540424a435e15ca65ad1aca70630b88e8748d8515f237585aa5607f3dcd0036d96288c48a3fd7c8c3d83d414fead7334df8dadff39877b2d98980f",
+          "to": "a40018290150df8cdd67a26db8aaccf21deb7658e0fe0250d2dc2ef47790fcc8e3b2e86e5a37f4b804a2005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410181590153845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e5a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48035820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5055820b0329e0de36445a3e9ec232c3a20131b1fa9f3eeae5f8f4d3846d730aa9eb34b06583004ba6a9ee798c446a6d3faa6a3f330ba921cf8db90df809a9bbbaea97e25e1e5c1377337bb5ea7c6f9c23686d0eee533584028f09ea4ce31651ddaa9caea285bb879aec77a8aa8ad1e74189b21e9aed167b33300a9536dfb60651be1e3d2dfbf64a62d4704460cdca4e0d8de4c4e85be2b06",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=KEY_PACKAGE_PUT].expected.message_cbor.hex",
+          "from": "a300182a0150376fc407fc3e816023ae4c2751f8cbc904a2005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410181590153845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e5a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48035820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50558206974f9a0bb2d8e91e498871d820fc1db32970f30ad6a697923fc6873eef7c5700658304423f72dec72cb32393858fa15912acb3cdc926a414fdfc1310439c4553bc775670db33d1887436fae2b40ef595bb7e8584017d44d926f540424a435e15ca65ad1aca70630b88e8748d8515f237585aa5607f3dcd0036d96288c48a3fd7c8c3d83d414fead7334df8dadff39877b2d98980f",
+          "to": "a300182a0150376fc407fc3e816023ae4c2751f8cbc904a2005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410181590153845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e5a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48035820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5055820b0329e0de36445a3e9ec232c3a20131b1fa9f3eeae5f8f4d3846d730aa9eb34b06583004ba6a9ee798c446a6d3faa6a3f330ba921cf8db90df809a9bbbaea97e25e1e5c1377337bb5ea7c6f9c23686d0eee533584028f09ea4ce31651ddaa9caea285bb879aec77a8aa8ad1e74189b21e9aed167b33300a9536dfb60651be1e3d2dfbf64a62d4704460cdca4e0d8de4c4e85be2b06",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        },
+        {
+          "path": "cases[id=hpke_recipient_mismatch_KP0].inputs.cose_sign1.hex",
+          "from": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e5a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480358200b5dc558b8104686d5d6b0063629f1cfaf48049dee3580ca6e253d27f3359e33045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05582090ca4ed22f5b693d842711cd8c3d692e1002a3a84730926abd4e3eed9342ee0a065830e7a2257711c7244d0f333986ceab7baabdace14b42d179d3768648c535b3abed0ca41207be0e7157c31d6c073106e03758408802ca1c0b3a00ed98f3550c679e1e2d9a0d18b0b96075717cb31365c93f6e928642bb9bbc43cb7e1732172ebf5b90cbe2964d1f646aa0b5b76f120fa599c003",
+          "to": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e5a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410100025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480358200b5dc558b8104686d5d6b0063629f1cfaf48049dee3580ca6e253d27f3359e33045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d0558205f4006c8c21101bbed5d4ad8e7811e0f9e538d25cdaa2a23e7a27b1bba274d400658304477414eb8cf8ec3ff550d73a05870b42b7a4af7f49ebd081f0b619c50a98a92e93b3dd2c105f6d7d1949316546a876458402ac79e0ca77f4e468c21b2eed0d7c02370983a342861c610aaf228f512ee439d8a44c806c6917b27daeeff585a3cd0c3d11a819ff8dc3aa1f87bea0135e53c07",
+          "rule": "SPEC-PATCH-03 / G-KP2: Key Packages are sealed with skE = DeriveKeyPair(ikmE) (RFC 9180 §7.1.3); the vectors publish ikmE and the derived skE moves to expected."
+        }
+      ]
     },
     {
       "suite_file": "test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.json",
