@@ -16,7 +16,7 @@ resolve in code.
 | 1 | LFCP protocol architecture | `.github: docs/PROJECT-NARRATIVE.md`, `.github: docs/AGENT-OPERATING-GUIDE.md` | Context |
 | 2 | LFCP Wire | [wire/LFCP-WIRE-01.md](wire/LFCP-WIRE-01.md); CDDL extracted from it in [wire/](wire/README.md) | Normative, Working Draft |
 | 3 | LFCP Wire test vectors | [test-vectors/lfcp-wire-01/LFCP-TEST-VECTORS-01.md](test-vectors/lfcp-wire-01/LFCP-TEST-VECTORS-01.md), [.json](test-vectors/lfcp-wire-01/LFCP-TEST-VECTORS-01.json) | Test vectors |
-| 4 | Shared Objects Profile | [profiles/SHARED-OBJECTS-PROFILE-01.md](profiles/SHARED-OBJECTS-PROFILE-01.md) | Normative, Working Draft |
+| 4 | Shared Objects Profile | [profiles/SHARED-OBJECTS-PROFILE-01.md](profiles/SHARED-OBJECTS-PROFILE-01.md); structural contract in [profiles/shared-objects-01/schema/](profiles/shared-objects-01/schema/README.md) | Normative, Working Draft |
 | 5 | Shared Objects test vectors | [test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.md](test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.md), [.json](test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.json) | Test vectors |
 | 6 | Markdown projection refs | [integration/MARKDOWN-REFS-01.md](integration/MARKDOWN-REFS-01.md) | Normative, Working Draft |
 | 6 | Obsidian architecture | `obsidian: docs/OBSIDIAN-ARCHITECTURE-01.md` | Architecture |
@@ -49,7 +49,7 @@ Each vector directory also holds the generator that produced it:
 
 ```text
 wire/          LFCP Wire specification, its extracted CDDL and CDDL fixtures
-profiles/      Shared Objects Profile and other application profiles
+profiles/      Shared Objects Profile and other application profiles, with structural contracts
 integration/   Editor-integration formats (Markdown refs)
 test-vectors/  Interoperability vectors and their generators
 schemas/       lfcp-vector-format/1 schema for the vector suites, with fixtures
