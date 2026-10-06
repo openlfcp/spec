@@ -5,11 +5,12 @@ full WIRE-01 conformance, documents remain Working Drafts.**
 
 This file answers one question: *what exactly do I implement against for
 MVP 0.1?* The answer is every file listed below, at the Git tag
-`mvp-0.1-baseline.7` of this repository.
+`mvp-0.1-baseline.8` of this repository.
 
 | Tag | Status |
 | --- | --- |
-| mvp-0.1-baseline.7 | **Current.** Applies the sixth batch of decisions (SPEC-PATCH-07, ADR 0006), all orchestrator decisions pending owner review, from the pre-release security review. Receivers check every Automerge chunk before their engine: changes against exact expansion limits and structural rules (§11.1); Snapshots against local limits with a floor, with capped inflation (§13.1). Changes are uncompressed chunks, values nest at most 64 levels (§30), KEY_PACKAGE_GET lists at most 256 epochs (§52), and a client bounds its receive limit (§31). No vector value changes (`migrations/mvp-0.1-baseline.7/value-changes.json` lists no change); the corpus gains `expansion` cases, `SO-DEPTH` validations and the `SO-UNKNOWN-ACTOR` negative. |
+| mvp-0.1-baseline.8 | **Current.** Applies the seventh batch of decisions (SPEC-PATCH-08, ADR 0007), an orchestrator decision pending owner review: no object of a document may be deeper than 256 levels below the root (§11.2). A receiver rejects, before its Automerge engine, a change or Snapshot that would create one: deep nesting traps Automerge JS and terminates its wasm module. No vector value changes (`migrations/mvp-0.1-baseline.8/value-changes.json` lists no change); the corpus gains the `depth` section. |
+| mvp-0.1-baseline.7 | Superseded by `mvp-0.1-baseline.8`, because SPEC-PATCH-08 changes normative rules and adds vectors. Never moved. Applies the sixth batch of decisions (SPEC-PATCH-07, ADR 0006), all orchestrator decisions pending owner review, from the pre-release security review. Receivers check every Automerge chunk before their engine: changes against exact expansion limits and structural rules (§11.1); Snapshots against local limits with a floor, with capped inflation (§13.1). Changes are uncompressed chunks, values nest at most 64 levels (§30), KEY_PACKAGE_GET lists at most 256 epochs (§52), and a client bounds its receive limit (§31). No vector value changes (`migrations/mvp-0.1-baseline.7/value-changes.json` lists no change); the corpus gains `expansion` cases, `SO-DEPTH` validations and the `SO-UNKNOWN-ACTOR` negative. |
 | mvp-0.1-baseline.6 | Superseded by `mvp-0.1-baseline.7`, because SPEC-PATCH-07 changes normative rules and adds vectors. Never moved. Applied the fifth batch of decisions (SPEC-PATCH-06, ADR 0005), all orchestrator decisions pending owner review: a writer names its latest own unit still accepted as `previous` (§26.2), clients retransmit after a request timeout (§70), the invitation read rule uses the §25.2 active grant (§41), a writer keeps writing after a rebuild removes its own changes (Shared Objects §9, §14.1), scalar conflicts stay profile-valid (Shared Objects scenarios S15 and S16) and Collaborative Text is rejected at its own pointer (Automerge corpus `validations`). No vector value changes (`migrations/mvp-0.1-baseline.6/value-changes.json` lists no change). |
 | mvp-0.1-baseline.5 | Superseded by `mvp-0.1-baseline.6`, because SPEC-PATCH-06 changes normative rules and adds vectors. Never moved. Applied the fourth batch of decisions (SPEC-PATCH-05, ADR 0004): actor chains link across abandoned sequences (G-DP1-GAP, approved by the project owner), and, as orchestrator decisions pending owner review, the Snapshot cutoff rebuild (SNAP-EP), forward-compatible invitation query parameters, claimant Key Packages, server and message clarifications, per-value profile diagnostics and `INVALID_AUTOMERGE_BYTES`. No vector value changes; new `actor_chain` and `invite_uri` validation cases and two Automerge corpus negatives are added (`migrations/mvp-0.1-baseline.5/value-changes.json` lists no change). |
 | mvp-0.1-baseline.4 | Superseded by `mvp-0.1-baseline.5`, because SPEC-PATCH-05 changes normative rules and adds vectors. Never moved. Applied the third batch of project-owner decisions (SPEC-PATCH-04, ADR 0003): the Data Epoch rules G-EP1 to G-EP7, the general error-code rule, connection limits, Shared Objects validation (SO-SEC1, SOG-1, SOG-2) and the Markdown reference grammar. Adds the Automerge reference corpus (SPEC-CORPUS) and shared strict-Ed25519 vectors. `hpke_recipient_mismatch_KP0` is rebuilt (KP-1), four negatives now name a code and the Shared Objects intent names follow §59 (G-SC5); every changed value is listed in `migrations/mvp-0.1-baseline.4/value-changes.json`. |
@@ -28,17 +29,18 @@ MVP 0.1?* The answer is every file listed below, at the Git tag
   [ADR 0002](adr/0002-mvp-0.1-protocol-decisions-2.md),
   [ADR 0003](adr/0003-mvp-0.1-protocol-decisions-3.md),
   [ADR 0004](adr/0004-mvp-0.1-protocol-decisions-4.md),
-  [ADR 0005](adr/0005-mvp-0.1-protocol-decisions-5.md) and
-  [ADR 0006](adr/0006-mvp-0.1-protocol-decisions-6.md).
+  [ADR 0005](adr/0005-mvp-0.1-protocol-decisions-5.md),
+  [ADR 0006](adr/0006-mvp-0.1-protocol-decisions-6.md) and
+  [ADR 0007](adr/0007-mvp-0.1-protocol-decisions-7.md).
 
 ## Pinning
 
-Implementations pin the current tag, `mvp-0.1-baseline.7`, of
+Implementations pin the current tag, `mvp-0.1-baseline.8`, of
 `openlfcp/spec`, never a branch. sdk-ts consumes the vectors at this tag (LFCP-017); other
 implementations do the same.
 
 A later approved Working Draft correction does not move the tag. It
-produces a new tag, such as `mvp-0.1-baseline.8`, with an updated copy of
+produces a new tag, such as `mvp-0.1-baseline.9`, with an updated copy of
 this file. Implementations move to it deliberately.
 
 ## Canonical files
@@ -66,7 +68,7 @@ directory).
 | `test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.json` | Shared Objects vectors, machine-readable: deterministic, validation and behavioral cases |
 | `test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.md` | Shared Objects vectors, human-readable |
 | `test-vectors/shared-objects-01/generate_shared_objects_test_vectors_01.py` | Generator; reproduces both Shared Objects vector files byte for byte |
-| `test-vectors/shared-objects-01/SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json` | Automerge reference corpus for S01–S16: exact changes, save images, logical states and conflict sets, plus `validations` (save images with the expected profile problems) and `expansion` (chunks at and past the §11.1 and §13.1 limits) (supplementary; bytes not normative) |
+| `test-vectors/shared-objects-01/SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json` | Automerge reference corpus for S01–S16: exact changes, save images, logical states and conflict sets, plus `validations` (save images with the expected profile problems) `expansion` (chunks at and past the §11.1 and §13.1 limits) and `depth` (change sequences and Snapshots at and past the §11.2 depth bound) (supplementary; bytes not normative) |
 | `test-vectors/shared-objects-01/generate_automerge_reference_01.mjs` | Corpus generator; with the pinned `@automerge/automerge` 3.5.0 it reproduces the corpus byte for byte |
 
 ### Wire CDDL
@@ -104,9 +106,9 @@ directory).
 
 ## Project documents in `openlfcp/.github`
 
-These belong to the baseline at commit `.github@c7e8a30` (tag
-`mvp-0.1-baseline.7` in that repository; `mvp-0.1-baseline.6` there marks
-`6ae515a`, `mvp-0.1-baseline.5` marks `125c4e6`, `mvp-0.1-baseline.4` marks `1a8ab67`, `mvp-0.1-baseline.3` marks
+These belong to the baseline at commit `.github@eda4a80` (tag
+`mvp-0.1-baseline.8` in that repository; `mvp-0.1-baseline.7` there marks
+`c7e8a30`, `mvp-0.1-baseline.6` marks `6ae515a`, `mvp-0.1-baseline.5` marks `125c4e6`, `mvp-0.1-baseline.4` marks `1a8ab67`, `mvp-0.1-baseline.3` marks
 `0cfa217`, `mvp-0.1-baseline.2` marks `174e6e4` and `mvp-0.1-baseline`
 marks `89c0b01`):
 
