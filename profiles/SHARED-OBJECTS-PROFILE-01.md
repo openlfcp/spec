@@ -345,6 +345,18 @@ When every dependency of a change is in the document (Section 14.1), two more ru
 
 ---
 
+### 11.2 Document depth
+
+An Automerge engine may hold a document whose objects nest deeply, yet fail while applying a change to it: Automerge JS 3.5.0 traps applying a change that nests maps about 6,500 levels below the document root, and its wasm module then stops working for the whole process. Total depth is what matters, so many small changes reach it as well as one large one. A receiver therefore bounds the depth of the whole document, at admission.
+
+**Depth.** The document root has depth 0. An object (a map, list, text or table) created by an operation has the depth of the object the operation writes into, plus one: an object created under the root has depth 1. The operations that create objects are the actions `makeMap` (0), `makeList` (2), `makeText` (4) and `makeTable` (6); the object's ID is the creating operation's ID. An object keeps the depth it was created with, even after it is deleted or becomes unreachable.
+
+**Limit.** No object of a document has a depth greater than 256. A receiver MUST reject, before its Automerge engine applies it, a change that would create an object of depth 257 or more: `PROFILE_INVALID` with the diagnostic `INVALID_AUTOMERGE_BYTES` (Section 74.1). An object created earlier in the same change counts with the depth computed for it. A writer MUST NOT create such an object; the application transaction fails locally. The limit is exact, like those of Section 11.1, because acceptance decides the replica state.
+
+A receiver computes depths without recursion: it keeps the depth of every object of its document (or recovers it, for example from the object's path, which has one element per level), and for each object-creating operation of a change, in order, adds one to the depth of the object written into. The valid Shared Objects document stays far below the limit: an object's values nest at most 64 levels (Section 30), three levels below the root.
+
+A Snapshot (Section 13) holds the same bound: a receiver rejects, before its engine loads it, a Snapshot whose document has an object of depth 257 or more, computing depths from the document's operation columns (the object, operation ID and action columns). A receiver that cannot establish the depths within its Snapshot limits (Section 13.1) rejects the Snapshot and falls back to the units.
+
 ## 12. Change batching
 
 Version 1 intentionally defines **one Automerge change per LFCP Data Unit**.
@@ -1776,7 +1788,7 @@ Every profile validation failure is reported with the code `PROFILE_INVALID` and
 | `INVALID_TAG` | a tag is empty or starts with `#` | §40 |
 | `IMMUTABLE_FIELD_MUTATED` | `id`, `type` or `created_by` changed | §75 |
 | `CHANGE_ACTOR_MISMATCH` | a Data Unit carries an Automerge change whose actor is not the §8 actor of the unit's signer; the change is not merged | §8, §11 |
-| `INVALID_AUTOMERGE_BYTES` | a Data Unit or Snapshot plaintext is not the §11 or §13 framing, or its Automerge bytes are not a valid chunk of the required type with a matching checksum, or cannot be parsed or loaded, or the change skips a sequence number of its actor, or the chunk exceeds the change expansion limits (§11.1) or the receiver's Snapshot expansion limits (§13.1), or it is structurally inconsistent or names an actor the document does not know (§11.1), or the engine fails applying it (§11.1); nothing is merged | §11, §11.1, §13, §13.1, §14.1 |
+| `INVALID_AUTOMERGE_BYTES` | a Data Unit or Snapshot plaintext is not the §11 or §13 framing, or its Automerge bytes are not a valid chunk of the required type with a matching checksum, or cannot be parsed or loaded, or the change skips a sequence number of its actor, or the chunk exceeds the change expansion limits (§11.1) or the receiver's Snapshot expansion limits (§13.1), or it is structurally inconsistent or names an actor the document does not know (§11.1), or the engine fails applying it (§11.1), or it would create an object deeper than 256 levels (§11.2); nothing is merged | §11, §11.1, §11.2, §13, §13.1, §14.1 |
 
 When one value breaks several rules, its diagnostic is the first that applies in the order of this table: structure and value rules first, `IMMUTABLE_FIELD_MUTATED` last. Precedence applies within one value only. A changed `id` that is also not a UUIDv7, for example, is `INVALID_OBJECT_ID`.
 

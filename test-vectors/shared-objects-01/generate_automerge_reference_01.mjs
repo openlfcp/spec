@@ -799,6 +799,93 @@ function checkStructure(change) {
   });
 }
 
+// SPEC-PATCH-08 (SHARED-OBJECTS-PROFILE-01 §11.2): the document depth bound.
+// The root is depth 0; an object created in an object of depth d has depth
+// d + 1; no object may be deeper than 256. A receiver rejects, before its
+// engine, a change that would create one, and a Snapshot holding one.
+{
+  const base = A.change(A.init({ actor: EXP_ACTOR }), { message: "DEPTH.base", time: 0 }, (d) => {
+    d.a = 0;
+  });
+  const baseChange = A.getLastLocalChange(base);
+  const baseDecoded = A.decodeChange(baseChange);
+  /** Changes, one per entry of `levels`, each nesting that many maps under the previous change's deepest one. */
+  const chain = (levels, last = "makeMap") => {
+    const out = [];
+    let deps = [baseDecoded.hash];
+    let startOp = baseDecoded.startOp + baseDecoded.ops.length;
+    let parent = "_root";
+    levels.forEach((n, c) => {
+      const ops = Array.from({ length: n }, (_, i) => {
+        const op = {
+          action: c === levels.length - 1 && i === n - 1 ? last : "makeMap",
+          obj: parent,
+          key: "d",
+          pred: [],
+        };
+        parent = `${startOp + i}@${EXP_ACTOR}`;
+        return op;
+      });
+      const change = A.encodeChange({ actor: EXP_ACTOR, seq: c + 2, startOp, time: 0, message: null, deps, ops });
+      out.push(change);
+      deps = [A.decodeChange(change).hash];
+      startOp += n;
+    });
+    return out;
+  };
+  const changeCase = (id, description, changes, expected) => ({
+    id,
+    description,
+    rule: "SHARED-OBJECTS-PROFILE-01 §11.2: no object deeper than 256; the change that would create one is rejected before the engine",
+    changes: [baseChange, ...changes].map((c, i) => ({ change_hex: hex(c), expected: i === 0 ? "accept" : expected[i - 1] })),
+  });
+  const wide = A.encodeChange({
+    actor: EXP_ACTOR,
+    seq: 2,
+    startOp: baseDecoded.startOp + baseDecoded.ops.length,
+    time: 0,
+    message: null,
+    deps: [baseDecoded.hash],
+    ops: Array.from({ length: 300 }, (_, i) => ({ action: "makeMap", obj: "_root", key: `k${i}`, pred: [] })),
+  });
+  const saveOf = (changes) => A.save(A.applyChanges(A.init({ actor: actorOf("pavel") }), [baseChange, ...changes])[0]);
+  corpus.depth = {
+    limit: 256,
+    note:
+      "Each case is a list of changes applied in order to an empty replica: accept (merged), reject (PROFILE_INVALID / " +
+      "INVALID_AUTOMERGE_BYTES before the engine) or held (a dependency was rejected, so it never applies). " +
+      "Snapshot cases are save images a receiver accepts or rejects before loading them.",
+    cases: [
+      changeCase("DEPTH-256", "one change nesting maps exactly 256 levels deep", chain([256]), ["accept"]),
+      changeCase("DEPTH-257", "one change nesting maps 257 levels deep", chain([257]), ["reject"]),
+      changeCase("DEPTH-text-257", "256 nested maps and a text object inside the deepest one (depth 257)", chain([257], "makeText"), ["reject"]),
+      changeCase(
+        "DEPTH-cumulative",
+        "ten changes of 30 levels each: the ninth would reach depth 270, the tenth builds on it",
+        chain(Array(10).fill(30)),
+        [...Array(8).fill("accept"), "reject", "held"],
+      ),
+      changeCase("DEPTH-wide", "one change creating 300 maps side by side under the root (depth 1 each)", [wide], ["accept"]),
+    ],
+    snapshots: [
+      {
+        id: "DEPTH-snapshot-256",
+        description: "a save whose deepest object is at depth 256",
+        rule: "SHARED-OBJECTS-PROFILE-01 §11.2, §13.1",
+        save_hex: hex(saveOf(chain([256]))),
+        expected: "accept",
+      },
+      {
+        id: "DEPTH-snapshot-257",
+        description: "a save whose deepest object is at depth 257",
+        rule: "SHARED-OBJECTS-PROFILE-01 §11.2, §13.1: rejected before the engine loads it",
+        save_hex: hex(saveOf(chain([257]))),
+        expected: "reject",
+      },
+    ],
+  };
+}
+
 // The compressed case is a real compressed change: Automerge itself decodes it.
 if (A.decodeChange(compressed(nullSets(3))).ops.length !== 3) throw new Error("compressed() is wrong");
 
