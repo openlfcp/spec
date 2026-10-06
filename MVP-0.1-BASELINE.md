@@ -103,6 +103,7 @@ directory).
 | `adr/0005-mvp-0.1-protocol-decisions-5.md` | Fifth batch (SPEC-PATCH-06): orchestrator decisions approved by the project owner on 2026-10-06 |
 | `adr/0006-mvp-0.1-protocol-decisions-6.md` | Sixth batch (SPEC-PATCH-07): Automerge expansion limits, value nesting, the client receive limit; orchestrator decisions approved by the project owner on 2026-10-06 |
 | `adr/0007-mvp-0.1-protocol-decisions-7.md` | Seventh batch (SPEC-PATCH-08): the document depth bound; an orchestrator decision approved by the project owner on 2026-10-06 |
+| `adr/0008-recovery-after-server-data-loss.md` | Proposed, not applied in this or any baseline: recovery after server data loss (POST-013); listed because every file under `adr/` is |
 
 ## Project documents in `openlfcp/.github`
 
