@@ -2090,6 +2090,18 @@ Clients MUST NOT rely on server-side authorization as their only authorization c
 
 A `DATA_PUT` is all-or-nothing: when any of its units is refused, the server accepts none of them and answers with one `NACK`.
 
+### 51.1 The `previous` link
+
+A server MUST refuse a Data Unit whose `previous` is not `null` unless one of the following holds for the unit's actor and sequence `N`:
+
+1. the server stores a unit of that actor, at a sequence below `N`, whose Data Unit ID is `previous`. A unit kept as equivocation evidence (Section 26.2) counts;
+2. an earlier unit of the same `DATA_PUT` is such a unit; the server evaluates a `DATA_PUT`'s units in their order in the message;
+3. a Snapshot the server stores covers sequence `m` of that actor in its frontier, with `m < N`, and the server stores no unit of that actor at a sequence between `m` and `N`. This mirrors a receiver that loaded the Snapshot (Sections 26.2 and 29.3): the server does not know the IDs of the units a frontier covers.
+
+The refusal is `NACK(UNKNOWN_PREVIOUS)`. Its details (field `2`) are the 32-byte `previous` of the first refused unit. A `previous` of `null` is not checked by this rule: a writer that holds no accepted unit of its own names `null` (Section 26.2), even when the server stores units of that actor.
+
+The rule keeps a server from accepting a unit whose predecessor it has lost, for example after restoring an older copy of its store. A receiver that fetched such a unit would hold it until it links (Section 26.2), and so would every later unit of that actor: the server could no longer serve a history that links. A writer refused this way uploads its own accepted units the server lacks, oldest first, and then retries.
+
 ---
 
 # Part XII. Key Package Messages
@@ -2252,7 +2264,7 @@ nack-body = {
 
 Diagnostics MUST NOT contain secret key material.
 
-Field `2` is defined only where a rule says so: the current Control Head for `CONTROL_HEAD_MISMATCH` (Section 47) and the coordinator URL for `NOT_CONTROL_COORDINATOR` (Section 21). Data Plane `NACK`s carry no details.
+Field `2` is defined only where a rule says so: the current Control Head for `CONTROL_HEAD_MISMATCH` (Section 47), the coordinator URL for `NOT_CONTROL_COORDINATOR` (Section 21) and the unknown `previous` for `UNKNOWN_PREVIOUS` (Section 51.1). Other Data Plane `NACK`s carry no details.
 
 ---
 
@@ -2303,8 +2315,9 @@ Where a rule rejects a record or message without naming a code, the code follows
 | 20 | `HOSTING_DENIED` |
 | 21 | `RESOURCE_TOMBSTONED` |
 | 22 | `INTERNAL_ERROR` |
+| 23 | `UNKNOWN_PREVIOUS` |
 
-Error codes `23..127` are reserved for LFCP core.
+Error codes `24..127` are reserved for LFCP core.
 
 Servers do not use `RESOURCE_NOT_FOUND` in this version: a Resource a server does not host is `RESOURCE_NOT_HOSTED` (Section 41).
 
@@ -3161,7 +3174,7 @@ A conforming minimal server MUST implement:
 - Resource open/close;
 - Control Plane storage and range retrieval;
 - Control Coordinator CAS for `CONTROL_PUT`;
-- Data Plane Have/Get/Put;
+- Data Plane Have/Get/Put, with the `previous` link check (Section 51.1);
 - Key Package Get/Put;
 - Snapshot Get/Put;
 - durable object IDs;

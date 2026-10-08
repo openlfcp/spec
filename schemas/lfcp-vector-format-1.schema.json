@@ -239,6 +239,10 @@
               "properties": {
                 "code": { "$ref": "#/$defs/code" },
                 "diagnostic": { "$ref": "#/$defs/code" },
+                "details": {
+                  "description": "The machine-readable details (field 2) of the NACK or ERROR, where the specification defines them.",
+                  "$ref": "#/$defs/value"
+                },
                 "detail": {
                   "description": "Human-readable explanation. Never compared by test runners.",
                   "type": "string"

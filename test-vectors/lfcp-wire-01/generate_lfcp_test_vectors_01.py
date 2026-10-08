@@ -1743,6 +1743,122 @@ def generate():
     ]
     fixtures['invite_parse'] = INVITE_PARSE
 
+    # 20. The server's `previous` link check (SPEC-PATCH-09 / ADR 0008,
+    #     LFCP-WIRE-01 §51.1): CAROL's epoch-1 units at C6, as in section 18.
+    #     The server holds the `stored_*` units (and, where given, a Snapshot
+    #     whose frontier is `stored_snapshot_frontier`), then receives
+    #     `message_cbor`, a DATA_PUT.
+    D_C2B = data_unit(CAROL, 1, 2, D_C1['id'], C6['id'], b'LFCP epoch-1 unit from Carol, seq 2, other', DEK1)
+    D_C4B = data_unit(CAROL, 1, 4, D_C2B['id'], C6['id'], b'LFCP epoch-1 unit from Carol, seq 4, other', DEK1)
+    D_C3_NULL = data_unit(CAROL, 1, 3, None, C6['id'], b'LFCP epoch-1 unit from Carol, seq 3, null previous', DEK1)
+    PUT_RULE = 'LFCP-WIRE-01 §51.1'
+    PUT_TEXT = ('A server MUST refuse a Data Unit whose `previous` is not `null` unless [...] the server stores a '
+                'unit of that actor, at a sequence below `N`, whose Data Unit ID is `previous` [...]; an earlier '
+                'unit of the same `DATA_PUT` is such a unit [...]; a Snapshot the server stores covers sequence '
+                '`m` of that actor in its frontier, with `m < N`, and the server stores no unit of that actor at a '
+                'sequence between `m` and `N`.')
+
+    def data_put(label: str, units: list) -> dict:
+        return hexv(wire_msg(33, msgid(f'DATA-PUT-{label}'), {0: RESOURCE, 1: [u['cose'] for u in units]}))
+
+    def stored(units: dict) -> dict:
+        return {f'stored_{k}_cose': hexv(u['cose']) for k, u in units.items()}
+
+    def frontier(entries: list) -> dict:
+        return {'stored_snapshot_frontier': hexv(cbor(canonical_frontier(entries)))}
+
+    def refused(prev: bytes) -> dict:
+        return {'valid': False, 'disposition': 'reject',
+                'error': {'code': 'UNKNOWN_PREVIOUS', 'details': hexv(prev)}}
+
+    PUT_PREVIOUS: list[dict[str, Any]] = [
+        {
+            'id': 'put_previous_stored', 'description': 'CAROL seq 4 naming seq 2, which the server stores',
+            'note': 'Rule 1: `previous` is a stored unit of the actor at a lower sequence.',
+            'inputs': {**stored({'seq1': D_C1, 'seq2': D_C2}), 'message_cbor': data_put('PREV-STORED', [D_C4])},
+            'derivation': None,
+            'expected': {'valid': True},
+        },
+        {
+            'id': 'put_previous_unknown', 'description': 'CAROL seq 4 naming seq 2, which the server lost',
+            'note': 'The server stores only seq 1: no rule holds. NACK details: the `previous` of seq 4.',
+            'inputs': {**stored({'seq1': D_C1}), 'message_cbor': data_put('PREV-UNKNOWN', [D_C4])},
+            'derivation': {
+                'base_case': 'put_previous_stored',
+                'mutation': {'field': 'units the server stores', 'from': 'CAROL seq 1 and seq 2',
+                             'to': 'CAROL seq 1'},
+                'rule': {'section': PUT_RULE, 'text': PUT_TEXT},
+                'why': 'Accepting seq 4 would serve a unit that no receiver can link (§26.2).',
+            },
+            'expected': refused(D_C2['id']),
+        },
+        {
+            'id': 'put_previous_same_put', 'description': 'CAROL seq 2 and seq 4 in one DATA_PUT, in that order',
+            'note': 'Rule 2: seq 2, earlier in the same DATA_PUT, is the `previous` of seq 4.',
+            'inputs': {**stored({'seq1': D_C1}), 'message_cbor': data_put('PREV-SAME-PUT', [D_C2, D_C4])},
+            'derivation': None,
+            'expected': {'valid': True},
+        },
+        {
+            'id': 'put_previous_same_put_reversed', 'description': 'CAROL seq 4 before seq 2 in one DATA_PUT',
+            'note': 'Units are evaluated in message order: seq 4 comes first and its `previous` is unknown; the '
+                    'DATA_PUT is all-or-nothing (§51), so seq 2 is not stored either.',
+            'inputs': {**stored({'seq1': D_C1}), 'message_cbor': data_put('PREV-REVERSED', [D_C4, D_C2])},
+            'derivation': {
+                'base_case': 'put_previous_same_put',
+                'mutation': {'field': 'order of the DATA_PUT units', 'from': 'seq 2, seq 4', 'to': 'seq 4, seq 2'},
+                'rule': {'section': PUT_RULE, 'text': PUT_TEXT},
+                'why': 'Only an earlier unit of the same DATA_PUT counts.',
+            },
+            'expected': refused(D_C2['id']),
+        },
+        {
+            'id': 'put_previous_equivocation_evidence',
+            'description': 'CAROL seq 4 naming one unit of an equivocating pair at seq 2',
+            'note': 'The server keeps both seq 2 units as evidence (§26.2); either counts as a stored unit.',
+            'inputs': {**stored({'seq1': D_C1, 'seq2': D_C2, 'seq2_other': D_C2B}),
+                       'message_cbor': data_put('PREV-EVIDENCE', [D_C4B])},
+            'derivation': None,
+            'expected': {'valid': True},
+        },
+        {
+            'id': 'put_previous_snapshot_frontier',
+            'description': 'CAROL seq 4 naming seq 2, covered by a stored Snapshot frontier',
+            'note': 'Rule 3: the Snapshot covers CAROL 1..2 (m = 2 < 4) and the server stores no CAROL unit '
+                    'above 2.',
+            'inputs': {**frontier([actor_have(CAROL.pid, 2)]), 'message_cbor': data_put('PREV-SNAPSHOT', [D_C4])},
+            'derivation': None,
+            'expected': {'valid': True},
+        },
+        {
+            'id': 'put_previous_snapshot_unit_between',
+            'description': 'CAROL seq 4 naming seq 2 when the Snapshot covers only seq 1 and another seq 2 is stored',
+            'note': 'Rule 3 fails: the server stores a CAROL unit at seq 2, between m = 1 and 4, and it is not '
+                    'the `previous` of seq 4.',
+            'inputs': {**frontier([actor_have(CAROL.pid, 1)]), **stored({'seq2_other': D_C2B}),
+                       'message_cbor': data_put('PREV-BETWEEN', [D_C4])},
+            'derivation': {
+                'base_case': 'put_previous_snapshot_frontier',
+                'mutation': {'field': 'Snapshot frontier and stored units', 'from': 'CAROL 1..2, none stored',
+                             'to': 'CAROL 1..1, another seq 2 stored'},
+                'rule': {'section': PUT_RULE, 'text': PUT_TEXT},
+                'why': 'A stored unit between the frontier and N shows that the frontier does not stand for the '
+                       'missing predecessor.',
+            },
+            'expected': refused(D_C2['id']),
+        },
+        {
+            'id': 'put_previous_null', 'description': 'CAROL seq 3 with a null previous while seq 1 and 2 are stored',
+            'note': 'A null `previous` is not checked by §51.1: a writer with no accepted unit of its own names '
+                    'null (§26.2).',
+            'inputs': {**stored({'seq1': D_C1, 'seq2': D_C2}), 'message_cbor': data_put('PREV-NULL', [D_C3_NULL])},
+            'derivation': None,
+            'expected': {'valid': True},
+        },
+    ]
+    fixtures['data_put_previous'] = PUT_PREVIOUS
+
+
     fixtures['negatives'] = NEG
     OUT_JSON.write_text(json.dumps(to_vector_format(fixtures), indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
     return fixtures
@@ -1900,6 +2016,14 @@ def to_vector_format(fixtures: dict) -> dict:
                 case['derivation'] = x['derivation']
             case['expected'] = x['expected']
             cases.append(case)
+
+    for x in fixtures['data_put_previous']:
+        case = {'id': x['id'], 'type': 'validation', 'kind': 'data_put_previous', 'description': x['description'],
+                'note': x['note'], 'inputs': {**x['inputs'], 'signer': 'CAROL'}}
+        if x['derivation']:
+            case['derivation'] = x['derivation']
+        case['expected'] = x['expected']
+        cases.append(case)
 
     for x in fixtures['ed25519']:
         case = {'id': x['id'], 'type': 'validation', 'kind': 'ed25519_signature', 'description': x['description']}
@@ -2425,6 +2549,19 @@ def generate_markdown(f: dict):
         a(x['inputs']['uri'])
         a('```')
         a('')
+    a('### 17.14 The server\'s `previous` link check')
+    a('')
+    a('`validation` cases of kind `data_put_previous` for `LFCP-WIRE-01` §51.1 (SPEC-PATCH-09, ADR 0008). The server holds the Control Chain through C6, the `stored_*_cose` units of CAROL and, where `stored_snapshot_frontier` is given, a Snapshot with that frontier. It then receives `message_cbor`, a `DATA_PUT`, and reaches the expected outcome for the whole message. A refusal is `NACK(UNKNOWN_PREVIOUS)` whose details (field `2`) are `expected.error.details`, the `previous` of the first refused unit.')
+    a('')
+    for x in f['data_put_previous']:
+        a(f'#### {x["id"]}: {x["description"]}')
+        a('')
+        a(x['note'])
+        a('')
+        exp = x['expected']
+        a('Expected: accepted.' if exp['valid'] else
+          f'Expected: `NACK(UNKNOWN_PREVIOUS)`, details `{exp["error"]["details"]["hex"]}`.')
+        a('')
     a('## 18. Snapshot vectors')
     a('')
     a('`SNAPSHOT-01` and `SNAPSHOT-02` are byte-exact Snapshots under the consolidated `LFCP-WIRE-01` rules. Both are published by BOB, who owns the Resource after C4 and therefore holds `snapshot/publish` (§29.2), in Data Epoch 1 at Control Head C6, using DEK1. The plaintext is opaque test bytes: Snapshot plaintext framing belongs to the application profile, not to the Wire suite.')
@@ -2478,7 +2615,7 @@ def generate_markdown(f: dict):
         ('Snapshot','SNAPSHOT-01/02 canonical frontier, exact AAD, key, nonce, decrypt, signature, Snapshot ID'),
         ('Invitation','URI decode, Principal reconstruction, C2 subject match, C3 claim'),
         ('Wire','HELLO→CHALLENGE→AUTH→READY exact decoding and signature verification; every Section 16 message decodes to its §33 body'),
-        ('Negative','tamper, wrong recipient, equivocation, stale epoch, CAS mismatch, double claim; every Section 17.10 vector reaches its expected outcome'),
+        ('Negative','tamper, wrong recipient, equivocation, stale epoch, CAS mismatch, double claim; every Section 17.10 vector reaches its expected outcome; a server reaches every Section 17.14 outcome'),
     ]
     for x,y in matrix:
         a(f'| {x} | {y} |')

@@ -2822,6 +2822,58 @@ lfcp://join/yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE?endpoint=wss%3A%2F%2Fsyn
 lfcp://join/yMMEHNHocAnDmj_loC9IErjKJzPzqmwBF1MNTPw8wkE?endpoint=wss%3A%2F%2Fsync-a.example.test%2Fv1%2Fws&grant=p36MLOutRFjpygNr72Bs2acwU5USe2qEeeegiFBjNMI&grant=p36MLOutRFjpygNr72Bs2acwU5USe2qEeeegiFBjNMI#secret=owABAVggldgGjIieJIQ6Uz250jOGPA2uG9p8Mqg_0hYG1aETrAgCWCCM8_6jJsMVv8oihs_JA21mQyYyxsijAm7Cj5eIfhhBhQ
 ```
 
+### 17.14 The server's `previous` link check
+
+`validation` cases of kind `data_put_previous` for `LFCP-WIRE-01` §51.1 (SPEC-PATCH-09, ADR 0008). The server holds the Control Chain through C6, the `stored_*_cose` units of CAROL and, where `stored_snapshot_frontier` is given, a Snapshot with that frontier. It then receives `message_cbor`, a `DATA_PUT`, and reaches the expected outcome for the whole message. A refusal is `NACK(UNKNOWN_PREVIOUS)` whose details (field `2`) are `expected.error.details`, the `previous` of the first refused unit.
+
+#### put_previous_stored: CAROL seq 4 naming seq 2, which the server stores
+
+Rule 1: `previous` is a stored unit of the actor at a lower sequence.
+
+Expected: accepted.
+
+#### put_previous_unknown: CAROL seq 4 naming seq 2, which the server lost
+
+The server stores only seq 1: no rule holds. NACK details: the `previous` of seq 4.
+
+Expected: `NACK(UNKNOWN_PREVIOUS)`, details `b025bf1e23739dbdd9aa7ae78c9707d0f9a2013997cdb5dd8ecc2f80f5a72480`.
+
+#### put_previous_same_put: CAROL seq 2 and seq 4 in one DATA_PUT, in that order
+
+Rule 2: seq 2, earlier in the same DATA_PUT, is the `previous` of seq 4.
+
+Expected: accepted.
+
+#### put_previous_same_put_reversed: CAROL seq 4 before seq 2 in one DATA_PUT
+
+Units are evaluated in message order: seq 4 comes first and its `previous` is unknown; the DATA_PUT is all-or-nothing (§51), so seq 2 is not stored either.
+
+Expected: `NACK(UNKNOWN_PREVIOUS)`, details `b025bf1e23739dbdd9aa7ae78c9707d0f9a2013997cdb5dd8ecc2f80f5a72480`.
+
+#### put_previous_equivocation_evidence: CAROL seq 4 naming one unit of an equivocating pair at seq 2
+
+The server keeps both seq 2 units as evidence (§26.2); either counts as a stored unit.
+
+Expected: accepted.
+
+#### put_previous_snapshot_frontier: CAROL seq 4 naming seq 2, covered by a stored Snapshot frontier
+
+Rule 3: the Snapshot covers CAROL 1..2 (m = 2 < 4) and the server stores no CAROL unit above 2.
+
+Expected: accepted.
+
+#### put_previous_snapshot_unit_between: CAROL seq 4 naming seq 2 when the Snapshot covers only seq 1 and another seq 2 is stored
+
+Rule 3 fails: the server stores a CAROL unit at seq 2, between m = 1 and 4, and it is not the `previous` of seq 4.
+
+Expected: `NACK(UNKNOWN_PREVIOUS)`, details `b025bf1e23739dbdd9aa7ae78c9707d0f9a2013997cdb5dd8ecc2f80f5a72480`.
+
+#### put_previous_null: CAROL seq 3 with a null previous while seq 1 and 2 are stored
+
+A null `previous` is not checked by §51.1: a writer with no accepted unit of its own names null (§26.2).
+
+Expected: accepted.
+
 ## 18. Snapshot vectors
 
 `SNAPSHOT-01` and `SNAPSHOT-02` are byte-exact Snapshots under the consolidated `LFCP-WIRE-01` rules. Both are published by BOB, who owns the Resource after C4 and therefore holds `snapshot/publish` (§29.2), in Data Epoch 1 at Control Head C6, using DEK1. The plaintext is opaque test bytes: Snapshot plaintext framing belongs to the application profile, not to the Wire suite.
@@ -3040,7 +3092,7 @@ ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfead
 | Snapshot | SNAPSHOT-01/02 canonical frontier, exact AAD, key, nonce, decrypt, signature, Snapshot ID |
 | Invitation | URI decode, Principal reconstruction, C2 subject match, C3 claim |
 | Wire | HELLO→CHALLENGE→AUTH→READY exact decoding and signature verification; every Section 16 message decodes to its §33 body |
-| Negative | tamper, wrong recipient, equivocation, stale epoch, CAS mismatch, double claim; every Section 17.10 vector reaches its expected outcome |
+| Negative | tamper, wrong recipient, equivocation, stale epoch, CAS mismatch, double claim; every Section 17.10 vector reaches its expected outcome; a server reaches every Section 17.14 outcome |
 
 ## 20. Machine-readable artifacts
 

@@ -2990,6 +2990,233 @@
       }
     },
     {
+      "id": "put_previous_stored",
+      "type": "validation",
+      "kind": "data_put_previous",
+      "description": "CAROL seq 4 naming seq 2, which the server stores",
+      "note": "Rule 1: `previous` is a stored unit of the actor at a lower sequence.",
+      "inputs": {
+        "stored_seq1_cose": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a0589fa7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48030104f6055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc51806582c4dd85825362439c8e0cc06be7de0a147073dfa0869091441ec2830928ff8e13873145f9f61ad1cd487e7ea815840006bcbc4432511ee53a5fce412083d91764875ce676bfe691a931d1547a8068c4bfba3182be1bddd5d5983f8f55c0859b1004214bcee6ec545f2c034c1d77b04"
+        },
+        "stored_seq2_cose": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058c7a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4803020458209b0c864dbee938ab1f0a106d32947004c7bb444d2924211fede31f8bcf411743055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518065833ffa816bf70cb8b6b20a71f548931cfd4fd3354a40482afcc00619056f4d9336aae232e2896cca615f0c95af65017f9f54b5d415840b3e1ffc12943909458141fd17e7eca388e398d9618423aec26f8d873b7b2bb2cbe1714ff59317d950467ad8dc0320b9bc7e5dc2f34682229b126db35cc44430e"
+        },
+        "message_cbor": {
+          "hex": "a30018210150bfb9c300ef8760fdddb017d36ea37bdc04a2005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410181590135845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058c7a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480304045820b025bf1e23739dbdd9aa7ae78c9707d0f9a2013997cdb5dd8ecc2f80f5a72480055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518065833f653cf1d443bf60b29ebacf7706a49d11ccce0d839b70ed8559c973dfdde381204a243b47b6d1c21730e6f67ff41b3c6ec1e1758400bc7d15111a7b1935226f44557e3562f8693b4ecc22727c56192ab9c7ba623a9020e676fe4baf5887f3fe09bf48dd1b772e0617a35fcdbce74c1b5af1875840f"
+        },
+        "signer": "CAROL"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "put_previous_unknown",
+      "type": "validation",
+      "kind": "data_put_previous",
+      "description": "CAROL seq 4 naming seq 2, which the server lost",
+      "note": "The server stores only seq 1: no rule holds. NACK details: the `previous` of seq 4.",
+      "inputs": {
+        "stored_seq1_cose": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a0589fa7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48030104f6055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc51806582c4dd85825362439c8e0cc06be7de0a147073dfa0869091441ec2830928ff8e13873145f9f61ad1cd487e7ea815840006bcbc4432511ee53a5fce412083d91764875ce676bfe691a931d1547a8068c4bfba3182be1bddd5d5983f8f55c0859b1004214bcee6ec545f2c034c1d77b04"
+        },
+        "message_cbor": {
+          "hex": "a300182101506556453c7633bb1040fd6b1b8c478fea04a2005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410181590135845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058c7a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480304045820b025bf1e23739dbdd9aa7ae78c9707d0f9a2013997cdb5dd8ecc2f80f5a72480055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518065833f653cf1d443bf60b29ebacf7706a49d11ccce0d839b70ed8559c973dfdde381204a243b47b6d1c21730e6f67ff41b3c6ec1e1758400bc7d15111a7b1935226f44557e3562f8693b4ecc22727c56192ab9c7ba623a9020e676fe4baf5887f3fe09bf48dd1b772e0617a35fcdbce74c1b5af1875840f"
+        },
+        "signer": "CAROL"
+      },
+      "derivation": {
+        "base_case": "put_previous_stored",
+        "mutation": {
+          "field": "units the server stores",
+          "from": "CAROL seq 1 and seq 2",
+          "to": "CAROL seq 1"
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §51.1",
+          "text": "A server MUST refuse a Data Unit whose `previous` is not `null` unless [...] the server stores a unit of that actor, at a sequence below `N`, whose Data Unit ID is `previous` [...]; an earlier unit of the same `DATA_PUT` is such a unit [...]; a Snapshot the server stores covers sequence `m` of that actor in its frontier, with `m < N`, and the server stores no unit of that actor at a sequence between `m` and `N`."
+        },
+        "why": "Accepting seq 4 would serve a unit that no receiver can link (§26.2)."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "UNKNOWN_PREVIOUS",
+          "details": {
+            "hex": "b025bf1e23739dbdd9aa7ae78c9707d0f9a2013997cdb5dd8ecc2f80f5a72480"
+          }
+        }
+      }
+    },
+    {
+      "id": "put_previous_same_put",
+      "type": "validation",
+      "kind": "data_put_previous",
+      "description": "CAROL seq 2 and seq 4 in one DATA_PUT, in that order",
+      "note": "Rule 2: seq 2, earlier in the same DATA_PUT, is the `previous` of seq 4.",
+      "inputs": {
+        "stored_seq1_cose": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a0589fa7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48030104f6055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc51806582c4dd85825362439c8e0cc06be7de0a147073dfa0869091441ec2830928ff8e13873145f9f61ad1cd487e7ea815840006bcbc4432511ee53a5fce412083d91764875ce676bfe691a931d1547a8068c4bfba3182be1bddd5d5983f8f55c0859b1004214bcee6ec545f2c034c1d77b04"
+        },
+        "message_cbor": {
+          "hex": "a30018210150a861c3e99000554531834e3ac95a723104a2005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410182590135845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058c7a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4803020458209b0c864dbee938ab1f0a106d32947004c7bb444d2924211fede31f8bcf411743055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518065833ffa816bf70cb8b6b20a71f548931cfd4fd3354a40482afcc00619056f4d9336aae232e2896cca615f0c95af65017f9f54b5d415840b3e1ffc12943909458141fd17e7eca388e398d9618423aec26f8d873b7b2bb2cbe1714ff59317d950467ad8dc0320b9bc7e5dc2f34682229b126db35cc44430e590135845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058c7a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480304045820b025bf1e23739dbdd9aa7ae78c9707d0f9a2013997cdb5dd8ecc2f80f5a72480055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518065833f653cf1d443bf60b29ebacf7706a49d11ccce0d839b70ed8559c973dfdde381204a243b47b6d1c21730e6f67ff41b3c6ec1e1758400bc7d15111a7b1935226f44557e3562f8693b4ecc22727c56192ab9c7ba623a9020e676fe4baf5887f3fe09bf48dd1b772e0617a35fcdbce74c1b5af1875840f"
+        },
+        "signer": "CAROL"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "put_previous_same_put_reversed",
+      "type": "validation",
+      "kind": "data_put_previous",
+      "description": "CAROL seq 4 before seq 2 in one DATA_PUT",
+      "note": "Units are evaluated in message order: seq 4 comes first and its `previous` is unknown; the DATA_PUT is all-or-nothing (§51), so seq 2 is not stored either.",
+      "inputs": {
+        "stored_seq1_cose": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a0589fa7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48030104f6055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc51806582c4dd85825362439c8e0cc06be7de0a147073dfa0869091441ec2830928ff8e13873145f9f61ad1cd487e7ea815840006bcbc4432511ee53a5fce412083d91764875ce676bfe691a931d1547a8068c4bfba3182be1bddd5d5983f8f55c0859b1004214bcee6ec545f2c034c1d77b04"
+        },
+        "message_cbor": {
+          "hex": "a30018210150e4fc656edb5610b303460db349c7128704a2005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410182590135845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058c7a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480304045820b025bf1e23739dbdd9aa7ae78c9707d0f9a2013997cdb5dd8ecc2f80f5a72480055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518065833f653cf1d443bf60b29ebacf7706a49d11ccce0d839b70ed8559c973dfdde381204a243b47b6d1c21730e6f67ff41b3c6ec1e1758400bc7d15111a7b1935226f44557e3562f8693b4ecc22727c56192ab9c7ba623a9020e676fe4baf5887f3fe09bf48dd1b772e0617a35fcdbce74c1b5af1875840f590135845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058c7a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4803020458209b0c864dbee938ab1f0a106d32947004c7bb444d2924211fede31f8bcf411743055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518065833ffa816bf70cb8b6b20a71f548931cfd4fd3354a40482afcc00619056f4d9336aae232e2896cca615f0c95af65017f9f54b5d415840b3e1ffc12943909458141fd17e7eca388e398d9618423aec26f8d873b7b2bb2cbe1714ff59317d950467ad8dc0320b9bc7e5dc2f34682229b126db35cc44430e"
+        },
+        "signer": "CAROL"
+      },
+      "derivation": {
+        "base_case": "put_previous_same_put",
+        "mutation": {
+          "field": "order of the DATA_PUT units",
+          "from": "seq 2, seq 4",
+          "to": "seq 4, seq 2"
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §51.1",
+          "text": "A server MUST refuse a Data Unit whose `previous` is not `null` unless [...] the server stores a unit of that actor, at a sequence below `N`, whose Data Unit ID is `previous` [...]; an earlier unit of the same `DATA_PUT` is such a unit [...]; a Snapshot the server stores covers sequence `m` of that actor in its frontier, with `m < N`, and the server stores no unit of that actor at a sequence between `m` and `N`."
+        },
+        "why": "Only an earlier unit of the same DATA_PUT counts."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "UNKNOWN_PREVIOUS",
+          "details": {
+            "hex": "b025bf1e23739dbdd9aa7ae78c9707d0f9a2013997cdb5dd8ecc2f80f5a72480"
+          }
+        }
+      }
+    },
+    {
+      "id": "put_previous_equivocation_evidence",
+      "type": "validation",
+      "kind": "data_put_previous",
+      "description": "CAROL seq 4 naming one unit of an equivocating pair at seq 2",
+      "note": "The server keeps both seq 2 units as evidence (§26.2); either counts as a stored unit.",
+      "inputs": {
+        "stored_seq1_cose": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a0589fa7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48030104f6055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc51806582c4dd85825362439c8e0cc06be7de0a147073dfa0869091441ec2830928ff8e13873145f9f61ad1cd487e7ea815840006bcbc4432511ee53a5fce412083d91764875ce676bfe691a931d1547a8068c4bfba3182be1bddd5d5983f8f55c0859b1004214bcee6ec545f2c034c1d77b04"
+        },
+        "stored_seq2_cose": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058c7a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4803020458209b0c864dbee938ab1f0a106d32947004c7bb444d2924211fede31f8bcf411743055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518065833ffa816bf70cb8b6b20a71f548931cfd4fd3354a40482afcc00619056f4d9336aae232e2896cca615f0c95af65017f9f54b5d415840b3e1ffc12943909458141fd17e7eca388e398d9618423aec26f8d873b7b2bb2cbe1714ff59317d950467ad8dc0320b9bc7e5dc2f34682229b126db35cc44430e"
+        },
+        "stored_seq2_other_cose": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058cea7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4803020458209b0c864dbee938ab1f0a106d32947004c7bb444d2924211fede31f8bcf411743055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc51806583affa816bf70cb8b6b20a71f548931cfd4fd3354a40482afcc00619056f4d9336aae232ea2dd994e355bcd09200952405caa655ebac9dd29b87e1c5840e4953d9b7722a13cb1cb74b2fd3e8aec8a8bf30d846e896e145316d367be4b788642fd805676c27dcc045178e711145bfdecec945da60626a2215bae251bea0f"
+        },
+        "message_cbor": {
+          "hex": "a30018210150f6e73b4d39733c3ce384aa510c7c012f04a2005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc241018159013c845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058cea7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48030404582092511c4bfd54e21a2886cdf3b54207ebcefbee737a09457cf95441146cdd6437055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc51806583af653cf1d443bf60b29ebacf7706a49d11ccce0d839b70ed8559c973dfdde381204a2435274e99330123b17e3aa02cfebb1bb44e69fbec1298dcf5840797cce3662c32793d5237a5bb7c662fe45299d4c10915309112af3384a26ef0084ff620a5f2e4ffca90541ee0bb3825061a30073a887d3fa93d7ebd3eb2a9703"
+        },
+        "signer": "CAROL"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "put_previous_snapshot_frontier",
+      "type": "validation",
+      "kind": "data_put_previous",
+      "description": "CAROL seq 4 naming seq 2, covered by a stored Snapshot frontier",
+      "note": "Rule 3: the Snapshot covers CAROL 1..2 (m = 2 < 4) and the server stores no CAROL unit above 2.",
+      "inputs": {
+        "stored_snapshot_frontier": {
+          "hex": "81a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480102"
+        },
+        "message_cbor": {
+          "hex": "a300182101506cc63c24191a47963c6b0a9c634213f404a2005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410181590135845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058c7a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480304045820b025bf1e23739dbdd9aa7ae78c9707d0f9a2013997cdb5dd8ecc2f80f5a72480055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518065833f653cf1d443bf60b29ebacf7706a49d11ccce0d839b70ed8559c973dfdde381204a243b47b6d1c21730e6f67ff41b3c6ec1e1758400bc7d15111a7b1935226f44557e3562f8693b4ecc22727c56192ab9c7ba623a9020e676fe4baf5887f3fe09bf48dd1b772e0617a35fcdbce74c1b5af1875840f"
+        },
+        "signer": "CAROL"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "put_previous_snapshot_unit_between",
+      "type": "validation",
+      "kind": "data_put_previous",
+      "description": "CAROL seq 4 naming seq 2 when the Snapshot covers only seq 1 and another seq 2 is stored",
+      "note": "Rule 3 fails: the server stores a CAROL unit at seq 2, between m = 1 and 4, and it is not the `previous` of seq 4.",
+      "inputs": {
+        "stored_snapshot_frontier": {
+          "hex": "81a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101"
+        },
+        "stored_seq2_other_cose": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058cea7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4803020458209b0c864dbee938ab1f0a106d32947004c7bb444d2924211fede31f8bcf411743055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc51806583affa816bf70cb8b6b20a71f548931cfd4fd3354a40482afcc00619056f4d9336aae232ea2dd994e355bcd09200952405caa655ebac9dd29b87e1c5840e4953d9b7722a13cb1cb74b2fd3e8aec8a8bf30d846e896e145316d367be4b788642fd805676c27dcc045178e711145bfdecec945da60626a2215bae251bea0f"
+        },
+        "message_cbor": {
+          "hex": "a30018210150683956b2d8038cadcf6d99e3526d698a04a2005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410181590135845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058c7a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480304045820b025bf1e23739dbdd9aa7ae78c9707d0f9a2013997cdb5dd8ecc2f80f5a72480055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518065833f653cf1d443bf60b29ebacf7706a49d11ccce0d839b70ed8559c973dfdde381204a243b47b6d1c21730e6f67ff41b3c6ec1e1758400bc7d15111a7b1935226f44557e3562f8693b4ecc22727c56192ab9c7ba623a9020e676fe4baf5887f3fe09bf48dd1b772e0617a35fcdbce74c1b5af1875840f"
+        },
+        "signer": "CAROL"
+      },
+      "derivation": {
+        "base_case": "put_previous_snapshot_frontier",
+        "mutation": {
+          "field": "Snapshot frontier and stored units",
+          "from": "CAROL 1..2, none stored",
+          "to": "CAROL 1..1, another seq 2 stored"
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §51.1",
+          "text": "A server MUST refuse a Data Unit whose `previous` is not `null` unless [...] the server stores a unit of that actor, at a sequence below `N`, whose Data Unit ID is `previous` [...]; an earlier unit of the same `DATA_PUT` is such a unit [...]; a Snapshot the server stores covers sequence `m` of that actor in its frontier, with `m < N`, and the server stores no unit of that actor at a sequence between `m` and `N`."
+        },
+        "why": "A stored unit between the frontier and N shows that the frontier does not stand for the missing predecessor."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "UNKNOWN_PREVIOUS",
+          "details": {
+            "hex": "b025bf1e23739dbdd9aa7ae78c9707d0f9a2013997cdb5dd8ecc2f80f5a72480"
+          }
+        }
+      }
+    },
+    {
+      "id": "put_previous_null",
+      "type": "validation",
+      "kind": "data_put_previous",
+      "description": "CAROL seq 3 with a null previous while seq 1 and 2 are stored",
+      "note": "A null `previous` is not checked by §51.1: a writer with no accepted unit of its own names null (§26.2).",
+      "inputs": {
+        "stored_seq1_cose": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a0589fa7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48030104f6055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc51806582c4dd85825362439c8e0cc06be7de0a147073dfa0869091441ec2830928ff8e13873145f9f61ad1cd487e7ea815840006bcbc4432511ee53a5fce412083d91764875ce676bfe691a931d1547a8068c4bfba3182be1bddd5d5983f8f55c0859b1004214bcee6ec545f2c034c1d77b04"
+        },
+        "stored_seq2_cose": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058c7a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4803020458209b0c864dbee938ab1f0a106d32947004c7bb444d2924211fede31f8bcf411743055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518065833ffa816bf70cb8b6b20a71f548931cfd4fd3354a40482afcc00619056f4d9336aae232e2896cca615f0c95af65017f9f54b5d415840b3e1ffc12943909458141fd17e7eca388e398d9618423aec26f8d873b7b2bb2cbe1714ff59317d950467ad8dc0320b9bc7e5dc2f34682229b126db35cc44430e"
+        },
+        "message_cbor": {
+          "hex": "a30018210150928de78aaf765d0093ac05c534093fca04a2005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410181590123845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058b5a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48030304f6055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180658425e7946bc95bd45d8848dba9bdd162f88ee5ce995d8aaa89c1f252dd337525ab36c2e7da64f7b6b8f94b219ba36939c2a1edf13eb352411e7ac7254e3c878c8088d725840b0061a0c0d65c5422b063a3461e54795e172ad905590678d2be767dc9f1fe38c48da486062dd8e0fe10c4719ee18ce64d9e6e26e5e18c0244f2d4696171fc00d"
+        },
+        "signer": "CAROL"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
       "id": "ed25519_rfc8032_test1",
       "type": "validation",
       "kind": "ed25519_signature",
