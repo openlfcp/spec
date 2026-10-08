@@ -886,6 +886,62 @@ function checkStructure(change) {
   };
 }
 
+// POST-001 (SHARED-OBJECTS-PROFILE-01 §14.1): a replica never merges two
+// changes with one actor and sequence number. andrey equivocates; X is one
+// unit of the pair. pavel built c on X; after the rebuild that excludes X
+// (and c with it), pavel re-issues the work as c2, which reuses c's sequence
+// number (§9). A replica R that still holds X and c receives c2: it holds
+// it. When R learns of the equivocation and rebuilds without X and c, the
+// held c2 applies.
+{
+  const IS = (v) => new A.ImmutableString(v);
+  const last = (doc) => A.getLastLocalChange(doc);
+  const xDoc = A.change(A.clone(s01, { actor: actorOf("andrey") }), { message: "COLLISION.X", time: 0 }, (d) => {
+    d.objects[K].title = IS("Title from one unit of an equivocating pair");
+  });
+  const cDoc = A.change(A.clone(xDoc, { actor: actorOf("pavel") }), { message: "COLLISION.c", time: 0 }, (d) => {
+    d.objects[K].status = IS("in_progress");
+  });
+  const c2Doc = A.change(A.clone(s01, { actor: actorOf("pavel") }), { message: "COLLISION.c2", time: 0 }, (d) => {
+    d.objects[K].status = IS("in_progress");
+  });
+  const [x, c, c2] = [last(xDoc), last(cDoc), last(c2Doc)];
+  const [dx, dc, dc2] = [x, c, c2].map((b) => A.decodeChange(b));
+  if (dc.actor !== dc2.actor || dc.seq !== dc2.seq || dc.hash === dc2.hash || !dc.deps.includes(dx.hash)) {
+    throw new Error("COLLISION: c and c2 must share an actor and sequence number and differ, and c must depend on X");
+  }
+  const rebuilt = A.applyChanges(A.clone(s01), [c2])[0];
+  corpus.collision = {
+    rule:
+      "SHARED-OBJECTS-PROFILE-01 §14.1: a change whose actor and sequence number match a different change in the " +
+      "document is held, not merged and not profile-invalid; it is retried after every rebuild that removes changes",
+    note:
+      "Each case starts from the converged document of its base scenario and runs its steps in order: a change step " +
+      "gives the change to the replica (accept: merged; held: held; duplicate: already in the document, no-op); an " +
+      "exclude step is the rebuild of §14.1 without the listed changes and everything that depends on them, after " +
+      "which the held changes are retried.",
+    cases: [
+      {
+        id: "COLLISION-reissued-after-equivocation",
+        description:
+          "pavel's re-issued change c2 reuses the sequence number of c, which depends on X, one unit of andrey's " +
+          "equivocating pair; the replica holds c2 until it rebuilds without X",
+        base_scenario: "S01",
+        steps: [
+          { change_hex: hex(x), hash: dx.hash, actor: "andrey", seq: dx.seq, expected: "accept" },
+          { change_hex: hex(c), hash: dc.hash, actor: "pavel", seq: dc.seq, expected: "accept" },
+          { change_hex: hex(c2), hash: dc2.hash, actor: "pavel", seq: dc2.seq, expected: "held" },
+          { change_hex: hex(c), hash: dc.hash, actor: "pavel", seq: dc.seq, expected: "duplicate" },
+          { exclude: [dx.hash], expected: { removed: [dx.hash, dc.hash].sort(), applied: [dc2.hash] } },
+        ],
+        held_state: plain(A.toJS(cDoc)),
+        final_heads: [...A.getHeads(rebuilt)].sort(),
+        final_state: plain(A.toJS(rebuilt)),
+      },
+    ],
+  };
+}
+
 // The compressed case is a real compressed change: Automerge itself decodes it.
 if (A.decodeChange(compressed(nullSets(3))).ops.length !== 3) throw new Error("compressed() is wrong");
 

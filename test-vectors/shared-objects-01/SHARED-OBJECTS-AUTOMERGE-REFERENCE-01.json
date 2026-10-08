@@ -1848,5 +1848,101 @@
         "expected": "reject"
       }
     ]
+  },
+  "collision": {
+    "rule": "SHARED-OBJECTS-PROFILE-01 §14.1: a change whose actor and sequence number match a different change in the document is held, not merged and not profile-invalid; it is retried after every rebuild that removes changes",
+    "note": "Each case starts from the converged document of its base scenario and runs its steps in order: a change step gives the change to the replica (accept: merged; held: held; duplicate: already in the document, no-op); an exclude step is the rebuild of §14.1 without the listed changes and everything that depends on them, after which the held changes are retried.",
+    "cases": [
+      {
+        "id": "COLLISION-reissued-after-equivocation",
+        "description": "pavel's re-issued change c2 reuses the sequence number of c, which depends on X, one unit of andrey's equivocating pair; the replica holds c2 until it rebuilds without X",
+        "base_scenario": "S01",
+        "steps": [
+          {
+            "change_hex": "856f4a8386c629d401a901010f737136bdf197d0613ebaf03c0b332f5d7338f74ee15d1aa2b7432f65a4615c206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830310000b434f4c4c4953494f4e2e58000a010202021507340142025603572b7002710273027f007f047f057469746c65017f017fb6055469746c652066726f6d206f6e6520756e6974206f6620616e2065717569766f636174696e6720706169727f017f007f0e",
+            "hash": "86c629d4e8ae14e79532e94357c73bf9b1729ed5e8089c886c9e4029e7b2356e",
+            "actor": "andrey",
+            "seq": 3,
+            "expected": "accept"
+          },
+          {
+            "change_hex": "856f4a83d6497ed001ab010186c629d4e8ae14e79532e94357c73bf9b1729ed5e8089c886c9e4029e7b2356e207957aa8e06acc46c224685a07625acb31d6a60cee94b4c6847e74772757f10250111000b434f4c4c4953494f4e2e6301206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830a010202021508340142025603570b7002710273027f017f047f06737461747573017f017fb601696e5f70726f67726573737f017f017f0c",
+            "hash": "d6497ed0b058a7503d9f0a34234c376c5530a79cb82cee0b36590ae549c92f9c",
+            "actor": "pavel",
+            "seq": 1,
+            "expected": "accept"
+          },
+          {
+            "change_hex": "856f4a8311ae164b01ac01010f737136bdf197d0613ebaf03c0b332f5d7338f74ee15d1aa2b7432f65a4615c207957aa8e06acc46c224685a07625acb31d6a60cee94b4c6847e74772757f10250110000c434f4c4c4953494f4e2e633201206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830a010202021508340142025603570b7002710273027f017f047f06737461747573017f017fb601696e5f70726f67726573737f017f017f0c",
+            "hash": "11ae164b3016fc92d6ba171f5914c4dd2cc6de0872888532f5c2acbbcdeb2bc0",
+            "actor": "pavel",
+            "seq": 1,
+            "expected": "held"
+          },
+          {
+            "change_hex": "856f4a83d6497ed001ab010186c629d4e8ae14e79532e94357c73bf9b1729ed5e8089c886c9e4029e7b2356e207957aa8e06acc46c224685a07625acb31d6a60cee94b4c6847e74772757f10250111000b434f4c4c4953494f4e2e6301206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830a010202021508340142025603570b7002710273027f017f047f06737461747573017f017fb601696e5f70726f67726573737f017f017f0c",
+            "hash": "d6497ed0b058a7503d9f0a34234c376c5530a79cb82cee0b36590ae549c92f9c",
+            "actor": "pavel",
+            "seq": 1,
+            "expected": "duplicate"
+          },
+          {
+            "exclude": [
+              "86c629d4e8ae14e79532e94357c73bf9b1729ed5e8089c886c9e4029e7b2356e"
+            ],
+            "expected": {
+              "removed": [
+                "86c629d4e8ae14e79532e94357c73bf9b1729ed5e8089c886c9e4029e7b2356e",
+                "d6497ed0b058a7503d9f0a34234c376c5530a79cb82cee0b36590ae549c92f9c"
+              ],
+              "applied": [
+                "11ae164b3016fc92d6ba171f5914c4dd2cc6de0872888532f5c2acbbcdeb2bc0"
+              ]
+            }
+          }
+        ],
+        "held_state": {
+          "extensions": {},
+          "objects": {
+            "019a2f85-7b31-7c42-b85a-fc843e2f40ad": {
+              "assignees": {},
+              "created_at": "2026-10-04T05:30:00Z",
+              "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
+              "extensions": {},
+              "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+              "lifecycle": "active",
+              "priority": "normal",
+              "status": "in_progress",
+              "tags": {},
+              "title": "Title from one unit of an equivocating pair",
+              "type": "task"
+            }
+          },
+          "profile": "org.openlfcp.shared-objects.v1"
+        },
+        "final_heads": [
+          "11ae164b3016fc92d6ba171f5914c4dd2cc6de0872888532f5c2acbbcdeb2bc0"
+        ],
+        "final_state": {
+          "extensions": {},
+          "objects": {
+            "019a2f85-7b31-7c42-b85a-fc843e2f40ad": {
+              "assignees": {},
+              "created_at": "2026-10-04T05:30:00Z",
+              "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
+              "extensions": {},
+              "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+              "lifecycle": "active",
+              "priority": "normal",
+              "status": "in_progress",
+              "tags": {},
+              "title": "Prepare API contract",
+              "type": "task"
+            }
+          },
+          "profile": "org.openlfcp.shared-objects.v1"
+        }
+      }
+    ]
   }
 }

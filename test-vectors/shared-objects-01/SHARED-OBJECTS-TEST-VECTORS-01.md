@@ -853,6 +853,8 @@ The corpus `expansion` section (SPEC-PATCH-07) checks the expansion limits alone
 
 The corpus `depth` section (SPEC-PATCH-08) checks the document depth bound (§11.2): the root is depth 0, an object created in an object of depth `d` has depth `d + 1`, and no object may be deeper than 256. Each case is a list of changes applied in order to an empty replica, each accepted, rejected before the engine, or held because a dependency was rejected: one change nesting exactly 256 levels (accepted), 257 levels (rejected), a text object at depth 257 (rejected: every object kind counts), ten changes of 30 levels each (the ninth would reach 270 and is rejected, the tenth is held), and 300 maps side by side under the root (accepted). Two Snapshot cases hold depths 256 (accepted) and 257 (rejected before loading). Snapshot cases sit at and one past the floor (262,144 values in a column, 32 MiB of inflated column data, the deflate stream built by hand so its bytes never depend on a zlib version) and include a save followed by a second chunk. A case within the limits may still fail other checks: it is not necessarily a valid Shared Objects change or document.
 
+The corpus `collision` section (SPEC-PATCH-09, POST-001) checks §14.1's rule for two changes with one actor and sequence number. andrey equivocates; pavel built `c` on `X`, one unit of the pair, and after the rebuild that excludes `X` re-issues the work as `c2`, which reuses `c`'s sequence number (§9). A replica that holds `X` and `c` holds `c2` (not merged, not profile-invalid); re-sending `c` is a no-op; the rebuild without `X` removes `X` and `c` and applies the held `c2`.
+
 ---
 
 # Part VI. Implementation-neutral test runner contract
