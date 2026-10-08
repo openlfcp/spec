@@ -1,0 +1,3 @@
+# Fixture files whose line-ending bytes are part of the contract: stored
+# byte for byte, never normalized (core.autocrlf would turn CRLF into LF).
+test-vectors/shared-sections-01/markdown-files/** -text
