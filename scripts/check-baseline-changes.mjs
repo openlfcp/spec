@@ -20,6 +20,11 @@
 //   what an existing case means may be listed explicitly with `from: null`.
 // - Every `changed` entry must match a real difference, so the list cannot
 //   go stale.
+// - A suite marked `"previous": "migrated"` moved to lfcp-vector-format/1
+//   after the previous baseline, so its paths differ from the tag's. Its
+//   values are compared across the move by scripts/check-vector-migration.mjs
+//   (every value at the baseline unchanged at its new location); this check
+//   only confirms that the mapping's baseline commit is the previous tag.
 
 import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
@@ -55,6 +60,19 @@ const verbose = process.argv.includes("--verbose");
 let failed = false;
 
 for (const suite of manifest.suites) {
+  if (suite.previous === "migrated") {
+    const mapping = JSON.parse(readFileSync(join(root, suite.mapping), "utf8"));
+    const tag = execFileSync("git", ["rev-parse", `${manifest.previous_baseline}^{commit}`], { cwd: root, encoding: "utf8" }).trim();
+    const same = mapping.suite_file === suite.suite_file && tag.startsWith(mapping.baseline_commit);
+    console.log(
+      `${same ? "ok  " : "FAIL"}  ${suite.suite_file} (vs ${manifest.previous_baseline}): ` +
+        (same
+          ? "migrated; its values are checked across the move by check-vector-migration.mjs"
+          : `the mapping ${suite.mapping} is not of this suite at ${manifest.previous_baseline} (${tag.slice(0, 12)})`),
+    );
+    if (!same) failed = true;
+    continue;
+  }
   let before = new Map();
   if (suite.previous !== "absent") {
     let oldText;
@@ -63,6 +81,8 @@ for (const suite of manifest.suites) {
         cwd: root,
         encoding: "utf8",
         stdio: ["ignore", "pipe", "pipe"],
+        // The shared sections corpus is several MiB; the default is 1 MiB.
+        maxBuffer: 256 * 1024 * 1024,
       });
     } catch {
       throw new Error(`cannot read ${suite.suite_file} at ${manifest.previous_baseline}; this check needs the tag and full history`);
