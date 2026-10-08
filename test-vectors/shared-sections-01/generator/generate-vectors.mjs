@@ -26,11 +26,11 @@ function frame(b){
   else{h=Buffer.alloc(5);h[0]=0x5a;h.writeUInt32BE(b.length,1);}
   return Buffer.concat([Buffer.from([0x82,0x01]),h,b]);
 }
-function summarizeChange(b){
+function summarizeChange(b,signer){
   const c=A.decodeChange(b);
-  return {...bytesInfo(b),change_hash:c.hash,actor:c.actor,seq:c.seq,deps:c.deps,framed_plaintext:bytesInfo(frame(b))};
+  return {...bytesInfo(b),change_hash:c.hash,actor:c.actor,seq:c.seq,deps:c.deps,framed_plaintext:bytesInfo(frame(b)),...(signer?{signer}:{})};
 }
-function record(id,title,{base=seeds,a=[],b=[],after=[],requirements={},coverage='model',notes=[]}={}){
+function record(id,title,{base=seeds,a=[],b=[],after=[],inject,requirements={},coverage='model',notes=[]}={}){
   let da=fork(base,'A'),db=fork(base,'B');
   for(const [label,fn]of a)da=change(da,id+'/'+label,fn);
   for(const [label,fn]of b)db=change(db,id+'/'+label,fn);
@@ -39,18 +39,20 @@ function record(id,title,{base=seeds,a=[],b=[],after=[],requirements={},coverage
   let resolved=fork(merged,'C');
   for(const [label,fn]of after)resolved=change(resolved,id+'/'+label,fn);
   const cc=A.getChanges(merged,resolved);
+  // Crafted Data Units on branch A, each with the Principal that signs it.
+  const crafted=inject?inject(da):[];
   // §14.1: every change goes through admission; refused changes and their
   // dependents never enter the reference document.
-  const all=[...A.getAllChanges(base),...ca,...cb,...cc];
+  const all=[...A.getAllChanges(base),...ca,...crafted,...cb,...cc];
   const replay=admitReplay(all,actor('reference'));
   resolved=replay.doc;
   const summary={...inspect(resolved),refused:replay.refused,held:replay.held};
   assertExpected(summary,requirements,assert);
   const value={id,title,coverage,notes,
     base_snapshot:bytesInfo(A.save(base)),
-    base_changes:A.getAllChanges(base).map(summarizeChange),
-    branches:{A:ca.map(summarizeChange),B:cb.map(summarizeChange)},
-    after_merge:cc.map(summarizeChange),
+    base_changes:A.getAllChanges(base).map(b=>summarizeChange(b)),
+    branches:{A:[...ca.map(b=>summarizeChange(b)),...crafted.map(x=>summarizeChange(x.bytes,x.signer))],B:cb.map(b=>summarizeChange(b))},
+    after_merge:cc.map(b=>summarizeChange(b)),
     assertions:requirements,expected:summary,
     expected_heads:A.getHeads(resolved).sort(),
     reference_snapshot:bytesInfo(A.save(resolved)),
@@ -259,6 +261,48 @@ record('SS41','One change inserting 16,385 characters is refused',{
   a:[['too-long',d=>textEdit(d,ids.para,14,0,'ж'.repeat(16385))]],
   requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],visible,texts:{[ids.para]:'Draft contract'}},coverage:'negative-admission',
   notes:['SHARED-OBJECTS-PROFILE-01 §11.1: more than 16,384 values in a column; the reference model counts operations.']});
+// LFCP-02-010, inherited admission (SHARED-OBJECTS-PROFILE-01 §8, §11,
+// §11.2, §14.1) with this profile's actor domain.
+const leb=n=>{const o=[];do{let b=n&0x7f;n>>>=7;if(n)b|=0x80;o.push(b);}while(n);return o;};
+/** The same change as a compressed chunk (type 2): one stored DEFLATE block. */
+const compressedChunk=change=>{
+  const headerLen=9+leb(change.length-9).length;
+  const data=change.subarray(headerLen),len=data.length;
+  const stored=Uint8Array.from([0x01,len&0xff,len>>8,~len&0xff,(~len>>8)&0xff,...data]);
+  return Uint8Array.from([...change.subarray(0,8),2,...leb(stored.length),...stored]);
+};
+/** A's next change on `doc`: a title edit. */
+const nextOfA=(doc,label)=>{
+  const next=change(doc,label,d=>{d.objects[ids.task].title=S('Edited by A');});
+  return A.getLastLocalChange(next);
+};
+record('SS42','A change signed by another Principal is refused',{
+  inject:d=>[{bytes:nextOfA(d,'SS42/foreign'),signer:'B'}],
+  requirements:{classification:'VALID',refused:['CHANGE_ACTOR_MISMATCH'],visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
+  notes:['§2 (SHARED-OBJECTS-PROFILE-01 §8, §11): a change of A\'s actor in a Data Unit signed by B.']});
+record('SS43','A change skipping a sequence number is refused',{
+  inject:d=>{const c=A.decodeChange(nextOfA(d,'SS43/gap'));return [{bytes:A.encodeChange({...c,seq:c.seq+1}),signer:'A'}];},
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],visible},coverage:'negative-admission',
+  notes:['SHARED-OBJECTS-PROFILE-01 §14.1: with every dependency present, the sequence number is the actor\'s next one.']});
+record('SS44','A compressed change chunk is refused',{
+  inject:d=>[{bytes:compressedChunk(nextOfA(d,'SS44/compressed')),signer:'A'}],
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],visible},coverage:'negative-admission',
+  notes:['SHARED-OBJECTS-PROFILE-01 §11: a Data Unit carries an uncompressed change chunk (type 1).']});
+record('SS45','A change with a wrong checksum is refused',{
+  inject:d=>{const b=Uint8Array.from(nextOfA(d,'SS45/checksum'));b[4]^=0x01;return [{bytes:b,signer:'A'}];},
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],visible},coverage:'negative-admission',
+  notes:['SHARED-OBJECTS-PROFILE-01 §11: the chunk checksum is verified even when Automerge would parse the bytes.']});
+record('SS46','A change nesting an object 257 levels deep is refused',{
+  inject:d=>{
+    const next=change(d,'SS46/deep',x=>{
+      let value={};const root=value;
+      for(let i=2;i<257;i++){value.d={};value=value.d;}
+      x.extensions['org.example.deep']=root;
+    });
+    return [{bytes:A.getLastLocalChange(next),signer:'A'}];
+  },
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],visible},coverage:'negative-admission',
+  notes:['SHARED-OBJECTS-PROFILE-01 §11.2: the extensions map has depth 1, its new map depth 2, and the change nests to depth 257.']});
 const doc={
   suite:'SHARED-SECTIONS-TEST-VECTORS-01',schema_version:1,date:'2026-10-08',
   status:'working-draft-reference-corpus',profile:PROFILE,

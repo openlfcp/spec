@@ -7,7 +7,7 @@
 import {A,PROFILE,actor,pref,str,canon} from './section-model.mjs';
 
 /** Diagnostics in their order of precedence (§14.1). */
-export const ADMISSION_ORDER=['INVALID_AUTOMERGE_BYTES','CONTAINER_REPLACED','CHILDREN_LIST_MUTATED','PLACEMENT_NOT_ATOMIC','IMMUTABLE_FIELD_MUTATED','INVALID_FIELD_TYPE'];
+export const ADMISSION_ORDER=['INVALID_AUTOMERGE_BYTES','CHANGE_ACTOR_MISMATCH','CONTAINER_REPLACED','CHILDREN_LIST_MUTATED','PLACEMENT_NOT_ATOMIC','IMMUTABLE_FIELD_MUTATED','INVALID_FIELD_TYPE'];
 const ROOT_CONTAINERS=['section','objects','nodes','placements','extensions'];
 const TEXT_KINDS=new Set(['paragraph','item','raw']);
 const NODE_IMMUTABLE=['id','kind','created_by','task_id'];
@@ -111,6 +111,29 @@ export function admit(prev,bytes){
   return ADMISSION_ORDER.find(d=>found.has(d))||null;
 }
 
+/** SHARED-OBJECTS-PROFILE-01's checks before the engine (§8, §11, §11.2, §14.1). */
+function sopRefusal(prev,bytes,signer){
+  // §11: an uncompressed change chunk (type 1) whose checksum matches.
+  if(bytes[8]!==1)return 'INVALID_AUTOMERGE_BYTES';
+  const d=A.decodeChange(bytes);
+  if(Buffer.from(bytes.subarray(4,8)).toString('hex')!==d.hash.slice(0,8))return 'INVALID_AUTOMERGE_BYTES';
+  // §8: the change is the signer's.
+  if(signer!==undefined&&actor(signer)!==d.actor)return 'CHANGE_ACTOR_MISMATCH';
+  // §14.1: the actor's next sequence number.
+  const own=A.getAllChanges(prev).map(b=>A.decodeChange(b)).filter(c=>c.actor===d.actor);
+  const latest=own.reduce((m,c)=>Math.max(m,c.seq),0);
+  if(d.seq!==latest+1)return 'INVALID_AUTOMERGE_BYTES';
+  // §11.2: no object deeper than 256 below the root.
+  const depth=new Map([['_root',0]]);
+  for(const c of [...A.getAllChanges(prev).map(b=>A.decodeChange(b)),d]){
+    c.ops.forEach((op,i)=>{
+      if(['makeMap','makeList','makeText','makeTable'].includes(op.action))depth.set((c.startOp+i)+'@'+c.actor,(depth.get(op.obj)??0)+1);
+    });
+  }
+  for(const v of depth.values())if(v>256)return 'INVALID_AUTOMERGE_BYTES';
+  return null;
+}
+
 /**
  * Replays `changes` (dependencies first) through admission: each change is
  * checked against the admitted changes of its causal history. Returns the
@@ -118,8 +141,14 @@ export function admit(prev,bytes){
  * changes held because a dependency was refused or held.
  */
 export function admitReplay(changes,initActor){
-  const byHash=new Map(),order=[];
-  for(const b of changes){const h=A.decodeChange(b).hash;if(!byHash.has(h)){byHash.set(h,b);order.push(h);}}
+  // An entry is the change bytes, or {bytes, signer} for a Data Unit whose
+  // signer the corpus names.
+  const byHash=new Map(),order=[],signers=new Map();
+  for(const item of changes){
+    const b=item instanceof Uint8Array?item:item.bytes;
+    const h=A.decodeChange(b).hash;
+    if(!byHash.has(h)){byHash.set(h,b);order.push(h);if(item.signer!==undefined)signers.set(h,item.signer);}
+  }
   const deps=h=>A.decodeChange(byHash.get(h)).deps;
   const admitted=new Set(),refused=[],held=new Set();
   // Causal order: a change after its dependencies, whatever the input order.
@@ -131,7 +160,7 @@ export function admitReplay(changes,initActor){
     const past=new Set();const collect=x=>{if(past.has(x))return;past.add(x);for(const d of deps(x))collect(d);};
     for(const d of deps(h))collect(d);
     const [prev]=A.applyChanges(A.init({actor:initActor}),sorted.filter(x=>past.has(x)).map(x=>byHash.get(x)));
-    const diagnostic=admit(prev,byHash.get(h));
+    const diagnostic=sopRefusal(prev,byHash.get(h),signers.get(h))??admit(prev,byHash.get(h));
     if(diagnostic)refused.push({change:h,diagnostic});else admitted.add(h);
   }
   const [doc]=A.applyChanges(A.init({actor:initActor}),sorted.filter(h=>admitted.has(h)).map(h=>byHash.get(h)));

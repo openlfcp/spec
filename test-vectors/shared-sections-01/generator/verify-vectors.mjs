@@ -32,13 +32,14 @@ for(const c of suite.cases) {
   const changes=ordered.map(x=>{
     const b=decode(x),dc=A.decodeChange(b);
     assert.equal(dc.hash,x.change_hash);assert.equal(dc.actor,x.actor);assert.equal(dc.seq,x.seq);assert.deepEqual(dc.deps,x.deps);
-    assert.deepEqual(unframe(x.framed_plaintext),b);return b;
+    assert.deepEqual(unframe(x.framed_plaintext),b);
+    return x.signer?{bytes:b,signer:x.signer}:b;
   });
   // Replay stored bytes through admission (§14.1), in order, in reverse with
   // duplicates, and from the base Snapshot plus the tail.
   const normal=admitReplay(changes,actor('verify-normal'));
   const reverse=admitReplay([...changes].reverse().flatMap(b=>[b,b]),actor('verify-reverse'));
-  const delta=[...c.branches.A,...c.branches.B,...c.after_merge].map(decode);
+  const delta=[...c.branches.A,...c.branches.B,...c.after_merge].map(x=>x.signer?{bytes:decode(x),signer:x.signer}:decode(x));
   const loaded=A.load(base,{actor:actor('verify-checkpoint')});
   const checkpoint=admitReplay([...A.getAllChanges(loaded),...delta],actor('verify-checkpoint'));
   const saved=A.load(target,{actor:actor('verify-save')});
