@@ -11,7 +11,7 @@ This repository contains no production application logic.
 
 ## Scope
 
-These are Working Drafts. The tag `mvp-0.1-baseline.8` is the MVP 0.1
+These are Working Drafts. The tag `mvp-0.1-baseline.9` is the MVP 0.1
 implementation baseline ([MVP-0.1-BASELINE.md](MVP-0.1-BASELINE.md)), not a
 Stable LFCP-WIRE-01. MVP 0.1 software implements a subset of it; the
 deferred features are listed in `.github: docs/release/deferred-wire-01-features.md`
@@ -20,7 +20,7 @@ deferred features are listed in `.github: docs/release/deferred-wire-01-features
 ## Source of truth
 
 For MVP 0.1, [MVP-0.1-BASELINE.md](MVP-0.1-BASELINE.md) lists the exact files to
-implement against, at the tag `mvp-0.1-baseline.8`. It is an implementation
+implement against, at the tag `mvp-0.1-baseline.9`. It is an implementation
 baseline of Working Drafts, not a Stable publication.
 
 Higher entries win. A lower artifact never overrides a higher one; a

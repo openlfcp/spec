@@ -5,11 +5,12 @@ full WIRE-01 conformance, documents remain Working Drafts.**
 
 This file answers one question: *what exactly do I implement against for
 MVP 0.1?* The answer is every file listed below, at the Git tag
-`mvp-0.1-baseline.8` of this repository.
+`mvp-0.1-baseline.9` of this repository.
 
 | Tag | Status |
 | --- | --- |
-| mvp-0.1-baseline.8 | **Current.** Applies the seventh batch of decisions (SPEC-PATCH-08, ADR 0007), an orchestrator decision approved by the project owner on 2026-10-06: no object of a document may be deeper than 256 levels below the root (§11.2). A receiver rejects, before its Automerge engine, a change or Snapshot that would create one: deep nesting traps Automerge JS and terminates its wasm module. No vector value changes (`migrations/mvp-0.1-baseline.8/value-changes.json` lists no change); the corpus gains the `depth` section. |
+| mvp-0.1-baseline.9 | **Current.** Applies SPEC-PATCH-09: ADR 0008, recovery after server data loss, accepted by the project owner on 2026-10-08, and POST-001, decided by the project owner on 2026-10-06. A server refuses a Data Unit whose `previous` it does not hold, with the new code 23 `UNKNOWN_PREVIOUS` (LFCP-WIRE-01 §51.1, §62); anti-entropy runs in both directions, any session may upload a validly signed object, and clients re-supply what a server lacks and re-host a Resource a route lost (§41.1, §68.1, §84, §86, §88); a replica holds, and retries after a rebuild, a change whose Automerge actor and sequence number are taken (SHARED-OBJECTS-PROFILE-01 §14.1). No vector value changes (`migrations/mvp-0.1-baseline.9/value-changes.json` lists no change); the Wire vectors gain `data_put_previous` and `have_difference` cases, the corpus the `collision` section. |
+| mvp-0.1-baseline.8 | Superseded by `mvp-0.1-baseline.9`, because SPEC-PATCH-09 changes normative rules and adds vectors. Never moved. Applies the seventh batch of decisions (SPEC-PATCH-08, ADR 0007), an orchestrator decision approved by the project owner on 2026-10-06: no object of a document may be deeper than 256 levels below the root (§11.2). A receiver rejects, before its Automerge engine, a change or Snapshot that would create one: deep nesting traps Automerge JS and terminates its wasm module. No vector value changes (`migrations/mvp-0.1-baseline.8/value-changes.json` lists no change); the corpus gains the `depth` section. |
 | mvp-0.1-baseline.7 | Superseded by `mvp-0.1-baseline.8`, because SPEC-PATCH-08 changes normative rules and adds vectors. Never moved. Applies the sixth batch of decisions (SPEC-PATCH-07, ADR 0006), all orchestrator decisions approved by the project owner on 2026-10-06, from the pre-release security review. Receivers check every Automerge chunk before their engine: changes against exact expansion limits and structural rules (§11.1); Snapshots against local limits with a floor, with capped inflation (§13.1). Changes are uncompressed chunks, values nest at most 64 levels (§30), KEY_PACKAGE_GET lists at most 256 epochs (§52), and a client bounds its receive limit (§31). No vector value changes (`migrations/mvp-0.1-baseline.7/value-changes.json` lists no change); the corpus gains `expansion` cases, `SO-DEPTH` validations and the `SO-UNKNOWN-ACTOR` negative. |
 | mvp-0.1-baseline.6 | Superseded by `mvp-0.1-baseline.7`, because SPEC-PATCH-07 changes normative rules and adds vectors. Never moved. Applied the fifth batch of decisions (SPEC-PATCH-06, ADR 0005), all orchestrator decisions approved by the project owner on 2026-10-06: a writer names its latest own unit still accepted as `previous` (§26.2), clients retransmit after a request timeout (§70), the invitation read rule uses the §25.2 active grant (§41), a writer keeps writing after a rebuild removes its own changes (Shared Objects §9, §14.1), scalar conflicts stay profile-valid (Shared Objects scenarios S15 and S16) and Collaborative Text is rejected at its own pointer (Automerge corpus `validations`). No vector value changes (`migrations/mvp-0.1-baseline.6/value-changes.json` lists no change). |
 | mvp-0.1-baseline.5 | Superseded by `mvp-0.1-baseline.6`, because SPEC-PATCH-06 changes normative rules and adds vectors. Never moved. Applied the fourth batch of decisions (SPEC-PATCH-05, ADR 0004): actor chains link across abandoned sequences (G-DP1-GAP, approved by the project owner), and, as orchestrator decisions approved by the project owner on 2026-10-06, the Snapshot cutoff rebuild (SNAP-EP), forward-compatible invitation query parameters, claimant Key Packages, server and message clarifications, per-value profile diagnostics and `INVALID_AUTOMERGE_BYTES`. No vector value changes; new `actor_chain` and `invite_uri` validation cases and two Automerge corpus negatives are added (`migrations/mvp-0.1-baseline.5/value-changes.json` lists no change). |
@@ -30,17 +31,18 @@ MVP 0.1?* The answer is every file listed below, at the Git tag
   [ADR 0003](adr/0003-mvp-0.1-protocol-decisions-3.md),
   [ADR 0004](adr/0004-mvp-0.1-protocol-decisions-4.md),
   [ADR 0005](adr/0005-mvp-0.1-protocol-decisions-5.md),
-  [ADR 0006](adr/0006-mvp-0.1-protocol-decisions-6.md) and
-  [ADR 0007](adr/0007-mvp-0.1-protocol-decisions-7.md).
+  [ADR 0006](adr/0006-mvp-0.1-protocol-decisions-6.md),
+  [ADR 0007](adr/0007-mvp-0.1-protocol-decisions-7.md) and
+  [ADR 0008](adr/0008-recovery-after-server-data-loss.md).
 
 ## Pinning
 
-Implementations pin the current tag, `mvp-0.1-baseline.8`, of
+Implementations pin the current tag, `mvp-0.1-baseline.9`, of
 `openlfcp/spec`, never a branch. sdk-ts consumes the vectors at this tag (LFCP-017); other
 implementations do the same.
 
 A later approved Working Draft correction does not move the tag. It
-produces a new tag, such as `mvp-0.1-baseline.9`, with an updated copy of
+produces a new tag, such as `mvp-0.1-baseline.10`, with an updated copy of
 this file. Implementations move to it deliberately.
 
 ## Canonical files
@@ -68,7 +70,7 @@ directory).
 | `test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.json` | Shared Objects vectors, machine-readable: deterministic, validation and behavioral cases |
 | `test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.md` | Shared Objects vectors, human-readable |
 | `test-vectors/shared-objects-01/generate_shared_objects_test_vectors_01.py` | Generator; reproduces both Shared Objects vector files byte for byte |
-| `test-vectors/shared-objects-01/SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json` | Automerge reference corpus for S01–S16: exact changes, save images, logical states and conflict sets, plus `validations` (save images with the expected profile problems) `expansion` (chunks at and past the §11.1 and §13.1 limits) and `depth` (change sequences and Snapshots at and past the §11.2 depth bound) (supplementary; bytes not normative) |
+| `test-vectors/shared-objects-01/SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json` | Automerge reference corpus for S01–S16: exact changes, save images, logical states and conflict sets, plus `validations` (save images with the expected profile problems) `expansion` (chunks at and past the §11.1 and §13.1 limits), `depth` (change sequences and Snapshots at and past the §11.2 depth bound) and `collision` (a change held for a taken actor sequence until a rebuild, §14.1) (supplementary; bytes not normative) |
 | `test-vectors/shared-objects-01/generate_automerge_reference_01.mjs` | Corpus generator; with the pinned `@automerge/automerge` 3.5.0 it reproduces the corpus byte for byte |
 
 ### Wire CDDL
@@ -103,13 +105,13 @@ directory).
 | `adr/0005-mvp-0.1-protocol-decisions-5.md` | Fifth batch (SPEC-PATCH-06): orchestrator decisions approved by the project owner on 2026-10-06 |
 | `adr/0006-mvp-0.1-protocol-decisions-6.md` | Sixth batch (SPEC-PATCH-07): Automerge expansion limits, value nesting, the client receive limit; orchestrator decisions approved by the project owner on 2026-10-06 |
 | `adr/0007-mvp-0.1-protocol-decisions-7.md` | Seventh batch (SPEC-PATCH-08): the document depth bound; an orchestrator decision approved by the project owner on 2026-10-06 |
-| `adr/0008-recovery-after-server-data-loss.md` | Proposed, not applied in this or any baseline: recovery after server data loss (POST-013); listed because every file under `adr/` is |
+| `adr/0008-recovery-after-server-data-loss.md` | SPEC-PATCH-09: recovery after server data loss (POST-013), accepted by the project owner on 2026-10-08, and POST-001 (hold and retry of a taken actor sequence), decided by the project owner on 2026-10-06 |
 
 ## Project documents in `openlfcp/.github`
 
-These belong to the baseline at commit `.github@eda4a80` (tag
-`mvp-0.1-baseline.8` in that repository; `mvp-0.1-baseline.7` there marks
-`c7e8a30`, `mvp-0.1-baseline.6` marks `6ae515a`, `mvp-0.1-baseline.5` marks `125c4e6`, `mvp-0.1-baseline.4` marks `1a8ab67`, `mvp-0.1-baseline.3` marks
+These belong to the baseline at commit `.github@ca2e27b` (tag
+`mvp-0.1-baseline.9` in that repository; `mvp-0.1-baseline.8` there marks
+`eda4a80`, `mvp-0.1-baseline.7` marks `c7e8a30`, `mvp-0.1-baseline.6` marks `6ae515a`, `mvp-0.1-baseline.5` marks `125c4e6`, `mvp-0.1-baseline.4` marks `1a8ab67`, `mvp-0.1-baseline.3` marks
 `0cfa217`, `mvp-0.1-baseline.2` marks `174e6e4` and `mvp-0.1-baseline`
 marks `89c0b01`):
 
