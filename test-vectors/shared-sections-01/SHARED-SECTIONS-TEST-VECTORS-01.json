@@ -15303,7 +15303,7 @@
         "held": [],
         "snapshot": {
           "rows": 258162,
-          "successors": 253952,
+          "group_sum": 254016,
           "within_floor": true
         }
       },
@@ -16470,7 +16470,7 @@
         "held": [],
         "snapshot": {
           "rows": 262258,
-          "successors": 258048,
+          "group_sum": 258113,
           "within_floor": false
         }
       },

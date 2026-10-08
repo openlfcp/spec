@@ -225,13 +225,16 @@ export function inspect(doc) {
 }
 // SHARED-OBJECTS-PROFILE-01 §13.1: a full save's operation rows (one per
 // operation that is not a deletion: a deletion is a successor of the
-// operation it removes) and its successor entries (the group column's sum).
+// operation it removes) and the sum of its group columns (each operation's
+// successors, and each change's dependencies).
 const FLOOR=262144;
 export function snapshotCounts(doc){
-  const ops=A.getAllChanges(doc).flatMap(b=>A.decodeChange(b).ops);
+  const changes=A.getAllChanges(doc).map(b=>A.decodeChange(b));
+  const ops=changes.flatMap(c=>c.ops);
   const rows=ops.filter(o=>o.action!=='del').length;
   const successors=ops.reduce((n,o)=>n+(o.action==='del'?1:o.pred.length),0);
-  return {rows,successors,within_floor:rows<=FLOOR&&successors<=FLOOR};
+  const group_sum=successors+changes.reduce((n,c)=>n+c.deps.length,0);
+  return {rows,group_sum,within_floor:rows<=FLOOR&&group_sum<=FLOOR};
 }
 export function assertExpected(actual, requirements, assert) {
   const present=actual.tree.map(x=>x.id);
