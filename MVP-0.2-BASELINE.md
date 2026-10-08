@@ -72,7 +72,7 @@ directory).
 | `test-vectors/shared-sections-01/MARKDOWN-SECTIONS-FIXTURES-01.md` | Markdown fixtures, human-readable |
 | `test-vectors/shared-sections-01/markdown-files/` | The fixtures' files, extracted byte for byte |
 | `test-vectors/shared-sections-01/generator/` | Corpus and fixture generators and reference verifiers; with the pinned `@automerge/automerge` 3.5.0 they reproduce both suites byte for byte |
-| `test-vectors/shared-sections-01/schemas/` | JSON Schemas of the two suites |
+| `test-vectors/shared-sections-01/schemas/` | JSON Schema of the Markdown fixtures (the corpus uses `lfcp-vector-format/1`) |
 
 ### Wire CDDL
 

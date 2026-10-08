@@ -18,7 +18,7 @@ fs.mkdirSync(out,{recursive:true});
 const seeds=initial();
 const cases=[];
 const visible=[ids.task,ids.para,ids.x,ids.y];
-const bytesInfo=b=>({base64:Buffer.from(b).toString('base64'),sha256:hash(b),length:b.length});
+const bytesInfo=b=>({b64url:Buffer.from(b).toString('base64url'),sha256:hash(b),length:b.length});
 function frame(b){
   let h;if(b.length<24)h=Buffer.from([0x40+b.length]);
   else if(b.length<256)h=Buffer.from([0x58,b.length]);
@@ -48,15 +48,22 @@ function record(id,title,{base=seeds,a=[],b=[],after=[],inject,requirements={},c
   resolved=replay.doc;
   const summary={...inspect(resolved),refused:replay.refused,held:replay.held,...(snapshot?{snapshot:snapshotCounts(resolved)}:{})};
   assertExpected(summary,requirements,assert);
-  const value={id,title,coverage,notes,
-    base_snapshot:bytesInfo(A.save(base)),
-    base_changes:A.getAllChanges(base).map(b=>summarizeChange(b)),
-    branches:{A:[...ca.map(b=>summarizeChange(b)),...crafted.map(x=>summarizeChange(x.bytes,x.signer))],B:cb.map(b=>summarizeChange(b))},
-    after_merge:cc.map(b=>summarizeChange(b)),
-    assertions:requirements,expected:summary,
-    expected_heads:A.getHeads(resolved).sort(),
-    reference_snapshot:bytesInfo(A.save(resolved)),
-    reference_snapshot_plaintext:bytesInfo(frame(A.save(resolved)))
+  // lfcp-vector-format/1, a behavioral case: the inputs are the stored
+  // changes; the expected values are the reference state after admission.
+  const value={id,type:'behavioral',kind:'section_scenario',description:title,
+    inputs:{
+      base_snapshot:bytesInfo(A.save(base)),
+      base_changes:A.getAllChanges(base).map(b=>summarizeChange(b)),
+      branches:{A:[...ca.map(b=>summarizeChange(b)),...crafted.map(x=>summarizeChange(x.bytes,x.signer))],B:cb.map(b=>summarizeChange(b))},
+      after_merge:cc.map(b=>summarizeChange(b))
+    },
+    expected:{
+      state:summary,
+      heads:A.getHeads(resolved).sort(),
+      reference_snapshot:bytesInfo(A.save(resolved)),
+      reference_snapshot_plaintext:bytesInfo(frame(A.save(resolved))),
+      requirements,coverage,notes
+    }
   };
   cases.push(value);
 }
@@ -367,13 +374,23 @@ record('SS56','Text history past the Snapshot floor',{
   requirements:{classification:'VALID',visible,texts:{[ids.para]:'Draft contract'+'l'.repeat(RUN)}},coverage:'snapshot-floor',
   notes:['SHARED-OBJECTS-PROFILE-01 §13.1: one more change passes the floor (262,258 rows), with 4,110 characters of visible text. A receiver with floor limits rejects the Snapshot (INVALID_AUTOMERGE_BYTES) and falls back to the units, which it accepts; a publisher should not publish it. The reference snapshot is given for that check.']});
 const doc={
-  suite:'SHARED-SECTIONS-TEST-VECTORS-01',schema_version:1,date:'2026-10-08',
-  status:'working-draft-reference-corpus',profile:PROFILE,
-  engine:{package:'@automerge/automerge',version:ENGINE,role:'corpus reference engine; the version spec pins in package.json'},
-  wire_coverage:'application plaintext framing only; no signatures, encryption, server or network',
-  identities:{resource_hex:resource.toString('hex'),resource_ref:resource.toString('base64url'),ids,
-    actors:Object.fromEntries(['A','B','C'].map(n=>[n,{principal_hex:principal(n).toString('hex'),principal_ref:pref(n),actor_hex:actor(n)}]))},
+  format:'lfcp-vector-format/1',
+  suite:{
+    id:'SHARED-SECTIONS-TEST-VECTORS-01',version:'01',
+    specification:{id:'SHARED-SECTIONS-PROFILE-01',profile:PROFILE,revision:'working-draft'},
+    description:'Behavioral cases of the shared sections profile: Automerge changes produced by the reference model, their admission (SHARED-SECTIONS-PROFILE-01 §14.1), the effective tree, isolation and model facts after convergence.',
+    depends_on:['SHARED-OBJECTS-PROFILE-01','LFCP-WIRE-01'],
+    conventions:{
+      date:'2026-10-08',status:'working-draft-reference-corpus',
+      engine_package:'@automerge/automerge',engine_version:ENGINE,engine_role:'corpus reference engine; the version spec pins in package.json',
+      wire_coverage:'application plaintext framing only; no signatures, encryption, server or network',
+      byte_records:'A byte record is {b64url, sha256, length}: the bytes as unpadded base64url, their SHA-256 in hex and their length. A change record adds the decoded Automerge change_hash, actor, seq and deps, the framed_plaintext record of the application plaintext framing and, for a crafted Data Unit, its signer.',
+      expected:'expected.state is the reference state after admission; heads, the reference snapshot and its plaintext are byte values of the reference document; requirements are handwritten semantic checks; coverage and notes explain the case.'
+    }
+  },
+  fixtures:{identities:{resource_hex:resource.toString('hex'),resource_ref:resource.toString('base64url'),ids,
+    actors:Object.fromEntries(['A','B','C'].map(n=>[n,{principal_hex:principal(n).toString('hex'),principal_ref:pref(n),actor_hex:actor(n)}]))}},
   cases
 };
 fs.writeFileSync(path.join(out,'SHARED-SECTIONS-TEST-VECTORS-01.json'),JSON.stringify(doc,null,2)+'\n');
-console.log(JSON.stringify({generated:cases.length,engine:doc.engine.version,output:out}));
+console.log(JSON.stringify({generated:cases.length,engine:ENGINE,output:out}));

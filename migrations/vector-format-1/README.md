@@ -1,6 +1,6 @@
 # Migration to `lfcp-vector-format/1`
 
-LFCP-004 moved both vector suites into the
+LFCP-004 moved the Wire and Shared Objects vector suites into the
 [`lfcp-vector-format/1`](../../schemas/README.md) layout in place. No vector
 value changed.
 
@@ -26,3 +26,15 @@ baseline file from Git and checks the following:
 - every other value in a migrated case is explained by `added`.
 
 Run it with `--verbose` to list the added values.
+
+LFCP-02-107 moved the shared sections corpus SHARED-SECTIONS-TEST-VECTORS-01
+the same way, from its own format at `mvp-0.2-baseline.1`
+(`shared-sections-01.mapping.json`). Its mapping names its old id lists
+(`old_id_lists`) and re-encodes the bytes: a move with the encoding
+`base64url` takes a standard base64 value to the same bytes as unpadded
+base64url, and the check compares the bytes. No value changed.
+Because the paths changed, the value check of the next MVP 0.2 baseline
+(`scripts/check-baseline-changes.mjs` against `mvp-0.2-baseline.1`) has to
+read this suite through the mapping, or list it as moved; prepare that with
+`mvp-0.2-baseline.2`.
+

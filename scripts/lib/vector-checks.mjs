@@ -405,7 +405,10 @@ export function semanticProblems(doc) {
         const target = derived.split(/\s+/)[0];
         if (!byId.has(target)) add(c.id, at("/inputs/base_state/derived_from"), `unresolved-ref: no case ${target}`);
       }
-      (c.inputs?.branches ?? []).forEach((b, j) => {
+      // Shared Objects branches are a list naming fixture principals; the
+      // shared sections suite keys its branches by actor name instead.
+      const branches = Array.isArray(c.inputs?.branches) ? c.inputs.branches : [];
+      branches.forEach((b, j) => {
         if (typeof b?.actor === "string" && !(b.actor in principals)) {
           add(c.id, at(`/inputs/branches/${j}/actor`), `unresolved-ref: no fixtures.principals.${b.actor}`);
         }

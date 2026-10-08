@@ -2,8 +2,8 @@
 
 [`lfcp-vector-format-1.schema.json`](lfcp-vector-format-1.schema.json) is the
 JSON Schema (draft 2020-12) for every machine-readable vector suite in
-`test-vectors/`. The LFCP Wire suite and the Shared Objects Profile suite both
-use it.
+`test-vectors/`. The LFCP Wire suite, the Shared Objects Profile suite and the
+shared sections suite use it.
 
 ## Suite
 
@@ -163,7 +163,7 @@ Each requirement is enforced in exactly one place.
 | A negative's mutation changes something | validator `no-op-mutation` |
 | Behavioral cases not forced into byte shape | schema (`behavioral` branch has no byte requirements) |
 | Byte-exact cases carry expected bytes | schema (`bytes` branch: `expected` with at least one value) |
-| Wire and Shared Objects suites accepted | both suites validate in CI |
+| Wire, Shared Objects and shared sections suites accepted | the suites validate in CI |
 
 ### Hash recomputation
 

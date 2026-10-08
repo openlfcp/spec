@@ -95,9 +95,9 @@ const fail = (line) => {
 
 // 1. Published suites. A suite in its own format until it moves to
 // lfcp-vector-format/1 is checked by its own script instead.
-const OWN_FORMAT = new Map([
-  ["shared-sections-01", "scripts/check-shared-sections-corpus.mjs (MVP 0.2 Working Draft corpus, LFCP-02-008)"],
-]);
+// Directories whose suites have their own format and checker (none now: the
+// shared sections corpus moved to lfcp-vector-format/1, LFCP-02-107).
+const OWN_FORMAT = new Map();
 const suites = readdirSync(join(root, "test-vectors"), { withFileTypes: true })
   .filter((entry) => entry.isDirectory() && !OWN_FORMAT.has(entry.name))
   .flatMap((entry) => listJson(join(root, "test-vectors", entry.name), /-TEST-VECTORS-\d+\.json$/));

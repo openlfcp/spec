@@ -29,7 +29,7 @@
 
 This suite contains real Automerge changes and save images for shared sections, with human-authored semantic assertions and generated normalized expected states. It covers stable node identity, nested content, placement slots, concurrent moves, cycles, deletion/restore, collaborative text, snapshot continuation and invalid application states.
 
-The corpus is generated and replayed with **@automerge/automerge 3.5.0**, the version `package.json` pins for this repository and the one sdk-ts uses; the Rust `automerge` 0.12.0 is its core. The generator records the version it ran with in `engine.version`.
+The corpus is generated and replayed with **@automerge/automerge 3.5.0**, the version `package.json` pins for this repository and the one sdk-ts uses; the Rust `automerge` 0.12.0 is its core. The generator records the version it ran with in `suite.conventions.engine_version`.
 
 All cases pass reference replay, reverse-order delivery with duplicate changes, save/load and snapshot-plus-tail checks (for the two long histories SS55 and SS56, the reverse and snapshot-plus-tail replays run only when the `CI` environment variable is set, as on GitHub Actions), and the suite regenerates byte-for-byte (`scripts/check-shared-sections-corpus.mjs`, run by `scripts/validate.sh`). The reference generator and verifier share a model inspector; this is not an independent correctness proof. Explicit semantic assertions prevent the output from being accepted solely because the generator produced it.
 
@@ -39,13 +39,14 @@ No production SDK, Rust implementation, server, signed/encrypted LFCP exchange o
 
 | File | Purpose |
 | --- | --- |
-| `SHARED-SECTIONS-TEST-VECTORS-01.json` | 28 cases, real bytes, hashes, causal metadata and expected results |
+| `SHARED-SECTIONS-TEST-VECTORS-01.json` | 56 behavioral cases in `lfcp-vector-format/1`: real bytes, hashes, causal metadata and expected results |
 | `generator/generate-vectors.mjs` | Deterministic corpus construction with explicit semantic assertions |
 | `generator/section-model.mjs` | Reference schema helpers, tree derivation and per-node isolation (§14.2) |
 | `generator/admission.mjs` | Reference admission (§14.1): rules A1–A5 and the readiness rule, per change against its causal history |
 | `generator/verify-vectors.mjs` | Stored-byte replay, integrity checks and the optional independent-adapter interface |
-| `schemas/section-vectors.schema.json` | JSON schema of the suite |
-| `scripts/check-shared-sections-corpus.mjs` (repository root) | Schema, byte-for-byte regeneration and reference replay, in `validate.sh` |
+| `schemas/lfcp-vector-format-1.schema.json` (repository root) | The vector format, checked by `scripts/validate-vectors.mjs` |
+| `scripts/check-shared-sections-corpus.mjs` (repository root) | Byte-for-byte regeneration and reference replay, in `validate.sh` |
+| `migrations/vector-format-1/shared-sections-01.mapping.json` (repository root) | Where every value of the corpus before the format lives now (LFCP-02-107) |
 
 ## 3. Test identities and reproducibility
 
@@ -59,24 +60,25 @@ The generator records SHA-256 of the exact stored byte arrays separately from Au
 
 ## 4. JSON structure
 
-Each case contains:
+The suite is an `lfcp-vector-format/1` suite (`schemas/README.md`). The suite metadata names the profile and records the engine and conventions; `fixtures.identities` holds the Resource, the actors and the IDs. Every case is a `behavioral` case of kind `section_scenario`; its `description` is its title. Moved from the suite's own format without changing any value (`migrations/vector-format-1/shared-sections-01.mapping.json`): the bytes are now unpadded base64url instead of standard base64.
 
 | Field | Meaning |
 | --- | --- |
-| id / title / coverage / notes | Stable case identity and evidence limits |
-| base_snapshot | Complete reference save image before branches |
-| base_changes | Actual history corresponding to that base |
-| branches.A / branches.B | Changes authored independently from the shared base |
-| after_merge | Optional resolution or follow-up by actor C |
-| assertions | Human-authored required semantics |
-| expected | Normalized reference state and diagnostics |
-| expected_heads | Automerge heads after all changes |
-| reference_snapshot | Full resulting reference save image |
-| reference_snapshot_plaintext | Deterministic CBOR application Snapshot framing |
+| id / description | Stable case identity and title |
+| inputs.base_snapshot | Complete reference save image before branches |
+| inputs.base_changes | Actual history corresponding to that base |
+| inputs.branches.A / inputs.branches.B | Changes authored independently from the shared base |
+| inputs.after_merge | Optional resolution or follow-up by actor C |
+| expected.state | Normalized reference state and diagnostics after admission |
+| expected.heads | Automerge heads after all changes |
+| expected.reference_snapshot | Full resulting reference save image |
+| expected.reference_snapshot_plaintext | Deterministic CBOR application Snapshot framing |
+| expected.requirements | Human-authored required semantics |
+| expected.coverage / expected.notes | What the case covers and its evidence limits |
 
-Byte records contain Base64, byte length and SHA-256. Change records additionally include the decoded Automerge hash, actor, sequence and dependencies, plus the application plaintext framing. A crafted Data Unit (SS42–SS46) also names its `signer`, the fixture Principal that signs it; otherwise the change's own actor signs it.
+Byte records contain the bytes as unpadded base64url (`b64url`), their length and SHA-256. Change records additionally include the decoded Automerge hash, actor, sequence and dependencies, plus the application plaintext framing. A crafted Data Unit (SS42–SS46) also names its `signer`, the fixture Principal that signs it; otherwise the change's own actor signs it.
 
-Schema files describe the JSON containers. The verifier additionally checks byte hashes, canonical framing, causal replay and semantic expectations. JSON-schema validity alone is not profile conformance.
+The vector schema describes the JSON container. The verifier additionally checks byte hashes, canonical framing, causal replay and semantic expectations. JSON-schema validity alone is not profile conformance.
 
 ## 5. What is exact and what is behavioral
 
