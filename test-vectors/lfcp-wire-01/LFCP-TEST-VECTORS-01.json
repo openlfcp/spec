@@ -3217,6 +3217,117 @@
       }
     },
     {
+      "id": "have_difference_contiguous",
+      "type": "behavioral",
+      "kind": "have_difference",
+      "description": "Contiguous Have Vectors; each side lacks something",
+      "note": "Local BOB 1..100 and CAROL 1..8; remote BOB 1..104.",
+      "inputs": {
+        "local_have_cbor": {
+          "hex": "82a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5011864a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480108"
+        },
+        "remote_have_cbor": {
+          "hex": "81a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5011868"
+        }
+      },
+      "expected": {
+        "request": [
+          {
+            "actor": "BOB",
+            "start": 101,
+            "end": 104
+          }
+        ],
+        "offer": [
+          {
+            "actor": "CAROL",
+            "start": 1,
+            "end": 8
+          }
+        ]
+      }
+    },
+    {
+      "id": "have_difference_holes",
+      "type": "behavioral",
+      "kind": "have_difference",
+      "description": "Have Vectors with holes on both sides",
+      "note": "Local BOB 1..100 plus 105..107; remote BOB 1..102 plus 106..110.",
+      "inputs": {
+        "local_have_cbor": {
+          "hex": "81a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50118640281821869186b"
+        },
+        "remote_have_cbor": {
+          "hex": "81a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5011866028182186a186e"
+        }
+      },
+      "expected": {
+        "request": [
+          {
+            "actor": "BOB",
+            "start": 101,
+            "end": 102
+          },
+          {
+            "actor": "BOB",
+            "start": 108,
+            "end": 110
+          }
+        ],
+        "offer": [
+          {
+            "actor": "BOB",
+            "start": 105,
+            "end": 105
+          }
+        ]
+      }
+    },
+    {
+      "id": "have_difference_equal",
+      "type": "behavioral",
+      "kind": "have_difference",
+      "description": "Equal Have Vectors",
+      "note": "Nothing to request and nothing to offer.",
+      "inputs": {
+        "local_have_cbor": {
+          "hex": "81a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50118640281821869186b"
+        },
+        "remote_have_cbor": {
+          "hex": "81a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50118640281821869186b"
+        }
+      },
+      "expected": {
+        "request": [],
+        "offer": []
+      }
+    },
+    {
+      "id": "have_difference_server_lost_unit",
+      "type": "behavioral",
+      "kind": "have_difference",
+      "description": "A server whose store lost the latest unit",
+      "note": "The drill of ADR 0008: the client holds CAROL 1..4, the restored server CAROL 1..3. The client offers 4 before it writes 5 (§68.1).",
+      "inputs": {
+        "local_have_cbor": {
+          "hex": "81a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480104"
+        },
+        "remote_have_cbor": {
+          "hex": "81a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480103"
+        }
+      },
+      "expected": {
+        "request": [],
+        "offer": [
+          {
+            "actor": "CAROL",
+            "start": 4,
+            "end": 4
+          }
+        ]
+      }
+    },
+    {
       "id": "ed25519_rfc8032_test1",
       "type": "validation",
       "kind": "ed25519_signature",

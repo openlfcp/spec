@@ -1858,6 +1858,48 @@ def generate():
     ]
     fixtures['data_put_previous'] = PUT_PREVIOUS
 
+    # 21. Have Vector difference in both directions (SPEC-PATCH-09 / ADR 0008,
+    #     LFCP-WIRE-01 §28, §68.1): what a replica requests from a peer and what
+    #     it offers it, per actor, as minimal inclusive ranges in ascending
+    #     order. `local_have_cbor` and `remote_have_cbor` are [* actor-have].
+    def have(entries: list) -> dict:
+        return hexv(cbor(canonical_frontier(entries)))
+
+    def ranges(*items) -> list:
+        return [{'actor': a, 'start': s0, 'end': e0} for a, s0, e0 in items]
+
+    HAVE_DIFF: list[dict[str, Any]] = [
+        {
+            'id': 'have_difference_contiguous', 'description': 'Contiguous Have Vectors; each side lacks something',
+            'note': 'Local BOB 1..100 and CAROL 1..8; remote BOB 1..104.',
+            'inputs': {'local_have_cbor': have([actor_have(BOB.pid, 100), actor_have(CAROL.pid, 8)]),
+                       'remote_have_cbor': have([actor_have(BOB.pid, 104)])},
+            'expected': {'request': ranges(('BOB', 101, 104)), 'offer': ranges(('CAROL', 1, 8))},
+        },
+        {
+            'id': 'have_difference_holes', 'description': 'Have Vectors with holes on both sides',
+            'note': 'Local BOB 1..100 plus 105..107; remote BOB 1..102 plus 106..110.',
+            'inputs': {'local_have_cbor': have([actor_have(BOB.pid, 100, [[105, 107]])]),
+                       'remote_have_cbor': have([actor_have(BOB.pid, 102, [[106, 110]])])},
+            'expected': {'request': ranges(('BOB', 101, 102), ('BOB', 108, 110)), 'offer': ranges(('BOB', 105, 105))},
+        },
+        {
+            'id': 'have_difference_equal', 'description': 'Equal Have Vectors',
+            'note': 'Nothing to request and nothing to offer.',
+            'inputs': {'local_have_cbor': have([actor_have(BOB.pid, 100, [[105, 107]])]),
+                       'remote_have_cbor': have([actor_have(BOB.pid, 100, [[105, 107]])])},
+            'expected': {'request': [], 'offer': []},
+        },
+        {
+            'id': 'have_difference_server_lost_unit', 'description': 'A server whose store lost the latest unit',
+            'note': 'The drill of ADR 0008: the client holds CAROL 1..4, the restored server CAROL 1..3. The '
+                    'client offers 4 before it writes 5 (§68.1).',
+            'inputs': {'local_have_cbor': have([actor_have(CAROL.pid, 4)]),
+                       'remote_have_cbor': have([actor_have(CAROL.pid, 3)])},
+            'expected': {'request': [], 'offer': ranges(('CAROL', 4, 4))},
+        },
+    ]
+    fixtures['have_difference'] = HAVE_DIFF
 
     fixtures['negatives'] = NEG
     OUT_JSON.write_text(json.dumps(to_vector_format(fixtures), indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
@@ -2024,6 +2066,11 @@ def to_vector_format(fixtures: dict) -> dict:
             case['derivation'] = x['derivation']
         case['expected'] = x['expected']
         cases.append(case)
+
+    for x in fixtures['have_difference']:
+        cases.append({'id': x['id'], 'type': 'behavioral', 'kind': 'have_difference',
+                      'description': x['description'], 'note': x['note'], 'inputs': x['inputs'],
+                      'expected': x['expected']})
 
     for x in fixtures['ed25519']:
         case = {'id': x['id'], 'type': 'validation', 'kind': 'ed25519_signature', 'description': x['description']}
@@ -2379,6 +2426,19 @@ def generate_markdown(f: dict):
     a('Exact LFCP message bytes are in Section 16.')
     a('')
 
+    a('### 13.1 Have Vector difference')
+    a('')
+    a('`behavioral` cases of kind `have_difference` for `LFCP-WIRE-01` §28 and §68.1 (SPEC-PATCH-09, ADR 0008). Given a local and a remote Have Vector (`[* actor-have]`), a replica requests what the remote holds and it lacks, and offers what it holds and the remote lacks. Both are minimal inclusive ranges per actor, in ascending order.')
+    a('')
+    for x in f['have_difference']:
+        a(f'#### {x["id"]}: {x["description"]}')
+        a('')
+        a(x['note'])
+        a('')
+        for side in ('request', 'offer'):
+            rs = ', '.join(f'{r["actor"]} {r["start"]}..{r["end"]}' for r in x['expected'][side]) or 'nothing'
+            a(f'- {side}: {rs}')
+        a('')
     a('## 14. Invitation vector')
     a('')
     a('Invitation secret CBOR:')
@@ -2611,7 +2671,7 @@ def generate_markdown(f: dict):
         ('Control','linear chain C0→C10, owner transition at C4, route transition at C5, delegation and covered revocation at C7..C10'),
         ('HPKE','RFC 9180 A.2.1 self-test + all three LFCP Key Packages'),
         ('Data crypto','D1/D2/D4 decrypt; D3 decrypts cryptographically but is rejected semantically'),
-        ('Anti-entropy','Have Vector hole 101..104 inferred correctly'),
+        ('Anti-entropy','Have Vector hole 101..104 inferred correctly; every Section 13.1 difference requested and offered as expected'),
         ('Snapshot','SNAPSHOT-01/02 canonical frontier, exact AAD, key, nonce, decrypt, signature, Snapshot ID'),
         ('Invitation','URI decode, Principal reconstruction, C2 subject match, C3 claim'),
         ('Wire','HELLO→CHALLENGE→AUTH→READY exact decoding and signature verification; every Section 16 message decodes to its §33 body'),

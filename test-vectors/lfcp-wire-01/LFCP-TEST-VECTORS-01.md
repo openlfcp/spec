@@ -1189,6 +1189,38 @@ Missing: 101..104.
 
 Exact LFCP message bytes are in Section 16.
 
+### 13.1 Have Vector difference
+
+`behavioral` cases of kind `have_difference` for `LFCP-WIRE-01` §28 and §68.1 (SPEC-PATCH-09, ADR 0008). Given a local and a remote Have Vector (`[* actor-have]`), a replica requests what the remote holds and it lacks, and offers what it holds and the remote lacks. Both are minimal inclusive ranges per actor, in ascending order.
+
+#### have_difference_contiguous: Contiguous Have Vectors; each side lacks something
+
+Local BOB 1..100 and CAROL 1..8; remote BOB 1..104.
+
+- request: BOB 101..104
+- offer: CAROL 1..8
+
+#### have_difference_holes: Have Vectors with holes on both sides
+
+Local BOB 1..100 plus 105..107; remote BOB 1..102 plus 106..110.
+
+- request: BOB 101..102, BOB 108..110
+- offer: BOB 105..105
+
+#### have_difference_equal: Equal Have Vectors
+
+Nothing to request and nothing to offer.
+
+- request: nothing
+- offer: nothing
+
+#### have_difference_server_lost_unit: A server whose store lost the latest unit
+
+The drill of ADR 0008: the client holds CAROL 1..4, the restored server CAROL 1..3. The client offers 4 before it writes 5 (§68.1).
+
+- request: nothing
+- offer: CAROL 4..4
+
 ## 14. Invitation vector
 
 Invitation secret CBOR:
@@ -3088,7 +3120,7 @@ ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50302045820e67fb23dc530252680216aecfead
 | Control | linear chain C0→C10, owner transition at C4, route transition at C5, delegation and covered revocation at C7..C10 |
 | HPKE | RFC 9180 A.2.1 self-test + all three LFCP Key Packages |
 | Data crypto | D1/D2/D4 decrypt; D3 decrypts cryptographically but is rejected semantically |
-| Anti-entropy | Have Vector hole 101..104 inferred correctly |
+| Anti-entropy | Have Vector hole 101..104 inferred correctly; every Section 13.1 difference requested and offered as expected |
 | Snapshot | SNAPSHOT-01/02 canonical frontier, exact AAD, key, nonce, decrypt, signature, Snapshot ID |
 | Invitation | URI decode, Principal reconstruction, C2 subject match, C3 claim |
 | Wire | HELLO→CHALLENGE→AUTH→READY exact decoding and signature verification; every Section 16 message decodes to its §33 body |

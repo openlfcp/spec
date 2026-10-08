@@ -1788,6 +1788,8 @@ Durability levels:
 
 An ACK MUST NOT claim durability stronger than the server advertised.
 
+A durability level describes the store that gave the ACK. A server whose store is later replaced by an older copy, for example restored from a backup, may have lost objects it acknowledged; the replicas that hold them re-supply them (Sections 41.1 and 68.1).
+
 ---
 
 ## 38. PING and PONG
@@ -1833,6 +1835,8 @@ The server MUST:
 
 If successful, the server returns `RESOURCE_HOSTED`.
 
+A `RESOURCE_HOST` of the Genesis a server already hosts changes nothing; the server answers it with `RESOURCE_HOSTED` again, subject to its hosting policy.
+
 ---
 
 ## 40. RESOURCE_HOSTED
@@ -1876,6 +1880,19 @@ Resource-open flags:
 If the server stores the resource but transport policy denies the session, it returns `NACK(AUTHORIZATION_FAILED)`.
 
 A server answers `RESOURCE_OPEN` for a Resource it does not host with `NACK(RESOURCE_NOT_HOSTED)`. Opening a Resource, and reading its Control and Data Plane objects, requires the session Principal to hold `data/read`, or to be the subject of an active invitation grant (Section 18), at the Resource's accepted Control Head; otherwise the server answers `NACK(AUTHORIZATION_FAILED)` (Section 84). An active invitation grant has the meaning of Section 25.2: a grant that includes and still confers `invite/claim`. An invitation grant whose claims are used up no longer qualifies its subject under this rule; its subject reads only through abilities it holds, such as a `data/read` the grant lists (Section 18.1).
+
+### 41.1 Re-hosting a Resource a server lost
+
+A server can lose a Resource it hosted, for example when its store is restored from a copy taken before the Resource was hosted. It then answers `RESOURCE_OPEN` with `NACK(RESOURCE_NOT_HOSTED)`.
+
+A client that holds the Resource's Genesis re-hosts it when a route answers `RESOURCE_OPEN` that way, provided that:
+
+1. the route is in the Resource's current route set (Sections 15 and 20); and
+2. the client has seen that route host the Resource before: it received a `RESOURCE_HOSTED` or a `RESOURCE_OPENED` for the Resource from it.
+
+The client sends `RESOURCE_HOST` with the exact Genesis bytes (Section 39), opens the Resource again and re-supplies what the route lacks (Section 68.1). Any Principal that holds the Genesis may do this; it is not a Control Plane mutation, and the Genesis is unchanged. The server applies its hosting policy and quotas to the session that hosts.
+
+A client does not re-host on a route it has never seen host the Resource, and does not re-host a Resource that the route answers with `NACK(RESOURCE_TOMBSTONED)`. When the route refuses the `RESOURCE_HOST` (`HOSTING_DENIED`, `QUOTA_EXCEEDED`, `RATE_LIMITED`), the client stops re-hosting on that route and tells the user; it does not retry a `HOSTING_DENIED` automatically.
 
 ---
 
@@ -1965,6 +1982,8 @@ Records SHOULD be sorted by Control Sequence and then record ID.
 A receiver MUST validate every record independently.
 
 `CONTROL_BATCH` is bidirectional. A client or secondary server MAY send already-committed historical Control Records to seed or mirror another server.
+
+A client re-supplies a Control Record that a server lacks with `CONTROL_PUT` (Section 47), one record at a time in Control Sequence order, each naming the record before it as the expected head: a server is not required to accept `CONTROL_BATCH` from a client. The record is validated as any proposal is; it extends the server's head only when the server's head is its predecessor (Section 68.1).
 
 `CONTROL_BATCH` MUST NOT be used to create a new Control Head. New Control Plane mutations use `CONTROL_PUT` at the current Control Coordinator.
 
@@ -2100,7 +2119,7 @@ A server MUST refuse a Data Unit whose `previous` is not `null` unless one of th
 
 The refusal is `NACK(UNKNOWN_PREVIOUS)`. Its details (field `2`) are the 32-byte `previous` of the first refused unit. A `previous` of `null` is not checked by this rule: a writer that holds no accepted unit of its own names `null` (Section 26.2), even when the server stores units of that actor.
 
-The rule keeps a server from accepting a unit whose predecessor it has lost, for example after restoring an older copy of its store. A receiver that fetched such a unit would hold it until it links (Section 26.2), and so would every later unit of that actor: the server could no longer serve a history that links. A writer refused this way uploads its own accepted units the server lacks, oldest first, and then retries.
+The rule keeps a server from accepting a unit whose predecessor it has lost, for example after restoring an older copy of its store. A receiver that fetched such a unit would hold it until it links (Section 26.2), and so would every later unit of that actor: the server could no longer serve a history that links. A writer refused this way uploads its own accepted units the server lacks, oldest first, and then retries (Section 68.1).
 
 ---
 
@@ -2248,7 +2267,7 @@ For `CONTROL_PUT`, the ACK SHOULD include the new Control Record ID.
 
 For `DATA_PUT`, the ACK SHOULD include all accepted Data Unit IDs.
 
-An ACK means the receiver accepted the object. It does not mean every other replica has received it.
+An ACK means the receiver accepted the object. It does not mean every other replica has received it, nor that the receiver keeps it if its store is later replaced (Section 37).
 
 ---
 
@@ -2472,6 +2491,19 @@ The receiver:
 9. updates local Have Vector;
 10. persists before advertising possession to other peers.
 
+### 68.1 Offering what the peer lacks
+
+Anti-entropy runs in both directions. A client computes what the server lacks as well as what it lacks itself, and uploads it: on every `RESOURCE_OPENED`, whenever a `DATA_HAVE` or `CONTROL_HAVE` from the server arrives, and after a `NACK(UNKNOWN_PREVIOUS)` (Section 51.1). In normal operation the server lacks nothing and nothing is sent.
+
+- **Control Records.** When the server's Control Head is a record the client holds below its own head, the client uploads the records above it (Section 46) before it proposes a new record.
+- **Data Units.** For each actor, the client uploads the units it has accepted that the server's Have Vector (Section 28) lacks. It uploads them in ascending sequence order per actor, before any newly queued unit of that actor, and they include other actors' units (relay), not only its own.
+- **Key Packages.** A client re-uploads a Key Package it sent, or one addressed to it, when a `KEY_PACKAGE_GET` for that package's epoch and recipient comes back without it.
+- **Snapshots.** A publisher MAY re-upload its own Snapshots; no client is required to.
+
+A client uploads only objects it has accepted. It never uploads a unit it holds for its `previous` link (Section 26.2), a quarantined unit (Section 19.1), a unit it excluded, or an equivocating unit kept as evidence, except in a `DATA_PUT` of its own that carries that one unit: a `DATA_PUT` is all-or-nothing (Section 51), so a unit the server refuses as equivocation would refuse every unit uploaded with it. A `NACK(ACTOR_EQUIVOCATION)` answering a relayed unit is the expected answer when the server holds the other unit of the pair; it is not evidence against the uploader.
+
+Re-uploading an object the server already stores is harmless (Section 70): the server answers it as it answered it the first time. Uploads count against the server's quotas and rate limits like any other.
+
 ---
 
 ## 69. Live replication
@@ -2498,7 +2530,7 @@ Exactly-once network delivery is neither required nor assumed.
 
 A request or its answer can be lost on a connection that stays open. A client that gets no answer to a request within an implementation-chosen timeout sends the same objects again in a new message, or issues the read again, with bounded backoff; it does not wait for a reconnect. Servers MUST answer a repeated object as they answered it the first time (Section 47 for Control Records).
 
-Informative: a Have Vector (Section 28) describes accepted units only. A unit that is held for its `previous` link (Section 26.2) is not a holding, so it does not make a hole; a hole is a sequence the replica has not accepted, such as an abandoned one.
+Informative: a Have Vector (Section 28) describes accepted units only. A unit that is held for its `previous` link (Section 26.2) is not a holding, so it does not make a hole; a hole is a sequence the replica has not accepted, such as an abandoned one. A held unit is not offered to other peers either (Section 68.1).
 
 ---
 
@@ -2898,6 +2930,8 @@ A server MAY allow read access to encrypted Data Plane objects more broadly than
 
 The MVP read authorization is the rule of Section 41: `data/read`, or being the subject of an active invitation grant, at the Resource's accepted Control Head.
 
+A server authorizes an uploaded object, not the session that uploads it. Any authenticated session MAY upload a validly signed Control Record, Data Unit, Key Package or Snapshot of a Resource the server hosts, including one another Principal signed; the server checks the object as it would check it from its author: the issuer's or actor's signature and authority, the Control Head, the epoch and cutoff, and the `previous` link (Section 51.1). The session's own abilities do not enter that check. Hosting policy, quotas and rate limits still apply to the session. This lets any replica that holds an object re-supply a server that lost it (Section 68.1).
+
 ---
 
 ## 85. Server federation
@@ -2935,10 +2969,13 @@ A conforming local-first client MUST persist at least:
 - DEKs for authorized epochs;
 - local Data Units not yet acknowledged by any route;
 - received Data Units required to reconstruct local state or a safe compacted equivalent;
+- Key Packages it sent or received, while it keeps the Resource;
 - actor sequence counters;
 - CRDT/profile state or enough data to reconstruct it.
 
 A client MUST persist its next actor sequence safely before exposing a newly created Data Unit as committed local work.
+
+An acknowledged object stays part of the client's replica state: the client keeps its accepted units, its own included, its Control Chain and these Key Packages for as long as it keeps the Resource, and MAY upload them again (Section 68.1).
 
 ---
 
@@ -2971,11 +3008,14 @@ On reconnect:
 3. synchronize Control Plane first;
 4. process new revocations and epochs;
 5. obtain missing Key Packages;
-6. upload locally queued valid Data Units;
-7. quarantine units invalidated by a strict epoch cutoff;
-8. synchronize remote Data Units;
-9. converge the Data Profile;
-10. resume live anti-entropy.
+6. offer what the route lacks: Control Records, accepted Data Units and Key Packages (Section 68.1);
+7. upload locally queued valid Data Units;
+8. quarantine units invalidated by a strict epoch cutoff;
+9. synchronize remote Data Units;
+10. converge the Data Profile;
+11. resume live anti-entropy.
+
+A route that answers the `RESOURCE_OPEN` of step 2 with `NACK(RESOURCE_NOT_HOSTED)` may have lost the Resource; the client re-hosts it as Section 41.1 describes, opens it again and continues.
 
 ---
 
@@ -3115,6 +3155,8 @@ A malicious server can:
 
 Multi-route replication improves availability but does not provide anonymity.
 
+A server that is behind, holding less than a client knows it once held, is not necessarily malicious: its store may have been restored from an older copy. A client first re-supplies what it holds (Section 68.1). A Control Chain that then forks is handled as Section 13.2 describes, whatever its cause.
+
 ---
 
 ## 95. Authorized readers can copy plaintext
@@ -3213,7 +3255,8 @@ A conforming client MUST implement:
 - Data Unit encryption/signing;
 - Data Unit verification/decryption;
 - local actor sequence persistence;
-- Have Vector synchronization;
+- Have Vector synchronization in both directions (Section 68.1);
+- re-hosting a Resource a route lost (Section 41.1);
 - at least one LFCP Data Profile;
 - offline local writes;
 - reconnect synchronization;
