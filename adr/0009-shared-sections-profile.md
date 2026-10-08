@@ -198,7 +198,8 @@ pilot, with the number of such conflicts the pilot records.
   characters over a section's life): measured in LFCP-02-067.
 - How an SDK coalesces keystrokes into changes, and how many Data Units a
   typing session produces (LFCP-02-025, LFCP-02-026).
-- One Resource per section meets the public server's per-Principal quota
-  of 20 hosted Resources and 10 new Resources per client IP per day (server
-  0.2.0 defaults). Raising them on sync.openlfcp.org, or stating the limit,
-  is decided by the project owner before the beta (LFCP-02-003).
+- One Resource per section meets the server's per-Principal quota of
+  hosted Resources and its per-client-IP limit on new Resources per day
+  (20 and 10 by default since server 0.2.0). Both are tunable per server in
+  the config; the public server's values are set by the owner
+  (LFCP-02-003).
