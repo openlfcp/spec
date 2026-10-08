@@ -14,6 +14,17 @@ const boundary=new RegExp('^<!--'+W+'(/?lfcp-section):'+W+'(lfcp1:([A-Za-z0-9_-]
 const taskRef=new RegExp('<!--'+W+'lfcp-ref:'+W+'lfcp1:([A-Za-z0-9_-]{43})#task:('+uuid+')'+W+'-->','g');
 const nodeRef=new RegExp('<!--'+W+'lfcp-node:'+W+'(item|paragraph|raw):('+uuid+')'+W+'-->');
 const lfcpComment=/<!--[ \t]+\/?lfcp-/;
+// MARKDOWN-SECTIONS-01 §4.1: the Tasks suffix allowed after an inline ref
+// inside a section.
+const DATES=['📅','⏳','🛫','➕','✅','❌'],PRIORITY=['🔺','⏫','🔼','🔽','⏬'],SIGNS=[...DATES,...PRIORITY,'🔁','🆔','⛔','🏁'];
+const field=new RegExp('^[ \\t]+(?:(?:'+DATES.join('|')+') \\d{4}-\\d{2}-\\d{2}|(?:'+PRIORITY.join('|')+')|🔁 [A-Za-z0-9 ,:]+?(?=[ \\t]+(?:'+SIGNS.join('|')+')|$)|🆔 [A-Za-z0-9_-]+|⛔ [A-Za-z0-9_-]+(?:,[A-Za-z0-9_-]+)*|🏁 (?:keep|delete))(?=[ \\t]|$)','u');
+/** Whether `tail`, the text after an inline ref, is empty or a Tasks suffix whose fields are not also before the ref. */
+function tasksSuffix(head,tail){
+  let rest=tail.replace(/\uFE0F/g,'').replace(/[ \t]+\^[A-Za-z0-9-]+[ \t]*$/,'').trimEnd();
+  const used=[];
+  while(rest.length){const m=rest.match(field);if(!m)return false;used.push(SIGNS.find(x=>m[0].trimStart().startsWith(x)));rest=rest.slice(m[0].length);}
+  return !used.some(x=>head.includes(x));
+}
 function lex(source) {
   const lines=source.split(/\r?\n/),tokens=md.parse(source,{});
   const literal=new Set(),blocks=[],ranges=[];
@@ -79,6 +90,7 @@ function lex(source) {
       if(!literal.has(i)){
         for(const m of line.matchAll(taskRef)){
           task_refs++;
+          if(!tasksSuffix(line.slice(0,m.index),line.slice(m.index+m[0].length)))diagnostics.add('LFCP_REF_NOT_AT_LINE_END');
           if(m[1]!==s.resource)diagnostics.add('FOREIGN_RESOURCE_REF');
           if(seen.has(m[2]))diagnostics.add('NODE_BINDING_DUPLICATE');seen.add(m[2]);
         }
@@ -115,7 +127,7 @@ function goldenSmoke(f) {
 const adapterArg=process.argv.indexOf('--adapter');
 const adapter=adapterArg<0?null:await import(pathToFileURL(path.resolve(process.argv[adapterArg+1])).href);
 const reports=[];
-const lexicalCodes=new Set(['SECTION_BOUNDARY_MISSING','SECTION_BOUNDARY_MISMATCH','SECTION_BOUNDARY_OVERLAP','SECTION_HEADING_INVALID','SECTION_UNSUPPORTED_SYNTAX','FOREIGN_RESOURCE_REF','NODE_BINDING_DUPLICATE']);
+const lexicalCodes=new Set(['LFCP_REF_NOT_AT_LINE_END','SECTION_BOUNDARY_MISSING','SECTION_BOUNDARY_MISMATCH','SECTION_BOUNDARY_OVERLAP','SECTION_HEADING_INVALID','SECTION_UNSUPPORTED_SYNTAX','FOREIGN_RESOURCE_REF','NODE_BINDING_DUPLICATE']);
 for(const f of suite.fixtures){
   for(const [stage,files]of Object.entries({before:f.before_files,observed:f.event.observed_files,after:f.expected.after_files}))
     for(const [name,text]of Object.entries(files)){
@@ -129,6 +141,7 @@ for(const f of suite.fixtures){
   const actualDiagnostics=[...new Set(lexed.flatMap(l=>l.diagnostics))].sort();
   const requiredDiagnostics=f.expected.diagnostics.filter(d=>lexicalCodes.has(d)).sort();
   assert.deepEqual(actualDiagnostics,requiredDiagnostics,f.id+' lexical diagnostics');
+  if(f.expected.observed_diagnostics)assert.deepEqual([...new Set(Object.values(f.event.observed_files).flatMap(t=>lex(t).diagnostics))].sort(),f.expected.observed_diagnostics,f.id+' observed diagnostics');
   if(f.expected.line_endings==='CRLF')for(const s of Object.values(f.expected.after_files))assert(!/(?<!\r)\n/.test(s));
   for(const canary of f.expected.private_canaries||[]){
     const before=Object.values(f.before_files).join(''),after=Object.values(f.expected.after_files).join('');
