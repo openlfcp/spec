@@ -50,6 +50,7 @@ Each fixture contains:
 - rationale: present where an expectation changed from the planning fixtures or a case was added for a decision.
 - expected.intents: semantic actions that may be published.
 - files_sha256: byte identity checks for every supplied file.
+- expected.lexical: counts over the after files. `sections` counts pairs of matching start and end markers, including a pair whose section is invalid (for example `SECTION_HEADING_INVALID`, MS23 and MS32); `task_refs` and `node_refs` count markers inside those pairs.
 - Additional assertions for clipboard output, private canaries, identity preservation or forbidden effects.
 
 An absent filename in after_files means the local file is absent. It is not an instruction to delete a remote Resource. A suspended case has no publishable intents and must preserve the observed local text unless an explicit repair event says otherwise.
