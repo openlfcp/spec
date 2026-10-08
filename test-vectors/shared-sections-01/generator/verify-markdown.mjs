@@ -16,20 +16,29 @@ const nodeRef=new RegExp('<!--'+W+'lfcp-node:'+W+'(item|paragraph|raw):('+uuid+'
 const lfcpComment=/<!--[ \t]+\/?lfcp-/;
 function lex(source) {
   const lines=source.split(/\r?\n/),tokens=md.parse(source,{});
-  const literal=new Set(),blocks=[],comments=new Set();
+  const literal=new Set(),blocks=[],ranges=[];
   function visit(ts){for(const t of ts){
     if(t.map&&['fence','code_block'].includes(t.type))for(let i=t.map[0];i<t.map[1];i++)literal.add(i);
     if(t.map&&['fence','code_block','table_open','blockquote_open'].includes(t.type))blocks.push(t.map);
     if(t.map&&t.type==='html_block'&&t.content.startsWith('<!--')&&!lfcpComment.test(t.content))
-      for(let i=t.map[0];i<t.map[1];i++)comments.add(i);
+      ranges.push([t.map[0],t.map[1]-1]);
     if(t.children)visit(t.children);
   }}visit(tokens);
   // Obsidian comments: from a line opening %% through the line closing it (§4.5).
-  for(let i=0,open=false;i<lines.length;i++){
+  let open=-1;
+  for(let i=0;i<lines.length;i++){
     if(literal.has(i))continue;
     const n=(lines[i].match(/%%/g)||[]).length;
-    if(open||n)comments.add(i);
-    if(n%2)open=!open;
+    if(open<0&&n){if(n%2)open=i;else ranges.push([i,i]);}
+    else if(open>=0&&n%2){ranges.push([open,i]);open=-1;}
+  }
+  if(open>=0)ranges.push([open,lines.length-1]);
+  // A comment right after a raw marker is a shared raw node (§4.4, §4.5);
+  // any other comment is local.
+  const comments=new Set(),shared=new Set();
+  for(const [a,b]of ranges){
+    const target=(lines[a-1]||'').match(nodeRef)?.[1]==='raw'?shared:comments;
+    for(let i=a;i<=b;i++)target.add(i);
   }
   const diagnostics=new Set(),sections=[];let current=null,depth=0;
   for(let i=0;i<lines.length;i++){
@@ -64,6 +73,7 @@ function lex(source) {
     const seen=new Set();
     for(let i=s.from+1;i<s.to;i++){
       if(comments.has(i)){diagnostics.add('SECTION_UNSUPPORTED_SYNTAX');continue;}
+      if(shared.has(i)){owned.push(lines[i]);continue;}
       const line=lines[i];
       if(!literal.has(i)&&/^#{1,6} /.test(line))diagnostics.add('SECTION_UNSUPPORTED_SYNTAX');
       if(!literal.has(i)){

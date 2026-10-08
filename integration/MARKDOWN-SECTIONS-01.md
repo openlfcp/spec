@@ -12,7 +12,8 @@
 > are accepted in indentation (M2); the start marker follows the heading
 > (M4); every node carries a marker, hidden in Live Preview by default
 > (M5); unsupported blocks are carried as raw blocks (M6); Tasks-local
-> tokens stay local (M7). Host facts H2–H6 are cited from
+> tokens stay local (M7). Comments inside a section follow the sender's
+> section comments setting, `local` by default (§4.5). Host facts H2–H6 are cited from
 > `obsidian: docs/devel/testing/obsidian-host-facts.md`. Fixtures are
 > rewritten in LFCP-02-010.
 
@@ -127,20 +128,33 @@ A block the section grammar does not model is shared verbatim as a raw node (dec
 The `raw` marker is on its own line at the parent's content indentation, immediately before the block. The block is:
 
 - a fenced code block: from its opening fence through its closing fence; an unclosed fence is `SECTION_UNSUPPORTED_SYNTAX` and fails closed;
-- a table, a callout or blockquote, or an HTML block other than a comment: from the line after the marker through the line before the next blank line or the next node marker, whichever comes first. A blank line inside a multi-line HTML comment does not end the block: the comment is literal through the line containing its `-->`.
+- a table, a callout or blockquote, or an HTML block other than a comment: from the line after the marker through the line before the next blank line or the next node marker, whichever comes first. A blank line inside a multi-line HTML comment does not end the block: the comment is literal through the line containing its `-->`;
+- a shared comment (§4.5): from its opening delimiter through the line that holds its closing one, blank lines included.
 
 The node's `kind` is `raw`; its Text holds the block's source lines exactly, relative to the content indentation, without the marker. A raw node has no children. Peers render it as the same Markdown; nothing inside it is interpreted as a binding, a Task or a heading.
 
-### 4.5 Comments stay local
+### 4.5 Comments
 
-An Obsidian comment (`%%` … `%%`), or an HTML comment (`<!--` … `-->`) that is not an LFCP marker, inside a section is never shared: Obsidian hides both in Reading view, users write private notes in them, and a comment typed into a section later would otherwise reach the other participants without any preview. A comment runs from its opening delimiter through the line that holds its closing one, blank lines included. It is `SECTION_UNSUPPORTED_SYNTAX` with the message "Comments can't be shared; move them out of the section", and it fails closed for that comment only:
+An Obsidian comment (`%%` … `%%`), or an HTML comment (`<!--` … `-->`) that is not an LFCP marker, runs from its opening delimiter through the line that holds its closing one, blank lines included. Obsidian hides both in Reading view, and users write private notes in them. Whether a comment inside a section is shared is a setting of the sending adapter, **section comments**, with two values:
+
+- `local` (the default): a new comment is never shared;
+- `shared`: a new comment is shared as a raw node (§4.4): the adapter inserts a `raw` marker on its own line right before it, under a mutation guard, and publishes it like any other new content (§7). The share preview of §8 lists it.
+
+The policy is the sender's only and applies to new comments only:
+
+- a comment that already has a `raw` marker is a raw node under either value, and stays shared until it is deleted; switching the setting to `local` does not withdraw it, and switching to `shared` does not share comments that were kept local before;
+- a received raw node whose Text is a comment is projected as an ordinary raw node, marker included, whatever the receiver's setting;
+- the receiver's setting decides only the comments the receiver writes.
+
+A comment kept local is `SECTION_UNSUPPORTED_SYNTAX` with the message "Comments can't be shared; move them out of the section, or share comments in this section's settings", and it fails closed for that comment only:
 
 - the comment's lines are not extracted: they become no node and no Text, and the comment never enters a payload;
 - the rest of the section keeps synchronizing;
-- the comment stays in the local file where it is. A remote patch applies around it and keeps it next to the line it follows; a remote change that would remove or move that line, or the nodes around the comment, pauses the section's projection with the same message until the user moves the comment out;
-- markers inside a comment are literal, as in MARKDOWN-REFS-01.
+- the comment stays in the local file where it is. A remote patch applies around it and keeps it next to the line it follows; a remote change that would remove or move that line, or the nodes around the comment, pauses the section's projection with the same message until the user moves the comment out.
 
-This is deliberately the stricter choice: carrying comments as raw blocks later would be a compatible relaxation, while text already sent cannot be taken back.
+Markers inside a comment are literal, as in MARKDOWN-REFS-01, whether the comment is local or a raw node.
+
+`local` is the default because text already sent cannot be taken back: sharing a comment is the user's explicit choice, per section, and a comment typed into a section never reaches the other participants without it.
 
 ### 4.6 Identity interpretation
 
@@ -161,7 +175,7 @@ Exactly one structural occurrence of each NodeId/TaskId is allowed per section p
 | Task metadata | Existing adapter field contract; date-only values are not reinterpreted |
 | Tasks-local tokens (`🔁`, `🛫`, `➕`, `❌`, priority signs such as `🔼`) | Local presentation of the Task line, not shared fields (decision M7); kept in the local line, shown in the share preview, never written to the Task |
 | Fences, tables, callouts, blockquotes, HTML blocks | Raw node (§4.4) |
-| Obsidian comments (`%%` … `%%`) and HTML comments that are not LFCP markers | Never shared: `SECTION_UNSUPPORTED_SYNTAX` for the comment only; it stays local (§4.5) |
+| Obsidian comments (`%%` … `%%`) and HTML comments that are not LFCP markers | By the sender's section comments setting (§4.5): `local` (default), a new comment is `SECTION_UNSUPPORTED_SYNTAX` for the comment only and stays local; `shared`, a new comment becomes a raw node. A comment with a `raw` marker is a raw node under either value |
 | Headings inside the region | Unsupported: `SECTION_UNSUPPORTED_SYNTAX`; the share command offers to split the section |
 | File embeds/transclusion | No file transfer or automatic dereference; the embed's source text is shared as text |
 
@@ -232,7 +246,7 @@ Inside a shared section, removing only a Task ref does not create a private exce
 
 ## 8. Initial sharing and unsupported content
 
-Before first sharing, parse the selected range, identify all content including nested children, and preview the actual boundary, including raw blocks that become shared and comments that stay local. If it contains existing bindings to another Resource, use the explicit conversion workflow of the MVP 0.2 compatibility draft. Never include the entire old Resource as a hidden side effect.
+Before first sharing, parse the selected range, identify all content including nested children, and preview the actual boundary, including raw blocks that become shared and comments that stay local or, under the `shared` comment setting, become shared (§4.5). If it contains existing bindings to another Resource, use the explicit conversion workflow of the MVP 0.2 compatibility draft. Never include the entire old Resource as a hidden side effect.
 
 Constructs that are neither modeled nor carried as raw blocks (§5: headings inside the region) block creation unless the user splits or excludes them with a new visible boundary.
 
@@ -358,7 +372,10 @@ Existing `MALFORMED_LFCP_REF`, `DUPLICATE_LFCP_REF`, `LFCP_REF_NOT_AT_LINE_END`,
 | MS35 | Tasks-local tokens on a Task line stay local and appear in the share preview (M7) |
 | MS36 | Fold, Outline drag and `![[note#heading]]` embed of a section heading with private text before the next heading: the warning of §3 appears; nothing private is shared (H5) |
 | MS37 | The standalone Detach command inside a section is refused or redirected; outside it keeps its 0.1 meaning |
-| MS38 | A `%%` comment and a multi-line HTML comment with a blank line inside the region: not extracted, the rest of the section syncs, a remote edit next to them keeps them in place, a remote removal of the line one follows pauses the section with the comment message (§4.5) |
+| MS38 | A `%%` comment and a multi-line HTML comment with a blank line inside the region, setting `local`: not extracted, the rest of the section syncs, a remote edit next to them keeps them in place, a remote removal of the line one follows pauses the section with the comment message (§4.5) |
+| MS39 | The same comments typed into the region under the setting `shared`: each gets a `raw` marker and is published as a raw node (§4.5) |
+| MS40 | Setting `local` with a comment that already has a `raw` marker and a new comment: the marked one stays shared, the new one stays local (§4.5) |
+| MS41 | A received raw node whose Text is a comment, setting `local`: projected as a raw node with its marker, no diagnostic (§4.5) |
 
 Examples in this document are not a substitute for byte-exact before/action/after fixture files. Freeze grammar only after rendering these fixtures in the selected Obsidian/Tasks versions and testing them through the independent Markdown parser. Until then this remains a Working Draft.
 

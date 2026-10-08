@@ -3,7 +3,7 @@
 **Project:** OpenLFCP  
 **Target:** MVP 0.2  
 **Date:** 2026-10-08  
-**Status:** Working Draft golden fixture set for MVP 0.2, not in any implementation baseline; 41 reference checks pass, real editor integration pending  
+**Status:** Working Draft golden fixture set for MVP 0.2, not in any implementation baseline; 44 reference checks pass, real editor integration pending  
 **Normative companions:** `integration/MARKDOWN-SECTIONS-01.md`; `integration/MARKDOWN-REFS-01.md`
 
 > **Revision note (LFCP-02-010).** Rewritten from the MVP 0.2 planning
@@ -11,7 +11,8 @@
 > marker follows the heading (M4), so every fixture's section changed;
 > MS16 now expects a raw node instead of a suspension (M6). Identities
 > MS01–MS26 are kept; MS27–MS38 are added for M1, M2, M4–M7, the comment
-> rule and host facts H2–H6. Each changed or added expectation states its
+> rule and host facts H2–H6; MS39–MS41 for the sender's section comments
+> setting (§4.5). Each changed or added expectation states its
 > reason in the fixture's `rationale` or in this document.
 
 ## 1. Purpose
@@ -44,6 +45,7 @@ Each fixture contains:
 - before_files: local files before the action.
 - projection_base: trusted or unknown; unknown does not permit guessing whether a local difference is an edit.
 - event.kind and observed_files: the initiating action and current source.
+- event.settings: adapter settings the case depends on, such as `section_comments` (`local` or `shared`, MARKDOWN-SECTIONS-01 §4.5); absent means the defaults.
 - expected.after_files: exact resulting UTF-8 strings, including line endings.
 - expected.diagnostics: required error/attention identifiers.
 - expected.publication: none, semantic or suspended.
@@ -115,6 +117,9 @@ Diagnostics depending on a durable projection base or actual model state, such a
 | MS36 | Private text between the end marker and the next heading | The share preview warns (H5) |
 | MS37 | Standalone Detach inside a section | Refused or redirected |
 | MS38 | `%%` and multi-line HTML comments inside the region | Not extracted; the rest of the section is extracted (§4.5) |
+| MS39 | New `%%` and HTML comments typed under the setting `shared` | Each gets a `raw` marker and is published as a raw node (§4.5) |
+| MS40 | Setting `local`: a comment with a `raw` marker and a new comment | The marked one stays shared; the new one stays local with `SECTION_UNSUPPORTED_SYNTAX` |
+| MS41 | A received raw node holding a comment, setting `local` | Projected as a raw node with its marker; no diagnostic |
 
 The split IDs extend the original MS01–MS18 outline without renumbering its meaning; MS27–MS38 are numbered after the planning fixtures.
 

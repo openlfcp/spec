@@ -2,8 +2,8 @@
 // MARKDOWN-SECTIONS-01 (LFCP-02-010). Rewritten from the MVP 0.2 planning
 // fixtures for the grammar decisions M1-M7: the start marker follows the
 // heading, Task refs inside sections are child-line, unsupported blocks are
-// raw nodes, comments stay local. Identities MS01-MS26 are kept; MS27-MS38
-// are added.
+// raw nodes, comments follow the sender's setting. Identities MS01-MS26 are
+// kept; MS27-MS41 are added.
 import fs from 'node:fs';
 import path from 'node:path';
 import {resource,ids,uid,hash} from './section-model.mjs';
@@ -157,6 +157,27 @@ const comments='%% private note %%\n\n<!-- a private\n\nmulti-line note -->';
 add('MS38','Comments inside the region stay local (MARKDOWN-SECTIONS-01 §4.5)',{before:note(body+'\n\n'+comments),kind:'inspect_owned_payload',
   diagnostics:['SECTION_UNSUPPORTED_SYNTAX'],
   checks:{lexical:{sections:1,task_refs:1,node_refs:2},payload_contains:['Draft contract'],payload_excludes:['private note','multi-line note']}});
+
+// The sender's section comments setting (§4.5): new comments are shared as
+// raw nodes under `shared`; a comment with a raw marker stays shared under
+// either value; a received comment is projected as a raw node.
+const shareNote='%% shared note %%', shareHtml='<!-- a shared\n\nmulti-line note -->';
+const commentA=uid('comment-a'), commentB=uid('comment-b');
+const typedComments=base.replace('\n'+end,'\n\n'+shareNote+'\n\n'+shareHtml+'\n'+end);
+add('MS39','Under the shared comment setting, new comments become raw nodes (§4.5)',{kind:'local_insert',observed:typedComments,
+  after:typedComments.replace(shareNote,node('raw',commentA)+'\n'+shareNote).replace(shareHtml,node('raw',commentB)+'\n'+shareHtml),
+  publication:'semantic',intents:[{type:'raw.create',id:commentA,parent_id:S,text:shareNote},{type:'raw.create',id:commentB,parent_id:S,text:shareHtml}],
+  extra:{settings:{section_comments:'shared'},allocated_ids:[commentA,commentB]},
+  checks:{lexical:{sections:1,task_refs:1,node_refs:4},payload_contains:['shared note','multi-line note']},
+  rationale:'Owner decision on comments (MARKDOWN-SECTIONS-01 §4.5): sharing comments is a per-section setting of the sender, local by default.'});
+add('MS40','Under the local comment setting, a marked comment stays shared and a new one stays local (§4.5)',{
+  before:note(body+'\n\n'+node('raw',commentA)+'\n'+shareNote+'\n\n%% private note %%'),kind:'inspect_owned_payload',
+  diagnostics:['SECTION_UNSUPPORTED_SYNTAX'],extra:{settings:{section_comments:'local'}},
+  checks:{lexical:{sections:1,task_refs:1,node_refs:3},payload_contains:['shared note','Draft contract'],payload_excludes:['private note']}});
+const received=base.replace('\n'+end,'\n\n'+node('raw',commentA)+'\n'+shareNote+'\n'+end);
+add('MS41','A received comment is projected as a raw node under the local setting (§4.5)',{kind:'remote_insert',after:received,
+  extra:{settings:{section_comments:'local'},remote_intents:[{type:'raw.create',id:commentA,parent_id:S,text:shareNote}]},
+  checks:{lexical:{sections:1,task_refs:1,node_refs:3},payload_contains:['shared note']}});
 
 const result={suite:'MARKDOWN-SECTIONS-FIXTURES-01',schema_version:1,date:'2026-10-08',
   profile:'org.openlfcp.shared-sections.v1',status:'golden expectations for MARKDOWN-SECTIONS-01 (Working Draft); reference lexical/smoke checks only',
