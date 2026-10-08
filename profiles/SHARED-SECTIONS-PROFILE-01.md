@@ -316,7 +316,7 @@ Every other invalid value is merged and isolated, as SOP §77 isolates an invali
 | `INVALID_REFERENCE` | a node's `placement` names no placement, or a placement of another node; a placement's `node_id` or `parent_id` names no node or section; a Task node's `task_id` names no Task; a parent is a paragraph or raw node |
 | `IMMUTABLE_FIELD_MUTATED` | an immutable field has concurrent values (a write refused at admission cannot be merged) |
 
-`OBJECT_ID_COLLISION` (SOP §21) stays a separate named error, not a diagnostic.
+`OBJECT_ID_COLLISION` (SOP §21) stays a separate named error, not a diagnostic. A collision is an ID under which `nodes`, `objects` or `placements` holds concurrent values, each a map created by a different change. A node whose own ID, Task ID or selected PlacementId collides is not validated and not projected, and no value is chosen; its descendants are `BLOCKED_PARENT`; the section is reported with the colliding IDs and classifies `STRUCTURAL_ATTENTION`. A children-list entry naming a colliding PlacementId emits nothing.
 
 An invalid node is not projected, and its descendants are `BLOCKED_PARENT`; the rest of the section is projected. A Task whose object is invalid isolates its Task node the same way. Section-level problems (`INVALID_ROOT`, an invalid `section` map) leave nothing to project and are reported for the whole Resource.
 
@@ -331,7 +331,7 @@ These are not errors: the history is valid, and a user resolves them (§8).
 | `PLACEMENT_CONFLICT` | Concurrent location assignments of one node |
 | `PARENT_CYCLE` | A cycle in the selected parent graph |
 | `BLOCKED_PARENT` | A node under a conflicted, cyclic or invalid parent; content retained |
-| `LIFECYCLE_CONFLICT` | Concurrent active/deleted values |
+| `LIFECYCLE_CONFLICT` | Concurrent active/deleted values; concurrent equal values agree and are not a conflict |
 | `EDIT_UNDER_DELETED_ANCESTOR` | Retained content changed concurrently with its ancestor's deletion |
 
 A valid concurrent merge may have placement conflicts or cycles; they are not grounds to discard a peer's valid history. A client that does not implement this profile reports the Resource as `PROFILE_UNSUPPORTED` (LFCP-WIRE-01 §62) and neither interprets nor writes it.

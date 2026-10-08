@@ -141,7 +141,15 @@ export function inspect(doc) {
   if(doc.section&&!Array.isArray(doc.section.children))errors.push('INVALID_ROOT');
   const life=n=>str(nodes[n].kind)==='task'?doc.objects[n]:nodes[n];
   const fail=(n,diagnostic)=>{if(!invalid.has(n))invalid.set(n,diagnostic);};
+  // §14.2: an ID created concurrently as two objects is an OBJECT_ID_COLLISION
+  // (SOP §21). A node whose own map, Task or selected placement collides is
+  // not validated or projected; its descendants are blocked.
+  const collides=(map,key)=>!!map&&Object.keys(A.getConflicts(map,key)||{}).length>1;
+  const collisions=new Set(),collided=new Set();
+  for(const key of ['nodes','objects','placements'])for(const k of Object.keys(doc[key]||{}))if(collides(doc[key],k))collisions.add(k);
+  for(const n of Object.keys(nodes))if(collisions.has(n)||collisions.has(str(nodes[n].placement)))collided.add(n);
   for(const n of Object.keys(nodes).sort()) {
+    if(collided.has(n))continue;
     const o=nodes[n],kind=str(o.kind);
     if(!['task','paragraph','item','raw'].includes(kind)){fail(n,'INVALID_ENUM_VALUE');continue;}
     if(kind==='task' && (str(o.task_id)!==n || !doc.objects[n]))fail(n,'INVALID_REFERENCE');
@@ -152,18 +160,19 @@ export function inspect(doc) {
     if(!s||str(s.node_id)!==n){if(!blocked.has(n))fail(n,'INVALID_REFERENCE');continue;}
     parents[n]=str(s.parent_id);
     if(parents[n]!==ids.section && (!nodes[parents[n]]||['paragraph','raw'].includes(str(nodes[parents[n]].kind))))fail(n,'INVALID_REFERENCE');
-    if(values(life(n),'lifecycle').length>1)blocked.set(n,'LIFECYCLE_CONFLICT');
+    // §14.3: concurrent active and deleted values; equal values agree.
+    if(new Set(values(life(n),'lifecycle')).size>1)blocked.set(n,'LIFECYCLE_CONFLICT');
   }
   for(const n of invalid.keys())blocked.delete(n);
   // Detect all cycle members, independently of traversal order.
   for(const start of Object.keys(nodes).sort()) {
     const path=[],seen=new Map();let n=start;
-    while(n!==ids.section && nodes[n] && !blocked.has(n)) {
+    while(n!==ids.section && nodes[n] && !blocked.has(n) && !collided.has(n)) {
       if(seen.has(n)){for(const c of path.slice(seen.get(n)))blocked.set(c,'PARENT_CYCLE');break;}
       seen.set(n,path.length);path.push(n);n=parents[n];
     }
   }
-  const out=n=>blocked.has(n)||invalid.has(n);
+  const out=n=>blocked.has(n)||invalid.has(n)||collided.has(n);
   let again=true;
   while(again){again=false;for(const n of Object.keys(nodes))if(!out(n)&&out(parents[n])){blocked.set(n,'BLOCKED_PARENT');again=true;}}
   for(const n of Object.keys(nodes)) {
@@ -201,7 +210,8 @@ export function inspect(doc) {
     const v=values(obj,field);if(v.length>1)scalarConflicts.push({id:n,field,values:v});
   }
   return {
-    classification:errors.length?'PROFILE_INVALID':importing?'IMPORTING':blocked.size||invalid.size?'STRUCTURAL_ATTENTION':'VALID',
+    classification:errors.length?'PROFILE_INVALID':importing?'IMPORTING':blocked.size||invalid.size||collisions.size?'STRUCTURAL_ATTENTION':'VALID',
+    ...(collisions.size?{collisions:[...collisions].sort()}:{}),
     errors:[...new Set(errors)].sort(),tree,hidden:[...hidden].sort(),
     invalid:[...invalid].sort(([a],[b])=>a.localeCompare(b)).map(([id,diagnostic])=>({id,diagnostic})),
     recovery:[...blocked].sort(([a],[b])=>a.localeCompare(b)).map(([id,code])=>({id,code})),

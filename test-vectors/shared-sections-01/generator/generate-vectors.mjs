@@ -303,6 +303,51 @@ record('SS46','A change nesting an object 257 levels deep is refused',{
   },
   requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],visible},coverage:'negative-admission',
   notes:['SHARED-OBJECTS-PROFILE-01 §11.2: the extensions map has depth 1, its new map depth 2, and the change nests to depth 257.']});
+// LFCP-02-010: concurrent split and join (§10), and concurrent creations
+// of one ID (§14.2, SOP §21).
+const splitAt=(at,id,label)=>d=>{
+  const old=Array.from(d.nodes[ids.para].text);
+  textEdit(d,ids.para,at,old.length-at,'');
+  add(d,id,'paragraph',ids.task,ids.para,label,old.slice(at).join(''));
+};
+const joinExtra=d=>{
+  textEdit(d,ids.para,Array.from(d.nodes[ids.para].text).length,0,'\n'+d.nodes[ids.extra].text);
+  setLife(d,ids.extra,'deleted');
+};
+record('SS47','Concurrent splits of one paragraph keep both results',{
+  a:[['split-6',splitAt(6,ids.a,'SS47-A')]],b:[['split-5',splitAt(5,ids.b,'SS47-B')]],
+  requirements:{classification:'VALID',visible:[...visible,ids.a,ids.b],texts:{[ids.para]:'Draft',[ids.a]:'contract',[ids.b]:' contract'}},coverage:'split-join',
+  notes:['§10: both new nodes are kept with the suffix each writer observed; the prefix keeps the union of the deletions. Neither result is discarded.']});
+record('SS48','A split and a concurrent edit of the suffix',{
+  a:[['split',splitAt(6,ids.a,'SS48-A')]],b:[['append',d=>textEdit(d,ids.para,14,0,' v2')]],
+  requirements:{classification:'VALID',visible:[...visible,ids.a],texts:{[ids.para]:'Draft  v2',[ids.a]:'contract'}},coverage:'split-join',
+  notes:['§10: the concurrent characters stay in the original node\'s Text; they are not moved to the new node.']});
+record('SS49','A join and a concurrent edit of the second paragraph',{
+  base:joinBase,a:[['join',joinExtra]],b:[['edit-second',d=>textEdit(d,ids.extra,11,0,'!')]],
+  requirements:{classification:'VALID',hidden:[ids.extra],texts:{[ids.para]:'Draft contract\nSecond note',[ids.extra]:'Second note!'},retainedConcurrentEdits:[ids.extra]},coverage:'split-join',
+  notes:['§10: the unseen edit is retained under the tombstone and exposed for recovery, not merged into the copied text.']});
+record('SS50','Concurrent joins of the same pair',{
+  base:joinBase,a:[['join',joinExtra]],b:[['join',joinExtra]],
+  requirements:{classification:'VALID',hidden:[ids.extra],texts:{[ids.para]:'Draft contract\nSecond note\nSecond note'}},coverage:'split-join',
+  notes:['§10: each join appends the text it observed, so the text appears twice; both writers delete the second paragraph, which is not a lifecycle conflict (§14.3: equal values agree).']});
+record('SS51','A split and a concurrent join',{
+  base:joinBase,a:[['split',splitAt(6,ids.a,'SS51-A')]],b:[['join',joinExtra]],
+  requirements:{classification:'VALID',visible:[ids.task,ids.para,ids.a],hidden:[ids.extra],texts:{[ids.para]:'Draft \nSecond note',[ids.a]:'contract'}},coverage:'split-join'});
+record('SS52','Two writers create one node ID',{
+  a:[['create',d=>add(d,ids.a,'paragraph',ids.section,ids.y,'SS52-A','From A','A')]],
+  b:[['create',d=>add(d,ids.a,'item',ids.section,ids.y,'SS52-B','From B','B')]],
+  requirements:{classification:'STRUCTURAL_ATTENTION',visible,absent:[ids.a]},coverage:'collision',
+  notes:['§14.2, SOP §21: each change is admissible on its own; the merged node map has two concurrent values, an OBJECT_ID_COLLISION. The node is not projected and neither value is chosen.']});
+record('SS53','Two writers create one Task ID, with a child each',{
+  a:[['create',d=>{add(d,ids.b,'task',ids.section,ids.y,'SS53-A','Task from A','A');add(d,ids.a,'paragraph',ids.b,null,'SS53-child','Under the Task','A');}]],
+  b:[['create',d=>add(d,ids.b,'task',ids.section,ids.y,'SS53-B','Task from B','B')]],
+  requirements:{classification:'STRUCTURAL_ATTENTION',visible,absent:[ids.a,ids.b],recovery:{[ids.a]:'BLOCKED_PARENT'}},coverage:'collision',
+  notes:['§14.2, SOP §21: the Task and its node collide; the node is not projected and its subtree is blocked.']});
+record('SS54','Two nodes claim one placement ID',{
+  a:[['create',d=>add(d,ids.a,'paragraph',ids.section,ids.y,'SS54-slot','From A','A')]],
+  b:[['create',d=>add(d,ids.b,'paragraph',ids.section,ids.y,'SS54-slot','From B','B')]],
+  requirements:{classification:'STRUCTURAL_ATTENTION',visible,absent:[ids.a,ids.b]},coverage:'collision',
+  notes:['§14.2, SOP §21: the placement collides; both nodes that select it are not projected, and the children list holding the PlacementId twice emits nothing for it.']});
 const doc={
   suite:'SHARED-SECTIONS-TEST-VECTORS-01',schema_version:1,date:'2026-10-08',
   status:'working-draft-reference-corpus',profile:PROFILE,
