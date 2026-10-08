@@ -19,8 +19,15 @@
 // match both sides exactly and is left out of the multiset comparison.
 //
 // Path syntax in mapping files: dot-separated keys; `name[id=X]` selects the
-// array element whose `id` is X; `*` matches any key, `[id=*]` any id and
-// `[*]` any element; `$1`, `$2`, ... insert what the wildcards matched.
+// array element whose `id` is X; `[N]` the element at index N; `*` matches
+// any key, `[id=*]` any id and `[*]` any element; `$1`, `$2`, ... insert
+// what the wildcards matched (for `[*]`, the index).
+//
+// A move may name an encoding as a third element: "base64url" means the old
+// value is standard base64 and the new one the same bytes as unpadded
+// base64url (RFC 4648 §4, §5); the bytes, not the strings, must be equal.
+// A mapping's `old_id_lists` replaces the default list of old top-level
+// arrays whose elements are addressed by their `id`.
 
 import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
@@ -41,11 +48,12 @@ const pathText = (segs) => segs.map((s, i) => (i > 0 && "key" in s ? "." : "") +
 function parsePath(text) {
   const segs = [];
   for (const part of text.split(".")) {
-    const m = /^([^[\]]+)?(?:\[(?:id=([^\]]*)|(\*))\])?$/.exec(part);
+    const m = /^([^[\]]+)?(?:\[(?:id=([^\]]*)|(\*)|(\d+))\])?$/.exec(part);
     if (!m) throw new Error(`bad mapping path: ${text}`);
     if (m[1] !== undefined) segs.push({ key: m[1] });
     if (m[2] !== undefined) segs.push({ id: m[2] });
     if (m[3] !== undefined) segs.push({ any: true });
+    if (m[4] !== undefined) segs.push({ index: Number(m[4]) });
   }
   return segs;
 }
@@ -86,6 +94,10 @@ function matchPrefix(rule, segs, whole) {
       else if (r.id !== s.id) return null;
     } else if ("key" in s) {
       return null;
+    } else if ("index" in r) {
+      if (!("index" in s) || r.index !== s.index) return null;
+    } else if ("index" in s) {
+      captures.push(String(s.index));
     }
   }
   return captures;
@@ -123,6 +135,7 @@ function checkSuite(mappingFile) {
       cwd: root,
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"],
+      maxBuffer: 256 * 1024 * 1024,
     });
   } catch {
     throw new Error(
@@ -131,10 +144,13 @@ function checkSuite(mappingFile) {
     );
   }
   const oldDoc = JSON.parse(oldText);
-  if (Array.isArray(oldDoc.cases)) throw new Error(`${mapping.suite_file} at the baseline is already in the new format`);
+  if (oldDoc.format === "lfcp-vector-format/1") throw new Error(`${mapping.suite_file} at the baseline is already in the new format`);
+  const oldIdLists = mapping.old_id_lists ? new Set(mapping.old_id_lists) : OLD_ID_LISTS;
   const newDoc = JSON.parse(readFileSync(join(root, mapping.suite_file), "utf8"));
 
-  const moves = mapping.moves.map(([from, to]) => ({ from: parsePath(from), to }));
+  const moves = mapping.moves.map(([from, to, encoding]) => ({ from: parsePath(from), to, encoding }));
+  const encode = (encoding, value) =>
+    encoding === "base64url" ? Buffer.from(value, "base64").toString("base64url") : value;
   const structural = mapping.structural.map((r) => ({ ...r, segs: parsePath(r.path) }));
   const added = mapping.added.map((r) => ({ ...r, segs: parsePath(r.path) }));
   const changed = new Map((mapping.changed ?? []).map((r) => [r.path, r]));
@@ -145,13 +161,19 @@ function checkSuite(mappingFile) {
   const newValues = [];
   let structuralCount = 0;
 
-  for (const leaf of flatten(oldDoc, OLD_ID_LISTS)) {
+  for (const leaf of flatten(oldDoc, oldIdLists)) {
     const where = pathText(leaf.segs);
     let target = null;
     for (const move of moves) {
       const captures = matchPrefix(move.from, leaf.segs, false);
       if (captures) {
         target = [...parsePath(substitute(move.to, captures)), ...leaf.segs.slice(move.from.length)];
+        if (move.encoding) {
+          if (typeof leaf.value !== "string" || Buffer.from(leaf.value, "base64").toString("base64") !== leaf.value) {
+            errors.push(`old value at ${where} is not canonical base64`);
+          }
+          leaf.value = encode(move.encoding, leaf.value);
+        }
         break;
       }
     }
