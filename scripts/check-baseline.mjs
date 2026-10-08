@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Keeps MVP-0.1-BASELINE.md in step with the repository (LFCP-010):
+// Keeps each MVP-0.N-BASELINE.md in step with the repository (LFCP-010):
 //
 // - every path listed in a manifest table (first cell, in backticks) exists;
 //   a path ending in "/" names a directory and covers everything below it;
@@ -11,13 +11,15 @@ import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const MANIFEST = "MVP-0.1-BASELINE.md";
+const MANIFESTS = readdirSync(root).filter((name) => /^MVP-0\.\d+-BASELINE\.md$/.test(name)).sort();
 const ROOTS = ["wire", "profiles", "integration", "test-vectors", "schemas", "adr"];
 
+const problems = [];
+let entries = 0;
+for (const MANIFEST of MANIFESTS) {
 const text = readFileSync(join(root, MANIFEST), "utf8");
 const listed = [...text.matchAll(/^\| `([^`]+)` \|/gm)].map((m) => m[1]);
-
-const problems = [];
+entries += listed.length;
 for (const path of listed) {
   const full = join(root, path);
   const isDir = path.endsWith("/");
@@ -38,7 +40,8 @@ for (const top of ROOTS) {
     if (!covered(file)) problems.push(`${file} is not listed in ${MANIFEST}`);
   }
 }
+}
 
 for (const p of problems) console.log(`FAIL  ${p}`);
-console.log(`baseline: ${listed.length} manifest entries, ${problems.length} problem(s)`);
+console.log(`baseline: ${MANIFESTS.length} manifests, ${entries} entries, ${problems.length} problem(s)`);
 process.exit(problems.length === 0 ? 0 : 1);

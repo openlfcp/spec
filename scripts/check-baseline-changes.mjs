@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-// Proves that a new MVP 0.1 baseline changed no published vector value
+// Proves that a new MVP baseline changed no published vector value
 // except the ones its decisions approve.
 //
 // The manifest is the value-changes.json of the newest
-// migrations/mvp-0.1-baseline.N/ directory: the baseline being prepared. For
+// migrations/mvp-0.M-baseline.N/ directory, by M then N: the baseline
+// being prepared. For
 // each suite it lists, the file at the previous baseline tag is read from Git
 // and compared leaf by leaf with the current file. Elements of `cases` and
 // `scenarios` arrays are addressed by their `id`. A suite marked
@@ -27,9 +28,9 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const newest = readdirSync(join(root, "migrations"))
-  .map((name) => [name, /^mvp-0\.1-baseline\.(\d+)$/.exec(name)])
+  .map((name) => [name, /^mvp-0\.(\d+)-baseline\.(\d+)$/.exec(name)])
   .filter(([, m]) => m)
-  .sort((a, b) => Number(b[1][1]) - Number(a[1][1]))[0][0];
+  .sort((a, b) => Number(b[1][1]) - Number(a[1][1]) || Number(b[1][2]) - Number(a[1][2]))[0][0];
 const manifestFile = join(root, "migrations", newest, "value-changes.json");
 
 // Leaves of a suite as path -> JSON value. `cases` elements are keyed by id.

@@ -20,7 +20,7 @@
 #    pinned @automerge/automerge (scripts/check-automerge-corpus.mjs);
 #    the shared sections corpus matches its schema, regenerates
 #    byte-identically and replays (scripts/check-shared-sections-corpus.mjs);
-# 8. MVP-0.1-BASELINE.md lists exactly the canonical files
+# 8. each MVP-0.N-BASELINE.md lists exactly the canonical files
 #    (scripts/check-baseline.mjs).
 #
 # Run `pnpm install --frozen-lockfile` and `bundle install` first.
