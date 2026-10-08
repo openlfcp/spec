@@ -3,7 +3,7 @@
 **Project:** OpenLFCP  
 **Target:** MVP 0.2  
 **Date:** 2026-10-08  
-**Status:** Working Draft golden fixture set for MVP 0.2, not in any implementation baseline; 48 reference checks pass, real editor integration pending  
+**Status:** Working Draft golden fixture set for MVP 0.2, in the implementation baseline `mvp-0.2-baseline.1`; 48 reference checks pass, real editor integration pending  
 **Normative companions:** `integration/MARKDOWN-SECTIONS-01.md`; `integration/MARKDOWN-REFS-01.md`
 
 > **Revision note (LFCP-02-010).** Rewritten from the MVP 0.2 planning

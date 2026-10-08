@@ -1,7 +1,7 @@
 # MARKDOWN-SECTIONS-01
 
 **Title:** Portable Markdown Bindings for OpenLFCP Shared Sections  
-**Status:** Working Draft for MVP 0.2, not in any implementation baseline; grammar decisions M1–M7 of the MVP 0.2 review applied, fixture validation pending  
+**Status:** Working Draft for MVP 0.2, in the implementation baseline `mvp-0.2-baseline.1` (MVP-0.2-BASELINE.md); grammar decisions M1–M7 of the MVP 0.2 review applied, fixture validation pending  
 **Date:** 2026-10-08  
 **Profile:** `org.openlfcp.shared-sections.v1`  
 **Dependencies:** SHARED-SECTIONS-PROFILE-01; MARKDOWN-REFS-01

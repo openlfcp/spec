@@ -3,7 +3,7 @@
 **Project:** OpenLFCP  
 **Target:** MVP 0.2  
 **Date:** 2026-10-08  
-**Status:** Working Draft reference corpus for MVP 0.2, not in any implementation baseline; 28 JavaScript cases, independent SDK interoperability pending  
+**Status:** Working Draft reference corpus for MVP 0.2, in the implementation baseline `mvp-0.2-baseline.1`; 28 JavaScript cases, independent SDK interoperability pending  
 **Profile:** org.openlfcp.shared-sections.v1  
 **Normative companion:** `profiles/SHARED-SECTIONS-PROFILE-01.md` (Working Draft 0.3); ADR 0009
 

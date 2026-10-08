@@ -23,6 +23,10 @@ For MVP 0.1, [MVP-0.1-BASELINE.md](MVP-0.1-BASELINE.md) lists the exact files to
 implement against, at the tag `mvp-0.1-baseline.9`. It is an implementation
 baseline of Working Drafts, not a Stable publication.
 
+For MVP 0.2, [MVP-0.2-BASELINE.md](MVP-0.2-BASELINE.md) does the same at the
+tag `mvp-0.2-baseline.1`: the MVP 0.1 baseline unchanged, plus shared
+sections.
+
 Higher entries win. A lower artifact never overrides a higher one; a
 conflict between them is a specification gap to report, not something to
 resolve in code.

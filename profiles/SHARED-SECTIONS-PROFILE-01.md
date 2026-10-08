@@ -1,7 +1,7 @@
 # SHARED-SECTIONS-PROFILE-01
 
 **Title:** OpenLFCP Shared Sections Data Profile  
-**Status:** Working Draft 0.3 for MVP 0.2, not in any implementation baseline; decisions of ADR 0009 applied, independent interoperability pending  
+**Status:** Working Draft 0.3 for MVP 0.2, in the implementation baseline `mvp-0.2-baseline.1` (MVP-0.2-BASELINE.md); decisions of ADR 0009 applied, independent interoperability pending  
 **Date:** 2026-10-08  
 **Profile identifier:** `org.openlfcp.shared-sections.v1`  
 **Dependencies:** LFCP-WIRE-01 and SHARED-OBJECTS-PROFILE-01 at `mvp-0.1-baseline.9`; ADR 0009  

@@ -1,7 +1,7 @@
 # SDK-SECTIONS-INTEGRATION-01
 
 **Title:** SDK Receipt, Status and Parser Integration Contracts for OpenLFCP Shared Sections  
-**Status:** Working Draft for MVP 0.2, not in any implementation baseline  
+**Status:** Working Draft for MVP 0.2, in the implementation baseline `mvp-0.2-baseline.1` (MVP-0.2-BASELINE.md)  
 **Date:** 2026-10-08  
 **Contract version:** `sections-integration/1`  
 **Profile:** `org.openlfcp.shared-sections.v1`  

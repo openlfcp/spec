@@ -58,10 +58,10 @@ directory).
 | --- | --- |
 | `wire/LFCP-WIRE-01.md` | LFCP Wire protocol (Working Draft) |
 | `profiles/SHARED-OBJECTS-PROFILE-01.md` | Shared Objects application profile `org.openlfcp.shared-objects.v1` (Working Draft) |
-| `profiles/SHARED-SECTIONS-PROFILE-01.md` | Working Draft for MVP 0.2, not in any baseline: the shared sections profile `org.openlfcp.shared-sections.v1` (ADR 0009); listed because every file under `profiles/` is |
+| `profiles/SHARED-SECTIONS-PROFILE-01.md` | Working Draft for MVP 0.2, in `mvp-0.2-baseline.1` (MVP-0.2-BASELINE.md), not in this baseline: the shared sections profile `org.openlfcp.shared-sections.v1` (ADR 0009); listed because every file under `profiles/` is |
 | `integration/MARKDOWN-REFS-01.md` | Markdown projection reference grammar: inline and child-line placements (Working Draft) |
-| `integration/MARKDOWN-SECTIONS-01.md` | Working Draft for MVP 0.2, not in any baseline: Markdown bindings of shared sections; listed because every file under `integration/` is |
-| `integration/SDK-SECTIONS-INTEGRATION-01.md` | Working Draft for MVP 0.2, not in any baseline: SDK receipt, status and parser integration contracts for shared sections; listed because every file under `integration/` is |
+| `integration/MARKDOWN-SECTIONS-01.md` | Working Draft for MVP 0.2, in `mvp-0.2-baseline.1` (MVP-0.2-BASELINE.md), not in this baseline: Markdown bindings of shared sections; listed because every file under `integration/` is |
+| `integration/SDK-SECTIONS-INTEGRATION-01.md` | Working Draft for MVP 0.2, in `mvp-0.2-baseline.1` (MVP-0.2-BASELINE.md), not in this baseline: SDK receipt, status and parser integration contracts for shared sections; listed because every file under `integration/` is |
 
 ### Test vectors
 
@@ -75,7 +75,7 @@ directory).
 | `test-vectors/shared-objects-01/generate_shared_objects_test_vectors_01.py` | Generator; reproduces both Shared Objects vector files byte for byte |
 | `test-vectors/shared-objects-01/SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json` | Automerge reference corpus for S01–S16: exact changes, save images, logical states and conflict sets, plus `validations` (save images with the expected profile problems) `expansion` (chunks at and past the §11.1 and §13.1 limits), `depth` (change sequences and Snapshots at and past the §11.2 depth bound) and `collision` (a change held for a taken actor sequence until a rebuild, §14.1) (supplementary; bytes not normative) |
 | `test-vectors/shared-objects-01/generate_automerge_reference_01.mjs` | Corpus generator; with the pinned `@automerge/automerge` 3.5.0 it reproduces the corpus byte for byte |
-| `test-vectors/shared-sections-01/` | Working Draft corpus for MVP 0.2, not in any baseline: SHARED-SECTIONS-TEST-VECTORS-01, its generator, verifier and schema (LFCP-02-008); listed because every file under `test-vectors/` is |
+| `test-vectors/shared-sections-01/` | Working Draft corpus for MVP 0.2, in `mvp-0.2-baseline.1` (MVP-0.2-BASELINE.md), not in this baseline: SHARED-SECTIONS-TEST-VECTORS-01, its generator, verifier and schema (LFCP-02-008); listed because every file under `test-vectors/` is |
 
 ### Wire CDDL
 
@@ -110,7 +110,7 @@ directory).
 | `adr/0006-mvp-0.1-protocol-decisions-6.md` | Sixth batch (SPEC-PATCH-07): Automerge expansion limits, value nesting, the client receive limit; orchestrator decisions approved by the project owner on 2026-10-06 |
 | `adr/0007-mvp-0.1-protocol-decisions-7.md` | Seventh batch (SPEC-PATCH-08): the document depth bound; an orchestrator decision approved by the project owner on 2026-10-06 |
 | `adr/0008-recovery-after-server-data-loss.md` | SPEC-PATCH-09: recovery after server data loss (POST-013), accepted by the project owner on 2026-10-08, and POST-001 (hold and retry of a taken actor sequence), decided by the project owner on 2026-10-06 |
-| `adr/0009-shared-sections-profile.md` | Accepted for MVP 0.2, not applied in this baseline: the shared sections profile `org.openlfcp.shared-sections.v1` (LFCP-02-083); listed because every file under `adr/` is |
+| `adr/0009-shared-sections-profile.md` | Accepted for MVP 0.2, applied in `mvp-0.2-baseline.1`, not in this baseline: the shared sections profile `org.openlfcp.shared-sections.v1` (LFCP-02-083); listed because every file under `adr/` is |
 
 ## Project documents in `openlfcp/.github`
 

@@ -1,0 +1,141 @@
+# MVP-0.2-BASELINE
+
+**OpenLFCP MVP 0.2 implementation baseline — NOT Stable LFCP-WIRE-01, NOT
+full WIRE-01 conformance, documents remain Working Drafts.**
+
+This file answers one question: *what exactly do I implement against for
+MVP 0.2?* The answer is every file listed below, at the Git tag
+`mvp-0.2-baseline.1` of this repository.
+
+| Tag | Status |
+| --- | --- |
+| mvp-0.2-baseline.1 | **Current.** The MVP 0.1 baseline `mvp-0.1-baseline.9` unchanged, plus shared sections: the profile `org.openlfcp.shared-sections.v1` (SHARED-SECTIONS-PROFILE-01, ADR 0009), its Markdown bindings (MARKDOWN-SECTIONS-01), the SDK integration contracts (SDK-SECTIONS-INTEGRATION-01), the corpus and the Markdown fixtures. No published value of MVP 0.1 changes (`migrations/mvp-0.2-baseline.1/value-changes.json` lists no change); the two shared sections suites are new. |
+
+- The listed specifications are Working Drafts. They keep their identifiers;
+  nothing is renamed or declared Stable.
+- Every file of `mvp-0.1-baseline.9` is part of this baseline, byte for
+  byte: a Resource of the profile `org.openlfcp.shared-objects.v1` behaves
+  exactly as in MVP 0.1. MVP-0.1-BASELINE.md keeps describing the MVP 0.1
+  tags.
+- Software built on this baseline may say "Implements the OpenLFCP MVP 0.2
+  subset of LFCP-WIRE-01". It must not claim full LFCP-WIRE-01 conformance
+  (`.github: docs/MVP-0.1-PROTOCOL-SCOPE.md` §5; MVP 0.2 adds no Wire
+  feature).
+- The decisions applied are those of MVP 0.1 (ADR 0001 to ADR 0008) and
+  [ADR 0009](adr/0009-shared-sections-profile.md).
+
+## Pinning
+
+Implementations pin the current tag, `mvp-0.2-baseline.1`, of
+`openlfcp/spec`, never a branch, in their `spec.lock`. A development pin of
+the shared sections files before this tag (`spec-sections.lock`) is retired
+when an implementation moves to the tag.
+
+A later approved Working Draft correction does not move the tag. It
+produces a new tag, such as `mvp-0.2-baseline.2`, with an updated copy of
+this file and a `migrations/mvp-0.2-baseline.N/` entry. Implementations
+move to it deliberately.
+
+## Canonical files
+
+`./scripts/validate.sh` checks that every file listed here exists, and that
+every file under `wire/`, `profiles/`, `integration/`, `test-vectors/`,
+`schemas/` and `adr/` is listed (a path ending in `/` covers its whole
+directory).
+
+### Normative prose
+
+| File | Role |
+| --- | --- |
+| `wire/LFCP-WIRE-01.md` | LFCP Wire protocol (Working Draft) |
+| `profiles/SHARED-OBJECTS-PROFILE-01.md` | Shared Objects application profile `org.openlfcp.shared-objects.v1` (Working Draft) |
+| `profiles/SHARED-SECTIONS-PROFILE-01.md` | Shared sections application profile `org.openlfcp.shared-sections.v1` (Working Draft 0.3, ADR 0009) |
+| `integration/MARKDOWN-REFS-01.md` | Markdown projection reference grammar: inline and child-line placements (Working Draft) |
+| `integration/MARKDOWN-SECTIONS-01.md` | Markdown bindings of shared sections (Working Draft) |
+| `integration/SDK-SECTIONS-INTEGRATION-01.md` | SDK receipt, status and parser integration contracts for shared sections, `sections-integration/1` (Working Draft) |
+
+### Test vectors
+
+| File | Role |
+| --- | --- |
+| `test-vectors/lfcp-wire-01/LFCP-TEST-VECTORS-01.json` | Wire vectors, machine-readable (`lfcp-vector-format/1`): byte-exact positives and negatives |
+| `test-vectors/lfcp-wire-01/LFCP-TEST-VECTORS-01.md` | Wire vectors, human-readable, with derivations |
+| `test-vectors/lfcp-wire-01/generate_lfcp_test_vectors_01.py` | Generator; reproduces both Wire vector files byte for byte |
+| `test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.json` | Shared Objects vectors, machine-readable: deterministic, validation and behavioral cases |
+| `test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.md` | Shared Objects vectors, human-readable |
+| `test-vectors/shared-objects-01/generate_shared_objects_test_vectors_01.py` | Generator; reproduces both Shared Objects vector files byte for byte |
+| `test-vectors/shared-objects-01/SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json` | Automerge reference corpus for S01–S16: exact changes, save images, logical states and conflict sets, plus `validations` (save images with the expected profile problems) `expansion` (chunks at and past the §11.1 and §13.1 limits), `depth` (change sequences and Snapshots at and past the §11.2 depth bound) and `collision` (a change held for a taken actor sequence until a rebuild, §14.1) (supplementary; bytes not normative) |
+| `test-vectors/shared-objects-01/generate_automerge_reference_01.mjs` | Corpus generator; with the pinned `@automerge/automerge` 3.5.0 it reproduces the corpus byte for byte |
+| `test-vectors/shared-sections-01/SHARED-SECTIONS-TEST-VECTORS-01.json` | Shared sections corpus, machine-readable: 56 cases of Automerge changes, admission, isolation, budgets and the Snapshot floor |
+| `test-vectors/shared-sections-01/SHARED-SECTIONS-TEST-VECTORS-01.md` | Shared sections corpus, human-readable |
+| `test-vectors/shared-sections-01/MARKDOWN-SECTIONS-FIXTURES-01.json` | Markdown fixtures of MARKDOWN-SECTIONS-01, machine-readable: before, event and after files |
+| `test-vectors/shared-sections-01/MARKDOWN-SECTIONS-FIXTURES-01.md` | Markdown fixtures, human-readable |
+| `test-vectors/shared-sections-01/markdown-files/` | The fixtures' files, extracted byte for byte |
+| `test-vectors/shared-sections-01/generator/` | Corpus and fixture generators and reference verifiers; with the pinned `@automerge/automerge` 3.5.0 they reproduce both suites byte for byte |
+| `test-vectors/shared-sections-01/schemas/` | JSON Schemas of the two suites |
+
+### Wire CDDL
+
+| File | Role |
+| --- | --- |
+| `wire/LFCP-WIRE-01.cddl` | CDDL extracted from the body of `LFCP-WIRE-01.md` (generated) |
+| `wire/LFCP-WIRE-01.summary.cddl` | CDDL of the Part XXVIII summary (generated; checked against the body) |
+| `wire/LFCP-WIRE-01.supplement.cddl` | Typed signed-object, Control Record and message rules |
+| `wire/README.md` | What the CDDL proves and what it leaves to validators |
+| `wire/fixtures/` | CDDL fixture manifest and must-fail structural fixtures |
+
+### Schemas
+
+| File | Role |
+| --- | --- |
+| `schemas/lfcp-vector-format-1.schema.json` | JSON Schema of the vector format both suites use |
+| `schemas/README.md` | Vector format description, validator rules, conflict convention |
+| `schemas/fixtures/` | Format examples and validator self-tests (not normative vectors) |
+| `profiles/shared-objects-01/schema/shared-objects-state.schema.json` | Structural contract for Shared Objects logical state |
+| `profiles/shared-objects-01/schema/README.md` | Contract coverage and enforcement table |
+| `profiles/shared-objects-01/schema/fixtures/` | Valid and invalid state fixtures (not normative vectors) |
+
+### Decisions
+
+| File | Role |
+| --- | --- |
+| `adr/0001-mvp-0.1-protocol-decisions.md` | Project-owner decisions of 2026-10-05 applied to the Working Drafts |
+| `adr/0002-mvp-0.1-protocol-decisions-2.md` | Second batch of project-owner decisions of 2026-10-05 (SPEC-PATCH-03) |
+| `adr/0003-mvp-0.1-protocol-decisions-3.md` | Third batch of project-owner decisions of 2026-10-05 (SPEC-PATCH-04) |
+| `adr/0004-mvp-0.1-protocol-decisions-4.md` | Fourth batch (SPEC-PATCH-05): G-DP1-GAP approved by the project owner; the other items are orchestrator decisions approved by the project owner on 2026-10-06 |
+| `adr/0005-mvp-0.1-protocol-decisions-5.md` | Fifth batch (SPEC-PATCH-06): orchestrator decisions approved by the project owner on 2026-10-06 |
+| `adr/0006-mvp-0.1-protocol-decisions-6.md` | Sixth batch (SPEC-PATCH-07): Automerge expansion limits, value nesting, the client receive limit; orchestrator decisions approved by the project owner on 2026-10-06 |
+| `adr/0007-mvp-0.1-protocol-decisions-7.md` | Seventh batch (SPEC-PATCH-08): the document depth bound; an orchestrator decision approved by the project owner on 2026-10-06 |
+| `adr/0008-recovery-after-server-data-loss.md` | SPEC-PATCH-09: recovery after server data loss (POST-013), accepted by the project owner on 2026-10-08, and POST-001 (hold and retry of a taken actor sequence), decided by the project owner on 2026-10-06 |
+| `adr/0009-shared-sections-profile.md` | The shared sections profile: decisions P1, P2, P3 and P5 approved by the project owner, applied in this baseline |
+
+## Validation
+
+From a clean checkout with full history and tags:
+
+```sh
+pnpm install --frozen-lockfile
+bundle install
+./scripts/validate.sh
+```
+
+The checks are those of MVP-0.1-BASELINE.md, plus:
+
+- vector values against the previous baseline tag, from the newest
+  `migrations/mvp-0.M-baseline.N/value-changes.json`: for this baseline,
+  against `mvp-0.1-baseline.9`;
+- the shared sections corpus and the Markdown fixtures: schema-valid,
+  regenerated byte for byte with the pinned `@automerge/automerge` and
+  replayed by the reference verifiers (`scripts/check-shared-sections-corpus.mjs`);
+- this manifest's file list, as for MVP-0.1-BASELINE.md.
+
+## Changes from `mvp-0.1-baseline.9`
+
+| Kind | Files |
+| --- | --- |
+| Added, normative | `profiles/SHARED-SECTIONS-PROFILE-01.md`, `integration/MARKDOWN-SECTIONS-01.md`, `integration/SDK-SECTIONS-INTEGRATION-01.md` |
+| Added, vectors | `test-vectors/shared-sections-01/` |
+| Added, decision | `adr/0009-shared-sections-profile.md` |
+| Added, migration | `migrations/mvp-0.2-baseline.1/` |
+| Changed, tooling | `scripts/check-shared-sections-corpus.mjs` (new), `scripts/validate-vectors.mjs` (skips the sections suites, which have their own format), `scripts/check-baseline.mjs` and `scripts/check-baseline-changes.mjs` (two baseline series), `package.json` |
+| Changed, MVP 0.1 files | None |
