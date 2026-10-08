@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Markdown Sections golden fixture container v1",
+  "type": "object",
+  "required": [
+    "suite",
+    "schema_version",
+    "profile",
+    "fixtures"
+  ],
+  "properties": {
+    "suite": {
+      "const": "MARKDOWN-SECTIONS-FIXTURES-01"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "profile": {
+      "const": "org.openlfcp.shared-sections.v1"
+    },
+    "fixtures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "execution",
+          "projection_base",
+          "before_files",
+          "event",
+          "expected",
+          "files_sha256"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^MS[0-9]{2}(-[a-z]+)?$"
+          },
+          "projection_base": {
+            "enum": [
+              "trusted",
+              "unknown"
+            ]
+          },
+          "before_files": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "event": {
+            "type": "object",
+            "required": [
+              "kind",
+              "observed_files"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string"
+              },
+              "observed_files": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "required": [
+              "after_files",
+              "diagnostics",
+              "publication",
+              "intents"
+            ],
+            "properties": {
+              "after_files": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "diagnostics": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "publication": {
+                "enum": [
+                  "none",
+                  "semantic",
+                  "suspended"
+                ]
+              },
+              "intents": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "type"
+                  ]
+                }
+              }
+            }
+          },
+          "files_sha256": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}

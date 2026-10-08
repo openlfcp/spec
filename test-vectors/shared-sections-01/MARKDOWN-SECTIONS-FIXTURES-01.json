@@ -1,0 +1,1792 @@
+{
+  "suite": "MARKDOWN-SECTIONS-FIXTURES-01",
+  "schema_version": 1,
+  "date": "2026-10-08",
+  "profile": "org.openlfcp.shared-sections.v1",
+  "status": "golden expectations for MARKDOWN-SECTIONS-01 (Working Draft); reference lexical/smoke checks only",
+  "identifiers": {
+    "resource": "LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo",
+    "section": "268a166f-4891-7243-840e-e7fea9fe6390",
+    "ids": {
+      "section": "268a166f-4891-7243-840e-e7fea9fe6390",
+      "task": "2372cd94-58dc-7fd0-bbc6-6e17c0aebc80",
+      "para": "84cf3237-3432-7041-881f-c34897689278",
+      "x": "be46412d-1708-757e-ad18-e21fa7c61c68",
+      "y": "3765a941-ec92-76c9-afac-99d0c5364c2e",
+      "a": "c6745fdc-687f-730e-8777-31248bb8e709",
+      "b": "c3a304ad-42eb-7276-bbff-9add5f86863e",
+      "extra": "e9a163ea-76d2-7b98-ad10-1a0e7fbb278a"
+    }
+  },
+  "fixtures": [
+    {
+      "id": "MS01",
+      "title": "Complete section with Task, paragraph and child item",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "scan",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [],
+        "publication": "none",
+        "intents": [],
+        "lexical": {
+          "sections": 1,
+          "task_refs": 1,
+          "node_refs": 2
+        },
+        "private_canaries": [
+          "PRIVATE_BEFORE_8f3a: budget and personal thoughts.",
+          "PRIVATE_AFTER_71c2: do not transmit."
+        ]
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "after": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        }
+      }
+    },
+    {
+      "id": "MS02",
+      "title": "Remote completion preserves both ref placements",
+      "execution": "golden-operation-smoke",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "remote_complete",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "task_id": "2372cd94-58dc-7fd0-bbc6-6e17c0aebc80"
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [x] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [x] Prepare contract <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [],
+        "publication": "none",
+        "intents": [],
+        "lexical": {
+          "sections": 2,
+          "task_refs": 2,
+          "node_refs": 0
+        },
+        "private_canaries": [
+          "PRIVATE_BEFORE_8f3a: budget and personal thoughts.",
+          "PRIVATE_AFTER_71c2: do not transmit."
+        ]
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "3388220c3cd1910eb753881e1f8f9001bc38b7e21fe787605a29fe7c87512a40"
+        },
+        "observed": {
+          "note.md": "3388220c3cd1910eb753881e1f8f9001bc38b7e21fe787605a29fe7c87512a40"
+        },
+        "after": {
+          "note.md": "056b560f165c869ff465ee6b1e0376a8e7beab28fe6186a8916e62afb1248a6f"
+        }
+      }
+    },
+    {
+      "id": "MS03",
+      "title": "New unbound Task inside section gets an identity",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "local_insert",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n- [ ] New task\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "allocated_ids": [
+          "e9a163ea-76d2-7b98-ad10-1a0e7fbb278a"
+        ]
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n- [ ] New task\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:e9a163ea-76d2-7b98-ad10-1a0e7fbb278a -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [],
+        "publication": "semantic",
+        "intents": [
+          {
+            "type": "task.create_in_section",
+            "id": "e9a163ea-76d2-7b98-ad10-1a0e7fbb278a",
+            "parent_id": "268a166f-4891-7243-840e-e7fea9fe6390",
+            "title": "New task"
+          }
+        ],
+        "lexical": {
+          "sections": 1,
+          "task_refs": 2,
+          "node_refs": 2
+        }
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "25355fdd3df2c5c38b710bc3d4af6d2f6f90daee44a40f55fb33722790cb5cf9"
+        },
+        "after": {
+          "note.md": "0f599d0eabf8664a0d86b6a6029932b438345d0a2c7d4c61be6770343c37defe"
+        }
+      }
+    },
+    {
+      "id": "MS04",
+      "title": "Unbound Task outside section stays local",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "local_insert",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n\n- [ ] New private task\n"
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n\n- [ ] New private task\n"
+        },
+        "diagnostics": [],
+        "publication": "none",
+        "intents": [],
+        "lexical": {
+          "sections": 1,
+          "task_refs": 1,
+          "node_refs": 2
+        }
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "abbf51eb793b3734184cf1d916643c3eee43b9cc0a6ed1371fa1bba2aab8e028"
+        },
+        "after": {
+          "note.md": "abbf51eb793b3734184cf1d916643c3eee43b9cc0a6ed1371fa1bba2aab8e028"
+        }
+      }
+    },
+    {
+      "id": "MS05",
+      "title": "Missing end marker never captures following private content",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "source_edit",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [
+          "SECTION_BOUNDARY_MISSING"
+        ],
+        "publication": "suspended",
+        "intents": [],
+        "lexical": {
+          "sections": 0
+        },
+        "private_canaries": [
+          "PRIVATE_BEFORE_8f3a: budget and personal thoughts.",
+          "PRIVATE_AFTER_71c2: do not transmit."
+        ]
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "96921844375245a9a1dcec6ecb3dffc159507f8d9ce90c2bf1c848463395fd3d"
+        },
+        "after": {
+          "note.md": "96921844375245a9a1dcec6ecb3dffc159507f8d9ce90c2bf1c848463395fd3d"
+        }
+      }
+    },
+    {
+      "id": "MS06",
+      "title": "Fenced example is not a live section",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "Example only:\n\n```markdown\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n```\n"
+      },
+      "event": {
+        "kind": "scan",
+        "observed_files": {
+          "note.md": "Example only:\n\n```markdown\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n```\n"
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "Example only:\n\n```markdown\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n```\n"
+        },
+        "diagnostics": [],
+        "publication": "none",
+        "intents": [],
+        "lexical": {
+          "sections": 0,
+          "task_refs": 0,
+          "node_refs": 0
+        }
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "19cdd6ce7af1d09b7ac24007073851427bb57629601f51343a2c627296c63665"
+        },
+        "observed": {
+          "note.md": "19cdd6ce7af1d09b7ac24007073851427bb57629601f51343a2c627296c63665"
+        },
+        "after": {
+          "note.md": "19cdd6ce7af1d09b7ac24007073851427bb57629601f51343a2c627296c63665"
+        }
+      }
+    },
+    {
+      "id": "MS07",
+      "title": "Copy complete section creates another projection",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "source.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "copy_complete_section",
+        "observed_files": {
+          "source.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n",
+          "destination.md": "Private destination\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n"
+        }
+      },
+      "expected": {
+        "after_files": {
+          "source.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n",
+          "destination.md": "Private destination\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n"
+        },
+        "diagnostics": [],
+        "publication": "none",
+        "intents": [],
+        "lexical": {
+          "sections": 2,
+          "task_refs": 2,
+          "node_refs": 4
+        },
+        "same_shared_identity": true
+      },
+      "files_sha256": {
+        "before": {
+          "source.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "source.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb",
+          "destination.md": "14a4c332d5ac69077ad9ddba66281ca041472fdb10ab74b4551e6d875997e31c"
+        },
+        "after": {
+          "source.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb",
+          "destination.md": "14a4c332d5ac69077ad9ddba66281ca041472fdb10ab74b4551e6d875997e31c"
+        }
+      }
+    },
+    {
+      "id": "MS08",
+      "title": "Duplicate Task ID inside one projection blocks publication",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "source_edit",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [
+          "NODE_BINDING_DUPLICATE"
+        ],
+        "publication": "suspended",
+        "intents": [],
+        "lexical": {
+          "sections": 1,
+          "task_refs": 2,
+          "node_refs": 2
+        }
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "55ef83a129f35a32f4ce3f96656767bbf4aaff540f651e7b46a793e18f206a6d"
+        },
+        "after": {
+          "note.md": "55ef83a129f35a32f4ce3f96656767bbf4aaff540f651e7b46a793e18f206a6d"
+        }
+      }
+    },
+    {
+      "id": "MS09",
+      "title": "Heading title/level change preserves section identity",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "source_edit",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n### Launch revised\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n### Launch revised\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [],
+        "publication": "semantic",
+        "intents": [
+          {
+            "type": "section.set_title",
+            "id": "268a166f-4891-7243-840e-e7fea9fe6390",
+            "title": "Launch revised"
+          }
+        ],
+        "lexical": {
+          "sections": 1
+        },
+        "same_shared_identity": true
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "bab13b9694d2d924b6bd99e8f20c6fad56e22427d3e63e7ac24c92c67269d42a"
+        },
+        "after": {
+          "note.md": "bab13b9694d2d924b6bd99e8f20c6fad56e22427d3e63e7ac24c92c67269d42a"
+        }
+      }
+    },
+    {
+      "id": "MS10-delete",
+      "title": "Delete child paragraph is a shared lifecycle intent",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "source_edit",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [],
+        "publication": "semantic",
+        "intents": [
+          {
+            "type": "node.delete",
+            "id": "84cf3237-3432-7041-881f-c34897689278"
+          }
+        ],
+        "lexical": {
+          "sections": 1,
+          "task_refs": 1,
+          "node_refs": 1
+        }
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "fff4ed77c09911a7a4a99e42d54ec77126e989d39da4b35472bdfcb45daaff93"
+        },
+        "after": {
+          "note.md": "fff4ed77c09911a7a4a99e42d54ec77126e989d39da4b35472bdfcb45daaff93"
+        }
+      }
+    },
+    {
+      "id": "MS10-detach",
+      "title": "Detach keeps readable text without shared deletion",
+      "execution": "golden-operation-smoke",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "detach_section",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n- [ ] Prepare contract\n  Draft contract\n\n  - Check details\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [],
+        "publication": "none",
+        "intents": [],
+        "lexical": {
+          "sections": 0,
+          "task_refs": 0,
+          "node_refs": 0
+        },
+        "private_canaries": [
+          "PRIVATE_BEFORE_8f3a: budget and personal thoughts.",
+          "PRIVATE_AFTER_71c2: do not transmit."
+        ]
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "after": {
+          "note.md": "2cd70774a2dedbaf80ab5e78a8e0fa538af88275b1e12bd2dcb5c88adfa4946b"
+        }
+      }
+    },
+    {
+      "id": "MS11",
+      "title": "Index rebuild does not infer edits without a causal base",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "unknown",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "rebuild_index",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Unbased local edit\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Unbased local edit\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [
+          "PROJECTION_BASE_UNKNOWN"
+        ],
+        "publication": "suspended",
+        "intents": [],
+        "lexical": {
+          "sections": 1
+        }
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "3dc2c22db02efe9fcb1d6deb9e0d7833f5d9f39f33ac9e41f265834279c47f81"
+        },
+        "after": {
+          "note.md": "3dc2c22db02efe9fcb1d6deb9e0d7833f5d9f39f33ac9e41f265834279c47f81"
+        }
+      }
+    },
+    {
+      "id": "MS12",
+      "title": "CRLF and Unicode survive a remote completion",
+      "execution": "golden-operation-smoke",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\r\n\r\n## Joint launch\r\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\r\n- [ ] Договор 😀\r\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\r\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\r\n  Draft contract\r\n\r\n  - Check details\r\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\r\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\r\n\r\nPRIVATE_AFTER_71c2: do not transmit.\r\n"
+      },
+      "event": {
+        "kind": "remote_complete",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\r\n\r\n## Joint launch\r\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\r\n- [ ] Договор 😀\r\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\r\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\r\n  Draft contract\r\n\r\n  - Check details\r\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\r\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\r\n\r\nPRIVATE_AFTER_71c2: do not transmit.\r\n"
+        },
+        "task_id": "2372cd94-58dc-7fd0-bbc6-6e17c0aebc80"
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\r\n\r\n## Joint launch\r\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\r\n- [x] Договор 😀\r\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\r\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\r\n  Draft contract\r\n\r\n  - Check details\r\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\r\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\r\n\r\nPRIVATE_AFTER_71c2: do not transmit.\r\n"
+        },
+        "diagnostics": [],
+        "publication": "none",
+        "intents": [],
+        "lexical": {
+          "sections": 1
+        },
+        "line_endings": "CRLF",
+        "private_canaries": [
+          "PRIVATE_BEFORE_8f3a: budget and personal thoughts.",
+          "PRIVATE_AFTER_71c2: do not transmit."
+        ]
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "48ed754f52fd95a5d00ea3300610a6e341b9bd2fb4055198fc36ff65be2296cd"
+        },
+        "observed": {
+          "note.md": "48ed754f52fd95a5d00ea3300610a6e341b9bd2fb4055198fc36ff65be2296cd"
+        },
+        "after": {
+          "note.md": "ecfb7db86fc61cd86a6e6cbcba7e597b081028c6c717df851f9c8b2989c0a2d8"
+        }
+      }
+    },
+    {
+      "id": "MS13",
+      "title": "Ordered Task and nested ordinary item indentation",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n1. [ ] Contract\n   <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n   <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n   Details.\n\n   1. Check details\n      <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "scan",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n1. [ ] Contract\n   <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n   <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n   Details.\n\n   1. Check details\n      <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "requires_ast_assertions": {
+          "task_content_indent": 3,
+          "item_content_indent": 6
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n1. [ ] Contract\n   <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n   <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n   Details.\n\n   1. Check details\n      <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [],
+        "publication": "none",
+        "intents": [],
+        "lexical": {
+          "sections": 1,
+          "task_refs": 1,
+          "node_refs": 2
+        }
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "7b9fd70885a73dd68ba451050523ad61fad14ba90fb713234b00e0143dae0da7"
+        },
+        "observed": {
+          "note.md": "7b9fd70885a73dd68ba451050523ad61fad14ba90fb713234b00e0143dae0da7"
+        },
+        "after": {
+          "note.md": "7b9fd70885a73dd68ba451050523ad61fad14ba90fb713234b00e0143dae0da7"
+        }
+      }
+    },
+    {
+      "id": "MS14",
+      "title": "Remote structural conflict retains last safe source",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "remote_structure_conflict",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "model_diagnostics": [
+          "PARENT_CYCLE"
+        ]
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [
+          "PARENT_CYCLE"
+        ],
+        "publication": "suspended",
+        "intents": [],
+        "lexical": {
+          "sections": 1
+        },
+        "source_rewrite_allowed": false
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "after": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        }
+      }
+    },
+    {
+      "id": "MS15",
+      "title": "Rendered clipboard excludes UI decorations",
+      "execution": "editor-integration-contract",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "copy_rendered",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "selection": "task-title-only",
+        "rendered_decorations": [
+          "double-check SVG",
+          "sync tooltip",
+          "participant popover"
+        ]
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [],
+        "publication": "none",
+        "intents": [],
+        "lexical": {
+          "sections": 1
+        },
+        "clipboard": {
+          "plain_text": "Prepare contract",
+          "forbidden_fragments": [
+            "<svg",
+            "data-lfcp-ui",
+            "Changes accepted by server",
+            "Shared with"
+          ],
+          "rich_text_must_exclude_decorations": true
+        }
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "after": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        }
+      }
+    },
+    {
+      "id": "MS16",
+      "title": "A fence typed inside the region becomes a raw node",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "rationale": "Decision M6 (MARKDOWN-SECTIONS-01 §4.4): unsupported blocks are carried as raw nodes instead of suspending the section. The planning fixture expected SECTION_UNSUPPORTED_SYNTAX and a suspension.",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "local_insert",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n```js\nconsole.log(\"shared\")\n```\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "allocated_ids": [
+          "e9a163ea-76d2-7b98-ad10-1a0e7fbb278a"
+        ]
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- lfcp-node: raw:e9a163ea-76d2-7b98-ad10-1a0e7fbb278a -->\n```js\nconsole.log(\"shared\")\n```\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [],
+        "publication": "semantic",
+        "intents": [
+          {
+            "type": "raw.create",
+            "id": "e9a163ea-76d2-7b98-ad10-1a0e7fbb278a",
+            "parent_id": "268a166f-4891-7243-840e-e7fea9fe6390",
+            "text": "```js\nconsole.log(\"shared\")\n```"
+          }
+        ],
+        "lexical": {
+          "sections": 1,
+          "task_refs": 1,
+          "node_refs": 3
+        },
+        "payload_contains": [
+          "console.log(\"shared\")"
+        ]
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "9d56a8fe2be06f54565257cc143a72d0b38375a94dc50141869f1ea9685dbab6"
+        },
+        "after": {
+          "note.md": "cbacd1bcebb96890d1b870cd28e4480c76fd523b84a21761ecb1fcfd3e4bb1b0"
+        }
+      }
+    },
+    {
+      "id": "MS17-empty",
+      "title": "Empty paragraph retains its binding",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n\n\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "scan",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n\n\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n\n\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [],
+        "publication": "none",
+        "intents": [],
+        "lexical": {
+          "sections": 1,
+          "task_refs": 1,
+          "node_refs": 1
+        }
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "9d85d33183941eec8900bdcbbad343a350041ad5337dfb22c236398c151c9c2a"
+        },
+        "observed": {
+          "note.md": "9d85d33183941eec8900bdcbbad343a350041ad5337dfb22c236398c151c9c2a"
+        },
+        "after": {
+          "note.md": "9d85d33183941eec8900bdcbbad343a350041ad5337dfb22c236398c151c9c2a"
+        }
+      }
+    },
+    {
+      "id": "MS17-transient",
+      "title": "Transient damaged Task syntax is not a new object",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "source_edit",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "prior_bound_task": "2372cd94-58dc-7fd0-bbc6-6e17c0aebc80"
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [
+          "NODE_BINDING_LOST"
+        ],
+        "publication": "suspended",
+        "intents": [],
+        "lexical": {
+          "sections": 1
+        }
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "843d6d981717ff3c938f59df2dea3777c85ec8de4849e667f61ca1a247757a70"
+        },
+        "after": {
+          "note.md": "843d6d981717ff3c938f59df2dea3777c85ec8de4849e667f61ca1a247757a70"
+        }
+      }
+    },
+    {
+      "id": "MS17-undo",
+      "title": "Undo completion makes a compensating semantic edit",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [x] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "undo_completion",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "earlier_change_already_acknowledged": true
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [],
+        "publication": "semantic",
+        "intents": [
+          {
+            "type": "task.reopen",
+            "id": "2372cd94-58dc-7fd0-bbc6-6e17c0aebc80"
+          }
+        ],
+        "lexical": {
+          "sections": 1
+        },
+        "retract_history": false
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "28ba95dded5cb1f95126a0a4bdab8cea7db9b4093818d91ce194b239e57df597"
+        },
+        "observed": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "after": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        }
+      }
+    },
+    {
+      "id": "MS18",
+      "title": "Ambiguous external cut and paste preserves content for repair",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "source.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n",
+        "destination.md": "Private destination\n"
+      },
+      "event": {
+        "kind": "external_cut_paste",
+        "observed_files": {
+          "source.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n",
+          "destination.md": "Private destination\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n"
+        },
+        "transaction_mapping_available": false
+      },
+      "expected": {
+        "after_files": {
+          "source.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n",
+          "destination.md": "Private destination\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n"
+        },
+        "diagnostics": [
+          "NODE_BINDING_LOST"
+        ],
+        "publication": "suspended",
+        "intents": [],
+        "lexical": {
+          "sections": 1
+        },
+        "physical_shared_deletion": false
+      },
+      "files_sha256": {
+        "before": {
+          "source.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb",
+          "destination.md": "c7d9a7b1f420b5e30f635f42185379ac856870c1a7c26d763fc42c8a9e42a6a5"
+        },
+        "observed": {
+          "source.md": "dcc240c4acef01ea7abb1df9245f83e9021c1ccde13a24299d019fa93f66fddb",
+          "destination.md": "640f655e85abb3f7c1fbbe3f7020e02a051ec332a2f19fc2061d3295bc2f3a71"
+        },
+        "after": {
+          "source.md": "dcc240c4acef01ea7abb1df9245f83e9021c1ccde13a24299d019fa93f66fddb",
+          "destination.md": "640f655e85abb3f7c1fbbe3f7020e02a051ec332a2f19fc2061d3295bc2f3a71"
+        }
+      }
+    },
+    {
+      "id": "MS19",
+      "title": "Mismatched end reference blocks extraction",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "source_edit",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:a5350944-3266-708f-a103-6054599d9b7c -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:a5350944-3266-708f-a103-6054599d9b7c -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [
+          "SECTION_BOUNDARY_MISMATCH"
+        ],
+        "publication": "suspended",
+        "intents": [],
+        "lexical": {
+          "sections": 0
+        }
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "083f7514152f374daefda1d99c393a66813789389e79606694007edde3429e9f"
+        },
+        "after": {
+          "note.md": "083f7514152f374daefda1d99c393a66813789389e79606694007edde3429e9f"
+        }
+      }
+    },
+    {
+      "id": "MS20",
+      "title": "Foreign Resource Task ref is not silently adopted",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "source_edit",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [
+          "FOREIGN_RESOURCE_REF"
+        ],
+        "publication": "suspended",
+        "intents": [],
+        "lexical": {
+          "sections": 1,
+          "task_refs": 1,
+          "node_refs": 2
+        }
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "8bb25eae9cfd7874d1924b6376256063797072dc273548a34aad296b88fb0908"
+        },
+        "after": {
+          "note.md": "8bb25eae9cfd7874d1924b6376256063797072dc273548a34aad296b88fb0908"
+        }
+      }
+    },
+    {
+      "id": "MS21",
+      "title": "Removing only a Task ref does not make a private exception",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "source_edit",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "prior_bound_task": "2372cd94-58dc-7fd0-bbc6-6e17c0aebc80"
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [
+          "NODE_BINDING_LOST"
+        ],
+        "publication": "suspended",
+        "intents": [],
+        "lexical": {
+          "sections": 1,
+          "task_refs": 0,
+          "node_refs": 2
+        }
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "ce33baab7ebfb4e0eb24a4c565562123cc6ac2abb1b05ebcb6ebe967783870dc"
+        },
+        "after": {
+          "note.md": "ce33baab7ebfb4e0eb24a4c565562123cc6ac2abb1b05ebcb6ebe967783870dc"
+        }
+      }
+    },
+    {
+      "id": "MS22",
+      "title": "Nested section boundaries suspend both ranges",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "source_edit",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [
+          "SECTION_BOUNDARY_OVERLAP"
+        ],
+        "publication": "suspended",
+        "intents": [],
+        "lexical": {
+          "sections": 0
+        }
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "1c6ef172bea291c3836f2cce2ae04703ed67314e7583ac1fefb24d176da2521c"
+        },
+        "after": {
+          "note.md": "1c6ef172bea291c3836f2cce2ae04703ed67314e7583ac1fefb24d176da2521c"
+        }
+      }
+    },
+    {
+      "id": "MS23",
+      "title": "Heading cannot be inferred when missing",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "source_edit",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\nJoint launch without heading\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\nJoint launch without heading\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [
+          "SECTION_HEADING_INVALID"
+        ],
+        "publication": "suspended",
+        "intents": [],
+        "lexical": {
+          "sections": 1
+        }
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "e3b7bb95cf58db369ab8636f9132efa8a2fa166fe1e0e3304f8551ca355eab94"
+        },
+        "after": {
+          "note.md": "e3b7bb95cf58db369ab8636f9132efa8a2fa166fe1e0e3304f8551ca355eab94"
+        }
+      }
+    },
+    {
+      "id": "MS24",
+      "title": "Payload extraction excludes surrounding private text",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "inspect_owned_payload",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [],
+        "publication": "none",
+        "intents": [],
+        "lexical": {
+          "sections": 1
+        },
+        "private_canaries": [
+          "PRIVATE_BEFORE_8f3a: budget and personal thoughts.",
+          "PRIVATE_AFTER_71c2: do not transmit."
+        ],
+        "payload_contains": [
+          "Prepare contract",
+          "Draft contract",
+          "Check details"
+        ],
+        "payload_excludes": [
+          "PRIVATE_BEFORE_8f3a: budget and personal thoughts.",
+          "PRIVATE_AFTER_71c2: do not transmit."
+        ]
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "after": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        }
+      }
+    },
+    {
+      "id": "MS25",
+      "title": "Readable-copy action strips metadata only in output",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "copy_readable_section",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "selection": "whole-section"
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [],
+        "publication": "none",
+        "intents": [],
+        "lexical": {
+          "sections": 1
+        },
+        "clipboard": {
+          "plain_text": "## Joint launch\n- [ ] Prepare contract\n  Draft contract\n\n  - Check details\n",
+          "source_unchanged": true
+        }
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "after": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        }
+      }
+    },
+    {
+      "id": "MS26",
+      "title": "Deleting a local file does not delete the collaboration",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "delete_host_file",
+        "observed_files": {}
+      },
+      "expected": {
+        "after_files": {},
+        "diagnostics": [],
+        "publication": "none",
+        "intents": [],
+        "lexical": {
+          "sections": 0
+        },
+        "physical_shared_deletion": false
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {},
+        "after": {}
+      }
+    },
+    {
+      "id": "MS27",
+      "title": "Enter after a Task with a child-line ref keeps the ref with its Task",
+      "execution": "editor-integration-contract",
+      "projection_base": "trusted",
+      "rationale": "Decision M1: child-line refs inside sections; the adapter keeps the binding with the Task in the editor transaction (ADR 0001 S1). An empty new Task is not published until it has a title.",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "editor_enter",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n- [ ] \n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "transaction": "insert \"\\n- [ ] \" at the end of the Task line",
+        "user_event": "input"
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n- [ ] \n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [],
+        "publication": "none",
+        "intents": [],
+        "lexical": {
+          "sections": 1,
+          "task_refs": 1,
+          "node_refs": 0
+        }
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "175bd9b50df650c143cd5d9844fd9b9ff78ba24094a2fb96787c34926d473718"
+        },
+        "observed": {
+          "note.md": "8ecf78299a22b936d2775da7057a528ae99915123582f51826ee5e129cd122bd"
+        },
+        "after": {
+          "note.md": "b2f4aa28756adc4c97605ca48a159a2a14ebcfc5fb8dc2cca7d249ba7a1c2b1f"
+        }
+      }
+    },
+    {
+      "id": "MS28",
+      "title": "Enter after a Task with a nested paragraph keeps the ref and the paragraph",
+      "execution": "editor-integration-contract",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "editor_enter",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n- [ ] \n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "transaction": "insert \"\\n- [ ] \" at the end of the Task line",
+        "user_event": "input"
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n- [ ] \n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [],
+        "publication": "none",
+        "intents": [],
+        "lexical": {
+          "sections": 1,
+          "task_refs": 1,
+          "node_refs": 1
+        }
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "dc2ad8899fe50319838c8a33dcbe80def938f2b5f87ababfe2f8e1de7d39eb7a"
+        },
+        "observed": {
+          "note.md": "24288a6228bd1d197ed29bcb58080d0774f4669dc1a341c0e7c70fbf43c0d207"
+        },
+        "after": {
+          "note.md": "a0a43e3b02e9a36f549ed5cdacdeabbaf729f56a9155c2146a81c3fd30cfbba9"
+        }
+      }
+    },
+    {
+      "id": "MS29",
+      "title": "Tasks completing a Task leaves its child-line ref untouched (H6)",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "external_plugin_edit",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [x] Prepare contract ✅ 2026-10-08\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "plugin": "obsidian-tasks-plugin 8.4.0",
+        "user_event": null
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [x] Prepare contract ✅ 2026-10-08\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [],
+        "publication": "semantic",
+        "intents": [
+          {
+            "type": "task.complete",
+            "id": "2372cd94-58dc-7fd0-bbc6-6e17c0aebc80",
+            "completion_date": "2026-10-08"
+          }
+        ],
+        "lexical": {
+          "sections": 1,
+          "task_refs": 1,
+          "node_refs": 2
+        }
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "f0538beee32acf6528bc4c75e242fd99a800a7a6cae6409e4f776c322b3fb787"
+        },
+        "after": {
+          "note.md": "f0538beee32acf6528bc4c75e242fd99a800a7a6cae6409e4f776c322b3fb787"
+        }
+      }
+    },
+    {
+      "id": "MS30",
+      "title": "Tasks completing a recurring Task: the next occurrence is new shared content (H6)",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Water plants 🔁 every week 📅 2026-10-08\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "external_plugin_edit",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Water plants 🔁 every week 📅 2026-10-15\n- [x] Water plants 🔁 every week 📅 2026-10-08 ✅ 2026-10-08\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "plugin": "obsidian-tasks-plugin 8.4.0",
+        "user_event": null,
+        "allocated_ids": [
+          "e9a163ea-76d2-7b98-ad10-1a0e7fbb278a"
+        ]
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Water plants 🔁 every week 📅 2026-10-15\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:e9a163ea-76d2-7b98-ad10-1a0e7fbb278a -->\n- [x] Water plants 🔁 every week 📅 2026-10-08 ✅ 2026-10-08\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [],
+        "publication": "semantic",
+        "intents": [
+          {
+            "type": "task.create_in_section",
+            "id": "e9a163ea-76d2-7b98-ad10-1a0e7fbb278a",
+            "parent_id": "268a166f-4891-7243-840e-e7fea9fe6390",
+            "title": "Water plants",
+            "due": "2026-10-15",
+            "before": "2372cd94-58dc-7fd0-bbc6-6e17c0aebc80"
+          },
+          {
+            "type": "task.complete",
+            "id": "2372cd94-58dc-7fd0-bbc6-6e17c0aebc80",
+            "completion_date": "2026-10-08"
+          }
+        ],
+        "lexical": {
+          "sections": 1,
+          "task_refs": 2,
+          "node_refs": 0
+        }
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "d253c5b2210570d939fce356138c842ed6600279030d869b72a77b9fadd4e118"
+        },
+        "observed": {
+          "note.md": "13e932acdab0fa3f149a60aedc7bf34b0634e6c5d22c96200bcfae7f37bf060a"
+        },
+        "after": {
+          "note.md": "db6b2927187cc4f39e1547dcf7185fe20dc1359c441fb773f957ada33b4ab8ca"
+        }
+      }
+    },
+    {
+      "id": "MS31",
+      "title": "Tab-indented nesting parses to the same tree as spaces (M2, H2)",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n\t<!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n\t<!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n\tDraft contract\n\n\t- Check details\n\t\t<!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "scan",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n\t<!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n\t<!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n\tDraft contract\n\n\t- Check details\n\t\t<!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "same_tree_as": "MS01"
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n\t<!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n\t<!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n\tDraft contract\n\n\t- Check details\n\t\t<!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [],
+        "publication": "none",
+        "intents": [],
+        "lexical": {
+          "sections": 1,
+          "task_refs": 1,
+          "node_refs": 2
+        },
+        "payload_contains": [
+          "Draft contract",
+          "Check details"
+        ]
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "5a136af0c815a7471cb2368fa94f5fef8220709dcae993bce8685a981645a2e7"
+        },
+        "observed": {
+          "note.md": "5a136af0c815a7471cb2368fa94f5fef8220709dcae993bce8685a981645a2e7"
+        },
+        "after": {
+          "note.md": "5a136af0c815a7471cb2368fa94f5fef8220709dcae993bce8685a981645a2e7"
+        }
+      }
+    },
+    {
+      "id": "MS32",
+      "title": "A line between the heading and its start marker fails closed (H4)",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "source_edit",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\nMoved here by an Outline drag\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\nMoved here by an Outline drag\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [
+          "SECTION_HEADING_INVALID"
+        ],
+        "publication": "suspended",
+        "intents": [],
+        "lexical": {
+          "sections": 1
+        },
+        "private_canaries": [
+          "PRIVATE_BEFORE_8f3a: budget and personal thoughts.",
+          "PRIVATE_AFTER_71c2: do not transmit."
+        ]
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "736513b7535b8b6b528f7ef3e39c923f3de9e13a4dc73ad77681f91ad11aa0d5"
+        },
+        "after": {
+          "note.md": "736513b7535b8b6b528f7ef3e39c923f3de9e13a4dc73ad77681f91ad11aa0d5"
+        }
+      }
+    },
+    {
+      "id": "MS33",
+      "title": "A table and a fence round-trip as raw nodes (M6)",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n\n<!-- lfcp-node: raw:c6745fdc-687f-730e-8777-31248bb8e709 -->\n| Milestone | Date |\n| --- | --- |\n| Launch | TBD |\n\n<!-- lfcp-node: raw:c3a304ad-42eb-7276-bbff-9add5f86863e -->\n```js\nconsole.log(\"shared\")\n```\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "scan",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n\n<!-- lfcp-node: raw:c6745fdc-687f-730e-8777-31248bb8e709 -->\n| Milestone | Date |\n| --- | --- |\n| Launch | TBD |\n\n<!-- lfcp-node: raw:c3a304ad-42eb-7276-bbff-9add5f86863e -->\n```js\nconsole.log(\"shared\")\n```\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n\n<!-- lfcp-node: raw:c6745fdc-687f-730e-8777-31248bb8e709 -->\n| Milestone | Date |\n| --- | --- |\n| Launch | TBD |\n\n<!-- lfcp-node: raw:c3a304ad-42eb-7276-bbff-9add5f86863e -->\n```js\nconsole.log(\"shared\")\n```\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [],
+        "publication": "none",
+        "intents": [],
+        "lexical": {
+          "sections": 1,
+          "task_refs": 1,
+          "node_refs": 4
+        },
+        "payload_contains": [
+          "| Launch | TBD |",
+          "console.log(\"shared\")"
+        ]
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "ec1809ef5e48f1223b296c4609b8fe714244c83a9e02cdb8eb58dcbbe1eefcac"
+        },
+        "observed": {
+          "note.md": "ec1809ef5e48f1223b296c4609b8fe714244c83a9e02cdb8eb58dcbbe1eefcac"
+        },
+        "after": {
+          "note.md": "ec1809ef5e48f1223b296c4609b8fe714244c83a9e02cdb8eb58dcbbe1eefcac"
+        }
+      }
+    },
+    {
+      "id": "MS34",
+      "title": "A heading inside the region blocks sharing until the section is split",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "source_edit",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n### Sub-heading\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n### Sub-heading\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [
+          "SECTION_UNSUPPORTED_SYNTAX"
+        ],
+        "publication": "suspended",
+        "intents": [],
+        "lexical": {
+          "sections": 1
+        }
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "6fe2d53504dc1cc4157f9fd50b4b9313188acefe8a4134b8e204a98d94096e2c"
+        },
+        "after": {
+          "note.md": "6fe2d53504dc1cc4157f9fd50b4b9313188acefe8a4134b8e204a98d94096e2c"
+        }
+      }
+    },
+    {
+      "id": "MS35",
+      "title": "Tasks-local tokens stay local (M7)",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract 🔼 ➕ 2026-10-01 🛫 2026-10-02\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "inspect_owned_payload",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract 🔼 ➕ 2026-10-01 🛫 2026-10-02\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract 🔼 ➕ 2026-10-01 🛫 2026-10-02\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [],
+        "publication": "none",
+        "intents": [],
+        "lexical": {
+          "sections": 1,
+          "task_refs": 1,
+          "node_refs": 0
+        },
+        "task_title": "Prepare contract",
+        "shared_task_fields_exclude": [
+          "priority-sign",
+          "created",
+          "start"
+        ]
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "82666fc62f07ca31a66ba7d9ea4d1371d063dd04f5a4f8dc48ec050eb7f333dc"
+        },
+        "observed": {
+          "note.md": "82666fc62f07ca31a66ba7d9ea4d1371d063dd04f5a4f8dc48ec050eb7f333dc"
+        },
+        "after": {
+          "note.md": "82666fc62f07ca31a66ba7d9ea4d1371d063dd04f5a4f8dc48ec050eb7f333dc"
+        }
+      }
+    },
+    {
+      "id": "MS36",
+      "title": "Fold, drag and embed carry private text after the end marker: the share preview warns (H5)",
+      "execution": "editor-integration-contract",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\nPrivate tail between the end marker and the next heading.\n\n## Next heading\n"
+      },
+      "event": {
+        "kind": "share_preview",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\nPrivate tail between the end marker and the next heading.\n\n## Next heading\n"
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\nPrivate tail between the end marker and the next heading.\n\n## Next heading\n"
+        },
+        "diagnostics": [],
+        "publication": "none",
+        "intents": [],
+        "lexical": {
+          "sections": 1
+        },
+        "preview_warning": "private-text-before-next-heading",
+        "private_canaries": [
+          "PRIVATE_BEFORE_8f3a: budget and personal thoughts."
+        ]
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "b41956a570910d0f616dbbfede1a4489192df5fcdef4ebb0ae0434e9f4c64551"
+        },
+        "observed": {
+          "note.md": "b41956a570910d0f616dbbfede1a4489192df5fcdef4ebb0ae0434e9f4c64551"
+        },
+        "after": {
+          "note.md": "b41956a570910d0f616dbbfede1a4489192df5fcdef4ebb0ae0434e9f4c64551"
+        }
+      }
+    },
+    {
+      "id": "MS37",
+      "title": "The standalone Detach command inside a section is refused",
+      "execution": "editor-integration-contract",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "detach_task_command",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "task_id": "2372cd94-58dc-7fd0-bbc6-6e17c0aebc80"
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [],
+        "publication": "none",
+        "intents": [],
+        "lexical": {
+          "sections": 1
+        },
+        "command_refused": true
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "observed": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        },
+        "after": {
+          "note.md": "79f2256d492acec4b3d63be55b46b02abdf571169fc9f7a15d92b9638864e9cb"
+        }
+      }
+    },
+    {
+      "id": "MS38",
+      "title": "Comments inside the region stay local (MARKDOWN-SECTIONS-01 §4.5)",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n\n%% private note %%\n\n<!-- a private\n\nmulti-line note -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "inspect_owned_payload",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n\n%% private note %%\n\n<!-- a private\n\nmulti-line note -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  Draft contract\n\n  - Check details\n    <!-- lfcp-node: item:be46412d-1708-757e-ad18-e21fa7c61c68 -->\n\n%% private note %%\n\n<!-- a private\n\nmulti-line note -->\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [
+          "SECTION_UNSUPPORTED_SYNTAX"
+        ],
+        "publication": "none",
+        "intents": [],
+        "lexical": {
+          "sections": 1,
+          "task_refs": 1,
+          "node_refs": 2
+        },
+        "payload_contains": [
+          "Draft contract"
+        ],
+        "payload_excludes": [
+          "private note",
+          "multi-line note"
+        ]
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "f73dfaf2b879f038bcc98bb337ddfd94617775e2cd1b80890d6512552da71669"
+        },
+        "observed": {
+          "note.md": "f73dfaf2b879f038bcc98bb337ddfd94617775e2cd1b80890d6512552da71669"
+        },
+        "after": {
+          "note.md": "f73dfaf2b879f038bcc98bb337ddfd94617775e2cd1b80890d6512552da71669"
+        }
+      }
+    }
+  ]
+}

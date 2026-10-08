@@ -226,7 +226,7 @@ Node kind is immutable. Task-to-plain-text or item-to-Task conversion uses an ex
 | section.set_title | Write a scalar title; preserve concurrent title conflict |
 | task.create_in_section | Create Task, task node and placement atomically |
 | task.place_existing | Create the sole node for an unplaced Task in this Resource |
-| paragraph.create / item.create | Create node, Text, children list and placement atomically |
+| paragraph.create / item.create / raw.create | Create node, Text, children list and placement atomically |
 | text.edit | Apply edits to existing Text against a known base |
 | node.move | New placement and assignment, same node identity |
 | node.set_list_style | Update ordered/bullet presentation semantics |

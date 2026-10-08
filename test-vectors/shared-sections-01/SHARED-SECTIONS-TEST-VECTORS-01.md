@@ -13,8 +13,9 @@
 > under ADR 0009 (P2) and the profile's §14.1 those changes are refused at
 > admission, and LFCP-02-010 rewrites their expectations with that
 > rationale and adds the admission, isolation and import cases. The
-> Markdown fixtures follow in LFCP-02-010, rewritten for the grammar
-> decisions of MARKDOWN-SECTIONS-01.
+> Markdown fixtures, rewritten for the grammar decisions of
+> MARKDOWN-SECTIONS-01, are in `MARKDOWN-SECTIONS-FIXTURES-01.md` beside
+> this document.
 
 ## 1. What this corpus establishes
 

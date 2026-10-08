@@ -88,7 +88,7 @@ Resource IDs on Task refs inside a section MUST equal the enclosing Resource. Th
   <!-- lfcp-node: item:<node-id> -->
 ```
 
-The `item` marker is the only non-whitespace content on the immediately following physical line, at the list item's content indentation. The host is an unordered or ordered list item without a Task checkbox. The node's `kind` must be `item`.
+The `item` marker is the only non-whitespace content on its line, at the list item's content indentation, and follows the item's last continuation line: an HTML comment interrupts a paragraph in CommonMark, so a marker right after the first line would cut the item's text short. The host is an unordered or ordered list item without a Task checkbox. The node's `kind` must be `item`.
 
 An ordered example:
 
@@ -170,6 +170,13 @@ Canonical list emission uses `- ` for bullet items and consecutive decimal numbe
 Content indentation is leading indentation plus the physical list marker and the following space (`- ` is two columns; `10. ` is four). Child content is emitted at the parent's content indentation; deeper children apply the same rule recursively.
 
 Tabs are accepted in structural indentation (decision M2): Obsidian indents nested lists with tabs by default (host fact H2). A parser expands a tab to the next multiple of 4 columns, as CommonMark does, and compares the resulting columns. A serializer keeps the indentation characters of existing lines; for new lines it follows the line it nests under (a tab-indented parent's children are tab-indented, one tab per level). Mixed tabs and spaces on one line are accepted by the same expansion.
+
+**Text extraction.** A node's Text is derived from its source lines as follows; line endings in Text are always LF, and a file's CRLF is local presentation.
+- `item`: the inline text after the list marker and its following space, plus the continuation lines of the same paragraph (lazy continuation lines included), joined with LF. Child paragraphs with their own marker are separate nodes.
+- `paragraph`: the paragraph's lines without the marker line, each with its indentation removed up to the parent's content column, joined with LF.
+- `raw`: the block's lines, each with its indentation removed up to the parent's content column, joined with LF, without a trailing LF.
+- Indentation is removed by columns after tab expansion: a tab that reaches past the content column leaves its remaining columns as spaces in Text.
+- A Task node has no Text: its title and fields come from the Task line by the 0.1 adapter field contract (MARKDOWN-REFS-01). A Task title is one line.
 
 All metadata lines are excluded from Text and Task title extraction. Continuation lines belonging to an item's inline text must be distinguished from a child paragraph by the paragraph marker/blank-line grammar. Content must round-trip through the defined node tree without guessing a private versus shared interpretation.
 
@@ -329,21 +336,29 @@ Existing `MALFORMED_LFCP_REF`, `DUPLICATE_LFCP_REF`, `LFCP_REF_NOT_AT_LINE_END`,
 | MS13 | Task/item/paragraph nesting and ordered markers parse consistently |
 | MS14 | Structural conflict freezes unsafe projection while preserving local text |
 | MS15 | No decorative icons/labels in plain or rich clipboard output |
-| MS16 | Unsupported syntax introduced mid-edit remains intact and visible as a problem |
+| MS16 | A fence typed inside the region becomes a raw node (M6); unsupported syntax such as a heading (MS34) remains intact and visible as a problem |
 | MS17 | Empty paragraph, transient list edits and undo preserve identity or diagnose ambiguity |
 | MS18 | Cut/paste across files never physically destroys shared content |
-| MS19 | Enter at the end of a Task line with a child-line ref and no children: the new Task line is unbound, the ref stays with the original Task (adapter requirement) |
-| MS20 | Enter at the end of a Task line with a child-line ref and a nested paragraph: the ref and the paragraph stay with the original Task (adapter requirement) |
-| MS21 | Tasks completes a Task with a child-line ref: `✅ <date>` is appended to the Task line, the ref is untouched, the completion is shared (H6) |
-| MS22 | Tasks completes a recurring Task: the next occurrence above is new shared content, the done occurrence keeps its ref (H6) |
-| MS23 | Tab-indented and mixed tab/space nesting parse to the same tree as space indentation (M2, H2) |
-| MS24 | A heading moved away from its start marker fails closed (H4) |
-| MS25 | A table and a fence inside the region round-trip as raw nodes (M6) |
-| MS30 | A `%%` comment and a multi-line HTML comment with a blank line inside the region: not extracted, the rest of the section syncs, a remote edit next to them keeps them in place, a remote removal of the line one follows pauses the section with the comment message (§4.5) |
-| MS26 | A heading inside the region is `SECTION_UNSUPPORTED_SYNTAX` and blocks sharing until split |
-| MS27 | Tasks-local tokens on a Task line stay local and appear in the share preview (M7) |
-| MS28 | Fold, Outline drag and `![[note#heading]]` embed of a section heading with private text before the next heading: the warning of §3 appears; nothing private is shared (H5) |
-| MS29 | The standalone Detach command inside a section is refused or redirected; outside it keeps its 0.1 meaning |
+| MS19 | Mismatched end reference blocks extraction |
+| MS20 | A foreign Resource Task ref is not silently adopted |
+| MS21 | Removing only a Task ref does not make a private exception |
+| MS22 | Nested section boundaries suspend both ranges |
+| MS23 | A missing heading is not inferred |
+| MS24 | Payload extraction excludes surrounding private text |
+| MS25 | The readable-copy action strips metadata only in its output |
+| MS26 | Deleting a local file does not delete the collaboration |
+| MS27 | Enter at the end of a Task line with a child-line ref and no children: the new Task line is unbound, the ref stays with the original Task (adapter requirement) |
+| MS28 | Enter at the end of a Task line with a child-line ref and a nested paragraph: the ref and the paragraph stay with the original Task (adapter requirement) |
+| MS29 | Tasks completes a Task with a child-line ref: `✅ <date>` is appended to the Task line, the ref is untouched, the completion is shared (H6) |
+| MS30 | Tasks completes a recurring Task: the next occurrence above is new shared content, the done occurrence keeps its ref (H6) |
+| MS31 | Tab-indented and mixed tab/space nesting parse to the same tree as space indentation (M2, H2) |
+| MS32 | A heading moved away from its start marker fails closed (H4) |
+| MS33 | A table and a fence inside the region round-trip as raw nodes (M6) |
+| MS34 | A heading inside the region is `SECTION_UNSUPPORTED_SYNTAX` and blocks sharing until split |
+| MS35 | Tasks-local tokens on a Task line stay local and appear in the share preview (M7) |
+| MS36 | Fold, Outline drag and `![[note#heading]]` embed of a section heading with private text before the next heading: the warning of §3 appears; nothing private is shared (H5) |
+| MS37 | The standalone Detach command inside a section is refused or redirected; outside it keeps its 0.1 meaning |
+| MS38 | A `%%` comment and a multi-line HTML comment with a blank line inside the region: not extracted, the rest of the section syncs, a remote edit next to them keeps them in place, a remote removal of the line one follows pauses the section with the comment message (§4.5) |
 
 Examples in this document are not a substitute for byte-exact before/action/after fixture files. Freeze grammar only after rendering these fixtures in the selected Obsidian/Tasks versions and testing them through the independent Markdown parser. Until then this remains a Working Draft.
 
