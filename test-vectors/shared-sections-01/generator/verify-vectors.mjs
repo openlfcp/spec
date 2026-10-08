@@ -3,6 +3,7 @@ import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import assert from 'node:assert/strict';
 import {A,PROFILE,hash,actor,ids,inspect,assertExpected,str} from './section-model.mjs';
+import {admitReplay} from './admission.mjs';
 const out=process.argv[2]||'generated';
 const suite=JSON.parse(fs.readFileSync(path.join(out,'SHARED-SECTIONS-TEST-VECTORS-01.json'),'utf8'));
 const adapterAt=process.argv.indexOf('--adapter');
@@ -33,20 +34,20 @@ for(const c of suite.cases) {
     assert.equal(dc.hash,x.change_hash);assert.equal(dc.actor,x.actor);assert.equal(dc.seq,x.seq);assert.deepEqual(dc.deps,x.deps);
     assert.deepEqual(unframe(x.framed_plaintext),b);return b;
   });
-  // Independently replay stored bytes, including reverse delivery and duplicates.
-  let normal=A.init({actor:actor('verify-normal')});
-  [normal]=A.applyChanges(normal,changes);
-  let reverse=A.init({actor:actor('verify-reverse')});
-  for(const b of [...changes].reverse()) [reverse]=A.applyChanges(reverse,[b,b]);
-  assert.deepEqual(A.getMissingDeps(normal),[]);assert.deepEqual(A.getMissingDeps(reverse),[]);
+  // Replay stored bytes through admission (§14.1), in order, in reverse with
+  // duplicates, and from the base Snapshot plus the tail.
+  const normal=admitReplay(changes,actor('verify-normal'));
+  const reverse=admitReplay([...changes].reverse().flatMap(b=>[b,b]),actor('verify-reverse'));
   const delta=[...c.branches.A,...c.branches.B,...c.after_merge].map(decode);
-  let checkpoint=A.load(base,{actor:actor('verify-checkpoint')});
-  [checkpoint]=A.applyChanges(checkpoint,delta);
+  const loaded=A.load(base,{actor:actor('verify-checkpoint')});
+  const checkpoint=admitReplay([...A.getAllChanges(loaded),...delta],actor('verify-checkpoint'));
   const saved=A.load(target,{actor:actor('verify-save')});
-  for(const d of [normal,reverse,checkpoint,saved]) {
-    assert.deepEqual(inspect(d),c.expected,'state mismatch '+c.id);
+  const summaries=[normal,reverse,checkpoint].map(r=>[r.doc,{...inspect(r.doc),refused:r.refused,held:r.held}]);
+  summaries.push([saved,{...inspect(saved),refused:normal.refused,held:normal.held}]);
+  for(const [d,summary] of summaries) {
+    assert.deepEqual(summary,c.expected,'state mismatch '+c.id);
     assert.deepEqual(A.getHeads(d).sort(),c.expected_heads,'heads mismatch '+c.id);
-    assertExpected(inspect(d),c.assertions,assert);
+    assertExpected(summary,c.assertions,assert);
   }
   assert.deepEqual(unframe(c.reference_snapshot_plaintext),target);
   if(c.id==='SS08')assert(c.branches.B.length===1,'restore was optimized away');

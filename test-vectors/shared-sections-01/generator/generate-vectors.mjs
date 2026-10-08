@@ -3,6 +3,7 @@ import {createRequire} from 'node:module';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import {A,PROFILE,hash,resource,principal,actor,pref,uid,ids,S,str,plain,fork,change,place,add,setLife,textEdit,initial,inspect,assertExpected} from './section-model.mjs';
+import {admitReplay} from './admission.mjs';
 const out=process.argv[2]||path.dirname(path.dirname(new URL(import.meta.url).pathname));
 // The engine that generated the corpus: the installed package, not a literal.
 const ENGINE=(()=>{
@@ -37,7 +38,13 @@ function record(id,title,{base=seeds,a=[],b=[],after=[],requirements={},coverage
   let merged=A.merge(fork(da,'merge'),db);
   let resolved=fork(merged,'C');
   for(const [label,fn]of after)resolved=change(resolved,id+'/'+label,fn);
-  const cc=A.getChanges(merged,resolved),summary=inspect(resolved);
+  const cc=A.getChanges(merged,resolved);
+  // §14.1: every change goes through admission; refused changes and their
+  // dependents never enter the reference document.
+  const all=[...A.getAllChanges(base),...ca,...cb,...cc];
+  const replay=admitReplay(all,actor('reference'));
+  resolved=replay.doc;
+  const summary={...inspect(resolved),refused:replay.refused,held:replay.held};
   assertExpected(summary,requirements,assert);
   const value={id,title,coverage,notes,
     base_snapshot:bytesInfo(A.save(base)),
@@ -97,7 +104,8 @@ record('SS12','Snapshot checkpoint and later change',{
   requirements:{tasks:{[ids.task]:{status:'done'}},texts:{[ids.para]:'Snapshot Draft contract'},classification:'VALID'}});
 record('SS13','Invalid mutation of immutable placement parent',{
   a:[['corrupt-parent',d=>{d.placements[uid('slot-task')].parent_id=S(ids.x);}]],
-  requirements:{classification:'PROFILE_INVALID'},coverage:'negative-model'});
+  requirements:{classification:'VALID',refused:['IMMUTABLE_FIELD_MUTATED'],visible},coverage:'negative-admission',
+  notes:['A3. Rewritten for ADR 0009 P2 (LFCP-02-010): the planning corpus expected the whole section PROFILE_INVALID with an empty tree; under SHARED-SECTIONS-PROFILE-01 §14.1 the change is refused at admission, is never merged, and the section stays VALID.']});
 record('SS14','Concurrent Unicode text edit using scalar-index bridge',{
   base:change(fork(seeds,'A'),'SS14/base',d=>A.updateText(d,['nodes',ids.para,'text'],'А😀Б')),
   a:[['after-emoji',d=>textEdit(d,ids.para,2,0,'!')]],
@@ -129,13 +137,16 @@ record('SS18','Unknown extension survives mutation and snapshot',{
   requirements:{classification:'VALID'},notes:['Verifier separately checks the extension in loaded snapshots.']});
 record('SS19','Duplicate placement list entry is invalid',{
   a:[['duplicate',d=>d.section.children.push(S(uid('slot-task')))]],
-  requirements:{classification:'PROFILE_INVALID'},coverage:'negative-model'});
+  requirements:{classification:'VALID',refused:['PLACEMENT_NOT_ATOMIC'],visible},coverage:'negative-admission',
+  notes:['A2: the inserted PlacementId is not created by the change. Rewritten for ADR 0009 P2 (LFCP-02-010): the planning corpus expected the whole section PROFILE_INVALID with an empty tree; under SHARED-SECTIONS-PROFILE-01 §14.1 the change is refused at admission, is never merged, and the section stays VALID.']});
 record('SS20','Replacing Text with a scalar is invalid',{
   a:[['scalar-instead-of-text',d=>{d.nodes[ids.para].text=S('Wrong type');}]],
-  requirements:{classification:'PROFILE_INVALID'},coverage:'negative-model'});
+  requirements:{classification:'VALID',refused:['CONTAINER_REPLACED'],visible,texts:{[ids.para]:'Draft contract'}},coverage:'negative-admission',
+  notes:['A4, which precedes A5: the change replaces a node\'s Text. Rewritten for ADR 0009 P2 (LFCP-02-010): the planning corpus expected the whole section PROFILE_INVALID with an empty tree; under SHARED-SECTIONS-PROFILE-01 §14.1 the change is refused at admission, is never merged, and the section stays VALID.']});
 record('SS21','Deleting an old ordering slot is invalid',{
   a:[['delete-slot',d=>d.section.children.splice(0,1)]],
-  requirements:{classification:'PROFILE_INVALID'},coverage:'negative-model'});
+  requirements:{classification:'VALID',refused:['CHILDREN_LIST_MUTATED'],visible},coverage:'negative-admission',
+  notes:['A1. Rewritten for ADR 0009 P2 (LFCP-02-010): the planning corpus expected the whole section PROFILE_INVALID with an empty tree; under SHARED-SECTIONS-PROFILE-01 §14.1 the change is refused at admission, is never merged, and the section stays VALID.']});
 record('SS22','Same destination concurrent moves still retain both intents',{
   a:[['move-X',d=>place(d,ids.task,ids.x,null,'SS22-A','A')]],
   b:[['move-X',d=>place(d,ids.task,ids.x,null,'SS22-B','B')]],

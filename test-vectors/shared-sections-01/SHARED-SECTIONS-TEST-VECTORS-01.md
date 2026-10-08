@@ -8,11 +8,14 @@
 **Normative companion:** `profiles/SHARED-SECTIONS-PROFILE-01.md` (Working Draft 0.3); ADR 0009
 
 > **Revision note.** Imported from the MVP 0.2 planning corpus and
-> regenerated with the project's pinned engine (LFCP-02-008). Cases SS13,
-> SS19, SS20 and SS21 still expect the whole section `PROFILE_INVALID`;
-> under ADR 0009 (P2) and the profile's §14.1 those changes are refused at
-> admission, and LFCP-02-010 rewrites their expectations with that
-> rationale and adds the admission, isolation and import cases. The
+> regenerated with the project's pinned engine (LFCP-02-008). LFCP-02-010
+> applies ADR 0009 (P2): every change goes through the admission rules of
+> the profile's §14.1 (`generator/admission.mjs`), and other invalid
+> values are isolated per node (§14.2). Cases SS13, SS19, SS20 and SS21,
+> which expected the whole section `PROFILE_INVALID` with an empty tree,
+> now expect their change refused at admission and the section `VALID`;
+> each case's `notes` give the rationale. Every case's `expected` gains
+> `invalid`, `refused` and `held`. The
 > Markdown fixtures, rewritten for the grammar decisions of
 > MARKDOWN-SECTIONS-01, are in `MARKDOWN-SECTIONS-FIXTURES-01.md` beside
 > this document.
@@ -33,7 +36,8 @@ No production SDK, Rust implementation, server, signed/encrypted LFCP exchange o
 | --- | --- |
 | `SHARED-SECTIONS-TEST-VECTORS-01.json` | 28 cases, real bytes, hashes, causal metadata and expected results |
 | `generator/generate-vectors.mjs` | Deterministic corpus construction with explicit semantic assertions |
-| `generator/section-model.mjs` | Reference schema helpers, tree derivation and selected validation checks |
+| `generator/section-model.mjs` | Reference schema helpers, tree derivation and per-node isolation (§14.2) |
+| `generator/admission.mjs` | Reference admission (§14.1): rules A1–A5 and the readiness rule, per change against its causal history |
 | `generator/verify-vectors.mjs` | Stored-byte replay, integrity checks and the optional independent-adapter interface |
 | `schemas/section-vectors.schema.json` | JSON schema of the suite |
 | `scripts/check-shared-sections-corpus.mjs` (repository root) | Schema, byte-for-byte regeneration and reference replay, in `validate.sh` |
@@ -99,15 +103,15 @@ The application framing is plaintext inside the LFCP security envelope. This sui
 | SS10 | Local detach | Empty shared delta; adapter action itself is not executed here |
 | SS11 | Field edit from another projection | Same Task changes; child text is untouched |
 | SS12 | Snapshot and later changes | Checkpoint plus tail equals full replay |
-| SS13 | Mutate immutable placement parent | PROFILE_INVALID |
+| SS13 | Mutate immutable placement parent | Refused at admission: `IMMUTABLE_FIELD_MUTATED` (A3) |
 | SS14 | Concurrent Cyrillic/emoji text edits | Correct Unicode index conversion and converged text |
 | SS15 | Resolve placement conflict | One selected location after causal resolution |
 | SS16 | Split a paragraph | Original retains prefix identity; suffix gets a new node |
 | SS17 | Join paragraphs | Target text updated; source text retained under tombstone |
 | SS18 | Unknown extension | Preserved through unrelated edits and snapshots |
-| SS19 | Duplicate a placement-list entry | PROFILE_INVALID |
-| SS20 | Replace Text with scalar | PROFILE_INVALID |
-| SS21 | Remove a historical slot | PROFILE_INVALID |
+| SS19 | Duplicate a placement-list entry | Refused at admission: `PLACEMENT_NOT_ATOMIC` (A2) |
+| SS20 | Replace Text with scalar | Refused at admission: `CONTAINER_REPLACED` (A4) |
+| SS21 | Remove a historical slot | Refused at admission: `CHILDREN_LIST_MUTATED` (A1) |
 | SS22 | Concurrent moves to the same parent | Distinct placement intents still conflict |
 | SS23 | Large section | Exactly 200 Tasks, 200 paragraphs and two ordinary items |
 | SS24 | Add child under concurrently deleted parent | Child retained and discoverable |
@@ -150,9 +154,9 @@ Invoke it with:
 
 The runner supplies IDs, base bytes, branch changes and after-merge changes, but not expected results. A Rust harness may be invoked from this adapter or consume the JSON directly.
 
-Return classification, tree, hidden IDs, recovery entries, retainedConcurrentEdits, scalarConflicts, texts, tasks, slotCount, nodeCount and type checks in the JSON's normalized form. The reference verifier compares these fields; low-level expected.errors strings are excluded from the external-adapter comparison.
+Return classification, tree, hidden IDs, invalid nodes with their diagnostic, recovery entries, retainedConcurrentEdits, scalarConflicts, texts, tasks, slotCount, nodeCount, type checks, and the changes refused at admission (`refused`, with their diagnostic) and held behind them (`held`), in the JSON's normalized form. The reference verifier compares these fields; low-level expected.errors strings are excluded from the external-adapter comparison.
 
-For negative cases, accepting bytes into Automerge is not acceptance by the LFCP profile. The implementation must separately classify the invalid application history and preserve it non-destructively.
+For negative cases, accepting bytes into Automerge is not acceptance by the LFCP profile. A change the profile refuses at admission (§14.1) never enters the document; the implementation reports it with its diagnostic and holds the changes that depend on it.
 
 ## 10. Coverage limits and next gates
 

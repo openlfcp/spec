@@ -124,36 +124,29 @@ export function historyAudit(doc) {
   return {errors:[...new Set(errors)].sort(),events,deps};
 }
 export function inspect(doc) {
+  // Structural violations are refused at admission (admission.mjs, §14.1);
+  // what remains invalid here is isolated per node and subtree (§14.2).
   const audit=historyAudit(doc);
-  const errors=[...audit.errors], blocked=new Map(), parents={}, hidden=new Set(), nodes=doc.nodes||{};
-  if(str(doc.profile)!==PROFILE)errors.push('profile');
-  const occurrences={};
-  for(const p of [ids.section,...Object.keys(nodes)]) {
-    let l;
-    try{l=lane(doc,p);}catch{errors.push('missing-lane:'+p);continue;}
-    for(const val of l) {
-      const s=str(val); occurrences[s]=(occurrences[s]||0)+1;
-      if(!A.isImmutableString(val))errors.push('slot-id-not-scalar:'+s);
-      if(!doc.placements[s]||str(doc.placements[s].parent_id)!==p)errors.push('slot-parent:'+s);
-    }
-  }
-  for(const [p,slot] of Object.entries(doc.placements||{})) {
-    if(occurrences[p]!==1)errors.push('slot-occurrence:'+p);
-    if(str(slot.id)!==p)errors.push('slot-id:'+p);
-  }
+  const errors=[], invalid=new Map(), blocked=new Map(), parents={}, hidden=new Set(), nodes=doc.nodes||{};
+  if(str(doc.profile)!==PROFILE)errors.push('INVALID_ROOT');
+  for(const key of ['section','objects','nodes','placements','extensions'])if(!doc[key]||typeof doc[key]!=='object')errors.push('INVALID_ROOT');
+  if(doc.section&&!Array.isArray(doc.section.children))errors.push('INVALID_ROOT');
   const life=n=>str(nodes[n].kind)==='task'?doc.objects[n]:nodes[n];
+  const fail=(n,diagnostic)=>{if(!invalid.has(n))invalid.set(n,diagnostic);};
   for(const n of Object.keys(nodes).sort()) {
     const o=nodes[n],kind=str(o.kind);
-    if(kind==='task' && (str(o.task_id)!==n || !doc.objects[n]))errors.push('task-binding:'+n);
-    if(['paragraph','item'].includes(kind) && (!A.getObjectId(o,'text') || A.isImmutableString(o.text)))errors.push('text-type:'+n);
-    if(!A.isImmutableString(o.placement))errors.push('placement-type:'+n);
+    if(!['task','paragraph','item','raw'].includes(kind)){fail(n,'INVALID_ENUM_VALUE');continue;}
+    if(kind==='task' && (str(o.task_id)!==n || !doc.objects[n]))fail(n,'INVALID_REFERENCE');
+    if(kind!=='task' && (!A.getObjectId(o,'text') || A.isImmutableString(o.text)))fail(n,'INVALID_FIELD_TYPE');
+    if(!A.isImmutableString(o.placement))fail(n,'INVALID_FIELD_TYPE');
     if(values(o,'placement').length>1)blocked.set(n,'PLACEMENT_CONFLICT');
-    const s=doc.placements[str(o.placement)];
-    if(!s||str(s.node_id)!==n){errors.push('selected-slot:'+n);continue;}
+    const s=doc.placements?.[str(o.placement)];
+    if(!s||str(s.node_id)!==n){if(!blocked.has(n))fail(n,'INVALID_REFERENCE');continue;}
     parents[n]=str(s.parent_id);
-    if(parents[n]!==ids.section && (!nodes[parents[n]]||str(nodes[parents[n]].kind)==='paragraph'))errors.push('invalid-parent:'+n);
+    if(parents[n]!==ids.section && (!nodes[parents[n]]||['paragraph','raw'].includes(str(nodes[parents[n]].kind))))fail(n,'INVALID_REFERENCE');
     if(values(life(n),'lifecycle').length>1)blocked.set(n,'LIFECYCLE_CONFLICT');
   }
+  for(const n of invalid.keys())blocked.delete(n);
   // Detect all cycle members, independently of traversal order.
   for(const start of Object.keys(nodes).sort()) {
     const path=[],seen=new Map();let n=start;
@@ -162,8 +155,9 @@ export function inspect(doc) {
       seen.set(n,path.length);path.push(n);n=parents[n];
     }
   }
+  const out=n=>blocked.has(n)||invalid.has(n);
   let again=true;
-  while(again){again=false;for(const n of Object.keys(nodes))if(!blocked.has(n)&&blocked.has(parents[n])){blocked.set(n,'BLOCKED_PARENT');again=true;}}
+  while(again){again=false;for(const n of Object.keys(nodes))if(!out(n)&&out(parents[n])){blocked.set(n,'BLOCKED_PARENT');again=true;}}
   for(const n of Object.keys(nodes)) {
     let p=n;const seen=new Set();
     while(p!==ids.section && nodes[p]&&!seen.has(p)) {
@@ -189,7 +183,7 @@ export function inspect(doc) {
     if(depth>Object.keys(nodes).length)throw new Error('oracle recursion bound');
     for(const raw of lane(doc,p)) {
       const s=str(raw),slot=doc.placements[s],n=slot&&str(slot.node_id);
-      if(!n||!nodes[n]||blocked.has(n)||hidden.has(n)||str(nodes[n].placement)!==s)continue;
+      if(!n||!nodes[n]||out(n)||hidden.has(n)||str(nodes[n].placement)!==s)continue;
       tree.push({id:n,parent:p,depth,kind:str(nodes[n].kind)});walk(n,depth+1);
     }
   }
@@ -199,15 +193,16 @@ export function inspect(doc) {
     const v=values(obj,field);if(v.length>1)scalarConflicts.push({id:n,field,values:v});
   }
   return {
-    classification:errors.length?'PROFILE_INVALID':blocked.size?'STRUCTURAL_ATTENTION':'VALID',
+    classification:errors.length?'PROFILE_INVALID':blocked.size||invalid.size?'STRUCTURAL_ATTENTION':'VALID',
     errors:[...new Set(errors)].sort(),tree,hidden:[...hidden].sort(),
+    invalid:[...invalid].sort(([a],[b])=>a.localeCompare(b)).map(([id,diagnostic])=>({id,diagnostic})),
     recovery:[...blocked].sort(([a],[b])=>a.localeCompare(b)).map(([id,code])=>({id,code})),
     retainedConcurrentEdits:[...attention].sort(),scalarConflicts,
     texts:Object.fromEntries(Object.keys(nodes).sort().filter(n=>nodes[n].text!==undefined).map(n=>[n,str(nodes[n].text)])),
     tasks:Object.fromEntries(Object.keys(doc.objects||{}).sort().map(n=>[n,plain(doc.objects[n])])),
     slotCount:Object.keys(doc.placements||{}).length,
     nodeCount:Object.keys(nodes).length,
-    types:{taskTitleScalar:!doc.objects[ids.task]||A.isImmutableString(doc.objects[ids.task].title),paragraphText:!nodes[ids.para]||!!A.getObjectId(nodes[ids.para],'text')}
+    types:{taskTitleScalar:!doc.objects?.[ids.task]||A.isImmutableString(doc.objects[ids.task].title),paragraphText:!nodes[ids.para]||!!A.getObjectId(nodes[ids.para],'text')}
   };
 }
 export function assertExpected(actual, requirements, assert) {
@@ -216,6 +211,9 @@ export function assertExpected(actual, requirements, assert) {
   for(const n of requirements.absent||[])assert(!present.includes(n),'unexpected visible: '+n);
   for(const n of requirements.hidden||[])assert(actual.hidden.includes(n),'not retained hidden: '+n);
   for(const [n,code] of Object.entries(requirements.recovery||{}))assert(actual.recovery.some(x=>x.id===n&&x.code===code),'missing recovery '+code);
+  for(const [n,d] of Object.entries(requirements.invalid||{}))assert(actual.invalid.some(x=>x.id===n&&x.diagnostic===d),'missing invalid '+n+' '+d);
+  for(const d of requirements.refused||[])assert(actual.refused?.some(x=>x.diagnostic===d),'missing refusal '+d);
+  if(requirements.heldCount!==undefined)assert.equal(actual.held?.length,requirements.heldCount);
   for(const [n,t] of Object.entries(requirements.texts||{}))assert.equal(actual.texts[n],t);
   for(const [n,fields] of Object.entries(requirements.tasks||{}))for(const [k,v] of Object.entries(fields))assert.deepEqual(actual.tasks[n][k],v);
   for(const n of requirements.retainedConcurrentEdits||[])assert(actual.retainedConcurrentEdits.includes(n));
