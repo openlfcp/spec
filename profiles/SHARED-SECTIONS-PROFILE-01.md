@@ -13,8 +13,8 @@
 > SHARED-OBJECTS-PROFILE-01 §§19–83, while ADR 0009 also imports §§7–18 and
 > §74.1; §14 classifies invalid history as a whole-section
 > `PROFILE_INVALID`, while ADR 0009 refuses structural violations at
-> admission (A1–A5) and isolates the rest per subtree; §12 forbids a
-> multi-change import, which ADR 0009 requires. The draft's references to
+> admission (A1–A5) and isolates the rest per subtree; §12 and §16 are revised by LFCP-02-084 (multi-change
+> import, readiness, authoring budgets). The draft's references to
 > the Task contract and Automerge versions are re-pinned to
 > `mvp-0.1-baseline.9` and Automerge 3.5.0 in LFCP-02-007. Not part of any
 > implementation baseline.
@@ -75,6 +75,7 @@ section.title       scalar string, conflict-preserving
 section.created_by  PrincipalRef, immutable
 section.created_at  optional UTC timestamp
 section.children    Automerge list<PlacementId>, permanent, insert-only
+section.ready       scalar boolean true; absent while being imported (§12.1)
 section.extensions  map
 ```
 
@@ -230,11 +231,37 @@ Node kind is immutable. Task-to-plain-text or item-to-Task conversion uses an ex
 
 These are SDK/application operations, not new LFCP wire message types. Exact programming-language API names may differ, but the semantics and atomic groups must match. UI detach/copy-plain actions need not produce any shared change.
 
-## 12. Transactions and persistence
+## 12. Transactions, import and persistence
 
-One semantic transaction should produce one Automerge change and therefore one Data Unit. An import may create many nodes atomically if within negotiated size limits. If chunking is necessary, stage locally and publish only a complete initialized representation through a separately specified import boundary; do not expose a half-built section as the final shared result.
+One semantic transaction produces one Automerge change and therefore one Data Unit, unless the budgets of §16.2 make it more. Content that does not fit one change is written in several (ADR 0009, P3); the admission limits of §16.1 are never raised for it.
 
-This draft requires preflight rejection when initial import exceeds the implementation's declared safe transaction limit. Chunked atomic publication is not assumed. The 100–200 Task acceptance fixture must fit the declared supported limit or the limit must be addressed before release.
+### 12.1 Readiness
+
+The section map carries a key `ready`, a scalar boolean.
+
+```text
+section.ready   true; absent while the section is being imported
+```
+
+- A section created in one change writes `ready = true` in that change.
+- An import in several changes writes `ready = true` in its last change, and in no earlier one. Every change of the import leaves the section consistent on its own: each node it creates is placed (§4.3), and nothing it writes refers to a node or placement a later change creates.
+- A reader that finds no `ready` shows the section as being imported ("section is being imported"). It projects none of its content, authors no change in it, and offers no invitation to it.
+- `ready` is written once. A receiver refuses, before its engine, a change that deletes `ready`, writes a value other than `true`, or writes `ready` while its actor is not the actor of the section's `created_by` Principal (§2): `PROFILE_INVALID` with the diagnostic `IMMUTABLE_FIELD_MUTATED`.
+- Invitations to the section are issued only after `ready` (MVP 0.2 compatibility draft, §9).
+
+### 12.2 Interrupted and abandoned import
+
+The creator records an import in a local, durable import journal before its first change (MVP 0.2 compatibility draft, §8) and continues an interrupted import from it, with the same Principal and its actor state (SHARED-OBJECTS-PROFILE-01 §9).
+
+One Principal has one Automerge actor in a Resource (§2). An import is therefore continued only on the device that holds that actor state, or from a restored copy of it. Two devices that write concurrently as one Principal equivocate (LFCP-WIRE-01 §26.2): receivers exclude both units, and the Principal's re-issued work is held until the rebuild (SHARED-OBJECTS-PROFILE-01 §14.1).
+
+A section that stays without `ready` is never offered for invitation. Its creator continues the import or deletes the section locally; no shared operation abandons it.
+
+### 12.3 Long Text edits
+
+A Text insertion or deletion that exceeds the Text budget of §16.2 is written as consecutive changes. Each change inserts, or deletes, one contiguous run that starts where the previous run ended, in order. Together they are one user action: an application undoes them together and shows them as one pending edit. A peer may observe the edit in part, between its Data Units; it converges when the last one arrives.
+
+### 12.4 Persistence
 
 Persist actor history, state and the outbound queue with restart-safe commit ordering. Retried transmission sends identical queued bytes. SDKs may store local change-to-node mappings for UI pending indicators; such metadata is not part of replicated section content.
 
@@ -286,9 +313,58 @@ Notation below names existing objects; symbols are not literal IDs or a binary v
 
 ## 16. Limits and serialization
 
-Implementations declare safe limits for payload size, number/depth of nodes, text size and retained history. Limits are checked before local authoring; exceeding local rendering capacity must not erase received valid content. Snapshotting is not authorization to prune historical slots or tombstones.
+### 16.1 Admission limits
 
-The initial product benchmark is 100–200 Tasks with nested supporting content. This is not a protocol maximum. Use iterative graph traversal or enforce a documented depth limit to avoid call-stack-dependent behavior. A release corpus must include that limit and a non-destructive overflow case.
+The admission limits are those of SHARED-OBJECTS-PROFILE-01 at `mvp-0.1-baseline.9`, exact and shared by every receiver, because acceptance decides the replica state. This profile raises none of them (ADR 0009).
+
+| Limit | Value | Source |
+| --- | --- | --- |
+| Values in any one change column, except a group's entries | 16,384 | SHARED-OBJECTS-PROFILE-01 §11.1 |
+| Sum of the values of a change's group columns | 262,144 | §11.1 |
+| Expanded string bytes of a change | 4,194,304 (4 MiB) | §11.1 |
+| Dependencies of a change | 1,024 | §11.1 |
+| Other actors of a change | 1,024 | §11.1 |
+| Depth of any object below the root | 256 | §11.2 |
+| Snapshot floor: values in a column, group sum | 262,144 each | §13.1 |
+| Snapshot floor: expanded string bytes, inflated column data | 32 MiB each | §13.1 |
+| Snapshot floor: actors, heads | 1,024 each | §13.1 |
+| Maximum LFCP message size, default | 8 MiB | LFCP-WIRE-01 §31 |
+
+The section's own structure is flat in Automerge terms: nodes and placements are entries of root maps, so a node's nesting in the section adds no Automerge depth.
+
+### 16.2 Authoring budgets
+
+So that every writer produces changes every receiver accepts, one change carries at most:
+
+- 8,192 operations on Text elements: characters inserted plus characters deleted, over all Text objects of the change;
+- 256 created nodes;
+
+and, counted as SHARED-OBJECTS-PROFILE-01 §11.1 counts it, stays within §16.1. A writer counts a change before it publishes it; a change over a budget or a limit is split (§12) before it is published, never sent to be refused.
+
+### 16.3 Worked examples
+
+Values in the largest column of one change, counted as §11.1 counts them, with Automerge 3.5.0. A Task node with its Task (the required fields of SHARED-OBJECTS-PROFILE-01 §31, no tags, assignees or dates) and placement takes 27; a paragraph or item node with its placement and an empty Text takes 15; each Text character takes 1 more.
+
+| Change | Largest column | Within §16.1 |
+| --- | --- | --- |
+| 1 Task node | 27 | yes |
+| 1 paragraph with 100 characters | 115 | yes |
+| 100 Task nodes | 2,700 | yes |
+| 200 Task nodes and 200 paragraphs, 2,109 characters | 10,509 | yes |
+| At the budgets: 128 Task nodes, 128 paragraphs, 8,192 characters | 13,568 | yes |
+| At the budgets: 255 Task nodes, 1 paragraph, 8,192 characters | 15,092 | yes |
+| Over the Text budget: 200 Task nodes, 200 paragraphs, 8,192 characters | above 16,384 | no: refused (`INVALID_AUTOMERGE_BYTES`) |
+| Over the Text budget: one paragraph of 16,384 characters | above 16,384 | no: refused |
+
+Tasks with tags, assignees, dates or extension fields take more per node, so 256 Task nodes and a full Text budget can exceed §16.1: the count of §16.2, not the node budget alone, decides. Reproducible with LFCP-02-010's import vectors.
+
+An import of 200 Tasks with a paragraph of about 200 characters each (40,000 characters) therefore takes at least five changes: the Text budget gives five, and the node budget alone two.
+
+### 16.4 Implementation limits
+
+Implementations declare local limits for rendering, number and depth of nodes, text size and retained history. These limits never refuse received content that §16.1 accepts: exceeding local rendering capacity must not erase received valid content. Snapshotting is not authorization to prune historical slots or tombstones. Use iterative graph traversal, or a documented depth limit for rendering only, to avoid call-stack-dependent behavior.
+
+The initial product benchmark is 100–200 Tasks with nested supporting content. It is not a protocol maximum.
 
 ## 17. Compatibility decision
 
