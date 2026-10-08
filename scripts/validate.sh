@@ -18,6 +18,8 @@
 #    Shared Objects vectors (scripts/validate-shared-objects.mjs);
 # 7. the Automerge reference corpus regenerates byte-identically with the
 #    pinned @automerge/automerge (scripts/check-automerge-corpus.mjs);
+#    the shared sections corpus matches its schema, regenerates
+#    byte-identically and replays (scripts/check-shared-sections-corpus.mjs);
 # 8. MVP-0.1-BASELINE.md lists exactly the canonical files
 #    (scripts/check-baseline.mjs).
 #
@@ -49,4 +51,5 @@ node scripts/extract-cddl.mjs --check
 bundle exec ruby scripts/check-cddl.rb
 node scripts/validate-shared-objects.mjs
 node scripts/check-automerge-corpus.mjs
+node scripts/check-shared-sections-corpus.mjs
 node scripts/check-baseline.mjs

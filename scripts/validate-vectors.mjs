@@ -2,7 +2,7 @@
 // Protocol vector validator (LFCP-004 schema, LFCP-007 checks).
 //
 // - every test-vectors/*/*-TEST-VECTORS-*.json suite MUST pass the
-//   lfcp-vector-format/1 schema and the checks in lib/vector-checks.mjs
+//   lfcp-vector-format/1 schema (except the directories in OWN_FORMAT) and the checks in lib/vector-checks.mjs
 //   (duplicate keys and ids, canonical b64url, hash recomputation,
 //   deterministic encodings, cross-references);
 // - every schemas/fixtures/valid-*.json format excerpt MUST pass the schema;
@@ -93,9 +93,13 @@ const fail = (line) => {
   console.log(line);
 };
 
-// 1. Published suites.
+// 1. Published suites. A suite in its own format until it moves to
+// lfcp-vector-format/1 is checked by its own script instead.
+const OWN_FORMAT = new Map([
+  ["shared-sections-01", "scripts/check-shared-sections-corpus.mjs (MVP 0.2 Working Draft corpus, LFCP-02-008)"],
+]);
 const suites = readdirSync(join(root, "test-vectors"), { withFileTypes: true })
-  .filter((entry) => entry.isDirectory())
+  .filter((entry) => entry.isDirectory() && !OWN_FORMAT.has(entry.name))
   .flatMap((entry) => listJson(join(root, "test-vectors", entry.name), /-TEST-VECTORS-\d+\.json$/));
 if (suites.length === 0) fail("- - / no-suites: no vector suites found under test-vectors/");
 const verified = [];

@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Shared Sections reference vector container v1",
+  "type": "object",
+  "required": [
+    "suite",
+    "schema_version",
+    "profile",
+    "engine",
+    "identities",
+    "cases"
+  ],
+  "properties": {
+    "suite": {
+      "const": "SHARED-SECTIONS-TEST-VECTORS-01"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "profile": {
+      "const": "org.openlfcp.shared-sections.v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "coverage",
+          "base_snapshot",
+          "base_changes",
+          "branches",
+          "after_merge",
+          "assertions",
+          "expected",
+          "expected_heads",
+          "reference_snapshot",
+          "reference_snapshot_plaintext"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^SS[0-9]{2}$"
+          },
+          "title": {
+            "type": "string"
+          },
+          "coverage": {
+            "type": "string"
+          },
+          "base_snapshot": {
+            "$ref": "#/$defs/bytes"
+          },
+          "reference_snapshot": {
+            "$ref": "#/$defs/bytes"
+          },
+          "reference_snapshot_plaintext": {
+            "$ref": "#/$defs/bytes"
+          },
+          "base_changes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/change"
+            }
+          },
+          "after_merge": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/change"
+            }
+          },
+          "branches": {
+            "type": "object",
+            "required": [
+              "A",
+              "B"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "A": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/change"
+                }
+              },
+              "B": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/change"
+                }
+              }
+            }
+          },
+          "assertions": {
+            "type": "object"
+          },
+          "expected": {
+            "type": "object",
+            "required": [
+              "classification",
+              "tree",
+              "hidden",
+              "recovery",
+              "texts",
+              "tasks"
+            ],
+            "properties": {
+              "classification": {
+                "enum": [
+                  "VALID",
+                  "STRUCTURAL_ATTENTION",
+                  "PROFILE_INVALID"
+                ]
+              }
+            }
+          },
+          "expected_heads": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "bytes": {
+      "type": "object",
+      "required": [
+        "base64",
+        "sha256",
+        "length"
+      ],
+      "properties": {
+        "base64": {
+          "type": "string",
+          "contentEncoding": "base64"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "change": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/bytes"
+        },
+        {
+          "type": "object",
+          "required": [
+            "change_hash",
+            "actor",
+            "seq",
+            "deps",
+            "framed_plaintext"
+          ],
+          "properties": {
+            "change_hash": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "actor": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "seq": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "deps": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            },
+            "framed_plaintext": {
+              "$ref": "#/$defs/bytes"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

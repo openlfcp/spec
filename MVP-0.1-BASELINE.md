@@ -74,6 +74,7 @@ directory).
 | `test-vectors/shared-objects-01/generate_shared_objects_test_vectors_01.py` | Generator; reproduces both Shared Objects vector files byte for byte |
 | `test-vectors/shared-objects-01/SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json` | Automerge reference corpus for S01–S16: exact changes, save images, logical states and conflict sets, plus `validations` (save images with the expected profile problems) `expansion` (chunks at and past the §11.1 and §13.1 limits), `depth` (change sequences and Snapshots at and past the §11.2 depth bound) and `collision` (a change held for a taken actor sequence until a rebuild, §14.1) (supplementary; bytes not normative) |
 | `test-vectors/shared-objects-01/generate_automerge_reference_01.mjs` | Corpus generator; with the pinned `@automerge/automerge` 3.5.0 it reproduces the corpus byte for byte |
+| `test-vectors/shared-sections-01/` | Working Draft corpus for MVP 0.2, not in any baseline: SHARED-SECTIONS-TEST-VECTORS-01, its generator, verifier and schema (LFCP-02-008); listed because every file under `test-vectors/` is |
 
 ### Wire CDDL
 
