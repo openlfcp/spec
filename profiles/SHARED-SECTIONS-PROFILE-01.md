@@ -1,22 +1,18 @@
 # SHARED-SECTIONS-PROFILE-01
 
 **Title:** OpenLFCP Shared Sections Data Profile  
-**Status:** Working Draft 0.2 for MVP 0.2; JavaScript reference corpus prepared separately, independent interoperability pending  
-**Date:** 2026-10-07  
+**Status:** Working Draft 0.3 for MVP 0.2, not in any implementation baseline; decisions of ADR 0009 applied, independent interoperability pending  
+**Date:** 2026-10-08  
 **Profile identifier:** `org.openlfcp.shared-sections.v1`  
-**Dependencies:** LFCP-WIRE-01; Task semantics imported from SHARED-OBJECTS-PROFILE-01  
-**Companions:** MARKDOWN-SECTIONS-01 and the MVP 0.2 compatibility and migration draft, to be published with LFCP-02-007
+**Dependencies:** LFCP-WIRE-01 and SHARED-OBJECTS-PROFILE-01 at `mvp-0.1-baseline.9`; ADR 0009  
+**Companions:** MARKDOWN-SECTIONS-01; the MVP 0.2 compatibility and migration draft, to be published with LFCP-02-007
 
-> **Imported as drafted; superseded in part by
-> [ADR 0009](../adr/0009-shared-sections-profile.md) (P1–P5) and being
-> revised in LFCP-02-084 and LFCP-02-007.** In particular: §2 imports only
-> SHARED-OBJECTS-PROFILE-01 §§19–83, while ADR 0009 also imports §§7–18 and
-> §74.1; §14 classifies invalid history as a whole-section
-> `PROFILE_INVALID`, while ADR 0009 refuses structural violations at
-> admission (A1–A5) and isolates the rest per subtree; §12 and §16 are revised by LFCP-02-084 (multi-change
-> import, readiness, authoring budgets). The draft's references to
-> the Task contract and Automerge versions are re-pinned to
-> `mvp-0.1-baseline.9` and Automerge 3.5.0 in LFCP-02-007. Not part of any
+> **Revision note.** Imported from the MVP 0.2 planning draft (Working
+> Draft 0.2) and revised for [ADR 0009](../adr/0009-shared-sections-profile.md):
+> the 0.1 admission rules are inherited (§2), structural violations are
+> refused at admission and other invalid history is isolated per subtree
+> (§14), import and long edits take several changes (§12, §16, LFCP-02-084),
+> and raw nodes carry unsupported Markdown blocks (§4.2). Not part of any
 > implementation baseline.
 
 ## 1. Contract and boundaries
@@ -29,21 +25,31 @@ The separate profile identifier is deliberate. A Resource created under `org.ope
 
 ## 2. Reused LFCP and Task contracts
 
-LFCP encryption, signing, capability checks, Control Chain, epochs, anti-entropy, framing transport and snapshots remain governed by LFCP-WIRE-01 and its scoped implementation requirements. The server does not parse section contents.
+LFCP encryption, signing, capability checks, Control Chain, epochs, anti-entropy, transport and snapshots remain governed by LFCP-WIRE-01. The server does not parse section contents.
 
-Application Data Unit plaintext is deterministic CBOR `[1, change_bytes]`, containing exactly one Automerge change. Snapshot plaintext is `[1, full_save_bytes]`. Multiple semantic mutations may occur in one atomic Automerge change; concatenating several change byte streams in one payload is forbidden. This adopts the existing framing shape under a different profile identifier.
+This profile adopts SHARED-OBJECTS-PROFILE-01 (written `SOP` below) at `mvp-0.1-baseline.9`, as follows (ADR 0009, P1).
 
-Automerge actor derivation for this profile is:
+**Inherited unchanged: SOP §§7–18.**
+- §7: Automerge is the engine. Implementations pin `@automerge/automerge` 3.5.0 or the Rust `automerge` 0.12.0, as SOP's corpus does.
+- §8: the actor binding, with this profile's domain:
 
-```text
-SHA-256(ASCII("OPENLFCP-SHARED-SECTIONS-ACTOR-v1") || resource_id || principal_id)
-```
+  ```text
+  actor_id = SHA-256(ASCII("OPENLFCP-SHARED-SECTIONS-ACTOR-v1") || resource_id || principal_id)
+  ```
 
-Both IDs are their raw 32-byte values. Actor state MUST be durable; a missing actor history MUST NOT be replaced with a fresh history under the same actor. The change's author actor MUST match the authenticated LFCP Data Unit author under this derivation. This defines application authorship; it does not replace LFCP authorization.
+  Both IDs are their raw 32-byte values. The change carried by a Data Unit MUST be a change of the actor of the unit's signer; otherwise `PROFILE_INVALID` with `CHANGE_ACTOR_MISMATCH`, and nothing is merged.
+- §9: actor state safety and writing after a rebuild.
+- §10 and §12: one semantic transaction per change and one change per Data Unit, with the exceptions of §12 of this profile.
+- §11 and §13: the framing `[1, change_bytes]` (an uncompressed change chunk with a verified checksum) and `[1, full_save_bytes]`.
+- §11.1, §11.2 and §13.1: the exact change expansion limits, the document depth bound and the Snapshot limits, checked before the engine (§16.1).
+- §14 and §14.1: Snapshot equivalence, the replica state rule, rebuilds, the sequence check, and holding a change whose actor and sequence number another change holds (POST-001).
+- §§15–18: the root rules, as extended by §3 of this profile; reserved keys; extension namespaces.
 
-The Task schema, status/priority/date meanings, tags and assignees, scalar conflicts, tombstones and field intents are imported from SHARED-OBJECTS-PROFILE-01, §§19–69 and §§70–83 where applicable. This profile overrides its root structure, actor domain and profile identifier only, and adds explicit section structure. A conformance release MUST record the exact adopted revision of that Task contract.
+**Inherited for Tasks: SOP §§19–83.** The Task schema, status/priority/date meanings, tags and assignees, scalar conflicts, tombstones and intents apply to the Task objects of a section. This profile adds the section structure; it does not change a Task.
 
-Task title/status/date/priority/lifecycle values remain Automerge scalar values, not collaborative text objects. This distinction is a binary data-type requirement even when a language binding presents both as strings. In TypeScript bindings exposing `RawString`, use the scalar-string representation for scalar fields. Rust must use the equivalent scalar string, not a Text object. Never infer this distinction from a plain JSON dump.
+**Diagnostics: the model of SOP §74.1.** Every profile validation failure is `PROFILE_INVALID` with exactly one diagnostic from the registry of §14.2, which extends SOP's.
+
+Task title/status/date/priority/lifecycle values are Automerge scalar strings (`ImmutableString` in Automerge JS, `ScalarValue::Str` in Rust), never collaborative Text (SOP §30). Never infer the distinction from a plain JSON dump.
 
 ## 3. Root structure and primitive types
 
@@ -57,7 +63,7 @@ root
   extensions    map<reverse-domain namespace, unknown>
 ```
 
-Maps and lists are persistent Automerge objects created once, not rebuilt from JSON during ordinary edits. Replacing a root map, section map, node map or children list is a profile violation. Unknown extension state MUST survive edits, synchronization and snapshots.
+Maps and lists are persistent Automerge objects created once, not rebuilt from JSON during ordinary edits. A change that replaces a root map, the section map, a node's map, children list or Text is refused at admission (§14.1, A4). Unknown extension state MUST survive edits, synchronization and snapshots.
 
 IDs are canonical lowercase UUIDv7 strings. Section, Task, non-Task node and placement IDs MUST be collision-free within the Resource. A Task node deliberately uses its Task's ID; all other ID collisions are errors. UUID timestamps and lexical ordering MUST NOT establish causality or conflict precedence.
 
@@ -275,20 +281,60 @@ The exact portable syntax and external-file behavior are defined by MARKDOWN-SEC
 
 ## 14. Validation and error classes
 
-| Code | Classification / handling |
+### 14.1 Admission
+
+A receiver checks a change when every dependency of it is in the document (SOP §14.1), before its engine applies it: first SOP's checks (§11, §11.1, §11.2, the sequence check of §14.1, `CHANGE_ACTOR_MISMATCH`), then the structural rules below (ADR 0009, P2). Each rule is decided from the change's operations and the objects they write into, which are in the change's causal history; every replica decides it the same way, in time linear in the change.
+
+| Rule | The change … | Diagnostic |
+| --- | --- | --- |
+| A1 | deletes or replaces an element of a children list (`section.children` or a node's `children`) | `CHILDREN_LIST_MUTATED` |
+| A2 | inserts into a children list a PlacementId whose placement it does not create, or whose `parent_id` is not the list's owner; or creates a placement that it does not insert exactly once into its parent's children list and assign to its node's `placement` | `PLACEMENT_NOT_ATOMIC` |
+| A3 | writes or deletes a key of a placement map it did not create; writes an immutable key (`id`, `kind`, `created_by`, `task_id`, `node_id`, `parent_id`, and the Task keys of SOP §75) of an object it did not create; or writes `section.ready` against §12.1 | `IMMUTABLE_FIELD_MUTATED` |
+| A4 | replaces or deletes a container: the root's `profile`, `section`, `nodes`, `placements`, `objects` or `extensions` after the initial change, or an existing node's `children`, `text` or `extensions` | `CONTAINER_REPLACED` |
+| A5 | writes collaborative Text where a scalar is required (SOP §30), a scalar to a node's `text`, or a value other than a scalar string into a children list | `INVALID_FIELD_TYPE` |
+
+A change that breaks a rule is `PROFILE_INVALID` with that rule's diagnostic and is not merged. When it breaks several, the diagnostic is the first that applies in the order `INVALID_AUTOMERGE_BYTES`, `CHANGE_ACTOR_MISMATCH`, `CONTAINER_REPLACED`, `CHILDREN_LIST_MUTATED`, `PLACEMENT_NOT_ATOMIC`, `IMMUTABLE_FIELD_MUTATED`, `INVALID_FIELD_TYPE`. A refused change blocks the changes that depend on it, as SOP §14.1 holds any change with a missing dependency.
+
+### 14.2 Values: isolation per subtree
+
+Every other invalid value is merged and isolated, as SOP §77 isolates an invalid object. A failing value reports one diagnostic from this registry, which is SOP §74.1's with the section rows added; when one value breaks several rules, its diagnostic is the first that applies in this order.
+
+| Diagnostic | Meaning |
 | --- | --- |
-| UNSUPPORTED_PROFILE | No interpretation or writes by a legacy-only client |
-| PROFILE_INVALID | Wrong root, types, immutable mutation, missing required fields or broken slot invariants |
-| OBJECT_ID_COLLISION | Conflicting identity creation; do not reinterpret as one object |
-| PLACEMENT_CONFLICT | Concurrent location assignments; explicit resolution |
-| PARENT_CYCLE | Selected parent graph cycle; explicit resolution |
-| BLOCKED_PARENT | Dependent structural blockage; retain content |
-| LIFECYCLE_CONFLICT | Active/deleted alternatives; explicit resolution |
-| EDIT_UNDER_DELETED_ANCESTOR | Retained content requiring recovery visibility |
+| `INVALID_ROOT` | `profile` differs, or a root container of §3 is missing or not a map |
+| `INVALID_OBJECT_ID` | a Section, Node, Placement or Task ID, or a map key holding one, is not a canonical UUIDv7 |
+| `OBJECT_ID_MISMATCH` | an object's `id` differs from its map key, or a Task node's `id` differs from its `task_id` |
+| `MISSING_REQUIRED_FIELD` | a required section, node, placement or Task field is absent |
+| `INVALID_FIELD_TYPE` | a field has the wrong type (SOP §30, §76), e.g. `text` that is not Text, a `children` that is not a list |
+| `INVALID_ENUM_VALUE` | `kind`, `lifecycle`, `list_style`, or a Task's `status` or `priority` is outside its domain |
+| `INVALID_EXTENSION_NAMESPACE` | an `extensions` key is not a reverse-domain namespace |
+| `INVALID_PRINCIPAL_REF` | a `created_by` or assignee is not `p:` + base64url of 32 bytes |
+| `INVALID_TIMESTAMP` | a `created_at` is not an RFC 3339 UTC timestamp |
+| `INVALID_LOCAL_DATE` | a Task date is not a valid `YYYY-MM-DD` |
+| `INVALID_COLLECTION_REPRESENTATION` | Task `tags` or `assignees` are not a map of `true` |
+| `INVALID_TAG` | a Task tag is empty or starts with `#` |
+| `INVALID_REFERENCE` | a node's `placement` names no placement, or a placement of another node; a placement's `node_id` or `parent_id` names no node or section; a Task node's `task_id` names no Task; a parent is a paragraph or raw node |
+| `IMMUTABLE_FIELD_MUTATED` | an immutable field has concurrent values (a write refused at admission cannot be merged) |
 
-Validate each change against its causal predecessor state for authored invariants such as immutable slot creation and insert-only list mutation, then classify the merged graph separately. A valid concurrent merge may have placement conflicts or cycles; these are not grounds to discard one peer's valid history. Descendants of an unavailable or rejected causal change remain pending/quarantined rather than being applied to invented base state.
+`OBJECT_ID_COLLISION` (SOP §21) stays a separate named error, not a diagnostic.
 
-Profile-invalid authenticated history is retained for diagnostics and recovery without projecting unsafe state. Readers must converge on the same classification for the same history. Validation must inspect conflicting values, not just the language binding's default visible value.
+An invalid node is not projected, and its descendants are `BLOCKED_PARENT`; the rest of the section is projected. A Task whose object is invalid isolates its Task node the same way. Section-level problems (`INVALID_ROOT`, an invalid `section` map) leave nothing to project and are reported for the whole Resource.
+
+Validation inspects every concurrent value of a field, not only the binding's default visible value (SOP §45, §74.1). Readers converge on the same classification for the same accepted history.
+
+### 14.3 Model facts
+
+These are not errors: the history is valid, and a user resolves them (§8).
+
+| Fact | Meaning |
+| --- | --- |
+| `PLACEMENT_CONFLICT` | Concurrent location assignments of one node |
+| `PARENT_CYCLE` | A cycle in the selected parent graph |
+| `BLOCKED_PARENT` | A node under a conflicted, cyclic or invalid parent; content retained |
+| `LIFECYCLE_CONFLICT` | Concurrent active/deleted values |
+| `EDIT_UNDER_DELETED_ANCESTOR` | Retained content changed concurrently with its ancestor's deletion |
+
+A valid concurrent merge may have placement conflicts or cycles; they are not grounds to discard a peer's valid history. A client that does not implement this profile reports the Resource as `PROFILE_UNSUPPORTED` (LFCP-WIRE-01 §62) and neither interprets nor writes it.
 
 ## 15. Required behavioral examples
 
@@ -308,7 +354,7 @@ Notation below names existing objects; symbols are not literal IDs or a binary v
 | SS10 | A detaches a local section | No Resource/Task delete or capability revoke |
 | SS11 | Standalone Task title edited | Same Task updates in section; child content untouched |
 | SS12 | Snapshot load then further changes | Same tree, Text and conflicts as complete change replay |
-| SS13 | Corrupt immutable placement parent | PROFILE_INVALID; no silent relocation |
+| SS13 | Corrupt immutable placement parent | Refused at admission (§14.1, A3); no silent relocation |
 | SS14 | Concurrent paragraph edit in TS and Rust | Same Text after merge, including Cyrillic/emoji |
 
 ## 16. Limits and serialization
@@ -374,18 +420,16 @@ New clients must dispatch by Resource Genesis profile before interpreting a `#ta
 
 ## 18. Technical references
 
-The proposed slot/placement scheme and conflict policy are OpenLFCP design decisions. They are not claims about built-in Automerge tree semantics.
+The slot/placement scheme and conflict policy are OpenLFCP design decisions. They are not claims about built-in Automerge tree semantics.
 
 - [Automerge conflicts](https://automerge.org/docs/reference/documents/conflicts/) describes scalar conflict inspection and sequence merge behavior.
 - [Automerge text](https://automerge.org/docs/reference/documents/text/) describes collaborative text operations.
-- [Automerge API](https://automerge.org/automerge/api-docs/js/) provides the current binding reference; its current version is not automatically the project's pinned version.
-
-References checked 2026-10-07. This document does not choose a dependency upgrade without checking the actual repositories.
+- [Automerge API](https://automerge.org/automerge/api-docs/js/) is the binding reference; the project pins 3.5.0 (§2).
 
 ## 19. Required before implementation baseline freeze
 
-1. Publish SHARED-SECTIONS-TEST-VECTORS-01 with real Automerge change/save bytes for SS01–SS14 and additional negative cases.
-2. Record exact TypeScript/Rust dependency versions and adopted Task-spec revision. Verify scalar strings versus Text types and actor derivation in both.
+1. Publish SHARED-SECTIONS-TEST-VECTORS-01 with real Automerge change/save bytes, generated with Automerge 3.5.0, for SS01–SS28 and the admission, isolation and import cases of LFCP-02-010.
+2. Verify scalar strings versus Text types, the actor derivation and the admission rules of §14.1 in sdk-ts and sdk-rs.
 3. Validate slot ordering, repeated moves, cycle/conflict classification, Text operations and snapshot replay against the same corpus.
 4. Validate MARKDOWN-SECTIONS-01 fixtures and legacy profile-dispatch behavior.
 5. Test crash/restart, data-size limits and the 100–200 Task scenario.
