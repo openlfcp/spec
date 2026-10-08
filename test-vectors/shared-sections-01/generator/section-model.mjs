@@ -27,6 +27,7 @@ export const canon = value => JSON.stringify(plain(value));
 export const fork = (doc,name) => A.clone(doc,{actor:actor(name)});
 export const change = (doc,label,fn) => A.change(doc,{time:0,message:label},fn);
 export const values = (obj,key) => {
+  if(obj==null)return [];
   const c=A.getConflicts(obj,key);
   return c ? Object.values(c).map(str).sort() : obj[key] === undefined ? [] : [str(obj[key])];
 };
@@ -67,14 +68,19 @@ export function textEdit(d,n,scalarIndex,removeScalars,insert) {
   const count=chars.slice(scalarIndex,scalarIndex+removeScalars).join('').length;
   A.splice(d,['nodes',n,'text'],start,count,insert);
 }
-export function initial() {
-  let d=A.init({actor:actor('A')});
-  d=change(d,'genesis-profile',x=>{
+/** The creator's first change: the root and an empty section, not yet ready (§12.1). */
+export function genesis() {
+  return change(A.init({actor:actor('A')}),'genesis-profile',x=>{
     x.profile=S(PROFILE);
     x.section={id:S(ids.section),title:S('Joint launch'),created_by:S(pref('A')),children:[],extensions:{}};
     x.objects={};x.nodes={};x.placements={};x.extensions={};
   });
+}
+export function initial() {
+  const d=genesis();
+  // The creator's last initialization change writes the readiness marker (§12.1).
   return change(d,'initial-content',x=>{
+    x.section.ready=true;
     add(x,ids.task,'task',ids.section,null,'slot-task','Prepare contract');
     add(x,ids.para,'paragraph',ids.task,null,'slot-para','Draft contract');
     add(x,ids.x,'item',ids.section,ids.task,'slot-x','Group X');
@@ -128,6 +134,8 @@ export function inspect(doc) {
   // what remains invalid here is isolated per node and subtree (§14.2).
   const audit=historyAudit(doc);
   const errors=[], invalid=new Map(), blocked=new Map(), parents={}, hidden=new Set(), nodes=doc.nodes||{};
+  // §12.1: a section without ready is being imported and projects nothing.
+  const importing=!!doc.section&&doc.section.ready!==true;
   if(str(doc.profile)!==PROFILE)errors.push('INVALID_ROOT');
   for(const key of ['section','objects','nodes','placements','extensions'])if(!doc[key]||typeof doc[key]!=='object')errors.push('INVALID_ROOT');
   if(doc.section&&!Array.isArray(doc.section.children))errors.push('INVALID_ROOT');
@@ -187,13 +195,13 @@ export function inspect(doc) {
       tree.push({id:n,parent:p,depth,kind:str(nodes[n].kind)});walk(n,depth+1);
     }
   }
-  if(!errors.length)walk(ids.section,0);
+  if(!errors.length&&!importing)walk(ids.section,0);
   const scalarConflicts=[];
   for(const [n,obj] of Object.entries(doc.objects||{}))for(const field of ['title','status','lifecycle','due','priority']){
     const v=values(obj,field);if(v.length>1)scalarConflicts.push({id:n,field,values:v});
   }
   return {
-    classification:errors.length?'PROFILE_INVALID':blocked.size||invalid.size?'STRUCTURAL_ATTENTION':'VALID',
+    classification:errors.length?'PROFILE_INVALID':importing?'IMPORTING':blocked.size||invalid.size?'STRUCTURAL_ATTENTION':'VALID',
     errors:[...new Set(errors)].sort(),tree,hidden:[...hidden].sort(),
     invalid:[...invalid].sort(([a],[b])=>a.localeCompare(b)).map(([id,diagnostic])=>({id,diagnostic})),
     recovery:[...blocked].sort(([a],[b])=>a.localeCompare(b)).map(([id,code])=>({id,code})),

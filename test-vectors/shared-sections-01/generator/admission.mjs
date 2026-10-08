@@ -7,7 +7,7 @@
 import {A,PROFILE,actor,pref,str,canon} from './section-model.mjs';
 
 /** Diagnostics in their order of precedence (§14.1). */
-export const ADMISSION_ORDER=['CONTAINER_REPLACED','CHILDREN_LIST_MUTATED','PLACEMENT_NOT_ATOMIC','IMMUTABLE_FIELD_MUTATED','INVALID_FIELD_TYPE'];
+export const ADMISSION_ORDER=['INVALID_AUTOMERGE_BYTES','CONTAINER_REPLACED','CHILDREN_LIST_MUTATED','PLACEMENT_NOT_ATOMIC','IMMUTABLE_FIELD_MUTATED','INVALID_FIELD_TYPE'];
 const ROOT_CONTAINERS=['section','objects','nodes','placements','extensions'];
 const TEXT_KINDS=new Set(['paragraph','item','raw']);
 const NODE_IMMUTABLE=['id','kind','created_by','task_id'];
@@ -41,7 +41,11 @@ const conflictValues=(obj,key)=>{const c=obj?A.getConflicts(obj,key):undefined;r
 export function admit(prev,bytes){
   const [next]=A.applyChanges(A.clone(prev),[bytes]);
   const found=new Set();
-  const changeActor=A.decodeChange(bytes).actor;
+  const decoded=A.decodeChange(bytes);
+  const changeActor=decoded.actor;
+  // SHARED-OBJECTS-PROFILE-01 §11.1, approximated by the operation count:
+  // the action column holds one value per operation.
+  if(decoded.ops.length>16384)return 'INVALID_AUTOMERGE_BYTES';
   if(prev.section){
     // A4: root containers and the profile.
     for(const key of ROOT_CONTAINERS)if(oid(prev,key)&&oid(prev,key)!==oid(next,key))found.add('CONTAINER_REPLACED');

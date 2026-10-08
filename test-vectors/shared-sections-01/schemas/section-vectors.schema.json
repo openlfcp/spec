@@ -110,6 +110,7 @@
               "classification": {
                 "enum": [
                   "VALID",
+                  "IMPORTING",
                   "STRUCTURAL_ATTENTION",
                   "PROFILE_INVALID"
                 ]

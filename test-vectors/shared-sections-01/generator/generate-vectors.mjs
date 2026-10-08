@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import {createRequire} from 'node:module';
 import path from 'node:path';
 import assert from 'node:assert/strict';
-import {A,PROFILE,hash,resource,principal,actor,pref,uid,ids,S,str,plain,fork,change,place,add,setLife,textEdit,initial,inspect,assertExpected} from './section-model.mjs';
+import {A,PROFILE,hash,resource,principal,actor,pref,uid,ids,S,str,plain,fork,change,place,add,setLife,textEdit,initial,genesis,inspect,assertExpected} from './section-model.mjs';
 import {admitReplay} from './admission.mjs';
 const out=process.argv[2]||path.dirname(path.dirname(new URL(import.meta.url).pathname));
 // The engine that generated the corpus: the installed package, not a literal.
@@ -185,8 +185,82 @@ const restored=A.load(A.save(seeds),{actor:actor('A')});
 record('SS28','Continue an actor safely from a full snapshot',{
   base:restored,a:[['continue-after-load',d=>{d.objects[ids.task].priority=S('high');}]],
   requirements:{classification:'VALID',tasks:{[ids.task]:{priority:'high'}}}});
+// LFCP-02-010: readiness and import (§12), admission (§14.1), isolation
+// (§14.2) and the Text budget (§16).
+const empty=genesis();
+const importChunk=(from,to)=>d=>{
+  let after=from>1?uid('imp-task-'+(from-1)):null;
+  for(let i=from;i<=to;i++){
+    const t=uid('imp-task-'+i);
+    add(d,t,'task',ids.section,after,'imp-slot-'+i,'Import '+i);
+    add(d,uid('imp-para-'+i),'paragraph',t,null,'imp-body-'+i,'Notes '+i);
+    after=t;
+  }
+};
+record('SS29','Import in three changes, ready written last',{base:empty,
+  a:[['chunk-1',importChunk(1,3)],['chunk-2',importChunk(4,6)],['ready',d=>{d.section.ready=true;}]],
+  requirements:{classification:'VALID',nodeCount:12,treeCount:12},coverage:'import',
+  notes:['§12.1: each change of the import is consistent on its own; the section is projected once its creator writes ready in the last change.']});
+record('SS30','An import without ready projects nothing',{base:empty,
+  a:[['chunk-1',importChunk(1,3)]],
+  requirements:{classification:'IMPORTING',nodeCount:6,treeCount:0},coverage:'import',
+  notes:['§12.1: a reader shows the section as being imported and projects none of its content.']});
+record('SS31','Ready written by another actor is refused',{base:empty,
+  a:[['chunk-1',importChunk(1,3)]],
+  b:[['ready-by-B',d=>{d.section.ready=true;}]],
+  requirements:{classification:'IMPORTING',refused:['IMMUTABLE_FIELD_MUTATED'],treeCount:0},coverage:'negative-admission',
+  notes:['§12.1: only the actor of the section\'s created_by writes ready.']});
+record('SS32','Deleting ready is refused',{
+  a:[['delete-ready',d=>{delete d.section.ready;}]],
+  requirements:{classification:'VALID',refused:['IMMUTABLE_FIELD_MUTATED'],visible},coverage:'negative-admission'});
+record('SS33','A placement created but not inserted is refused',{
+  a:[['orphan-placement',d=>{
+    const n=ids.a,p=uid('SS33-slot');
+    d.nodes[n]={id:S(n),kind:S('paragraph'),created_by:S(pref('A')),lifecycle:S('active'),placement:S(p),children:[],extensions:{},text:'Orphan'};
+    d.placements[p]={id:S(p),node_id:S(n),parent_id:S(ids.section),created_by:S(pref('A'))};
+  }]],
+  requirements:{classification:'VALID',refused:['PLACEMENT_NOT_ATOMIC'],visible,nodeCount:4},coverage:'negative-admission',
+  notes:['A2: a placement is created, inserted exactly once and assigned in one change.']});
+record('SS34','Changing a node\'s kind is refused',{
+  a:[['retype',d=>{d.nodes[ids.x].kind=S('paragraph');}]],
+  requirements:{classification:'VALID',refused:['IMMUTABLE_FIELD_MUTATED'],visible},coverage:'negative-admission',notes:['A3.']});
+record('SS35','Replacing a node\'s children list is refused',{
+  a:[['new-list',d=>{d.nodes[ids.x].children=[];}]],
+  requirements:{classification:'VALID',refused:['CONTAINER_REPLACED'],visible},coverage:'negative-admission',notes:['A4.']});
+record('SS36','A Task title written as Text is refused',{
+  a:[['text-title',d=>{d.objects[ids.task].title='Collaborative title';}]],
+  requirements:{classification:'VALID',refused:['INVALID_FIELD_TYPE'],visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
+  notes:['A5: Task fields are scalar strings (SHARED-OBJECTS-PROFILE-01 §30).']});
+record('SS37','A change after a refused one is held',{
+  a:[['delete-slot',d=>d.section.children.splice(0,1)],['edit-after',d=>textEdit(d,ids.para,0,0,'Held: ')]],
+  requirements:{classification:'VALID',refused:['CHILDREN_LIST_MUTATED'],heldCount:1,visible,texts:{[ids.para]:'Draft contract'}},coverage:'negative-admission',
+  notes:['§14.1: a refused change blocks the changes that depend on it (SHARED-OBJECTS-PROFILE-01 §14.1).']});
+record('SS38','A Task node whose Task is missing is isolated with its subtree',{
+  a:[['dangling-task',d=>{
+    const n=ids.a,p=uid('SS38-slot');
+    d.nodes[n]={id:S(n),kind:S('task'),task_id:S(n),list_style:S('bullet'),created_by:S(pref('A')),lifecycle:S('active'),placement:S(p),children:[],extensions:{}};
+    d.placements[p]={id:S(p),node_id:S(n),parent_id:S(ids.section),created_by:S(pref('A'))};
+    d.section.children.push(S(p));
+    add(d,ids.b,'paragraph',n,null,'SS38-child','Under a missing Task');
+  }]],
+  requirements:{classification:'STRUCTURAL_ATTENTION',invalid:{[ids.a]:'INVALID_REFERENCE'},recovery:{[ids.b]:'BLOCKED_PARENT'},visible,absent:[ids.a,ids.b]},coverage:'isolation',
+  notes:['§14.2: the invalid node and its subtree are not projected; the rest of the section is.']});
+record('SS39','An item placed under a paragraph is isolated',{
+  a:[['under-paragraph',d=>add(d,ids.a,'item',ids.para,null,'SS39-slot','Misplaced')]],
+  requirements:{classification:'STRUCTURAL_ATTENTION',invalid:{[ids.a]:'INVALID_REFERENCE'},visible,absent:[ids.a]},coverage:'isolation'});
+const long='абвгдежзий'.repeat(2000);
+record('SS40','A 20,000-character insertion split under the Text budget',{
+  a:[['run-1',d=>textEdit(d,ids.para,14,0,long.slice(0,8192))],
+     ['run-2',d=>textEdit(d,ids.para,14+8192,0,long.slice(8192,16384))],
+     ['run-3',d=>textEdit(d,ids.para,14+16384,0,long.slice(16384))]],
+  requirements:{classification:'VALID',visible,texts:{[ids.para]:'Draft contract'+long}},coverage:'budget',
+  notes:['§12.3, §16.2: consecutive contiguous runs of at most 8,192 Text operations each.']});
+record('SS41','One change inserting 16,385 characters is refused',{
+  a:[['too-long',d=>textEdit(d,ids.para,14,0,'ж'.repeat(16385))]],
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],visible,texts:{[ids.para]:'Draft contract'}},coverage:'negative-admission',
+  notes:['SHARED-OBJECTS-PROFILE-01 §11.1: more than 16,384 values in a column; the reference model counts operations.']});
 const doc={
-  suite:'SHARED-SECTIONS-TEST-VECTORS-01',schema_version:1,date:'2026-10-07',
+  suite:'SHARED-SECTIONS-TEST-VECTORS-01',schema_version:1,date:'2026-10-08',
   status:'working-draft-reference-corpus',profile:PROFILE,
   engine:{package:'@automerge/automerge',version:ENGINE,role:'corpus reference engine; the version spec pins in package.json'},
   wire_coverage:'application plaintext framing only; no signatures, encryption, server or network',
