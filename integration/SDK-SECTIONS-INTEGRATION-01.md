@@ -90,14 +90,24 @@ An adapter releases a receipt when its journal finishes the operation (§7.7). A
 
 ### 3.6 Refusals before commit
 
-A refused batch reports a code and, where it applies, the intent and node it concerns. The codes are those of SHARED-SECTIONS-PROFILE-01 (§6, §8, §10, §14) and SHARED-OBJECTS-PROFILE-01, plus:
+A refused batch reports a `code`, the `intentIndex` of the first refused intent in the batch and, where it applies, the `nodeId` it concerns. SHARED-SECTIONS-PROFILE-01 names the rules but not their refusal codes; these are the codes, the same in every SDK:
 
 | Code | Meaning |
 | --- | --- |
+| `SECTION_INVALID` | The document is not a valid section: a section-level problem of SHARED-SECTIONS-PROFILE-01 §14.2 |
+| `SECTION_EXISTS` | `section.create` on a document that has a root, or `ready` written on a section that is ready |
+| `SECTION_IMPORTING` | The section has no `ready` and the batch is not the creator's (SHARED-SECTIONS-PROFILE-01 §12.1), or `ready` is written by another actor |
+| `NOT_WRITABLE` | The validated access state does not allow writing (§6) |
+| `UNKNOWN_NODE` | An intent names a node that does not exist |
+| `ID_IN_USE` | A new node, Task or placement ID is already used in the Resource (§3; the writer's check) |
+| `INVALID_PARENT` | The parent does not exist, is invalid, deleted, in a lifecycle or placement conflict or a cycle, cannot hold content (§4.2, §6), or a move would make a node its own ancestor |
+| `INVALID_PREDECESSOR` | `after` is not a visible child of the parent (§6) |
+| `INVALID_INTENT` | A value outside its domain (an ID that is not a canonical UUIDv7, `list_style` on a paragraph, a string with an unpaired surrogate), or an intent that does not apply to its node (a Text edit of a Task, a split of a conflicted node, a join of non-adjacent, different or parenting nodes, §10) |
 | `STALE_BASE` | A `text.edit` names a base revision the SDK cannot rebase onto the current Text (§7.5) |
 | `OPERATION_ID_REUSED` | §3.3 |
-| `NOT_WRITABLE` | The validated access state does not allow writing (§6) |
-| `SECTION_IMPORTING` | The section has no `ready` and the batch is not the creator's continuation of the import (SHARED-SECTIONS-PROFILE-01 §12.1) |
+| `OVER_BUDGET` | The batch exceeds a budget of SHARED-SECTIONS-PROFILE-01 §16.2 and the SDK does not split it; an SDK that splits batches (§3.1) never returns it |
+
+A Task field refused by SHARED-OBJECTS-PROFILE-01 is `PROFILE_INVALID` with its diagnostic (§74.1 there), or `OBJECT_ID_COLLISION`.
 
 An adapter shows a code by its own words; it does not show raw SDK text.
 
