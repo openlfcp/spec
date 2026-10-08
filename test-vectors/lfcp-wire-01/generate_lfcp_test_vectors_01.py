@@ -2061,7 +2061,7 @@ def to_vector_format(fixtures: dict) -> dict:
 
     for x in fixtures['data_put_previous']:
         case = {'id': x['id'], 'type': 'validation', 'kind': 'data_put_previous', 'description': x['description'],
-                'note': x['note'], 'inputs': {**x['inputs'], 'signer': 'CAROL'}}
+                'note': x['note'], 'inputs': x['inputs']}
         if x['derivation']:
             case['derivation'] = x['derivation']
         case['expected'] = x['expected']
