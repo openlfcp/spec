@@ -203,3 +203,7 @@ pilot, with the number of such conflicts the pilot records.
   (20 and 10 by default since server 0.2.0). Both are tunable per server in
   the config; the public server's values are set by the owner
   (LFCP-02-003).
+- A6, a candidate admission rule: refuse a change that creates an ID
+  already used in another category in its causal history (SSP §3), which
+  is deterministic for every receiver. Readers do not check such reuse in
+  this version (SSP §14.2).
