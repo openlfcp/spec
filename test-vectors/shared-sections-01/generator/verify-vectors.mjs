@@ -37,15 +37,18 @@ for(const c of suite.cases) {
   });
   // Replay stored bytes through admission (§14.1), in order, in reverse with
   // duplicates, and from the base Snapshot plus the tail.
+  // The Snapshot floor cases (SS55, SS56) replay once outside CI; CI
+  // (the CI environment variable) replays every case all three ways.
+  const full=!c.expected.snapshot||!!process.env.CI;
   const normal=admitReplay(changes,actor('verify-normal'));
-  const reverse=admitReplay([...changes].reverse().flatMap(b=>[b,b]),actor('verify-reverse'));
+  const reverse=full?admitReplay([...changes].reverse().flatMap(b=>[b,b]),actor('verify-reverse')):normal;
   const delta=[...c.branches.A,...c.branches.B,...c.after_merge].map(x=>x.signer?{bytes:decode(x),signer:x.signer}:decode(x));
   const loaded=A.load(base,{actor:actor('verify-checkpoint')});
-  const checkpoint=admitReplay([...A.getAllChanges(loaded),...delta],actor('verify-checkpoint'));
+  const checkpoint=full?admitReplay([...A.getAllChanges(loaded),...delta],actor('verify-checkpoint')):normal;
   const saved=A.load(target,{actor:actor('verify-save')});
   // SHARED-OBJECTS-PROFILE-01 §13.1 counts, for the cases that record them.
   const counts=d=>c.expected.snapshot?{snapshot:snapshotCounts(d)}:{};
-  const summaries=[normal,reverse,checkpoint].map(r=>[r.doc,{...inspect(r.doc),refused:r.refused,held:r.held,...counts(r.doc)}]);
+  const summaries=[...new Set([normal,reverse,checkpoint])].map(r=>[r.doc,{...inspect(r.doc),refused:r.refused,held:r.held,...counts(r.doc)}]);
   summaries.push([saved,{...inspect(saved),refused:normal.refused,held:normal.held,...counts(saved)}]);
   for(const [d,summary] of summaries) {
     assert.deepEqual(summary,c.expected,'state mismatch '+c.id);

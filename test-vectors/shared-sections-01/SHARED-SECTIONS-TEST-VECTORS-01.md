@@ -31,7 +31,7 @@ This suite contains real Automerge changes and save images for shared sections, 
 
 The corpus is generated and replayed with **@automerge/automerge 3.5.0**, the version `package.json` pins for this repository and the one sdk-ts uses; the Rust `automerge` 0.12.0 is its core. The generator records the version it ran with in `engine.version`.
 
-All 28 cases pass reference replay, reverse-order delivery with duplicate changes, save/load and snapshot-plus-tail checks, and the suite regenerates byte-for-byte (`scripts/check-shared-sections-corpus.mjs`, run by `scripts/validate.sh`). The reference generator and verifier share a model inspector; this is not an independent correctness proof. Explicit semantic assertions prevent the output from being accepted solely because the generator produced it.
+All cases pass reference replay, reverse-order delivery with duplicate changes, save/load and snapshot-plus-tail checks (for the two long histories SS55 and SS56, the reverse and snapshot-plus-tail replays run only when the `CI` environment variable is set, as on GitHub Actions), and the suite regenerates byte-for-byte (`scripts/check-shared-sections-corpus.mjs`, run by `scripts/validate.sh`). The reference generator and verifier share a model inspector; this is not an independent correctness proof. Explicit semantic assertions prevent the output from being accepted solely because the generator produced it.
 
 No production SDK, Rust implementation, server, signed/encrypted LFCP exchange or Obsidian installation was exercised. This corpus prepares their conformance inputs.
 
