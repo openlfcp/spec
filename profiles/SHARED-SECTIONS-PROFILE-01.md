@@ -88,7 +88,7 @@ The creator initializes root, section and their empty maps/lists in one change b
 ```text
 nodes[id] = {
   id,                 NodeId; immutable; equals map key
-  kind,               "task" | "paragraph" | "item"; immutable
+  kind,               "task" | "paragraph" | "item" | "raw"; immutable
   created_by,         PrincipalRef; immutable
   created_at?,        optional timestamp
   lifecycle,          "active" | "deleted"; scalar register
@@ -96,14 +96,14 @@ nodes[id] = {
   children,           Automerge list<PlacementId>; permanent, insert-only
   extensions,         map
   task_id?,           TaskId; immutable; task nodes only
-  text?,              Automerge Text; paragraph/item nodes only
+  text?,              Automerge Text; paragraph/item/raw nodes only
   list_style?         "bullet" | "ordered"; scalar register; task/item only
 }
 ```
 
 Task nodes MUST have `id == task_id` and reference an existing Task in `objects`. Their `text` field is absent. Their lifecycle is always `active`; effective deletion is governed by the Task lifecycle. This prevents independent Task/node tombstones from making restore ambiguous. An unplaced Task may exist in `objects`; there is at most one node for it.
 
-Paragraph nodes MUST have Text and an empty children list. They cannot parent content. Item nodes MUST have Text and may parent paragraphs, Tasks or items. Task nodes may parent the same types. `list_style` expresses ordered versus unordered list membership, not a Task's status.
+Paragraph nodes MUST have Text and an empty children list. They cannot parent content. Raw nodes likewise MUST have Text and an empty children list and cannot parent content; their Text is a Markdown block carried verbatim, which no reader interprets as nodes or bindings (MARKDOWN-SECTIONS-01 §4.4). Item nodes MUST have Text and may parent paragraphs, raw nodes, Tasks or items. Task nodes may parent the same types. `list_style` expresses ordered versus unordered list membership, not a Task's status.
 
 Text holds Markdown inline source and soft line breaks, without list prefixes or LFCP metadata. Marker-like text is ordinary literal content only when escaped or in inline code according to the Markdown companion. Paragraph boundaries belong to separate nodes. Typed bytes that cannot yet be interpreted are retained locally until a safe intent can be formed.
 

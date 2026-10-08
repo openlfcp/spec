@@ -60,6 +60,7 @@ directory).
 | `profiles/SHARED-OBJECTS-PROFILE-01.md` | Shared Objects application profile `org.openlfcp.shared-objects.v1` (Working Draft) |
 | `profiles/SHARED-SECTIONS-PROFILE-01.md` | Working Draft for MVP 0.2, not in any baseline: the shared sections profile `org.openlfcp.shared-sections.v1` (ADR 0009); listed because every file under `profiles/` is |
 | `integration/MARKDOWN-REFS-01.md` | Markdown projection reference grammar: inline and child-line placements (Working Draft) |
+| `integration/MARKDOWN-SECTIONS-01.md` | Working Draft for MVP 0.2, not in any baseline: Markdown bindings of shared sections; listed because every file under `integration/` is |
 
 ### Test vectors
 

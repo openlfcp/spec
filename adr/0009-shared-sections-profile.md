@@ -193,7 +193,7 @@ pilot, with the number of such conflicts the pilot records.
 
 ## Open items
 
-- The authoring budgets are estimates until LFCP-02-084 measures them.
+- The authoring budgets are estimates until LFCP-02-084 measures them: measured in SSP §16.3 (27/15 rows per Task/other node).
 - Text history and the Snapshot floor of P §13.1 (about 262,000 typed
   characters over a section's life): measured in LFCP-02-067.
 - How an SDK coalesces keystrokes into changes, and how many Data Units a
