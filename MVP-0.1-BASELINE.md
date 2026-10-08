@@ -5,11 +5,12 @@ full WIRE-01 conformance, documents remain Working Drafts.**
 
 This file answers one question: *what exactly do I implement against for
 MVP 0.1?* The answer is every file listed below, at the Git tag
-`mvp-0.1-baseline.9` of this repository.
+`mvp-0.1-baseline.10` of this repository.
 
 | Tag | Status |
 | --- | --- |
-| mvp-0.1-baseline.9 | **Current.** Applies SPEC-PATCH-09: ADR 0008, recovery after server data loss, accepted by the project owner on 2026-10-08, and POST-001, decided by the project owner on 2026-10-06. A server refuses a Data Unit whose `previous` it does not hold, with the new code 23 `UNKNOWN_PREVIOUS` (LFCP-WIRE-01 §51.1, §62); anti-entropy runs in both directions, any session may upload a validly signed object, and clients re-supply what a server lacks and re-host a Resource a route lost (§41.1, §68.1, §84, §86, §88); a replica holds, and retries after a rebuild, a change whose Automerge actor and sequence number are taken (SHARED-OBJECTS-PROFILE-01 §14.1). No vector value changes (`migrations/mvp-0.1-baseline.9/value-changes.json` lists no change); the Wire vectors gain `data_put_previous` and `have_difference` cases, the corpus the `collision` section. |
+| mvp-0.1-baseline.10 | **Current.** Applies SPEC-PATCH-10 (ADR 0010), orchestrator decisions of 2026-10-09 from an external review (findings F2 to F4): a change's bytes are its one canonical encoding, defined by properties of the change format (SHARED-OBJECTS-PROFILE-01 §11.3), and its operations refer only to its causal history (§11.4, rules R1 to R7); a receiver checks both before its engine, and rejects a Snapshot whose document holds a change they refuse (§13). No vector value changes (`migrations/mvp-0.1-baseline.10/value-changes.json` lists no change); the corpus gains the `canonical` and `references` sections. |
+| mvp-0.1-baseline.9 | Superseded by `mvp-0.1-baseline.10`, because SPEC-PATCH-10 changes normative rules and adds vectors. Never moved. Applies SPEC-PATCH-09: ADR 0008, recovery after server data loss, accepted by the project owner on 2026-10-08, and POST-001, decided by the project owner on 2026-10-06. A server refuses a Data Unit whose `previous` it does not hold, with the new code 23 `UNKNOWN_PREVIOUS` (LFCP-WIRE-01 §51.1, §62); anti-entropy runs in both directions, any session may upload a validly signed object, and clients re-supply what a server lacks and re-host a Resource a route lost (§41.1, §68.1, §84, §86, §88); a replica holds, and retries after a rebuild, a change whose Automerge actor and sequence number are taken (SHARED-OBJECTS-PROFILE-01 §14.1). No vector value changes (`migrations/mvp-0.1-baseline.9/value-changes.json` lists no change); the Wire vectors gain `data_put_previous` and `have_difference` cases, the corpus the `collision` section. |
 | mvp-0.1-baseline.8 | Superseded by `mvp-0.1-baseline.9`, because SPEC-PATCH-09 changes normative rules and adds vectors. Never moved. Applies the seventh batch of decisions (SPEC-PATCH-08, ADR 0007), an orchestrator decision approved by the project owner on 2026-10-06: no object of a document may be deeper than 256 levels below the root (§11.2). A receiver rejects, before its Automerge engine, a change or Snapshot that would create one: deep nesting traps Automerge JS and terminates its wasm module. No vector value changes (`migrations/mvp-0.1-baseline.8/value-changes.json` lists no change); the corpus gains the `depth` section. |
 | mvp-0.1-baseline.7 | Superseded by `mvp-0.1-baseline.8`, because SPEC-PATCH-08 changes normative rules and adds vectors. Never moved. Applies the sixth batch of decisions (SPEC-PATCH-07, ADR 0006), all orchestrator decisions approved by the project owner on 2026-10-06, from the pre-release security review. Receivers check every Automerge chunk before their engine: changes against exact expansion limits and structural rules (§11.1); Snapshots against local limits with a floor, with capped inflation (§13.1). Changes are uncompressed chunks, values nest at most 64 levels (§30), KEY_PACKAGE_GET lists at most 256 epochs (§52), and a client bounds its receive limit (§31). No vector value changes (`migrations/mvp-0.1-baseline.7/value-changes.json` lists no change); the corpus gains `expansion` cases, `SO-DEPTH` validations and the `SO-UNKNOWN-ACTOR` negative. |
 | mvp-0.1-baseline.6 | Superseded by `mvp-0.1-baseline.7`, because SPEC-PATCH-07 changes normative rules and adds vectors. Never moved. Applied the fifth batch of decisions (SPEC-PATCH-06, ADR 0005), all orchestrator decisions approved by the project owner on 2026-10-06: a writer names its latest own unit still accepted as `previous` (§26.2), clients retransmit after a request timeout (§70), the invitation read rule uses the §25.2 active grant (§41), a writer keeps writing after a rebuild removes its own changes (Shared Objects §9, §14.1), scalar conflicts stay profile-valid (Shared Objects scenarios S15 and S16) and Collaborative Text is rejected at its own pointer (Automerge corpus `validations`). No vector value changes (`migrations/mvp-0.1-baseline.6/value-changes.json` lists no change). |
@@ -32,17 +33,18 @@ MVP 0.1?* The answer is every file listed below, at the Git tag
   [ADR 0004](adr/0004-mvp-0.1-protocol-decisions-4.md),
   [ADR 0005](adr/0005-mvp-0.1-protocol-decisions-5.md),
   [ADR 0006](adr/0006-mvp-0.1-protocol-decisions-6.md),
-  [ADR 0007](adr/0007-mvp-0.1-protocol-decisions-7.md) and
-  [ADR 0008](adr/0008-recovery-after-server-data-loss.md).
+  [ADR 0007](adr/0007-mvp-0.1-protocol-decisions-7.md),
+  [ADR 0008](adr/0008-recovery-after-server-data-loss.md) and
+  [ADR 0010](adr/0010-canonical-changes-and-operation-references.md).
 
 ## Pinning
 
-Implementations pin the current tag, `mvp-0.1-baseline.9`, of
+Implementations pin the current tag, `mvp-0.1-baseline.10`, of
 `openlfcp/spec`, never a branch. sdk-ts consumes the vectors at this tag (LFCP-017); other
 implementations do the same.
 
 A later approved Working Draft correction does not move the tag. It
-produces a new tag, such as `mvp-0.1-baseline.10`, with an updated copy of
+produces a new tag, such as `mvp-0.1-baseline.11`, with an updated copy of
 this file. Implementations move to it deliberately.
 
 ## Canonical files
@@ -58,10 +60,10 @@ directory).
 | --- | --- |
 | `wire/LFCP-WIRE-01.md` | LFCP Wire protocol (Working Draft) |
 | `profiles/SHARED-OBJECTS-PROFILE-01.md` | Shared Objects application profile `org.openlfcp.shared-objects.v1` (Working Draft) |
-| `profiles/SHARED-SECTIONS-PROFILE-01.md` | Working Draft for MVP 0.2, in `mvp-0.2-baseline.1` (MVP-0.2-BASELINE.md), not in this baseline: the shared sections profile `org.openlfcp.shared-sections.v1` (ADR 0009); listed because every file under `profiles/` is |
+| `profiles/SHARED-SECTIONS-PROFILE-01.md` | Working Draft for MVP 0.2, in `mvp-0.2-baseline.2` (MVP-0.2-BASELINE.md), not in this baseline: the shared sections profile `org.openlfcp.shared-sections.v1` (ADR 0009); listed because every file under `profiles/` is |
 | `integration/MARKDOWN-REFS-01.md` | Markdown projection reference grammar: inline and child-line placements (Working Draft) |
-| `integration/MARKDOWN-SECTIONS-01.md` | Working Draft for MVP 0.2, in `mvp-0.2-baseline.1` (MVP-0.2-BASELINE.md), not in this baseline: Markdown bindings of shared sections; listed because every file under `integration/` is |
-| `integration/SDK-SECTIONS-INTEGRATION-01.md` | Working Draft for MVP 0.2, in `mvp-0.2-baseline.1` (MVP-0.2-BASELINE.md), not in this baseline: SDK receipt, status and parser integration contracts for shared sections; listed because every file under `integration/` is |
+| `integration/MARKDOWN-SECTIONS-01.md` | Working Draft for MVP 0.2, in `mvp-0.2-baseline.2` (MVP-0.2-BASELINE.md), not in this baseline: Markdown bindings of shared sections; listed because every file under `integration/` is |
+| `integration/SDK-SECTIONS-INTEGRATION-01.md` | Working Draft for MVP 0.2, in `mvp-0.2-baseline.2` (MVP-0.2-BASELINE.md), not in this baseline: SDK receipt, status and parser integration contracts for shared sections; listed because every file under `integration/` is |
 
 ### Test vectors
 
@@ -73,9 +75,9 @@ directory).
 | `test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.json` | Shared Objects vectors, machine-readable: deterministic, validation and behavioral cases |
 | `test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.md` | Shared Objects vectors, human-readable |
 | `test-vectors/shared-objects-01/generate_shared_objects_test_vectors_01.py` | Generator; reproduces both Shared Objects vector files byte for byte |
-| `test-vectors/shared-objects-01/SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json` | Automerge reference corpus for S01–S16: exact changes, save images, logical states and conflict sets, plus `validations` (save images with the expected profile problems) `expansion` (chunks at and past the §11.1 and §13.1 limits), `depth` (change sequences and Snapshots at and past the §11.2 depth bound) and `collision` (a change held for a taken actor sequence until a rebuild, §14.1) (supplementary; bytes not normative) |
+| `test-vectors/shared-objects-01/SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json` | Automerge reference corpus for S01–S16: exact changes, save images, logical states and conflict sets, plus `validations` (save images with the expected profile problems) `expansion` (chunks at and past the §11.1 and §13.1 limits), `depth` (change sequences and Snapshots at and past the §11.2 depth bound) `collision` (a change held for a taken actor sequence until a rebuild, §14.1), `canonical` (changes in and out of the canonical encoding, §11.3) and `references` (changes whose operations refer inside and outside their history, §11.4) (supplementary; bytes not normative) |
 | `test-vectors/shared-objects-01/generate_automerge_reference_01.mjs` | Corpus generator; with the pinned `@automerge/automerge` 3.5.0 it reproduces the corpus byte for byte |
-| `test-vectors/shared-sections-01/` | Working Draft corpus for MVP 0.2, in `mvp-0.2-baseline.1` (MVP-0.2-BASELINE.md), not in this baseline: SHARED-SECTIONS-TEST-VECTORS-01, its generator, verifier and schema (LFCP-02-008); listed because every file under `test-vectors/` is |
+| `test-vectors/shared-sections-01/` | Working Draft corpus for MVP 0.2, in `mvp-0.2-baseline.2` (MVP-0.2-BASELINE.md), not in this baseline: SHARED-SECTIONS-TEST-VECTORS-01, its generator, verifier and schema (LFCP-02-008); listed because every file under `test-vectors/` is |
 
 ### Wire CDDL
 
@@ -110,7 +112,8 @@ directory).
 | `adr/0006-mvp-0.1-protocol-decisions-6.md` | Sixth batch (SPEC-PATCH-07): Automerge expansion limits, value nesting, the client receive limit; orchestrator decisions approved by the project owner on 2026-10-06 |
 | `adr/0007-mvp-0.1-protocol-decisions-7.md` | Seventh batch (SPEC-PATCH-08): the document depth bound; an orchestrator decision approved by the project owner on 2026-10-06 |
 | `adr/0008-recovery-after-server-data-loss.md` | SPEC-PATCH-09: recovery after server data loss (POST-013), accepted by the project owner on 2026-10-08, and POST-001 (hold and retry of a taken actor sequence), decided by the project owner on 2026-10-06 |
-| `adr/0009-shared-sections-profile.md` | Accepted for MVP 0.2, applied in `mvp-0.2-baseline.1`, not in this baseline: the shared sections profile `org.openlfcp.shared-sections.v1` (LFCP-02-083); listed because every file under `adr/` is |
+| `adr/0009-shared-sections-profile.md` | Accepted for MVP 0.2, applied in `mvp-0.2-baseline.1` and later, not in this baseline: the shared sections profile `org.openlfcp.shared-sections.v1` (LFCP-02-083); listed because every file under `adr/` is |
+| `adr/0010-canonical-changes-and-operation-references.md` | SPEC-PATCH-10: canonical change encoding and operation references (findings F2 to F4); orchestrator decisions of 2026-10-09 |
 
 ## Project documents in `openlfcp/.github`
 

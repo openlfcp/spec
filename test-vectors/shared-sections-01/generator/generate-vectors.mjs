@@ -373,6 +373,57 @@ record('SS56','Text history past the Snapshot floor',{
   a:churned(64),snapshot:true,
   requirements:{classification:'VALID',visible,texts:{[ids.para]:'Draft contract'+'l'.repeat(RUN)}},coverage:'snapshot-floor',
   notes:['SHARED-OBJECTS-PROFILE-01 §13.1: one more change passes the floor (262,258 rows), with 4,110 characters of visible text. A receiver with floor limits rejects the Snapshot (INVALID_AUTOMERGE_BYTES) and falls back to the units, which it accepts; a publisher should not publish it. The reference snapshot is given for that check.']});
+// SPEC-PATCH-10 (SHARED-OBJECTS-PROFILE-01 §11.3, §11.4, ADR 0010),
+// inherited unchanged: the forms an external review found (F3d, F3b) and a
+// non-canonical change.
+/** A's change `label` written by `fn`, decoded. */
+const decodedOfA=(d,label,fn)=>A.decodeChange(A.getLastLocalChange(change(d,label,fn)));
+/** The change chunk `bytes` with 10 more rows in its insert column than it has operations (finding F3a). */
+const extraRows=bytes=>{
+  const b=Buffer.from(bytes);
+  let pos=9;
+  const u=()=>{let v=0,scale=1;for(;;){const x=b[pos++];v+=(x&0x7f)*scale;if(!(x&0x80))return v;scale*=128;}};
+  const s=()=>{let v=0,scale=1;for(;;){const x=b[pos++];v+=(x&0x7f)*scale;scale*=128;if(!(x&0x80))return x&0x40?v-scale:v;}};
+  const skip=n=>{pos+=n;};
+  u();const start=pos;skip(u()*32);skip(u());u();u();s();skip(u());
+  const others=u();for(let i=0;i<others;i++)skip(u());
+  const headerEnd=pos;
+  const metas=Array.from({length:u()},()=>[u(),u()]);
+  const cols=metas.map(([spec,length])=>{const data=b.subarray(pos,pos+length);pos+=length;return [spec,data];});
+  const extra=b.subarray(pos);
+  const n=A.decodeChange(bytes).ops.length;
+  const INSERT=(3<<4)|4;
+  if(Buffer.from(cols.find(([spec])=>spec===INSERT)[1]).toString('hex')!==Buffer.from(leb(n)).toString('hex'))throw new Error('expected no insertions');
+  const next=cols.map(([spec,data])=>[spec,spec===INSERT?Buffer.from(leb(n+10)):data]);
+  const body=Buffer.concat([b.subarray(start,headerEnd),Buffer.from(leb(next.length)),
+    Buffer.from(next.flatMap(([spec,data])=>[...leb(spec),...leb(data.length)])),...next.map(([,data])=>Buffer.from(data)),extra]);
+  const len=Buffer.from(leb(body.length));
+  const sum=Buffer.from(hash(Buffer.concat([Buffer.from([1]),len,body])),'hex').subarray(0,4);
+  return Uint8Array.from(Buffer.concat([b.subarray(0,4),sum,Buffer.from([1]),len,body]));
+};
+record('SS57','A deletion without a predecessor is refused',{
+  inject:d=>{
+    const c=decodedOfA(d,'SS57/delete',x=>{x.objects[ids.task].title=S('Edited by A');});
+    return [{bytes:A.encodeChange({...c,ops:[...c.ops,{action:'del',obj:'_root',key:'nodes',pred:[]}]}),signer:'A'}];
+  },
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
+  notes:['SHARED-OBJECTS-PROFILE-01 §11.4 (R7): a deletion names the operations it removes. Automerge applies this one, and its save then does not load ("missing ops").']});
+record('SS58','A Text deletion naming the next element as its predecessor is refused',{
+  inject:d=>{
+    const c=decodedOfA(d,'SS58/delete',x=>textEdit(x,ids.para,0,1,''));
+    const ops=c.ops.map(op=>{
+      if(op.action!=='del')return op;
+      const [ctr,who]=op.elemId.split('@');
+      return {...op,pred:[`${Number(ctr)+1}@${who}`]};
+    });
+    return [{bytes:A.encodeChange({...c,ops}),signer:'A'}];
+  },
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],visible,texts:{[ids.para]:'Draft contract'}},coverage:'negative-admission',
+  notes:['SHARED-OBJECTS-PROFILE-01 §11.4 (R6): a predecessor is on the same object and key; for a sequence the key is the element. Automerge applies this one, and its save then does not load.']});
+record('SS59','A change that is not in its canonical encoding is refused',{
+  inject:d=>[{bytes:extraRows(nextOfA(d,'SS59/rows')),signer:'A'}],
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
+  notes:['SHARED-OBJECTS-PROFILE-01 §11.3 (4): every operation column has one row per operation; the insert column has 10 more (finding F3a). Automerge applies it, and its save then does not load: the heads mismatch.']});
 const doc={
   format:'lfcp-vector-format/1',
   suite:{

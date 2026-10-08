@@ -1944,5 +1944,599 @@
         }
       }
     ]
+  },
+  "canonical": {
+    "rule": "SHARED-OBJECTS-PROFILE-01 §11.3: a receiver rejects a change that is not its one canonical encoding, before its engine",
+    "note": "Each case is checked with the §11.1 limits and the §11.3 rules alone; history_hex is the history the change was written on, for an implementation that applies it after the check. Every change elsewhere in this corpus is canonical.",
+    "cases": [
+      {
+        "id": "CAN-control",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.3 (all): the canonical change encoding",
+        "description": "Automerge's own change: map, list, int and string values",
+        "history_hex": [
+          "856f4a838a5f1edb016200206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830101000843414e2e62617365000901040204130415073402420456045701700200027f0000027f0200027f007e016d016c000102017d00020102007f14010300"
+        ],
+        "change_hex": "856f4a8308801880018901018a5f1edbbe2f75a38292fe6b74ec7b61206aafc52b55b44732ec85d28a07d3a5206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830204000a43414e2e6368616e6765000a0102020411041304150734024202560457047002030002017f0200027f0000027f037e017801790001020103017d241614ac0279020300",
+        "expected": {
+          "canonical": true
+        }
+      },
+      {
+        "id": "CAN-control-two-actors",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.3 (all): the canonical change encoding",
+        "description": "Automerge's own merge overwrite: two dependencies, two predecessors of two actors",
+        "history_hex": [
+          "856f4a83e408fa5a014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830101000c43414e2e6b2e616e6472657900061503340142025602570170027f016b017f017f14017f00",
+          "856f4a83bc8a6563014a00207957aa8e06acc46c224685a07625acb31d6a60cee94b4c6847e74772757f10250101000b43414e2e6b2e706176656c00061503340142025602570170027f016b017f017f14027f00"
+        ],
+        "change_hex": "856f4a831faf595c01b90102bc8a65630f640c099ec7716c693c378305cc55223d3a815ce6ba86f111078439e408fa5a79d23293246afb9c1eee91d8f37cf9b535e1fa8cba49e46f02af450a206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830202000f43414e2e6b2e6f766572777269746501207957aa8e06acc46c224685a07625acb31d6a60cee94b4c6847e74772757f102508150334014202560257017002710373037f016b017f017f14037f027e00017e0100",
+        "expected": {
+          "canonical": true
+        }
+      },
+      {
+        "id": "CAN-1-leb-header",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.3 (1): the canonical change encoding",
+        "description": "the sequence number 2 written in two bytes (0x82 0x00)",
+        "history_hex": [
+          "856f4a838a5f1edb016200206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830101000843414e2e62617365000901040204130415073402420456045701700200027f0000027f0200027f007e016d016c000102017d00020102007f14010300"
+        ],
+        "change_hex": "856f4a8385d12702018a01018a5f1edbbe2f75a38292fe6b74ec7b61206aafc52b55b44732ec85d28a07d3a5206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583820004000a43414e2e6368616e6765000a0102020411041304150734024202560457047002030002017f0200027f0000027f037e017801790001020103017d241614ac0279020300",
+        "expected": {
+          "canonical": false,
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "CAN-2-deps-order",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.3 (2): the canonical change encoding",
+        "description": "the two dependencies in descending order",
+        "history_hex": [
+          "856f4a83e408fa5a014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830101000c43414e2e6b2e616e6472657900061503340142025602570170027f016b017f017f14017f00",
+          "856f4a83bc8a6563014a00207957aa8e06acc46c224685a07625acb31d6a60cee94b4c6847e74772757f10250101000b43414e2e6b2e706176656c00061503340142025602570170027f016b017f017f14027f00"
+        ],
+        "change_hex": "856f4a831a66678801b90102e408fa5a79d23293246afb9c1eee91d8f37cf9b535e1fa8cba49e46f02af450abc8a65630f640c099ec7716c693c378305cc55223d3a815ce6ba86f111078439206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830202000f43414e2e6b2e6f766572777269746501207957aa8e06acc46c224685a07625acb31d6a60cee94b4c6847e74772757f102508150334014202560257017002710373037f016b017f017f14037f027e00017e0100",
+        "expected": {
+          "canonical": false,
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "CAN-2-unused-actor",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.3 (2): the canonical change encoding",
+        "description": "an other actor (pavel) that no operation names",
+        "history_hex": [
+          "856f4a838a5f1edb016200206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830101000843414e2e62617365000901040204130415073402420456045701700200027f0000027f0200027f007e016d016c000102017d00020102007f14010300"
+        ],
+        "change_hex": "856f4a8345b5f84701aa01018a5f1edbbe2f75a38292fe6b74ec7b61206aafc52b55b44732ec85d28a07d3a5206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830204000a43414e2e6368616e676501207957aa8e06acc46c224685a07625acb31d6a60cee94b4c6847e74772757f10250a0102020411041304150734024202560457047002030002017f0200027f0000027f037e017801790001020103017d241614ac0279020300",
+        "expected": {
+          "canonical": false,
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "CAN-3-column-order",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.3 (3): the canonical change encoding",
+        "description": "the action and insert columns swapped",
+        "history_hex": [
+          "856f4a838a5f1edb016200206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830101000843414e2e62617365000901040204130415073402420456045701700200027f0000027f0200027f007e016d016c000102017d00020102007f14010300"
+        ],
+        "change_hex": "856f4a834a94ce45018901018a5f1edbbe2f75a38292fe6b74ec7b61206aafc52b55b44732ec85d28a07d3a5206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830204000a43414e2e6368616e6765000a0102020411041304150742023402560457047002030002017f0200027f0000027f037e017801790001030102017d241614ac0279020300",
+        "expected": {
+          "canonical": false,
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "CAN-3-absent-column-present",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.3 (3): the canonical change encoding",
+        "description": "an expand column holding only false (it is present only when some flag is true)",
+        "history_hex": [
+          "856f4a838a5f1edb016200206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830101000843414e2e62617365000901040204130415073402420456045701700200027f0000027f0200027f007e016d016c000102017d00020102007f14010300"
+        ],
+        "change_hex": "856f4a8316710e22018d01018a5f1edbbe2f75a38292fe6b74ec7b61206aafc52b55b44732ec85d28a07d3a5206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830204000a43414e2e6368616e6765000b0102020411041304150734024202560457047002940101030002017f0200027f0000027f037e017801790001020103017d241614ac027902030003",
+        "expected": {
+          "canonical": false,
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "CAN-3-unknown-column",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.3 (3): the canonical change encoding",
+        "description": "an extra column with specification 0xb2 (id 11, integer)",
+        "history_hex": [
+          "856f4a838a5f1edb016200206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830101000843414e2e62617365000901040204130415073402420456045701700200027f0000027f0200027f007e016d016c000102017d00020102007f14010300"
+        ],
+        "change_hex": "856f4a830895b8e9018e01018a5f1edbbe2f75a38292fe6b74ec7b61206aafc52b55b44732ec85d28a07d3a5206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830204000a43414e2e6368616e6765000b0102020411041304150734024202560457047002b20102030002017f0200027f0000027f037e017801790001020103017d241614ac02790203000300",
+        "expected": {
+          "canonical": false,
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "CAN-4-rows-F3a",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.3 (4): the canonical change encoding",
+        "description": "the insert column with 13 rows for 3 operations (finding F3a)",
+        "history_hex": [
+          "856f4a838a5f1edb016200206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830101000843414e2e62617365000901040204130415073402420456045701700200027f0000027f0200027f007e016d016c000102017d00020102007f14010300"
+        ],
+        "change_hex": "856f4a836374d314018801018a5f1edbbe2f75a38292fe6b74ec7b61206aafc52b55b44732ec85d28a07d3a5206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830204000a43414e2e6368616e6765000a0102020411041304150734014202560457047002030002017f0200027f0000027f037e0178017900010d03017d241614ac0279020300",
+        "expected": {
+          "canonical": false,
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "CAN-5-split-run",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.3 (5): the canonical change encoding",
+        "description": "the action column's three equal values as a run of 1 and a run of 2 (one run of 3)",
+        "history_hex": [
+          "856f4a838a5f1edb016200206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830101000843414e2e62617365000901040204130415073402420456045701700200027f0000027f0200027f007e016d016c000102017d00020102007f14010300"
+        ],
+        "change_hex": "856f4a83b4d23fcc018b01018a5f1edbbe2f75a38292fe6b74ec7b61206aafc52b55b44732ec85d28a07d3a5206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830204000a43414e2e6368616e6765000a0102020411041304150734024204560457047002030002017f0200027f0000027f037e0178017900010201010102017d241614ac0279020300",
+        "expected": {
+          "canonical": false,
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "CAN-6-value-leb",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.3 (6): the canonical change encoding",
+        "description": "the int value 300 written in three bytes",
+        "history_hex": [
+          "856f4a838a5f1edb016200206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830101000843414e2e62617365000901040204130415073402420456045701700200027f0000027f0200027f007e016d016c000102017d00020102007f14010300"
+        ],
+        "change_hex": "856f4a83355dc29e018a01018a5f1edbbe2f75a38292fe6b74ec7b61206aafc52b55b44732ec85d28a07d3a5206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830204000a43414e2e6368616e6765000a0102020411041304150734024202560457057002030002017f0200027f0000027f037e017801790001020103017d341614ac820079020300",
+        "expected": {
+          "canonical": false,
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "CAN-6-value-type",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.3 (6): the canonical change encoding",
+        "description": "a value of type 10",
+        "history_hex": [
+          "856f4a838a5f1edb016200206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830101000843414e2e62617365000901040204130415073402420456045701700200027f0000027f0200027f007e016d016c000102017d00020102007f14010300"
+        ],
+        "change_hex": "856f4a837b236730018901018a5f1edbbe2f75a38292fe6b74ec7b61206aafc52b55b44732ec85d28a07d3a5206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830204000a43414e2e6368616e6765000a0102020411041304150734024202560457047002030002017f0200027f0000027f037e017801790001020103017d2a1614ac0279020300",
+        "expected": {
+          "canonical": false,
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "CAN-7-make-value",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.3 (7): the canonical change encoding",
+        "description": "a map made with an int value",
+        "history_hex": [],
+        "change_hex": "856f4a8302f05c21014700206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830101000843414e2e6d616b6500061503340142025602570170027f016d017f007f14077f00",
+        "expected": {
+          "canonical": false,
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "CAN-8-counter-F2",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.3 (8): the canonical change encoding",
+        "description": "an object counter of 2^32 (finding F2: automerge-rs 0.12 aborts parsing it)",
+        "history_hex": [
+          "856f4a838a5f1edb016200206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830101000843414e2e62617365000901040204130415073402420456045701700200027f0000027f0200027f007e016d016c000102017d00020102007f14010300"
+        ],
+        "change_hex": "856f4a83509c5d68018d01018a5f1edbbe2f75a38292fe6b74ec7b61206aafc52b55b44732ec85d28a07d3a5206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830204000a43414e2e6368616e6765000a010202081104130415073402420256045704700203000280808080107f0200027f0000027f037e017801790001020103017d241614ac0279020300",
+        "expected": {
+          "canonical": false,
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "CAN-9-preds-order",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.3 (9): the canonical change encoding",
+        "description": "an operation's two predecessors in descending order",
+        "history_hex": [
+          "856f4a83e408fa5a014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830101000c43414e2e6b2e616e6472657900061503340142025602570170027f016b017f017f14017f00",
+          "856f4a83bc8a6563014a00207957aa8e06acc46c224685a07625acb31d6a60cee94b4c6847e74772757f10250101000b43414e2e6b2e706176656c00061503340142025602570170027f016b017f017f14027f00"
+        ],
+        "change_hex": "856f4a835fa9349b01b90102bc8a65630f640c099ec7716c693c378305cc55223d3a815ce6ba86f111078439e408fa5a79d23293246afb9c1eee91d8f37cf9b535e1fa8cba49e46f02af450a206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830202000f43414e2e6b2e6f766572777269746501207957aa8e06acc46c224685a07625acb31d6a60cee94b4c6847e74772757f102508150334014202560257017002710373037f016b017f017f14037f027e01007e0100",
+        "expected": {
+          "canonical": false,
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      }
+    ]
+  },
+  "references": {
+    "rule": "SHARED-OBJECTS-PROFILE-01 §11.4: a receiver rejects, before its engine, a change whose operations refer outside its causal history",
+    "note": "Each case applies history_hex in order (all admitted), then gives change_hex to the replica's admission. A refused change names the §11.4 rule it breaks (broken_rule); the replica's document is unchanged, still hands out its changes, saves and loads. Every change of history_hex and change_hex is canonical (§11.3).",
+    "cases": [
+      {
+        "id": "REF-control-overwrite",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R6): operations refer only to the change's causal history",
+        "description": "overwrite the counter, predecessor the counter",
+        "history_hex": [
+          "856f4a8335f31aa9014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100085245462e6261736500061505340142025603570270027e0163016b0202017e181401010200",
+          "856f4a835cec91db016e0135f31aa98dce42d8561614625c0029ff1018a7149ea2d7496ebb45a1a3fee9e4206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020300075245462e696e630008150334014202560257017002710273027f0163017f057f14027f017f007f01"
+        ],
+        "change_hex": "856f4a839c8c4e6b0167015cec91dbbc0fe6aa4dd84baaf03e1b2420eb7d3f1d977f148cfd4fbbf85701d9206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583030400000008150334014202560257017002710273027f0163017f017f14057f017f007f01",
+        "expected": {
+          "admitted": true
+        }
+      },
+      {
+        "id": "REF-control-pred-increment",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R6): operations refer only to the change's causal history",
+        "description": "predecessor the increment",
+        "history_hex": [
+          "856f4a8335f31aa9014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100085245462e6261736500061505340142025603570270027e0163016b0202017e181401010200",
+          "856f4a835cec91db016e0135f31aa98dce42d8561614625c0029ff1018a7149ea2d7496ebb45a1a3fee9e4206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020300075245462e696e630008150334014202560257017002710273027f0163017f057f14027f017f007f01"
+        ],
+        "change_hex": "856f4a83c1abb81a0167015cec91dbbc0fe6aa4dd84baaf03e1b2420eb7d3f1d977f148cfd4fbbf85701d9206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583030400000008150334014202560257017002710273027f0163017f017f14057f017f007f03",
+        "expected": {
+          "admitted": true
+        }
+      },
+      {
+        "id": "REF-control-pred-in-change",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R6): operations refer only to the change's causal history",
+        "description": "predecessor earlier in the change",
+        "history_hex": [
+          "856f4a8335f31aa9014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100085245462e6261736500061505340142025603570270027e0163016b0202017e181401010200",
+          "856f4a835cec91db016e0135f31aa98dce42d8561614625c0029ff1018a7149ea2d7496ebb45a1a3fee9e4206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020300075245462e696e630008150334014202560257017002710273027f0163017f057f14027f017f007f01"
+        ],
+        "change_hex": "856f4a836f30c4a30169015cec91dbbc0fe6aa4dd84baaf03e1b2420eb7d3f1d977f148cfd4fbbf85701d9206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830304000000081503340142025602570270037102730202017a020201021405067e00017f007f04",
+        "expected": {
+          "admitted": true
+        }
+      },
+      {
+        "id": "REF-control-list-put",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R5): operations refer only to the change's causal history",
+        "description": "put on an element, predecessor the last put",
+        "history_hex": [
+          "856f4a83f6f8d37001930100206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100095245462e6c69737473000c010802081106130a150a34044207560757047006710273020001030000017f000001030100017f0500020200000200017d00020000017f7e7f016c00037f016d0001010202017f0203017e02017f0003147e00140102030103007f0102007f007f02"
+        ],
+        "change_hex": "856f4a834e07934e017201f6f8d37006176742d014ab62113bad0d55b79fa4cc49da0f659990a3728383c0206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c58302070000000b010202021102130234014202560257017002710273027f007f017f007f02017f017f14097f017f007f04",
+        "expected": {
+          "admitted": true
+        }
+      },
+      {
+        "id": "REF-R1-previous-not-in-history",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R1): operations refer only to the change's causal history",
+        "description": "andrey's third change with no dependencies",
+        "history_hex": [
+          "856f4a8335f31aa9014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100085245462e6261736500061505340142025603570270027e0163016b0202017e181401010200",
+          "856f4a835cec91db016e0135f31aa98dce42d8561614625c0029ff1018a7149ea2d7496ebb45a1a3fee9e4206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020300075245462e696e630008150334014202560257017002710273027f0163017f057f14027f017f007f01"
+        ],
+        "change_hex": "856f4a839b5dcd49013f00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830301000000061503340142025602570170027f017a017f017f14017f00",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R1",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "REF-R2-start-past-history",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R2): operations refer only to the change's causal history",
+        "description": "start op 6 after a history whose largest counter is 3",
+        "history_hex": [
+          "856f4a8335f31aa9014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100085245462e6261736500061505340142025603570270027e0163016b0202017e181401010200",
+          "856f4a835cec91db016e0135f31aa98dce42d8561614625c0029ff1018a7149ea2d7496ebb45a1a3fee9e4206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020300075245462e696e630008150334014202560257017002710273027f0163017f057f14027f017f007f01"
+        ],
+        "change_hex": "856f4a839126c771015f015cec91dbbc0fe6aa4dd84baaf03e1b2420eb7d3f1d977f148cfd4fbbf85701d9206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830306000000061503340142025602570170027f017a017f017f14017f00",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R2",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "REF-R2-start-reuses-counter",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R2): operations refer only to the change's causal history",
+        "description": "start op 3 reuses andrey's counter 3",
+        "history_hex": [
+          "856f4a8335f31aa9014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100085245462e6261736500061505340142025603570270027e0163016b0202017e181401010200",
+          "856f4a835cec91db016e0135f31aa98dce42d8561614625c0029ff1018a7149ea2d7496ebb45a1a3fee9e4206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020300075245462e696e630008150334014202560257017002710273027f0163017f057f14027f017f007f01"
+        ],
+        "change_hex": "856f4a83c4c72a6f015f015cec91dbbc0fe6aa4dd84baaf03e1b2420eb7d3f1d977f148cfd4fbbf85701d9206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830303000000061503340142025602570170027f017a017f017f14017f00",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R2",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "REF-R2-empty-F3c",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R2): operations refer only to the change's causal history",
+        "description": "an empty first change with start op 2 (finding F3c)",
+        "history_hex": [],
+        "change_hex": "856f4a83b2a92461012800206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010200000000",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R2",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "REF-R3-not-an-object",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R3): operations refer only to the change's causal history",
+        "description": "a put into 2@andrey, which is a put, not a made object",
+        "history_hex": [
+          "856f4a8335f31aa9014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100085245462e6261736500061505340142025603570270027e0163016b0202017e181401010200",
+          "856f4a835cec91db016e0135f31aa98dce42d8561614625c0029ff1018a7149ea2d7496ebb45a1a3fee9e4206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020300075245462e696e630008150334014202560257017002710273027f0163017f057f14027f017f007f01"
+        ],
+        "change_hex": "856f4a835df36d090167015cec91dbbc0fe6aa4dd84baaf03e1b2420eb7d3f1d977f148cfd4fbbf85701d9206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583030400000008010202021503340142025602570170027f007f027f0178017f017f14017f00",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R3",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "REF-R3-property-on-list",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R3): operations refer only to the change's causal history",
+        "description": "a property key on a list",
+        "history_hex": [
+          "856f4a83f6f8d37001930100206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100095245462e6c69737473000c010802081106130a150a34044207560757047006710273020001030000017f000001030100017f0500020200000200017d00020000017f7e7f016c00037f016d0001010202017f0203017e02017f0003147e00140102030103007f0102007f007f02"
+        ],
+        "change_hex": "856f4a834ab33dea016701f6f8d37006176742d014ab62113bad0d55b79fa4cc49da0f659990a3728383c0206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020700000008010202021503340142025602570170027f007f017f0178017f017f14017f00",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R3",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "REF-R4-insert-into-map",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R4): operations refer only to the change's causal history",
+        "description": "an insertion into the root map",
+        "history_hex": [
+          "856f4a8335f31aa9014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100085245462e6261736500061505340142025603570270027e0163016b0202017e181401010200",
+          "856f4a835cec91db016e0135f31aa98dce42d8561614625c0029ff1018a7149ea2d7496ebb45a1a3fee9e4206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020300075245462e696e630008150334014202560257017002710273027f0163017f057f14027f017f007f01"
+        ],
+        "change_hex": "856f4a837a88b5d7015f015cec91dbbc0fe6aa4dd84baaf03e1b2420eb7d3f1d977f148cfd4fbbf85701d9206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830304000000061302340242025602570170027f0000017f017f14017f00",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R4",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "REF-R4-insert-with-pred",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R4): operations refer only to the change's causal history",
+        "description": "an insertion with a predecessor",
+        "history_hex": [
+          "856f4a83f6f8d37001930100206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100095245462e6c69737473000c010802081106130a150a34044207560757047006710273020001030000017f000001030100017f0500020200000200017d00020000017f7e7f016c00037f016d0001010202017f0203017e02017f0003147e00140102030103007f0102007f007f02"
+        ],
+        "change_hex": "856f4a83b9e47272016f01f6f8d37006176742d014ab62113bad0d55b79fa4cc49da0f659990a3728383c0206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c58302070000000a01020202130234024202560257017002710273027f007f017f0000017f017f14097f017f007f02",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R4",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "REF-R4-after-a-put",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R4): operations refer only to the change's causal history",
+        "description": "an insertion after 4@andrey, a put, not an element",
+        "history_hex": [
+          "856f4a83f6f8d37001930100206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100095245462e6c69737473000c010802081106130a150a34044207560757047006710273020001030000017f000001030100017f0500020200000200017d00020000017f7e7f016c00037f016d0001010202017f0203017e02017f0003147e00140102030103007f0102007f007f02"
+        ],
+        "change_hex": "856f4a8326ae390f016b01f6f8d37006176742d014ab62113bad0d55b79fa4cc49da0f659990a3728383c0206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830207000000090102020211021302340242025602570170027f007f017f007f0400017f017f14097f00",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R4",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "REF-R4-after-other-list",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R4): operations refer only to the change's causal history",
+        "description": "an insertion into l after an element of m",
+        "history_hex": [
+          "856f4a83f6f8d37001930100206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100095245462e6c69737473000c010802081106130a150a34044207560757047006710273020001030000017f000001030100017f0500020200000200017d00020000017f7e7f016c00037f016d0001010202017f0203017e02017f0003147e00140102030103007f0102007f007f02"
+        ],
+        "change_hex": "856f4a83e39a4aac016b01f6f8d37006176742d014ab62113bad0d55b79fa4cc49da0f659990a3728383c0206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830207000000090102020211021302340242025602570170027f007f017f007f0600017f017f14097f00",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R4",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "REF-R5-put-on-head",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R5): operations refer only to the change's causal history",
+        "description": "a put on the head",
+        "history_hex": [
+          "856f4a83f6f8d37001930100206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100095245462e6c69737473000c010802081106130a150a34044207560757047006710273020001030000017f000001030100017f0500020200000200017d00020000017f7e7f016c00037f016d0001010202017f0203017e02017f0003147e00140102030103007f0102007f007f02"
+        ],
+        "change_hex": "856f4a8374015325016601f6f8d37006176742d014ab62113bad0d55b79fa4cc49da0f659990a3728383c0206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020700000008010202021302340142025602570170027f007f017f00017f017f14097f00",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R5",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "REF-R6-other-key-F4",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R6): operations refer only to the change's causal history",
+        "description": "a put on k with the counter c as predecessor (finding F4)",
+        "history_hex": [
+          "856f4a8335f31aa9014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100085245462e6261736500061505340142025603570270027e0163016b0202017e181401010200",
+          "856f4a835cec91db016e0135f31aa98dce42d8561614625c0029ff1018a7149ea2d7496ebb45a1a3fee9e4206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020300075245462e696e630008150334014202560257017002710273027f0163017f057f14027f017f007f01"
+        ],
+        "change_hex": "856f4a83d6aa90dd0167015cec91dbbc0fe6aa4dd84baaf03e1b2420eb7d3f1d977f148cfd4fbbf85701d9206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583030400000008150334014202560257017002710273027f016b017f017f14057f017f007f01",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R6",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "REF-R6-missing",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R6): operations refer only to the change's causal history",
+        "description": "a predecessor that is no operation",
+        "history_hex": [
+          "856f4a8335f31aa9014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100085245462e6261736500061505340142025603570270027e0163016b0202017e181401010200",
+          "856f4a835cec91db016e0135f31aa98dce42d8561614625c0029ff1018a7149ea2d7496ebb45a1a3fee9e4206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020300075245462e696e630008150334014202560257017002710273027f0163017f057f14027f017f007f01"
+        ],
+        "change_hex": "856f4a835c628efb0167015cec91dbbc0fe6aa4dd84baaf03e1b2420eb7d3f1d977f148cfd4fbbf85701d9206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583030400000008150334014202560257017002710273027f016b017f017f14057f017f007f09",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R6",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "REF-R6-later-in-change",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R6): operations refer only to the change's causal history",
+        "description": "a predecessor later in the change",
+        "history_hex": [
+          "856f4a8335f31aa9014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100085245462e6261736500061505340142025603570270027e0163016b0202017e181401010200",
+          "856f4a835cec91db016e0135f31aa98dce42d8561614625c0029ff1018a7149ea2d7496ebb45a1a3fee9e4206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020300075245462e696e630008150334014202560257017002710273027f0163017f057f14027f017f007f01"
+        ],
+        "change_hex": "856f4a8304fc31170169015cec91dbbc0fe6aa4dd84baaf03e1b2420eb7d3f1d977f148cfd4fbbf85701d9206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830304000000081503340142025602570270037102730202016b020201021405067e01007f007f05",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R6",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "REF-R6-other-element-F3b",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R6): operations refer only to the change's causal history",
+        "description": "a put on element 2 with element 3 as predecessor (finding F3b)",
+        "history_hex": [
+          "856f4a83f6f8d37001930100206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100095245462e6c69737473000c010802081106130a150a34044207560757047006710273020001030000017f000001030100017f0500020200000200017d00020000017f7e7f016c00037f016d0001010202017f0203017e02017f0003147e00140102030103007f0102007f007f02"
+        ],
+        "change_hex": "856f4a83ff7a8e18017201f6f8d37006176742d014ab62113bad0d55b79fa4cc49da0f659990a3728383c0206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c58302070000000b010202021102130234014202560257017002710273027f007f017f007f02017f017f14097f017f007f03",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R6",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "REF-R6-concurrent",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R6): operations refer only to the change's causal history",
+        "description": "a predecessor of pavel's, concurrent with the change: the replica holds it, the history does not",
+        "history_hex": [
+          "856f4a8335f31aa9014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100085245462e6261736500061505340142025603570270027e0163016b0202017e181401010200",
+          "856f4a835cec91db016e0135f31aa98dce42d8561614625c0029ff1018a7149ea2d7496ebb45a1a3fee9e4206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020300075245462e696e630008150334014202560257017002710273027f0163017f057f14027f017f007f01",
+          "856f4a83ad667c5b014800207957aa8e06acc46c224685a07625acb31d6a60cee94b4c6847e74772757f1025010100095245462e706176656c00061503340142025602570170027f016b017f017f14027f00"
+        ],
+        "change_hex": "856f4a834e3ff7c4018801015cec91dbbc0fe6aa4dd84baaf03e1b2420eb7d3f1d977f148cfd4fbbf85701d9206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830304000001207957aa8e06acc46c224685a07625acb31d6a60cee94b4c6847e74772757f102508150334014202560257017002710273027f016b017f017f14057f017f017f01",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R6",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "REF-R7-delete-without-pred-F3d",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R7): operations refer only to the change's causal history",
+        "description": "a deletion without a predecessor (finding F3d)",
+        "history_hex": [
+          "856f4a8335f31aa9014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100085245462e6261736500061505340142025603570270027e0163016b0202017e181401010200",
+          "856f4a835cec91db016e0135f31aa98dce42d8561614625c0029ff1018a7149ea2d7496ebb45a1a3fee9e4206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020300075245462e696e630008150334014202560257017002710273027f0163017f057f14027f017f007f01"
+        ],
+        "change_hex": "856f4a836df99d0f015c015cec91dbbc0fe6aa4dd84baaf03e1b2420eb7d3f1d977f148cfd4fbbf85701d9206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583030400000005150334014202560270027f016b017f037f007f00",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R7",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      }
+    ]
   }
 }

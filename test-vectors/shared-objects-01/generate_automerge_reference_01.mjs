@@ -942,6 +942,435 @@ function checkStructure(change) {
   };
 }
 
+// SPEC-PATCH-10 (SHARED-OBJECTS-PROFILE-01 §11.3, §11.4, ADR 0010): a
+// change is in its one canonical encoding, and its operations refer only
+// to its causal history. `canonical` cases are checked with §11.1 and
+// §11.3 alone; `references` cases are given, after their history, to a
+// replica's admission. The bad changes are written by hand from Automerge's
+// own changes; findings F2 to F4 of an external review are among them.
+{
+  const ANDREY = actorOf("andrey");
+  const PAVEL = actorOf("pavel");
+  const commit = (doc, label, fn) => A.change(doc, { message: label, time: 0 }, fn);
+  const last = (doc) => A.getLastLocalChange(doc);
+
+  /** A change chunk's parts, every number read as written. */
+  const parts = (change) => {
+    let pos = 9;
+    const u = () => {
+      let v = 0;
+      let scale = 1;
+      for (;;) {
+        const b = change[pos++];
+        v += (b & 0x7f) * scale;
+        if ((b & 0x80) === 0) return v;
+        scale *= 128;
+      }
+    };
+    const s = () => {
+      let v = 0;
+      let scale = 1;
+      for (;;) {
+        const b = change[pos++];
+        v += (b & 0x7f) * scale;
+        scale *= 128;
+        if ((b & 0x80) === 0) return b & 0x40 ? v - scale : v;
+      }
+    };
+    const take = (n) => change.subarray(pos, (pos += n));
+    u(); // chunk length
+    const deps = Array.from({ length: u() }, () => take(32));
+    const actor = take(u());
+    const seq = u();
+    const startOp = u();
+    const time = s();
+    const message = take(u());
+    const others = Array.from({ length: u() }, () => take(u()));
+    const metas = Array.from({ length: u() }, () => [u(), u()]);
+    const columns = metas.map(([spec, length]) => [spec, take(length)]);
+    return { deps, actor, seq, startOp, time, message, others, columns, extra: change.subarray(pos) };
+  };
+  /** The chunk of `p`; `raw` overrides the encoding of a header number by its bytes. */
+  const assemble = (p, raw = {}) =>
+    chunk(1, Uint8Array.from([
+      ...leb(p.deps.length),
+      ...p.deps.flatMap((d) => [...d]),
+      ...leb(p.actor.length),
+      ...p.actor,
+      ...(raw.seq ?? leb(p.seq)),
+      ...leb(p.startOp),
+      ...sleb(p.time),
+      ...leb(p.message.length),
+      ...p.message,
+      ...leb(p.others.length),
+      ...p.others.flatMap((o) => [...leb(o.length), ...o]),
+      ...leb(p.columns.length),
+      ...p.columns.flatMap(([spec, data]) => [...leb(spec), ...leb(data.length)]),
+      ...p.columns.flatMap(([, data]) => [...data]),
+      ...p.extra,
+    ]));
+  const edit = (change, f, raw) => {
+    const p = parts(change);
+    f(p);
+    return assemble(p, raw);
+  };
+  const column = (p, spec) => p.columns.find(([s]) => s === spec);
+  const setColumn = (p, spec, data) => {
+    p.columns = p.columns.map(([s, d]) => [s, s === spec ? Uint8Array.from(data) : d]);
+  };
+  const bytes = (h) => Uint8Array.from(Buffer.from(h, "hex"));
+  /** The canonical run-length encoding of `values` (§11.3 rule 5); null is a null. */
+  const rleCol = (values, enc) => {
+    const out = [];
+    let literal = [];
+    const flush = () => {
+      if (literal.length > 0) out.push(...sleb(-literal.length), ...literal.flatMap(enc));
+      literal = [];
+    };
+    for (let i = 0; i < values.length; ) {
+      let j = i + 1;
+      while (j < values.length && values[j] === values[i]) j++;
+      if (values[i] === null) {
+        flush();
+        out.push(...sleb(0), ...leb(j - i));
+      } else if (j - i >= 2) {
+        flush();
+        out.push(...sleb(j - i), ...enc(values[i]));
+      } else literal.push(values[i]);
+      i = j;
+    }
+    flush();
+    return out;
+  };
+  const deltas = (values) => {
+    let prev = 0;
+    return values.map((v) => {
+      if (v === null) return null;
+      const d = v - prev;
+      prev = v;
+      return d;
+    });
+  };
+
+  // A base change with a map object, a list with an element, an int value
+  // and a string value: Automerge's own, canonical.
+  const base0 = commit(A.init({ actor: ANDREY }), "CAN.base", (d) => {
+    d.m = {};
+    d.l = [1];
+  });
+  // Taken before the next change: Automerge outdates a document it changes.
+  const goodHistory = A.getAllChanges(base0);
+  const base = commit(base0, "CAN.change", (d) => {
+    d.m.x = 300;
+    d.m.y = new A.ImmutableString("y");
+    d.l.insertAt(1, 2);
+  });
+  const good = last(base);
+  if (hex(edit(good, () => {})) !== hex(good)) throw new Error("parts/assemble do not round-trip");
+  // A change with two dependencies, and one overwriting a conflict: two
+  // predecessors of two actors.
+  const forkA = commit(A.init({ actor: ANDREY }), "CAN.k.andrey", (d) => {
+    d.k = 1;
+  });
+  const forkP = commit(A.init({ actor: PAVEL }), "CAN.k.pavel", (d) => {
+    d.k = 2;
+  });
+  const merged = A.merge(A.clone(forkA, { actor: ANDREY }), forkP);
+  const twoHistory = A.getAllChanges(merged);
+  const overwrite = commit(merged, "CAN.k.overwrite", (d) => {
+    d.k = 3;
+  });
+  const twoDeps = last(overwrite);
+  if (A.decodeChange(twoDeps).deps.length !== 2) throw new Error("expected two deps");
+  if (A.decodeChange(twoDeps).ops[0].pred.length !== 2) throw new Error("expected two preds");
+
+  const INSERT = (3 << 4) | 4;
+  const ACTION = (4 << 4) | 2;
+  const VALUE_META = (5 << 4) | 6;
+  const VALUE = (5 << 4) | 7;
+  const PRED_ACTOR = (7 << 4) | 1;
+  const PRED_CTR = (7 << 4) | 3;
+  const OBJ_CTR = (0 << 4) | 2;
+  const EXPAND = (9 << 4) | 4;
+  const n = A.decodeChange(good).ops.length;
+  const goodParts = parts(good);
+  const metaOf = (p) => column(p, VALUE_META)[1];
+  if (n !== 3) throw new Error("CAN.change: expected 3 operations");
+
+  const CANON_RULE = (item) => `SHARED-OBJECTS-PROFILE-01 §11.3 (${item}): the canonical change encoding`;
+  const canonicalCase = (id, item, description, change, history, canonical) => ({
+    id,
+    rule: CANON_RULE(item),
+    description,
+    history_hex: history.map(hex),
+    change_hex: hex(change),
+    expected: canonical
+      ? { canonical: true }
+      : { canonical: false, error: { code: "PROFILE_INVALID", diagnostic: "INVALID_AUTOMERGE_BYTES" } },
+  });
+  const refused = [
+    canonicalCase("CAN-control", "all", "Automerge's own change: map, list, int and string values", good, goodHistory, true),
+    canonicalCase("CAN-control-two-actors", "all", "Automerge's own merge overwrite: two dependencies, two predecessors of two actors", twoDeps, twoHistory, true),
+    canonicalCase("CAN-1-leb-header", "1", "the sequence number 2 written in two bytes (0x82 0x00)", edit(good, () => {}, { seq: [0x82, 0x00] }), goodHistory, false),
+    canonicalCase("CAN-2-deps-order", "2", "the two dependencies in descending order", edit(twoDeps, (p) => p.deps.reverse()), twoHistory, false),
+    canonicalCase(
+      "CAN-2-unused-actor",
+      "2",
+      "an other actor (pavel) that no operation names",
+      edit(good, (p) => {
+        p.others = [bytes(PAVEL)];
+      }),
+      goodHistory,
+      false,
+    ),
+    canonicalCase(
+      "CAN-3-column-order",
+      "3",
+      "the action and insert columns swapped",
+      edit(good, (p) => {
+        const i = p.columns.findIndex(([s]) => s === INSERT);
+        const j = p.columns.findIndex(([s]) => s === ACTION);
+        [p.columns[i], p.columns[j]] = [p.columns[j], p.columns[i]];
+      }),
+      goodHistory,
+      false,
+    ),
+    canonicalCase(
+      "CAN-3-absent-column-present",
+      "3",
+      "an expand column holding only false (it is present only when some flag is true)",
+      edit(good, (p) => {
+        p.columns.push([EXPAND, Uint8Array.from(leb(n))]);
+      }),
+      goodHistory,
+      false,
+    ),
+    canonicalCase(
+      "CAN-3-unknown-column",
+      "3",
+      "an extra column with specification 0xb2 (id 11, integer)",
+      edit(good, (p) => {
+        p.columns.push([0xb2, Uint8Array.from([...sleb(n), ...leb(0)])]);
+      }),
+      goodHistory,
+      false,
+    ),
+    canonicalCase(
+      "CAN-4-rows-F3a",
+      "4",
+      "the insert column with 13 rows for 3 operations (finding F3a)",
+      edit(good, (p) => setColumn(p, INSERT, leb(13))),
+      goodHistory,
+      false,
+    ),
+    canonicalCase(
+      "CAN-5-split-run",
+      "5",
+      "the action column's three equal values as a run of 1 and a run of 2 (one run of 3)",
+      edit(good, (p) => {
+        if (hex(column(p, ACTION)[1]) !== hex(rleCol([1, 1, 1], leb))) throw new Error("expected three puts");
+        setColumn(p, ACTION, [...sleb(1), ...leb(1), ...sleb(2), ...leb(1)]);
+      }),
+      goodHistory,
+      false,
+    ),
+    canonicalCase(
+      "CAN-6-value-leb",
+      "6",
+      "the int value 300 written in three bytes",
+      edit(good, (p) => {
+        const meta = [...metaOf(p)];
+        // Rebuild the value metadata and bytes: 300 as 0xac 0x82 0x00.
+        const values = A.decodeChange(good).ops.map((o) => o.value);
+        const enc = values.map((v) =>
+          v === 300 ? [0xac, 0x82, 0x00] : typeof v === "string" ? [...Buffer.from(v)] : [...sleb(v)],
+        );
+        const types = values.map((v) => (typeof v === "string" ? 6 : 4));
+        const minimal = values.map((v) => (typeof v === "string" ? [...Buffer.from(v)] : [...sleb(v)]));
+        const metaCol = (e) => rleCol(e.map((x, i) => x.length * 16 + types[i]), leb);
+        if (hex(metaCol(minimal)) !== hex(meta) || hex(minimal.flat()) !== hex(column(p, VALUE)[1]))
+          throw new Error("CAN-6: the value columns do not round-trip");
+        setColumn(p, VALUE_META, metaCol(enc));
+        setColumn(p, VALUE, enc.flat());
+      }),
+      goodHistory,
+      false,
+    ),
+    canonicalCase(
+      "CAN-6-value-type",
+      "6",
+      "a value of type 10",
+      edit(good, (p) => {
+        const values = A.decodeChange(good).ops.map((o) => o.value);
+        const enc = values.map((v) => (typeof v === "string" ? [...Buffer.from(v)] : [...sleb(v)]));
+        const metas = enc.map((e, i) => e.length * 16 + (i === 0 ? 10 : typeof values[i] === "string" ? 6 : 4));
+        setColumn(p, VALUE_META, rleCol(metas, leb));
+        setColumn(p, VALUE, enc.flat());
+      }),
+      goodHistory,
+      false,
+    ),
+    canonicalCase(
+      "CAN-7-make-value",
+      "7",
+      "a map made with an int value",
+      (() => {
+        const made = last(commit(A.init({ actor: ANDREY }), "CAN.make", (d) => {
+          d.m = {};
+        }));
+        return edit(made, (p) => {
+          setColumn(p, VALUE_META, rleCol([1 * 16 + 4], leb));
+          p.columns.push([VALUE, Uint8Array.from([0x07])]);
+          p.columns.sort(([a], [b]) => a - b);
+        });
+      })(),
+      [],
+      false,
+    ),
+    canonicalCase(
+      "CAN-8-counter-F2",
+      "8",
+      "an object counter of 2^32 (finding F2: automerge-rs 0.12 aborts parsing it)",
+      edit(good, (p) => {
+        const objs = A.decodeChange(good).ops.map((o) => (o.obj === "_root" ? null : Number(o.obj.split("@")[0])));
+        if (hex(rleCol(objs, leb)) !== hex(column(p, OBJ_CTR)[1])) throw new Error("CAN-8: object counters do not round-trip");
+        setColumn(p, OBJ_CTR, rleCol(objs.map((c) => (c === 1 ? 2 ** 32 : c)), leb));
+      }),
+      goodHistory,
+      false,
+    ),
+    canonicalCase(
+      "CAN-9-preds-order",
+      "9",
+      "an operation's two predecessors in descending order",
+      edit(twoDeps, (p) => {
+        const preds = A.decodeChange(twoDeps).ops[0].pred.map((x) => x.split("@"));
+        const index = (actor) => (actor === A.decodeChange(twoDeps).actor ? 0 : 1);
+        const encodePreds = (list) => [
+          rleCol(list.map(([, a]) => index(a)), leb),
+          rleCol(deltas(list.map(([c]) => Number(c))), sleb),
+        ];
+        const [actors, counters] = encodePreds(preds);
+        if (hex(actors) !== hex(column(p, PRED_ACTOR)[1]) || hex(counters) !== hex(column(p, PRED_CTR)[1]))
+          throw new Error("CAN-9: predecessors do not round-trip");
+        const [swappedActors, swappedCounters] = encodePreds([...preds].reverse());
+        setColumn(p, PRED_ACTOR, swappedActors);
+        setColumn(p, PRED_CTR, swappedCounters);
+      }),
+      twoHistory,
+      false,
+    ),
+  ];
+  // F2 and F3a as found: Data Unit plaintexts of the review.
+  corpus.canonical = {
+    rule: "SHARED-OBJECTS-PROFILE-01 §11.3: a receiver rejects a change that is not its one canonical encoding, before its engine",
+    note:
+      "Each case is checked with the §11.1 limits and the §11.3 rules alone; history_hex is the history the change was " +
+      "written on, for an implementation that applies it after the check. Every change elsewhere in this corpus is canonical.",
+    cases: refused,
+  };
+
+  // §11.4: changes built from Automerge's decoded changes, encoded again by
+  // Automerge with one reference changed.
+  const reference = (id, ruleId, description, history, change, admitted) => ({
+    id,
+    rule: `SHARED-OBJECTS-PROFILE-01 §11.4 (${ruleId}): operations refer only to the change's causal history`,
+    description,
+    history_hex: history.map(hex),
+    change_hex: hex(change),
+    expected: admitted
+      ? { admitted: true }
+      : { admitted: false, broken_rule: ruleId, error: { code: "PROFILE_INVALID", diagnostic: "INVALID_AUTOMERGE_BYTES" } },
+  });
+  const changesOf = (doc) => A.getAllChanges(doc);
+  // Counter c (1), k (2), then an increment of c (3), by andrey.
+  const counters = commit(
+    commit(A.init({ actor: ANDREY }), "REF.base", (d) => {
+      d.c = new A.Counter(1);
+      d.k = 1;
+    }),
+    "REF.inc",
+    (d) => {
+      d.c.increment(2);
+    },
+  );
+  const cHist = changesOf(counters);
+  const cHeads = A.getHeads(counters);
+  const next = (ops, extra = {}) =>
+    A.encodeChange({ actor: ANDREY, seq: 3, startOp: 4, time: 0, message: null, deps: cHeads, ops, ...extra });
+  const put = (key, value, pred) => ({ action: "set", obj: "_root", key, value, datatype: "int", pred });
+  // A list l (1) with elements 2, 3, a put on 2 (4), and a list m (5) with element 6.
+  const lists = commit(A.init({ actor: ANDREY }), "REF.lists", (d) => {
+    d.l = [1, 2];
+    d.l[0] = 3;
+    d.m = [1];
+  });
+  const lHist = changesOf(lists);
+  const lHeads = A.getHeads(lists);
+  const lid = (c) => `${c}@${ANDREY}`;
+  const lnext = (ops) =>
+    A.encodeChange({ actor: ANDREY, seq: 2, startOp: 7, time: 0, message: null, deps: lHeads, ops });
+  const lput = (elemId, pred, insert = false) => ({
+    action: "set",
+    obj: lid(1),
+    elemId,
+    insert,
+    value: 9,
+    datatype: "int",
+    pred,
+  });
+  if (A.decodeChange(lHist[0]).ops.length !== 6) throw new Error("REF.lists: expected 6 operations");
+  // pavel's concurrent k, not in the history of andrey's next change.
+  const pavelK = last(commit(A.init({ actor: PAVEL }), "REF.pavel", (d) => {
+    d.k = 2;
+  }));
+  const rcase = [
+    reference("REF-control-overwrite", "R6", "overwrite the counter, predecessor the counter", cHist, next([put("c", 5, [lid(1)])]), true),
+    reference("REF-control-pred-increment", "R6", "predecessor the increment", cHist, next([put("c", 5, [lid(3)])]), true),
+    reference("REF-control-pred-in-change", "R6", "predecessor earlier in the change", cHist, next([put("z", 5, []), put("z", 6, [lid(4)])]), true),
+    reference("REF-control-list-put", "R5", "put on an element, predecessor the last put", lHist, lnext([lput(lid(2), [lid(4)])]), true),
+    reference("REF-R1-previous-not-in-history", "R1", "andrey's third change with no dependencies", cHist, next([put("z", 1, [])], { deps: [], startOp: 1 }), false),
+    reference("REF-R2-start-past-history", "R2", "start op 6 after a history whose largest counter is 3", cHist, next([put("z", 1, [])], { startOp: 6 }), false),
+    reference("REF-R2-start-reuses-counter", "R2", "start op 3 reuses andrey's counter 3", cHist, next([put("z", 1, [])], { startOp: 3 }), false),
+    reference(
+      "REF-R2-empty-F3c",
+      "R2",
+      "an empty first change with start op 2 (finding F3c)",
+      [],
+      A.encodeChange({ actor: ANDREY, seq: 1, startOp: 2, time: 0, message: null, deps: [], ops: [] }),
+      false,
+    ),
+    reference("REF-R3-not-an-object", "R3", "a put into 2@andrey, which is a put, not a made object", cHist, next([{ action: "set", obj: lid(2), key: "x", value: 1, datatype: "int", pred: [] }]), false),
+    reference("REF-R3-property-on-list", "R3", "a property key on a list", lHist, lnext([{ action: "set", obj: lid(1), key: "x", value: 1, datatype: "int", pred: [] }]), false),
+    reference("REF-R4-insert-into-map", "R4", "an insertion into the root map", cHist, next([{ action: "set", obj: "_root", elemId: "_head", insert: true, value: 1, datatype: "int", pred: [] }]), false),
+    reference("REF-R4-insert-with-pred", "R4", "an insertion with a predecessor", lHist, lnext([lput("_head", [lid(2)], true)]), false),
+    reference("REF-R4-after-a-put", "R4", "an insertion after 4@andrey, a put, not an element", lHist, lnext([lput(lid(4), [], true)]), false),
+    reference("REF-R4-after-other-list", "R4", "an insertion into l after an element of m", lHist, lnext([lput(lid(6), [], true)]), false),
+    reference("REF-R5-put-on-head", "R5", "a put on the head", lHist, lnext([lput("_head", [])]), false),
+    reference("REF-R6-other-key-F4", "R6", "a put on k with the counter c as predecessor (finding F4)", cHist, next([put("k", 5, [lid(1)])]), false),
+    reference("REF-R6-missing", "R6", "a predecessor that is no operation", cHist, next([put("k", 5, [lid(9)])]), false),
+    reference("REF-R6-later-in-change", "R6", "a predecessor later in the change", cHist, next([put("k", 5, [lid(5)]), put("k", 6, [])]), false),
+    reference("REF-R6-other-element-F3b", "R6", "a put on element 2 with element 3 as predecessor (finding F3b)", lHist, lnext([lput(lid(2), [lid(3)])]), false),
+    reference(
+      "REF-R6-concurrent",
+      "R6",
+      "a predecessor of pavel's, concurrent with the change: the replica holds it, the history does not",
+      [...cHist, pavelK],
+      next([put("k", 5, [`1@${PAVEL}`])]),
+      false,
+    ),
+    reference("REF-R7-delete-without-pred-F3d", "R7", "a deletion without a predecessor (finding F3d)", cHist, next([{ action: "del", obj: "_root", key: "k", pred: [] }]), false),
+  ];
+  corpus.references = {
+    rule: "SHARED-OBJECTS-PROFILE-01 §11.4: a receiver rejects, before its engine, a change whose operations refer outside its causal history",
+    note:
+      "Each case applies history_hex in order (all admitted), then gives change_hex to the replica's admission. A refused " +
+      "change names the §11.4 rule it breaks (broken_rule); the replica's document is unchanged, still hands out its " +
+      "changes, saves and loads. Every change of history_hex and change_hex is canonical (§11.3).",
+    cases: rcase,
+  };
+}
+
 // The compressed case is a real compressed change: Automerge itself decodes it.
 if (A.decodeChange(compressed(nullSets(3))).ops.length !== 3) throw new Error("compressed() is wrong");
 

@@ -42,6 +42,7 @@ This profile adopts SHARED-OBJECTS-PROFILE-01 (written `SOP` below) at `mvp-0.1-
 - §10 and §12: one semantic transaction per change and one change per Data Unit, with the exceptions of §12 of this profile.
 - §11 and §13: the framing `[1, change_bytes]` (an uncompressed change chunk with a verified checksum) and `[1, full_save_bytes]`.
 - §11.1, §11.2 and §13.1: the exact change expansion limits, the document depth bound and the Snapshot limits, checked before the engine (§16.1).
+- §11.3 and §11.4: the canonical change encoding and the operation references, decided against the change's causal history, checked before the engine; a Snapshot whose document holds a change they refuse is rejected.
 - §14 and §14.1: Snapshot equivalence, the replica state rule, rebuilds, the sequence check, and holding a change whose actor and sequence number another change holds (POST-001).
 - §§15–18: the root rules, as extended by §3 of this profile; reserved keys; extension namespaces.
 
@@ -283,7 +284,7 @@ The exact portable syntax and external-file behavior are defined by MARKDOWN-SEC
 
 ### 14.1 Admission
 
-A receiver checks a change when every dependency of it is in the document (SOP §14.1), before its engine applies it: first SOP's checks (§11, §11.1, §11.2, the sequence check of §14.1, `CHANGE_ACTOR_MISMATCH`), then the structural rules below (ADR 0009, P2). Each rule is decided from the change's operations and the objects they write into, which are in the change's causal history; every replica decides it the same way, in time linear in the change.
+A receiver checks a change when every dependency of it is in the document (SOP §14.1), before its engine applies it: first SOP's checks (§11, §11.1, §11.2, §11.3, §11.4, the sequence check of §14.1, `CHANGE_ACTOR_MISMATCH`), then the structural rules below (ADR 0009, P2). Each rule is decided from the change's operations and the objects they write into, which are in the change's causal history; every replica decides it the same way, in time linear in the change.
 
 | Rule | The change … | Diagnostic |
 | --- | --- | --- |

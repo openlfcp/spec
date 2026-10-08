@@ -112,7 +112,7 @@ export function admit(prev,bytes){
   return ADMISSION_ORDER.find(d=>found.has(d))||null;
 }
 
-/** SHARED-OBJECTS-PROFILE-01's checks before the engine (§8, §11, §11.2, §14.1). */
+/** SHARED-OBJECTS-PROFILE-01's checks before the engine (§8, §11, §11.2, §11.3, §11.4, §14.1). */
 function sopRefusal(history,bytes,signer){
   // `history`: the decoded changes of the causal history.
   // §11: an uncompressed change chunk (type 1) whose checksum matches.
@@ -133,6 +133,58 @@ function sopRefusal(history,bytes,signer){
     for(const [id,obj]of c.made)depth.set(id,(depth.get(obj)??0)+1);
   }
   for(const v of depth.values())if(v>256)return 'INVALID_AUTOMERGE_BYTES';
+  // §11.3: the canonical encoding. Re-encoding with Automerge is a way to
+  // check it for the changes of this corpus, not the definition.
+  if(!Buffer.from(A.encodeChange(d)).equals(Buffer.from(bytes)))return 'INVALID_AUTOMERGE_BYTES';
+  // §11.4: operations refer only to the change's causal history.
+  if(referenceRule(history,d))return 'INVALID_AUTOMERGE_BYTES';
+  return null;
+}
+
+/**
+ * The §11.4 rule (R1-R7) the decoded change `d` breaks against its decoded
+ * causal history, or null.
+ */
+export function referenceRule(history,d){
+  // R1: the actor's previous change is in the history.
+  if(d.seq>1&&!history.some(c=>c.actor===d.actor&&c.seq===d.seq-1))return 'R1';
+  // R2: the start op follows the history's largest counter.
+  const top=history.reduce((m,c)=>Math.max(m,c.startOp+c.ops.length-1),0);
+  if(d.startOp!==top+1)return 'R2';
+  // An operation of the history (or earlier in the change), found by its
+  // actor's changes and their counter ranges; deletions are not targets.
+  const byActor=new Map();
+  for(const c of history){if(!byActor.has(c.actor))byActor.set(c.actor,[]);byActor.get(c.actor).push(c);}
+  const slotOf=(op,id)=>op.insert?id:op.elemId??op.key;
+  let upTo=d.startOp;
+  const target=id=>{
+    const at=id.indexOf('@'),ctr=Number(id.slice(0,at)),who=id.slice(at+1);
+    const c=who===d.actor&&ctr>=d.startOp&&ctr<upTo?d:(byActor.get(who)||[]).find(x=>ctr>=x.startOp&&ctr<x.startOp+x.ops.length);
+    const op=c?.ops[ctr-c.startOp];
+    if(op===undefined||op.action==='del')return undefined;
+    return {obj:op.obj,slot:slotOf(op,id),insert:!!op.insert,make:MAKE.has(op.action)?op.action:null};
+  };
+  const MAPS=new Set(['makeMap','makeTable']);
+  for(const [i,op]of d.ops.entries()){
+    const id=`${d.startOp+i}@${d.actor}`;
+    // R3: a made object, with the key form of its type.
+    const made=op.obj==='_root'?null:target(op.obj)?.make;
+    const sequence=op.obj==='_root'?false:made?!MAPS.has(made):undefined;
+    if(sequence===undefined)return 'R3';
+    if(!sequence&&(op.insert||op.key===undefined))return op.insert?'R4':'R3';
+    if(sequence&&op.key!==undefined)return 'R3';
+    const element=e=>{const t=target(e);return t!==undefined&&t.insert&&t.obj===op.obj;};
+    // R4: insertions after the head or an element of the same object.
+    if(op.insert&&(op.pred.length>0||(op.elemId!=='_head'&&!element(op.elemId))))return 'R4';
+    // R5: other sequence operations name an element of the same object.
+    if(sequence&&!op.insert&&(op.elemId==='_head'||!element(op.elemId)))return 'R5';
+    // R6: predecessors on the same object and key.
+    const slot=slotOf(op,id);
+    for(const p of op.pred){const t=target(p);if(t===undefined||t.obj!==op.obj||t.slot!==slot)return 'R6';}
+    // R7: a deletion has a predecessor.
+    if(op.action==='del'&&op.pred.length===0)return 'R7';
+    upTo=d.startOp+i+1;
+  }
   return null;
 }
 

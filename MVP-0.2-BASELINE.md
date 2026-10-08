@@ -5,15 +5,16 @@ full WIRE-01 conformance, documents remain Working Drafts.**
 
 This file answers one question: *what exactly do I implement against for
 MVP 0.2?* The answer is every file listed below, at the Git tag
-`mvp-0.2-baseline.1` of this repository.
+`mvp-0.2-baseline.2` of this repository.
 
 | Tag | Status |
 | --- | --- |
-| mvp-0.2-baseline.1 | **Current.** The MVP 0.1 baseline `mvp-0.1-baseline.9` unchanged, plus shared sections: the profile `org.openlfcp.shared-sections.v1` (SHARED-SECTIONS-PROFILE-01, ADR 0009), its Markdown bindings (MARKDOWN-SECTIONS-01), the SDK integration contracts (SDK-SECTIONS-INTEGRATION-01), the corpus and the Markdown fixtures. No published value of MVP 0.1 changes (`migrations/mvp-0.2-baseline.1/value-changes.json` lists no change); the two shared sections suites are new. |
+| mvp-0.2-baseline.2 | **Current.** The MVP 0.1 baseline `mvp-0.1-baseline.10` unchanged, plus shared sections as in `mvp-0.2-baseline.1`. Applies SPEC-PATCH-10 (ADR 0010): canonical change encoding and operation references (SHARED-OBJECTS-PROFILE-01 §11.3, §11.4), which shared sections inherit unchanged (SHARED-SECTIONS-PROFILE-01 §2). No vector value changes (`migrations/mvp-0.2-baseline.2/value-changes.json` lists no change); the Automerge reference corpus gains the `canonical` and `references` sections, the shared sections corpus the cases SS57 to SS59. |
+| mvp-0.2-baseline.1 | Superseded by `mvp-0.2-baseline.2`, because SPEC-PATCH-10 changes normative rules and adds vectors. Never moved. The MVP 0.1 baseline `mvp-0.1-baseline.9` unchanged, plus shared sections: the profile `org.openlfcp.shared-sections.v1` (SHARED-SECTIONS-PROFILE-01, ADR 0009), its Markdown bindings (MARKDOWN-SECTIONS-01), the SDK integration contracts (SDK-SECTIONS-INTEGRATION-01), the corpus and the Markdown fixtures. No published value of MVP 0.1 changes (`migrations/mvp-0.2-baseline.1/value-changes.json` lists no change); the two shared sections suites are new. |
 
 - The listed specifications are Working Drafts. They keep their identifiers;
   nothing is renamed or declared Stable.
-- Every file of `mvp-0.1-baseline.9` is part of this baseline, byte for
+- Every file of `mvp-0.1-baseline.10` is part of this baseline, byte for
   byte: a Resource of the profile `org.openlfcp.shared-objects.v1` behaves
   exactly as in MVP 0.1. MVP-0.1-BASELINE.md keeps describing the MVP 0.1
   tags.
@@ -21,18 +22,19 @@ MVP 0.2?* The answer is every file listed below, at the Git tag
   subset of LFCP-WIRE-01". It must not claim full LFCP-WIRE-01 conformance
   (`.github: docs/MVP-0.1-PROTOCOL-SCOPE.md` §5; MVP 0.2 adds no Wire
   feature).
-- The decisions applied are those of MVP 0.1 (ADR 0001 to ADR 0008) and
+- The decisions applied are those of MVP 0.1 (ADR 0001 to ADR 0008 and
+  [ADR 0010](adr/0010-canonical-changes-and-operation-references.md)) and
   [ADR 0009](adr/0009-shared-sections-profile.md).
 
 ## Pinning
 
-Implementations pin the current tag, `mvp-0.2-baseline.1`, of
+Implementations pin the current tag, `mvp-0.2-baseline.2`, of
 `openlfcp/spec`, never a branch, in their `spec.lock`. A development pin of
 the shared sections files before this tag (`spec-sections.lock`) is retired
 when an implementation moves to the tag.
 
 A later approved Working Draft correction does not move the tag. It
-produces a new tag, such as `mvp-0.2-baseline.2`, with an updated copy of
+produces a new tag, such as `mvp-0.2-baseline.3`, with an updated copy of
 this file and a `migrations/mvp-0.2-baseline.N/` entry. Implementations
 move to it deliberately.
 
@@ -64,9 +66,9 @@ directory).
 | `test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.json` | Shared Objects vectors, machine-readable: deterministic, validation and behavioral cases |
 | `test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.md` | Shared Objects vectors, human-readable |
 | `test-vectors/shared-objects-01/generate_shared_objects_test_vectors_01.py` | Generator; reproduces both Shared Objects vector files byte for byte |
-| `test-vectors/shared-objects-01/SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json` | Automerge reference corpus for S01–S16: exact changes, save images, logical states and conflict sets, plus `validations` (save images with the expected profile problems) `expansion` (chunks at and past the §11.1 and §13.1 limits), `depth` (change sequences and Snapshots at and past the §11.2 depth bound) and `collision` (a change held for a taken actor sequence until a rebuild, §14.1) (supplementary; bytes not normative) |
+| `test-vectors/shared-objects-01/SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json` | Automerge reference corpus for S01–S16: exact changes, save images, logical states and conflict sets, plus `validations` (save images with the expected profile problems) `expansion` (chunks at and past the §11.1 and §13.1 limits), `depth` (change sequences and Snapshots at and past the §11.2 depth bound) `collision` (a change held for a taken actor sequence until a rebuild, §14.1), `canonical` (changes in and out of the canonical encoding, §11.3) and `references` (changes whose operations refer inside and outside their history, §11.4) (supplementary; bytes not normative) |
 | `test-vectors/shared-objects-01/generate_automerge_reference_01.mjs` | Corpus generator; with the pinned `@automerge/automerge` 3.5.0 it reproduces the corpus byte for byte |
-| `test-vectors/shared-sections-01/SHARED-SECTIONS-TEST-VECTORS-01.json` | Shared sections corpus, machine-readable: 56 cases of Automerge changes, admission, isolation, budgets and the Snapshot floor |
+| `test-vectors/shared-sections-01/SHARED-SECTIONS-TEST-VECTORS-01.json` | Shared sections corpus, machine-readable: 59 cases of Automerge changes, admission, isolation, budgets and the Snapshot floor |
 | `test-vectors/shared-sections-01/SHARED-SECTIONS-TEST-VECTORS-01.md` | Shared sections corpus, human-readable |
 | `test-vectors/shared-sections-01/MARKDOWN-SECTIONS-FIXTURES-01.json` | Markdown fixtures of MARKDOWN-SECTIONS-01, machine-readable: before, event and after files |
 | `test-vectors/shared-sections-01/MARKDOWN-SECTIONS-FIXTURES-01.md` | Markdown fixtures, human-readable |
@@ -108,6 +110,7 @@ directory).
 | `adr/0007-mvp-0.1-protocol-decisions-7.md` | Seventh batch (SPEC-PATCH-08): the document depth bound; an orchestrator decision approved by the project owner on 2026-10-06 |
 | `adr/0008-recovery-after-server-data-loss.md` | SPEC-PATCH-09: recovery after server data loss (POST-013), accepted by the project owner on 2026-10-08, and POST-001 (hold and retry of a taken actor sequence), decided by the project owner on 2026-10-06 |
 | `adr/0009-shared-sections-profile.md` | The shared sections profile: decisions P1, P2, P3 and P5 approved by the project owner, applied in this baseline |
+| `adr/0010-canonical-changes-and-operation-references.md` | SPEC-PATCH-10: canonical change encoding and operation references (findings F2 to F4); orchestrator decisions of 2026-10-09, applied in `mvp-0.1-baseline.10` and this baseline |
 
 ## Validation
 
@@ -123,13 +126,25 @@ The checks are those of MVP-0.1-BASELINE.md, plus:
 
 - vector values against the previous baseline tag, from the newest
   `migrations/mvp-0.M-baseline.N/value-changes.json`: for this baseline,
-  against `mvp-0.1-baseline.9`;
+  against `mvp-0.2-baseline.1`;
 - the shared sections corpus and the Markdown fixtures: schema-valid,
   regenerated byte for byte with the pinned `@automerge/automerge` and
   replayed by the reference verifiers (`scripts/check-shared-sections-corpus.mjs`);
 - this manifest's file list, as for MVP-0.1-BASELINE.md.
 
-## Changes from `mvp-0.1-baseline.9`
+## Changes from `mvp-0.2-baseline.1`
+
+| Kind | Files |
+| --- | --- |
+| Changed, normative | `profiles/SHARED-OBJECTS-PROFILE-01.md` (§11, §11.3, §11.4, §13, §74.1; the same text as `mvp-0.1-baseline.10`) |
+| Changed, normative (reference) | `profiles/SHARED-SECTIONS-PROFILE-01.md` §2, §14.1: the inherited checks list §11.3 and §11.4 (no new rule) |
+| Changed, vectors | `test-vectors/shared-objects-01/SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json` and its generator (sections `canonical`, `references`), `test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.md`; `test-vectors/shared-sections-01/` (SS57 to SS59, the reference admission checks §11.3 and §11.4) |
+| Added, decision | `adr/0010-canonical-changes-and-operation-references.md` |
+| Changed, tooling | `scripts/check-baseline-changes.mjs`: reads suites of several MiB, and compares a suite moved to `lfcp-vector-format/1` after the previous baseline through the migration check (`"previous": "migrated"`) |
+| Added, migration | `migrations/mvp-0.2-baseline.2/`, `migrations/mvp-0.1-baseline.10/` |
+| Changed, MVP 0.1 files | Those of `mvp-0.1-baseline.10` |
+
+## Changes from `mvp-0.1-baseline.9` (`mvp-0.2-baseline.1`)
 
 | Kind | Files |
 | --- | --- |

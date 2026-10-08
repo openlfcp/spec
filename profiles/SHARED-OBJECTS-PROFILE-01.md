@@ -285,7 +285,7 @@ shared-objects-change = [
 
 The first element MUST equal `1`.
 
-The second element MUST contain one complete Automerge change in the canonical binary format defined by the Automerge implementation/specification used by the profile.
+The second element MUST contain one complete Automerge change in its canonical encoding (Section 11.3), whose operations refer only to its own causal history (Section 11.4).
 
 A receiver MUST reject profile plaintext that:
 
@@ -357,6 +357,58 @@ A receiver computes depths without recursion: it keeps the depth of every object
 
 A Snapshot (Section 13) holds the same bound: a receiver rejects, before its engine loads it, a Snapshot whose document has an object of depth 257 or more, computing depths from the document's operation columns (the object, operation ID and action columns). A receiver that cannot establish the depths within its Snapshot limits (Section 13.1) rejects the Snapshot and falls back to the units.
 
+### 11.3 Canonical change encoding
+
+An Automerge engine does not keep the bytes of a change it applies. It keeps the change's operations and metadata, and writes the change again whenever it saves the document or hands the change out. A change whose bytes differ from that writing is applied, but its hash no longer matches: Automerge 0.12 then fails to load the document's save ("mismatching heads"), and every Snapshot of the document is refused. The format allows many encodings of one change, so the bytes a receiver accepts MUST be the one encoding this section defines. The definition is a property of the change version 1 format, not of an Automerge version; re-encoding the change and comparing the bytes is one way to check it, not the definition. Automerge JS 3.5.0 and automerge-rs 0.12 write every change of the published corpora exactly this way.
+
+A receiver MUST check these rules after the limits of Section 11.1 and before its Automerge engine decodes the change, and MUST reject a change that breaks any of them with `PROFILE_INVALID` and the diagnostic `INVALID_AUTOMERGE_BYTES` (Section 74.1). A writer MUST NOT emit such a change.
+
+`N` is the row count of the action column (0 when the column is absent). The terms are those of Section 11.1.
+
+1. **Numbers.** Every LEB128 number of the chunk has its shortest encoding: the chunk length, every header number, the column metadata, every run header and every number value. An unsigned number of 2^64 or more, or a signed one outside the 64-bit range, is refused.
+2. **Header.** The dependencies are strictly ascending as 32-byte strings. The sequence number and the start op are at least 1. The message is valid UTF-8 (an empty message and no message are the same, a length of 0). The other actors are strictly ascending as byte strings, none of them is the change's actor, and they are exactly the actors other than the change's own that its operations name: in an object, a key element or a predecessor.
+3. **Columns.** The change has only the columns of this table, in the order of their specifications, each at most once, none with empty data and none deflated. A column is present exactly when the table says.
+
+   | Specification | Column | Present when |
+   | --- | --- | --- |
+   | `0x01`, `0x02` | object actor, object counter | some operation is not on the root object |
+   | `0x11` | key actor | some key is an element ID (not the head) |
+   | `0x13` | key counter (delta) | some key is an element ID or the head |
+   | `0x15` | key string | some key is a property |
+   | `0x34` | insert (boolean) | `N > 0` |
+   | `0x42` | action | `N > 0` |
+   | `0x56` | value metadata | `N > 0` |
+   | `0x57` | value bytes | the values have at least one byte |
+   | `0x70` | predecessor count (group) | `N > 0` |
+   | `0x71`, `0x73` | predecessor actor, predecessor counter (delta) | some operation has a predecessor |
+   | `0x94` | expand (boolean) | some operation's expand flag is true |
+   | `0xa5` | mark name | some operation has a mark name |
+
+4. **Rows.** Every present operation column has exactly `N` rows. The predecessor actor and counter columns have exactly as many rows as the sum of the predecessor counts. The value bytes column is exactly the concatenation of the values, whose lengths the value metadata gives. After the last column come only the change's extra bytes.
+5. **Runs.** A run-length column (types 0, 1, 2, 3, 5 and 6) has the one encoding of its rows in which every maximal sequence of nulls is one null run, every maximal sequence of two or more equal non-null values is one repetition run, and every maximal sequence of the remaining values is one literal run. So a repetition run has at least 2 values, no two adjacent values of a literal run are equal, and no two runs of the same kind are adjacent. A delta column (type 3) applies this to the differences: the first non-null value's difference is taken from 0, each later one from the previous non-null value. A boolean column (type 4) is the lengths of its alternating runs, starting with `false`; only the first length may be 0 (when the first row is `true`).
+6. **Values.** The value metadata of a value is its byte length shifted left by 4, plus its type: 0 null, 1 false and 2 true (no bytes); 3 an unsigned integer and 4 a signed integer, 8 a counter and 9 a timestamp (the shortest LEB128 of the number); 5 a float (8 bytes); 6 a UTF-8 string; 7 bytes (any). Types 10 to 15 are refused.
+7. **Actions.** The action is 0 to 7. An operation that makes an object (0 map, 2 list, 4 text, 6 table) or deletes (3) has a null value; an increment (5) has an integer value (type 3 or 4). A mark (7) inserts; only a mark has a mark name or a true expand flag.
+8. **IDs.** An object is the root (both object columns null) or an operation ID with a counter of at least 1. A key is a property (only the key string), the head (only the key counter, 0) or an element ID (the key actor and a counter of at least 1). Every counter is below 2^32: the change's last operation counter (`start op + N - 1`) and every object, key and predecessor counter. Automerge holds counters in 32 bits; automerge-rs 0.12 aborts on a larger one.
+9. **Predecessors.** The predecessors of an operation are strictly ascending by counter, then by actor ID (the actor's bytes).
+
+### 11.4 Operation references
+
+An Automerge engine also applies a change whose operations refer where they cannot: a predecessor on another key, an element of another list, an object that is not one. It then cannot write its changes back out (automerge-rs 0.12 aborts handing them out, and its save does not load), and some such changes make the apply itself abort, which in Automerge JS terminates its wasm module. A receiver MUST check these rules before its engine applies a change, and MUST reject a change that breaks one with `PROFILE_INVALID` and the diagnostic `INVALID_AUTOMERGE_BYTES` (Section 74.1). A writer MUST NOT emit such a change; an Automerge writer that commits on its document never does.
+
+The rules are decided against the change's **causal history** `H`: its dependencies and all their ancestors, never anything else the receiver holds, so every replica decides alike (Section 14.1). An operation may also refer to an operation earlier in the same change. The operations of a change have the IDs `start op`, `start op + 1`, … of the change's actor, in order.
+
+1. **R1, the actor's chain.** A change with sequence number `s > 1` has its actor's change `s - 1` in `H`.
+2. **R2, the start op.** The start op is one more than the largest operation counter in `H` (0 for an empty `H`). The largest counter of a change is `start op + N - 1`; for a change without operations it is `start op - 1`.
+3. **R3, objects.** An operation writes into the root or into an object made by an operation of `H` (or earlier in the change), an operation with action 0, 2, 4 or 6. A map (the root included) or table takes property keys; a list or text takes element keys (the head or an element ID).
+4. **R4, insertions.** An insertion writes into a list or text, after the head or after an element of the same object: an element is an inserting operation, and its ID is the element's. An insertion has no predecessors.
+5. **R5, sequence operations.** An operation on a list or text that does not insert names an element of the same object, not the head.
+6. **R6, predecessors.** Each predecessor is an operation of `H` (or earlier in the change) that is not a deletion, on the same object and the same key as the operation; the key of an insertion is its own element. A predecessor concurrent with the change (not in `H`) is refused, even where the receiver holds it.
+7. **R7, deletions.** A deletion has at least one predecessor.
+
+Section 11.1's rule that a change's other actors are actors of the document follows from these: every actor the change names is named by a reference into `H`.
+
+These rules and those of Section 11.3 hold for every change a document holds. A Snapshot (Section 13) whose document holds a change that either section refuses is rejected with `PROFILE_INVALID` and the diagnostic `INVALID_AUTOMERGE_BYTES`, and the receiver falls back to the units: a receiver checks the changes the loaded document hands out, in causal order, before it uses the document.
+
 ## 12. Change batching
 
 Version 1 intentionally defines **one Automerge change per LFCP Data Unit**.
@@ -390,7 +442,7 @@ shared-objects-snapshot = [
 ]
 ```
 
-The second element MUST be exactly one Automerge document chunk (a full save) with nothing after it, not a change chunk; a receiver MUST verify the chunk checksum as for Data Units (Section 11) and MUST reject a Snapshot plaintext that fails either check, that exceeds its Snapshot expansion limits (Section 13.1), or that its Automerge library cannot load, with `PROFILE_INVALID` and the diagnostic `INVALID_AUTOMERGE_BYTES` (Section 74.1). The framing rules of Section 11 apply to the Snapshot plaintext as well.
+The second element MUST be exactly one Automerge document chunk (a full save) with nothing after it, not a change chunk; a receiver MUST verify the chunk checksum as for Data Units (Section 11) and MUST reject a Snapshot plaintext that fails either check, that exceeds its Snapshot expansion limits (Section 13.1), or that its Automerge library cannot load, or whose document holds a change that Section 11.3 or 11.4 refuses, with `PROFILE_INVALID` and the diagnostic `INVALID_AUTOMERGE_BYTES` (Section 74.1). The framing rules of Section 11 apply to the Snapshot plaintext as well.
 
 A client loads the second element using the corresponding Automerge full-document load operation.
 
@@ -1792,7 +1844,7 @@ Every profile validation failure is reported with the code `PROFILE_INVALID` and
 | `INVALID_TAG` | a tag is empty or starts with `#` | §40 |
 | `IMMUTABLE_FIELD_MUTATED` | `id`, `type` or `created_by` changed | §75 |
 | `CHANGE_ACTOR_MISMATCH` | a Data Unit carries an Automerge change whose actor is not the §8 actor of the unit's signer; the change is not merged | §8, §11 |
-| `INVALID_AUTOMERGE_BYTES` | a Data Unit or Snapshot plaintext is not the §11 or §13 framing, or its Automerge bytes are not a valid chunk of the required type with a matching checksum, or cannot be parsed or loaded, or the change skips a sequence number of its actor, or the chunk exceeds the change expansion limits (§11.1) or the receiver's Snapshot expansion limits (§13.1), or it is structurally inconsistent or names an actor the document does not know (§11.1), or the engine fails applying it (§11.1), or it would create an object deeper than 256 levels (§11.2); nothing is merged | §11, §11.1, §11.2, §13, §13.1, §14.1 |
+| `INVALID_AUTOMERGE_BYTES` | a Data Unit or Snapshot plaintext is not the §11 or §13 framing, or its Automerge bytes are not a valid chunk of the required type with a matching checksum, or cannot be parsed or loaded, or the change skips a sequence number of its actor, or the chunk exceeds the change expansion limits (§11.1) or the receiver's Snapshot expansion limits (§13.1), or it is structurally inconsistent or names an actor the document does not know (§11.1), or the engine fails applying it (§11.1), or it would create an object deeper than 256 levels (§11.2), or the change is not in its canonical encoding (§11.3), or an operation refers outside the change's causal history (§11.4), or a Snapshot's document holds such a change (§11.4); nothing is merged | §11, §11.1, §11.2, §11.3, §11.4, §13, §13.1, §14.1 |
 
 When one value breaks several rules, its diagnostic is the first that applies in the order of this table: structure and value rules first, `IMMUTABLE_FIELD_MUTATED` last. Precedence applies within one value only. A changed `id` that is also not a UUIDv7, for example, is `INVALID_OBJECT_ID`.
 
