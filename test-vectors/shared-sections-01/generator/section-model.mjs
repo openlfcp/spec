@@ -223,6 +223,16 @@ export function inspect(doc) {
     types:{taskTitleScalar:!doc.objects?.[ids.task]||A.isImmutableString(doc.objects[ids.task].title),paragraphText:!nodes[ids.para]||!!A.getObjectId(nodes[ids.para],'text')}
   };
 }
+// SHARED-OBJECTS-PROFILE-01 §13.1: a full save's operation rows (one per
+// operation that is not a deletion: a deletion is a successor of the
+// operation it removes) and its successor entries (the group column's sum).
+const FLOOR=262144;
+export function snapshotCounts(doc){
+  const ops=A.getAllChanges(doc).flatMap(b=>A.decodeChange(b).ops);
+  const rows=ops.filter(o=>o.action!=='del').length;
+  const successors=ops.reduce((n,o)=>n+(o.action==='del'?1:o.pred.length),0);
+  return {rows,successors,within_floor:rows<=FLOOR&&successors<=FLOOR};
+}
 export function assertExpected(actual, requirements, assert) {
   const present=actual.tree.map(x=>x.id);
   for(const n of requirements.visible||[])assert(present.includes(n),'not visible: '+n);

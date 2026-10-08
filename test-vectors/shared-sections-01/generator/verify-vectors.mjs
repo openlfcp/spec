@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import assert from 'node:assert/strict';
-import {A,PROFILE,hash,actor,ids,inspect,assertExpected,str} from './section-model.mjs';
+import {A,PROFILE,hash,actor,ids,inspect,assertExpected,str,snapshotCounts} from './section-model.mjs';
 import {admitReplay} from './admission.mjs';
 const out=process.argv[2]||'generated';
 const suite=JSON.parse(fs.readFileSync(path.join(out,'SHARED-SECTIONS-TEST-VECTORS-01.json'),'utf8'));
@@ -43,8 +43,10 @@ for(const c of suite.cases) {
   const loaded=A.load(base,{actor:actor('verify-checkpoint')});
   const checkpoint=admitReplay([...A.getAllChanges(loaded),...delta],actor('verify-checkpoint'));
   const saved=A.load(target,{actor:actor('verify-save')});
-  const summaries=[normal,reverse,checkpoint].map(r=>[r.doc,{...inspect(r.doc),refused:r.refused,held:r.held}]);
-  summaries.push([saved,{...inspect(saved),refused:normal.refused,held:normal.held}]);
+  // SHARED-OBJECTS-PROFILE-01 §13.1 counts, for the cases that record them.
+  const counts=d=>c.expected.snapshot?{snapshot:snapshotCounts(d)}:{};
+  const summaries=[normal,reverse,checkpoint].map(r=>[r.doc,{...inspect(r.doc),refused:r.refused,held:r.held,...counts(r.doc)}]);
+  summaries.push([saved,{...inspect(saved),refused:normal.refused,held:normal.held,...counts(saved)}]);
   for(const [d,summary] of summaries) {
     assert.deepEqual(summary,c.expected,'state mismatch '+c.id);
     assert.deepEqual(A.getHeads(d).sort(),c.expected_heads,'heads mismatch '+c.id);

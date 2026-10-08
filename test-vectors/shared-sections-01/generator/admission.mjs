@@ -15,6 +15,7 @@ const NODE_SCALARS=['id','kind','created_by','lifecycle','placement','task_id','
 const TASK_IMMUTABLE=['id','type','created_by'];
 const TASK_SCALARS=['id','type','created_by','lifecycle','title','status','priority','due','scheduled','completion_date','created_at'];
 const NAMES=['A','B','C'];
+const MAKE=new Set(['makeMap','makeList','makeText','makeTable']);
 
 const oid=(obj,key)=>obj==null?null:A.getObjectId(obj,key);
 const isText=(obj,key)=>{const v=obj?.[key];return v!==undefined&&!A.isImmutableString(v)&&typeof v==='string'&&!!oid(obj,key);};
@@ -112,7 +113,8 @@ export function admit(prev,bytes){
 }
 
 /** SHARED-OBJECTS-PROFILE-01's checks before the engine (§8, §11, §11.2, §14.1). */
-function sopRefusal(prev,bytes,signer){
+function sopRefusal(history,bytes,signer){
+  // `history`: the decoded changes of the causal history.
   // §11: an uncompressed change chunk (type 1) whose checksum matches.
   if(bytes[8]!==1)return 'INVALID_AUTOMERGE_BYTES';
   const d=A.decodeChange(bytes);
@@ -120,15 +122,15 @@ function sopRefusal(prev,bytes,signer){
   // §8: the change is the signer's.
   if(signer!==undefined&&actor(signer)!==d.actor)return 'CHANGE_ACTOR_MISMATCH';
   // §14.1: the actor's next sequence number.
-  const own=A.getAllChanges(prev).map(b=>A.decodeChange(b)).filter(c=>c.actor===d.actor);
+  const own=history.filter(c=>c.actor===d.actor);
   const latest=own.reduce((m,c)=>Math.max(m,c.seq),0);
   if(d.seq!==latest+1)return 'INVALID_AUTOMERGE_BYTES';
   // §11.2: no object deeper than 256 below the root.
   const depth=new Map([['_root',0]]);
-  for(const c of [...A.getAllChanges(prev).map(b=>A.decodeChange(b)),d]){
-    c.ops.forEach((op,i)=>{
-      if(['makeMap','makeList','makeText','makeTable'].includes(op.action))depth.set((c.startOp+i)+'@'+c.actor,(depth.get(op.obj)??0)+1);
-    });
+  for(const c of [...history,d]){
+    // The objects a change creates, cached on its decoded form.
+    c.made??=c.ops.flatMap((op,i)=>MAKE.has(op.action)?[[(c.startOp+i)+'@'+c.actor,op.obj]]:[]);
+    for(const [id,obj]of c.made)depth.set(id,(depth.get(obj)??0)+1);
   }
   for(const v of depth.values())if(v>256)return 'INVALID_AUTOMERGE_BYTES';
   return null;
@@ -149,20 +151,27 @@ export function admitReplay(changes,initActor){
     const h=A.decodeChange(b).hash;
     if(!byHash.has(h)){byHash.set(h,b);order.push(h);if(item.signer!==undefined)signers.set(h,item.signer);}
   }
-  const deps=h=>A.decodeChange(byHash.get(h)).deps;
+  const decoded=new Map();
+  const decode=h=>{if(!decoded.has(h))decoded.set(h,A.decodeChange(byHash.get(h)));return decoded.get(h);};
+  const deps=h=>decode(h).deps;
   const admitted=new Set(),refused=[],held=new Set();
   // Causal order: a change after its dependencies, whatever the input order.
   const placed=new Set(),sorted=[];
   const visit=h=>{if(placed.has(h)||!byHash.has(h))return;placed.add(h);for(const d of deps(h))visit(d);sorted.push(h);};
   for(const h of order)visit(h);
+  // The document of the admitted changes so far: the causal history of a
+  // change whose history is exactly those changes, as in a linear run.
+  let running=A.init({actor:initActor});
   for(const h of sorted){
     if(deps(h).some(d=>held.has(d)||refused.some(r=>r.change===d)||!byHash.has(d))){held.add(h);continue;}
     const past=new Set();const collect=x=>{if(past.has(x))return;past.add(x);for(const d of deps(x))collect(d);};
     for(const d of deps(h))collect(d);
-    const [prev]=A.applyChanges(A.init({actor:initActor}),sorted.filter(x=>past.has(x)).map(x=>byHash.get(x)));
-    const diagnostic=sopRefusal(prev,byHash.get(h),signers.get(h))??admit(prev,byHash.get(h));
-    if(diagnostic)refused.push({change:h,diagnostic});else admitted.add(h);
+    const linear=past.size===admitted.size&&[...past].every(x=>admitted.has(x));
+    const prev=linear?running:A.applyChanges(A.init({actor:initActor}),sorted.filter(x=>past.has(x)).map(x=>byHash.get(x)))[0];
+    const history=sorted.filter(x=>past.has(x)).map(decode);
+    const diagnostic=sopRefusal(history,byHash.get(h),signers.get(h))??admit(prev,byHash.get(h));
+    if(diagnostic)refused.push({change:h,diagnostic});
+    else{admitted.add(h);running=A.applyChanges(running,[byHash.get(h)])[0];}
   }
-  const [doc]=A.applyChanges(A.init({actor:initActor}),sorted.filter(h=>admitted.has(h)).map(h=>byHash.get(h)));
-  return {doc,refused,held:[...held].sort()};
+  return {doc:running,refused,held:[...held].sort()};
 }

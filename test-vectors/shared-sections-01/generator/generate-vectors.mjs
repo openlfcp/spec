@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import {createRequire} from 'node:module';
 import path from 'node:path';
 import assert from 'node:assert/strict';
-import {A,PROFILE,hash,resource,principal,actor,pref,uid,ids,S,str,plain,fork,change,place,add,setLife,textEdit,initial,genesis,inspect,assertExpected} from './section-model.mjs';
+import {A,PROFILE,hash,resource,principal,actor,pref,uid,ids,S,str,plain,fork,change,place,add,setLife,textEdit,initial,genesis,inspect,assertExpected,snapshotCounts} from './section-model.mjs';
 import {admitReplay} from './admission.mjs';
 const out=process.argv[2]||path.dirname(path.dirname(new URL(import.meta.url).pathname));
 // The engine that generated the corpus: the installed package, not a literal.
@@ -30,7 +30,7 @@ function summarizeChange(b,signer){
   const c=A.decodeChange(b);
   return {...bytesInfo(b),change_hash:c.hash,actor:c.actor,seq:c.seq,deps:c.deps,framed_plaintext:bytesInfo(frame(b)),...(signer?{signer}:{})};
 }
-function record(id,title,{base=seeds,a=[],b=[],after=[],inject,requirements={},coverage='model',notes=[]}={}){
+function record(id,title,{base=seeds,a=[],b=[],after=[],inject,requirements={},coverage='model',notes=[],snapshot=false}={}){
   let da=fork(base,'A'),db=fork(base,'B');
   for(const [label,fn]of a)da=change(da,id+'/'+label,fn);
   for(const [label,fn]of b)db=change(db,id+'/'+label,fn);
@@ -46,7 +46,7 @@ function record(id,title,{base=seeds,a=[],b=[],after=[],inject,requirements={},c
   const all=[...A.getAllChanges(base),...ca,...crafted,...cb,...cc];
   const replay=admitReplay(all,actor('reference'));
   resolved=replay.doc;
-  const summary={...inspect(resolved),refused:replay.refused,held:replay.held};
+  const summary={...inspect(resolved),refused:replay.refused,held:replay.held,...(snapshot?{snapshot:snapshotCounts(resolved)}:{})};
   assertExpected(summary,requirements,assert);
   const value={id,title,coverage,notes,
     base_snapshot:bytesInfo(A.save(base)),
@@ -348,6 +348,24 @@ record('SS54','Two nodes claim one placement ID',{
   b:[['create',d=>add(d,ids.b,'paragraph',ids.section,ids.y,'SS54-slot','From B','B')]],
   requirements:{classification:'STRUCTURAL_ATTENTION',visible,absent:[ids.a,ids.b]},coverage:'collision',
   notes:['§14.2, SOP §21: the placement collides; both nodes that select it are not projected, and the children list holding the PlacementId twice emits nothing for it.']});
+// LFCP-02-010: Text history at the Snapshot floor (SHARED-OBJECTS-PROFILE-01
+// §13.1). Each change replaces the previous run of 4,096 characters with a
+// new one: 8,192 Text operations, the budget of §16.2. The text stays short
+// while every inserted character remains an operation of the history.
+const RUN=4096;
+const churn=k=>['run-'+(k+1),d=>{
+  if(k)textEdit(d,ids.para,14,RUN,'');
+  textEdit(d,ids.para,14,0,String.fromCharCode(97+k%26).repeat(RUN));
+}];
+const churned=n=>Array.from({length:n},(_,k)=>churn(k));
+record('SS55','Text history just within the Snapshot floor',{
+  a:churned(63),snapshot:true,
+  requirements:{classification:'VALID',visible,texts:{[ids.para]:'Draft contract'+'k'.repeat(RUN)}},coverage:'snapshot-floor',
+  notes:['SHARED-OBJECTS-PROFILE-01 §13.1: 63 changes of 8,192 Text operations leave a history of 258,162 operation rows, within the floor of 262,144: every receiver accepts its Snapshot.']});
+record('SS56','Text history past the Snapshot floor',{
+  a:churned(64),snapshot:true,
+  requirements:{classification:'VALID',visible,texts:{[ids.para]:'Draft contract'+'l'.repeat(RUN)}},coverage:'snapshot-floor',
+  notes:['SHARED-OBJECTS-PROFILE-01 §13.1: one more change passes the floor (262,258 rows), with 4,110 characters of visible text. A receiver with floor limits rejects the Snapshot (INVALID_AUTOMERGE_BYTES) and falls back to the units, which it accepts; a publisher should not publish it. The reference snapshot is given for that check.']});
 const doc={
   suite:'SHARED-SECTIONS-TEST-VECTORS-01',schema_version:1,date:'2026-10-08',
   status:'working-draft-reference-corpus',profile:PROFILE,
