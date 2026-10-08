@@ -59,6 +59,7 @@ An import is therefore one operation with one receipt. A provider whose storage 
 | `unitIds` | The Data Unit IDs of the batch, in the order of their changes |
 | `affectedNodeIds` | The nodes whose fields, Text, placement or lifecycle the batch writes, and the section when it writes the title |
 | `modelRevision` | The local document's heads after the commit, sorted, as one opaque string; the same value and name as the revision of the section snapshot |
+| `intentsHash` | SHA-256 of the batch's canonical form (§3.3) |
 | `durable` | Always `true`: a receipt exists only for a durable commit |
 
 `modelRevision` is the base an adapter records for the projection it reconciles with this commit (§7.3).
@@ -66,7 +67,7 @@ An import is therefore one operation with one receipt. A provider whose storage 
 ### 3.3 Idempotency
 
 - `commit` with an `operationId` that already has a receipt and the same intents returns that receipt and writes nothing.
-- `commit` with an `operationId` that already has a receipt and different intents fails with `OPERATION_ID_REUSED`, a local SDK error, not a Wire code. Intents are the same when their canonical forms are equal.
+- `commit` with an `operationId` that already has a receipt and different intents fails with `OPERATION_ID_REUSED`, a local SDK error, not a Wire code. Intents are the same when their canonical forms are equal: the canonical form of a batch is the deterministic CBOR encoding (RFC 8949 §4.2.1) of the list of its intents in order, each a map from this contract's field names to their values, with Text edits as given and no normalization. The receipt keeps its SHA-256 as `intentsHash`, so that TypeScript and Rust providers decide sameness alike.
 - An adapter that is unsure whether a commit happened asks `receiptOf` (§3.4); it never repeats the intents under a new `operationId`.
 
 ### 3.4 Query after a crash
@@ -134,7 +135,7 @@ A server that loses a unit it had acknowledged is detected only after the unit l
 | `have-gap` | Anti-entropy finds the unit missing from the server's Have Vector and offers it again (§68.1) |
 | `rehost` | The route answered `RESOURCE_NOT_HOSTED` and the client re-hosted the Resource (§41.1) |
 
-The SDK then reports the units as `reoffered` with the reason (§5). Every local batch holding one of them returns to `pending`, and becomes `accepted` again by a new correlated `ACK` for those units. Returning to pending is not an error: the units are re-supplied automatically, and an adapter shows the batch as waiting to sync.
+The SDK then reports the units as `reoffered` with the reason (§5), once per loss of a unit: when several signals report the same loss, as after a re-host followed by anti-entropy, the reason is the first one, and a consumer still tolerates a repeated report. Every local batch holding one of them returns to `pending`, and becomes `accepted` again by a new correlated `ACK` for those units. Returning to pending is not an error: the units are re-supplied automatically, and an adapter shows the batch as waiting to sync.
 
 ### 4.3 Received units and section state
 
@@ -171,6 +172,8 @@ statusSnapshot(resource) -> { revision, batches, received, section, access }
 ```
 
 and until it has one, shows the affected status as unknown, never as current. Events whose revision is not above the snapshot's are ignored. Events of a Resource session the consumer no longer follows are ignored.
+
+The sequence starts again when the SDK restarts. A consumer therefore starts every SDK session, a restart included, with `statusSnapshot`, and never compares revisions across sessions.
 
 ## 6. Write access
 
