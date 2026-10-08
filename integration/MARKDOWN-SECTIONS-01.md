@@ -127,13 +127,13 @@ A block the section grammar does not model is shared verbatim as a raw node (dec
 The `raw` marker is on its own line at the parent's content indentation, immediately before the block. The block is:
 
 - a fenced code block: from its opening fence through its closing fence; an unclosed fence is `SECTION_UNSUPPORTED_SYNTAX` and fails closed;
-- a table, a callout or blockquote, or an HTML block: from the line after the marker through the line before the next blank line or the next node marker, whichever comes first.
+- a table, a callout or blockquote, or an HTML block other than a comment: from the line after the marker through the line before the next blank line or the next node marker, whichever comes first. A blank line inside a multi-line HTML comment does not end the block: the comment is literal through the line containing its `-->`.
 
 The node's `kind` is `raw`; its Text holds the block's source lines exactly, relative to the content indentation, without the marker. A raw node has no children. Peers render it as the same Markdown; nothing inside it is interpreted as a binding, a Task or a heading.
 
-### 4.5 Obsidian comments stay local
+### 4.5 Comments stay local
 
-An Obsidian comment (`%%` … `%%`) inside a section is never shared: users write private notes in them, and a comment typed into a section later would otherwise reach the other participants without any preview. It is `SECTION_UNSUPPORTED_SYNTAX` with the message "Obsidian comments can't be shared; move them out of the section", and it fails closed for that comment only:
+An Obsidian comment (`%%` … `%%`), or an HTML comment (`<!--` … `-->`) that is not an LFCP marker, inside a section is never shared: Obsidian hides both in Reading view, users write private notes in them, and a comment typed into a section later would otherwise reach the other participants without any preview. A comment runs from its opening delimiter through the line that holds its closing one, blank lines included. It is `SECTION_UNSUPPORTED_SYNTAX` with the message "Comments can't be shared; move them out of the section", and it fails closed for that comment only:
 
 - the comment's lines are not extracted: they become no node and no Text, and the comment never enters a payload;
 - the rest of the section keeps synchronizing;
@@ -161,7 +161,7 @@ Exactly one structural occurrence of each NodeId/TaskId is allowed per section p
 | Task metadata | Existing adapter field contract; date-only values are not reinterpreted |
 | Tasks-local tokens (`🔁`, `🛫`, `➕`, `❌`, priority signs such as `🔼`) | Local presentation of the Task line, not shared fields (decision M7); kept in the local line, shown in the share preview, never written to the Task |
 | Fences, tables, callouts, blockquotes, HTML blocks | Raw node (§4.4) |
-| Obsidian comments (`%%` … `%%`) | Never shared: `SECTION_UNSUPPORTED_SYNTAX` for the comment only; it stays local (§4.5) |
+| Obsidian comments (`%%` … `%%`) and HTML comments that are not LFCP markers | Never shared: `SECTION_UNSUPPORTED_SYNTAX` for the comment only; it stays local (§4.5) |
 | Headings inside the region | Unsupported: `SECTION_UNSUPPORTED_SYNTAX`; the share command offers to split the section |
 | File embeds/transclusion | No file transfer or automatic dereference; the embed's source text is shared as text |
 
@@ -225,7 +225,7 @@ Inside a shared section, removing only a Task ref does not create a private exce
 
 ## 8. Initial sharing and unsupported content
 
-Before first sharing, parse the selected range, identify all content including nested children, and preview the actual boundary, including raw blocks that become shared and `%%` comments that stay local. If it contains existing bindings to another Resource, use the explicit conversion workflow of the MVP 0.2 compatibility draft. Never include the entire old Resource as a hidden side effect.
+Before first sharing, parse the selected range, identify all content including nested children, and preview the actual boundary, including raw blocks that become shared and comments that stay local. If it contains existing bindings to another Resource, use the explicit conversion workflow of the MVP 0.2 compatibility draft. Never include the entire old Resource as a hidden side effect.
 
 Constructs that are neither modeled nor carried as raw blocks (§5: headings inside the region) block creation unless the user splits or excludes them with a new visible boundary.
 
@@ -339,7 +339,7 @@ Existing `MALFORMED_LFCP_REF`, `DUPLICATE_LFCP_REF`, `LFCP_REF_NOT_AT_LINE_END`,
 | MS23 | Tab-indented and mixed tab/space nesting parse to the same tree as space indentation (M2, H2) |
 | MS24 | A heading moved away from its start marker fails closed (H4) |
 | MS25 | A table and a fence inside the region round-trip as raw nodes (M6) |
-| MS30 | A `%%` comment inside the region: not extracted, the rest of the section syncs, a remote edit next to it keeps it in place, a remote removal of the line it follows pauses the section with the comment message (§4.5) |
+| MS30 | A `%%` comment and a multi-line HTML comment with a blank line inside the region: not extracted, the rest of the section syncs, a remote edit next to them keeps them in place, a remote removal of the line one follows pauses the section with the comment message (§4.5) |
 | MS26 | A heading inside the region is `SECTION_UNSUPPORTED_SYNTAX` and blocks sharing until split |
 | MS27 | Tasks-local tokens on a Task line stay local and appear in the share preview (M7) |
 | MS28 | Fold, Outline drag and `![[note#heading]]` embed of a section heading with private text before the next heading: the warning of §3 appears; nothing private is shared (H5) |
