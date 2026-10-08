@@ -3,7 +3,7 @@
 **Project:** OpenLFCP  
 **Target:** MVP 0.2  
 **Date:** 2026-10-08  
-**Status:** Working Draft golden fixture set for MVP 0.2, not in any implementation baseline; 47 reference checks pass, real editor integration pending  
+**Status:** Working Draft golden fixture set for MVP 0.2, not in any implementation baseline; 48 reference checks pass, real editor integration pending  
 **Normative companions:** `integration/MARKDOWN-SECTIONS-01.md`; `integration/MARKDOWN-REFS-01.md`
 
 > **Revision note (LFCP-02-010).** Rewritten from the MVP 0.2 planning
@@ -12,8 +12,8 @@
 > MS16 now expects a raw node instead of a suspension (M6). Identities
 > MS01–MS26 are kept; MS27–MS38 are added for M1, M2, M4–M7, the comment
 > rule and host facts H2–H6; MS39–MS41 for the sender's section comments
-> setting (§4.5); MS42–MS44 for both ref placements and the Tasks suffix
-> after an inline ref (§4.1). Each changed or added expectation states its
+> setting (§4.5); MS42–MS45 for both ref placements and the Tasks suffix
+> after an inline ref (§4.1, host facts H6 and H8). Each changed or added expectation states its
 > reason in the fixture's `rationale` or in this document.
 
 ## 1. Purpose
@@ -122,9 +122,10 @@ Diagnostics depending on a durable projection base or actual model state, such a
 | MS39 | New `%%` and HTML comments typed under the setting `shared` | Each gets a `raw` marker and is published as a raw node (§4.5) |
 | MS40 | Setting `local`: a comment with a `raw` marker and a new comment | The marked one stays shared; the new one stays local with `SECTION_UNSUPPORTED_SYNTAX` |
 | MS41 | A received raw node holding a comment, setting `local` | Projected as a raw node with its marker; no diagnostic |
-| MS42 | Setting `inline`: Tasks completes a Task and appends `✅ <date>` after its inline ref | A Tasks suffix, no diagnostic; the completion is shared; the ref moves back to the end of the line (§4.1, H6) |
-| MS43 | Recurrence and a due date after an inline ref | A Tasks suffix: the due date is shared, `🔁` stays local; the ref moves to the end (§4.1) |
+| MS42 | Setting `inline`: Tasks completes a Task and appends `✅ <date>` after its inline ref | A Tasks suffix, no diagnostic; the completion is shared; the line stays canonical (§4.1, H6) |
+| MS43 | Tasks completes a recurring Task whose inline ref precedes its fields | The next occurrence's copied ref is replaced by a new identity and shared as a new Task; the done one keeps its ref (§4.1, H8) |
 | MS44 | Other text after an inline ref | `LFCP_REF_NOT_AT_LINE_END`; the Task is blocked, as in MARKDOWN-REFS-01 |
+| MS45 | An inline ref at the end of the line after Tasks fields | Valid; moved before the fields while the line is idle; nothing published (§4.1, H8) |
 
 The split IDs extend the original MS01–MS18 outline without renumbering its meaning; MS27–MS38 are numbered after the planning fixtures.
 

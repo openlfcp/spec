@@ -14,7 +14,7 @@
 > (M4); every node carries a marker, hidden in Live Preview by default
 > (M5); unsupported blocks are carried as raw blocks (M6); Tasks-local
 > tokens stay local (M7). Comments inside a section follow the sender's
-> section comments setting, `local` by default (§4.5). Host facts H2–H6 are cited from
+> section comments setting, `local` by default (§4.5). Host facts H2–H8 are cited from
 > `obsidian: docs/devel/testing/obsidian-host-facts.md`. Fixtures are
 > rewritten in LFCP-02-010.
 
@@ -81,9 +81,9 @@ A Task node reuses the existing Task ref (decision M1), in either form of MARKDO
 
 The Task ID is also the task NodeId under SHARED-SECTIONS-PROFILE-01. A parser accepts both forms, with the association rules of MARKDOWN-REFS-01 unchanged: the child-line ref immediately follows its Task line, and two refs on one Task are invalid even when identical.
 
-**Binding placement.** Which form a serializer emits for a new Task ref is an adapter setting, **binding placement**: `child-line` (the default) or `inline`. An existing ref keeps its form; switching the setting converts nothing (MARKDOWN-REFS-01 §2). Child-line is the default because it is untouched by the Obsidian Tasks plugin (host fact H6). The Enter key after a Task with a child-line ref splits the Task line from its ref line; keeping the ref with its Task is the adapter's work, in the editor transaction (fixtures MS27 and MS28).
+**Binding placement.** Which form a serializer emits for a new Task ref is an adapter setting, **binding placement**: `child-line` (the default) or `inline`. An existing ref keeps its form; switching the setting converts nothing (MARKDOWN-REFS-01 §2). Child-line is the default because it is untouched by the Obsidian Tasks plugin (host fact H6). The setting's description warns that under `inline` the Tasks plugin needs the ref before its fields: Tasks reads its fields only at the end of the line, so fields before a ref at the end of the line are invisible to it, including recurrence and dates (host fact H8). The Enter key after a Task with a child-line ref splits the Task line from its ref line; keeping the ref with its Task is the adapter's work, in the editor transaction (fixtures MS27 and MS28).
 
-**Tasks suffix after an inline ref.** Completing a Task, the Tasks plugin appends `✅ <date>` after an inline ref (host fact H6), and its edit dialog writes its fields at the end of the line. Inside a section, an inline ref MAY therefore be followed by a *Tasks suffix*; this is not `LFCP_REF_NOT_AT_LINE_END`. A Tasks suffix is one or more of the following fields, each preceded by spaces or tabs, optionally followed by one block ID `^<id>` (letters, digits and `-`), then only spaces or tabs to the end of the line:
+**Tasks suffix after an inline ref.** Completing a Task, the Tasks plugin appends `✅ <date>` after an inline ref (host fact H6), and it recognizes its own fields only at the end of the line (host fact H8). Inside a section, an inline ref MAY therefore be followed by a *Tasks suffix*; this is not `LFCP_REF_NOT_AT_LINE_END`. The canonical inline form inside a section is the Task text, the ref, then the Tasks suffix: `- [ ] Water plants <!-- lfcp-ref: … --> 🔁 every week 📅 2026-10-08`; a serializer under the `inline` setting emits it. A Tasks suffix is one or more of the following fields, each preceded by spaces or tabs, optionally followed by one block ID `^<id>` (letters, digits and `-`), then only spaces or tabs to the end of the line:
 
 | Field | Form |
 | --- | --- |
@@ -97,7 +97,9 @@ A variation selector U+FE0F after a field's sign is accepted. Any other text aft
 
 The Task's fields are read from the whole line, the suffix included, as if the suffix stood before the ref: `✅ <date>` is the completion date (`task.complete` with that date on a done Task), the due and scheduled dates and the priority are read as on any Task line, and the remaining fields are Tasks-local (§5, decision M7). A field given both before and after the ref is ambiguous: the Task is blocked with `LFCP_REF_NOT_AT_LINE_END` until one of them is removed.
 
-When it can, the adapter restores the canonical form: it moves the ref back to the end of the line, after the suffix, in one guarded transaction. It can when the Task line is not being edited (the editor has no pending transaction on it and the cursor is not on it) and the file still matches its projection base; otherwise it leaves the line as it is, which is valid, and tries again later. The move is a source rewrite only: it publishes nothing and does not enter the user's undo history as a semantic edit. How the Tasks plugin derives the next occurrence of a recurring Task whose line holds an inline ref is not established as a host fact; a copy of the ref on a new line is `NODE_BINDING_DUPLICATE` under §4.6.
+An inline ref at the end of a line after Tasks fields is valid, but hides those fields from the Tasks plugin. When it can, the adapter restores the canonical form: it moves the ref to just before the first Tasks field, in one guarded transaction. It can when the Task line is not being edited (the editor has no pending transaction on it and the cursor is not on it) and the file still matches its projection base; otherwise it leaves the line as it is and tries again later. The move is a source rewrite only: it publishes nothing and does not enter the user's undo history as a semantic edit. A ref already in the canonical form is never moved.
+
+**A recurring Task's next occurrence.** Completing a recurring Task whose inline ref precedes its fields, the Tasks plugin inserts the next occurrence on a new line above, with a copy of the ref, in the same edit that marks the original done (host fact H8). That copy is new content, not a second occurrence of the Task: when the edit is an external plugin edit (no editor `userEvent`, §11) that inserts one Task line carrying a copy of the ref of the Task completed in the same edit, the adapter removes the copy from the new line, gives the new line a new identity in the configured placement, and publishes it as a new shared Task (§7); the completed Task keeps its ref. Any other copy of a ref inside one projection is `NODE_BINDING_DUPLICATE` (§4.6).
 
 Resource IDs on Task refs inside a section MUST equal the enclosing Resource. The Task must either resolve to a valid Task in that Resource or be part of an explicitly prepared local creation transaction. A foreign Resource ref is a blocking diagnostic, not an access shortcut.
 
@@ -179,7 +181,7 @@ Markers inside a comment are literal, as in MARKDOWN-REFS-01, whether the commen
 
 The enclosing section supplies Resource context for `lfcp-node` markers. Such a marker outside a valid section does not independently authorize or activate sharing. Node IDs are permanent; line numbers, text equality and indentation are not identities.
 
-Exactly one structural occurrence of each NodeId/TaskId is allowed per section projection. The same IDs in another complete projection of the section are legitimate. Duplicate IDs inside one projection are diagnosed before any upload or source regeneration.
+Exactly one structural occurrence of each NodeId/TaskId is allowed per section projection. The same IDs in another complete projection of the section are legitimate. Duplicate IDs inside one projection are diagnosed before any upload or source regeneration, except for the next occurrence of a recurring Task that the Tasks plugin writes with a copy of the inline ref (§4.1): that copy is replaced by a new identity.
 
 ## 5. Supported syntax and indentation
 
@@ -395,9 +397,10 @@ Existing `MALFORMED_LFCP_REF`, `DUPLICATE_LFCP_REF`, `LFCP_REF_NOT_AT_LINE_END`,
 | MS39 | The same comments typed into the region under the setting `shared`: each gets a `raw` marker and is published as a raw node (§4.5) |
 | MS40 | Setting `local` with a comment that already has a `raw` marker and a new comment: the marked one stays shared, the new one stays local (§4.5) |
 | MS41 | A received raw node whose Text is a comment, setting `local`: projected as a raw node with its marker, no diagnostic (§4.5) |
-| MS42 | Setting `inline`: Tasks completes a Task with an inline ref and appends `✅ <date>` after it: no diagnostic, the completion is shared, the adapter moves the ref back to the end of the line (§4.1, H6) |
-| MS43 | A recurring Task whose recurrence and due date follow its inline ref: a Tasks suffix, no diagnostic, `🔁` stays local, the adapter moves the ref to the end (§4.1) |
+| MS42 | Setting `inline`: Tasks completes a Task with an inline ref and appends `✅ <date>` after it: no diagnostic, the completion is shared, the line stays in the canonical form (§4.1, H6) |
+| MS43 | Tasks completes a recurring Task whose inline ref precedes its fields: the next occurrence above carries a copy of the ref; the adapter replaces the copy with a new identity and shares the new Task, the done one keeps its ref (§4.1, H8) |
 | MS44 | Text after an inline ref that is not a Tasks suffix: `LFCP_REF_NOT_AT_LINE_END`, the Task is blocked, as in MARKDOWN-REFS-01 (§4.1) |
+| MS45 | An inline ref at the end of a line after Tasks fields: valid; the adapter moves it before the fields while the line is idle, publishing nothing (§4.1, H8) |
 
 Examples in this document are not a substitute for byte-exact before/action/after fixture files. Freeze grammar only after rendering these fixtures in the selected Obsidian/Tasks versions and testing them through the independent Markdown parser. Until then this remains a Working Draft.
 

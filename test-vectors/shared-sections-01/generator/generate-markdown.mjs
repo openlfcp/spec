@@ -3,7 +3,7 @@
 // fixtures for the grammar decisions M1-M7: the start marker follows the
 // heading, Task refs inside sections are child-line, unsupported blocks are
 // raw nodes, comments follow the sender's setting, an inline ref tolerates a
-// Tasks suffix. Identities MS01-MS26 are kept; MS27-MS44 are added.
+// Tasks suffix. Identities MS01-MS26 are kept; MS27-MS45 are added.
 import fs from 'node:fs';
 import path from 'node:path';
 import {resource,ids,uid,hash} from './section-model.mjs';
@@ -179,24 +179,34 @@ add('MS41','A received comment is projected as a raw node under the local settin
   extra:{settings:{section_comments:'local'},remote_intents:[{type:'raw.create',id:commentA,parent_id:S,text:shareNote}]},
   checks:{lexical:{sections:1,task_refs:1,node_refs:3},payload_contains:['shared note']}});
 
-// Binding placement and the Tasks suffix after an inline ref (§4.1).
-const inline=(line,tail='')=>line+' '+ref(ids.task)+tail;
+// Binding placement and the Tasks suffix after an inline ref (§4.1): the
+// canonical inline form is the Task text, the ref, then the Tasks fields.
+const inline=(line,tail='',id=ids.task)=>line+' '+ref(id)+tail;
 const inlineDone='- [x] Prepare contract';
 add('MS42','Tasks appends a completion date after an inline ref: a Tasks suffix (§4.1, H6)',{before:note(inline('- [ ] Prepare contract')),
-  kind:'external_plugin_edit',observed:note(inline(inlineDone,' ✅ 2026-10-08')),after:note(inline(inlineDone+' ✅ 2026-10-08')),
+  kind:'external_plugin_edit',observed:note(inline(inlineDone,' ✅ 2026-10-08')),
   publication:'semantic',intents:[{type:'task.complete',id:ids.task,completion_date:'2026-10-08'}],
   extra:{plugin:'obsidian-tasks-plugin 8.4.0',user_event:null,settings:{binding_placement:'inline'}},
   checks:{lexical:{sections:1,task_refs:1,node_refs:0},observed_diagnostics:[]},
-  rationale:'Owner decision on M1 (MARKDOWN-SECTIONS-01 §4.1): both ref placements inside sections, child-line by default; an inline ref tolerates the Tasks suffix.'});
-const water='- [ ] Water plants';
-add('MS43','Recurrence and a due date after an inline ref: a Tasks suffix, the recurrence stays local (§4.1)',{before:note(inline(water+' 🔁 every week 📅 2026-10-08')),
-  kind:'source_edit',observed:note(inline(water,' 🔁 every week 📅 2026-10-15')),after:note(inline(water+' 🔁 every week 📅 2026-10-15')),
-  publication:'semantic',intents:[{type:'task.set_due',id:ids.task,due:'2026-10-15'}],extra:{settings:{binding_placement:'inline'}},
-  checks:{lexical:{sections:1,task_refs:1,node_refs:0},observed_diagnostics:[],shared_task_fields_exclude:['recurrence']}});
+  rationale:'Owner decision on M1 (MARKDOWN-SECTIONS-01 §4.1): both ref placements inside sections, child-line by default; an inline ref tolerates the Tasks suffix. Host fact H8: the ref before the Tasks fields is the canonical inline form, so the adapter no longer moves the ref to the end of the line.'});
+const water=(id,due,done='')=>inline((done?'- [x]':'- [ ]')+' Water plants',' 🔁 every week 📅 '+due+done,id);
+add('MS43','Tasks completes a recurring Task with an inline ref: the copied ref becomes a new Task (§4.1, H8)',{before:note(water(ids.task,'2026-10-08')),
+  kind:'external_plugin_edit',observed:note(water(ids.task,'2026-10-15')+'\n'+water(ids.task,'2026-10-08',' ✅ 2026-10-08')),
+  after:note(water(ids.extra,'2026-10-15')+'\n'+water(ids.task,'2026-10-08',' ✅ 2026-10-08')),
+  publication:'semantic',intents:[{type:'task.create_in_section',id:ids.extra,parent_id:S,title:'Water plants',due:'2026-10-15',before:ids.task},
+    {type:'task.complete',id:ids.task,completion_date:'2026-10-08'}],
+  extra:{plugin:'obsidian-tasks-plugin 8.4.0',user_event:null,settings:{binding_placement:'inline'},allocated_ids:[ids.extra]},
+  checks:{lexical:{sections:1,task_refs:2,node_refs:0},observed_diagnostics:['NODE_BINDING_DUPLICATE'],shared_task_fields_exclude:['recurrence']},
+  rationale:'Host fact H8: Tasks writes the next occurrence above with a copy of the inline ref. Replaces the earlier MS43 (a recurrence and due date typed after an inline ref), whose behavior MS42 and MS45 cover.'});
 const stray=note(inline('- [ ] Prepare contract',' call Anna first'));
 add('MS44','Other text after an inline ref is not a Tasks suffix (§4.1)',{before:note(inline('- [ ] Prepare contract')),
   kind:'source_edit',observed:stray,publication:'suspended',diagnostics:['LFCP_REF_NOT_AT_LINE_END'],
   extra:{settings:{binding_placement:'inline'}},checks:{lexical:{sections:1,task_refs:1,node_refs:0}}});
+
+add('MS45','An inline ref after the Tasks fields moves before them (§4.1, H8)',{before:note('- [ ] Water plants 🔁 every week 📅 2026-10-08 '+ref(ids.task)),
+  kind:'line_idle',after:note(water(ids.task,'2026-10-08')),extra:{settings:{binding_placement:'inline'}},
+  checks:{lexical:{sections:1,task_refs:1,node_refs:0},observed_diagnostics:[]},
+  rationale:'Host fact H8: Tasks does not see fields before a ref at the end of the line.'});
 
 const result={suite:'MARKDOWN-SECTIONS-FIXTURES-01',schema_version:1,date:'2026-10-08',
   profile:'org.openlfcp.shared-sections.v1',status:'golden expectations for MARKDOWN-SECTIONS-01 (Working Draft); reference lexical/smoke checks only',
