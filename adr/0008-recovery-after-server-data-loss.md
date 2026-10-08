@@ -1,9 +1,10 @@
 # ADR 0008: Recovery after server data loss
 
-- **Status:** Proposed. Not applied in any baseline; no normative text
-  changes with this ADR.
+- **Status:** Accepted by the project owner on 2026-10-08: option (c),
+  with (d) deferred (see Decision). Applied in `mvp-0.1-baseline.9`
+  (SPEC-PATCH-09), together with POST-001.
 - **Proposed by:** Worker2 for the orchestrator, 2026-10-06 (POST-013 in
-  `.github: docs/BACKLOG-MVP-0.1.md` §6). Awaiting the project owner.
+  `.github: docs/BACKLOG-MVP-0.1.md` §6).
 - **Supersedes:** nothing. **Related:** POST-001 (hold and retry of
   Automerge (actor, seq) collisions,
   `.github: docs/release/open-decision-actor-seq-collision.md`).
@@ -237,7 +238,43 @@ pushes what it holds.
   but it is not a protocol guarantee and does not help a server that loses
   its replica too.
 
-## Decision (recommended)
+## Decision
+
+The project owner accepted the recommendation below on 2026-10-08. The
+open questions were answered by the orchestrator, as the owner delegated:
+
+1. **(c), with (d) deferred.** Yes.
+2. **Code.** A new code, 23 `UNKNOWN_PREVIOUS` (W §62), not
+   `MISSING_DEPENDENCY`. A 0.1.1 sdk-ts client parks a unit refused with
+   `MISSING_DEPENDENCY` until its next Control sync and then sends it
+   again, every round (`TS packages/client/src/outbound.ts:616`); an
+   unknown code takes its retry-with-backoff path instead. Both SDKs
+   decode any error code. The `NACK` details are the 32-byte `previous`
+   (W §51.1, §60).
+3. **Relay.** Any authenticated session may upload a validly signed
+   object; the server authorizes the object, not the uploader (W §84).
+   This is the server's behaviour already. Restricting relay to members
+   with `data/read` would fail exactly after a loss, when the server may
+   not know the relaying member's grant until the Control Records come
+   back. Because a put is all-or-nothing, a client uploads each actor's
+   units in ascending order and an equivocating unit only on its own
+   (W §68.1).
+4. **Re-host.** Automatic, in the SDK, with no user command: a client
+   that holds the Genesis re-hosts a Resource when a route of its current
+   route set, which it has seen host the Resource, answers
+   `RESOURCE_NOT_HOSTED` (W §41.1). A refusal (`HOSTING_DENIED` and the
+   like) is shown to the user and not retried automatically.
+5. **Launching the public server as a POC with this limitation** stays
+   with the project owner (`.github: docs/BACKLOG-MVP-0.1.md`,
+   LAUNCH-003).
+
+**Known limitation (open).** Neither the server nor `lfcp-admin` can
+remove a hosted Resource today. If an operator removal is added, it must
+leave a lasting refusal (`RESOURCE_TOMBSTONED`, or a denylist the
+server answers with `HOSTING_DENIED`): a missing Resource is otherwise
+indistinguishable from a lost one, and clients re-host it.
+
+### The recommendation
 
 **Adopt (c): bidirectional reconciliation with relay (a), plus the server
 refusing a dangling `previous` (b). Defer (d) to a separate design together
@@ -253,7 +290,7 @@ with Control Chain fork recovery.**
 - (d) is cheap on the wire but only useful with a Control-race rule, which
   needs its own design.
 
-### Spec work (a future SPEC-PATCH, not this ADR)
+### Spec work (SPEC-PATCH-09, applied in `mvp-0.1-baseline.9`)
 
 - W §68–§70: anti-entropy is bidirectional; a peer offers what the other
   lacks, own and relayed, oldest first per actor; relayed units are
@@ -298,6 +335,25 @@ with Control Chain fork recovery.**
 - sdk-rs gains the same `offer` use when it gets a sync client; until then,
   its vectors cover the Have difference and the server rule (sdk-rs is the
   server's validation library).
+
+### Also applied in `mvp-0.1-baseline.9`: POST-001
+
+The same baseline applies the project owner's decision of 2026-10-06 on
+two Automerge changes with the same actor and sequence number, option B,
+hold and retry (`.github: docs/release/open-decision-actor-seq-collision.md`,
+POST-001 in `.github: docs/BACKLOG-MVP-0.1.md` §6). It concerns the same
+actor history as this ADR, so it ships with it rather than in an ADR of
+its own:
+
+- P §14.1: a replica never merges two different changes with one actor
+  and sequence number. It holds the later one (not merged, not
+  profile-invalid, its Data Unit still accepted) and retries it after
+  every rebuild that removes changes. P §9 points to it.
+- Vectors: the Automerge reference corpus `collision` section.
+
+A unit whose change is held this way is LFCP-accepted, so it is a
+holding and may be relayed (W §68.1); a unit held for its `previous`
+link (W §26.2) is not.
 
 ## Interim guidance (until this ships)
 
