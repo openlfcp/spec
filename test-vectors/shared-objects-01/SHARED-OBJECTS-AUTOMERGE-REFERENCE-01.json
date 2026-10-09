@@ -2552,6 +2552,104 @@
             "diagnostic": "INVALID_AUTOMERGE_BYTES"
           }
         }
+      },
+      {
+        "id": "REF-control-increment",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R8): operations refer only to the change's causal history",
+        "description": "an increment of the counter, predecessor the put that set it",
+        "history_hex": [
+          "856f4a8335f31aa9014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100085245462e6261736500061505340142025603570270027e0163016b0202017e181401010200",
+          "856f4a835cec91db016e0135f31aa98dce42d8561614625c0029ff1018a7149ea2d7496ebb45a1a3fee9e4206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020300075245462e696e630008150334014202560257017002710273027f0163017f057f14027f017f007f01"
+        ],
+        "change_hex": "856f4a834fddbf1b0167015cec91dbbc0fe6aa4dd84baaf03e1b2420eb7d3f1d977f148cfd4fbbf85701d9206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583030400000008150334014202560257017002710273027f0163017f057f14017f017f007f01",
+        "expected": {
+          "admitted": true
+        }
+      },
+      {
+        "id": "REF-R8-increment-not-counter",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R8): operations refer only to the change's causal history",
+        "description": "an increment of k, whose put is an integer, not a counter",
+        "history_hex": [
+          "856f4a8335f31aa9014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100085245462e6261736500061505340142025603570270027e0163016b0202017e181401010200",
+          "856f4a835cec91db016e0135f31aa98dce42d8561614625c0029ff1018a7149ea2d7496ebb45a1a3fee9e4206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020300075245462e696e630008150334014202560257017002710273027f0163017f057f14027f017f007f01"
+        ],
+        "change_hex": "856f4a8312b008650167015cec91dbbc0fe6aa4dd84baaf03e1b2420eb7d3f1d977f148cfd4fbbf85701d9206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583030400000008150334014202560257017002710273027f016b017f057f14017f017f007f02",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R8",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "REF-control-increment-two-counters",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R8): operations refer only to the change's causal history",
+        "description": "Automerge's own increment of two concurrent counters: both puts are its predecessors",
+        "history_hex": [
+          "856f4a8335f31aa9014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100085245462e6261736500061505340142025603570270027e0163016b0202017e181401010200",
+          "856f4a835cec91db016e0135f31aa98dce42d8561614625c0029ff1018a7149ea2d7496ebb45a1a3fee9e4206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020300075245462e696e630008150334014202560257017002710273027f0163017f057f14027f017f007f01",
+          "856f4a8375885dfe015000207957aa8e06acc46c224685a07625acb31d6a60cee94b4c6847e74772757f1025010100115245462e706176656c2d636f756e74657200061503340142025602570170027f0163017f017f18057f00"
+        ],
+        "change_hex": "856f4a83bdc7661601b501025cec91dbbc0fe6aa4dd84baaf03e1b2420eb7d3f1d977f148cfd4fbbf85701d975885dfe39ba226a23ce27827be8048e1e1c1ee16762a53df69ff490e6f74f74206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830304000b5245462e696e632d74776f01207957aa8e06acc46c224685a07625acb31d6a60cee94b4c6847e74772757f102508150334014202560257017002710373037f0163017f057f14017f027e00017e0100",
+        "expected": {
+          "admitted": true
+        }
+      },
+      {
+        "id": "REF-R8-increment-no-pred",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R8): operations refer only to the change's causal history",
+        "description": "an increment without a predecessor",
+        "history_hex": [
+          "856f4a8335f31aa9014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100085245462e6261736500061505340142025603570270027e0163016b0202017e181401010200",
+          "856f4a835cec91db016e0135f31aa98dce42d8561614625c0029ff1018a7149ea2d7496ebb45a1a3fee9e4206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020300075245462e696e630008150334014202560257017002710273027f0163017f057f14027f017f007f01"
+        ],
+        "change_hex": "856f4a8326d49316015f015cec91dbbc0fe6aa4dd84baaf03e1b2420eb7d3f1d977f148cfd4fbbf85701d9206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830304000000061503340142025602570170027f0163017f057f14017f00",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R8",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "REF-R8-increment-pred-increment",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R8): operations refer only to the change's causal history",
+        "description": "an increment whose predecessor is the increment, not the counter's put",
+        "history_hex": [
+          "856f4a8335f31aa9014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100085245462e6261736500061505340142025603570270027e0163016b0202017e181401010200",
+          "856f4a835cec91db016e0135f31aa98dce42d8561614625c0029ff1018a7149ea2d7496ebb45a1a3fee9e4206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020300075245462e696e630008150334014202560257017002710273027f0163017f057f14027f017f007f01"
+        ],
+        "change_hex": "856f4a835a22cb560167015cec91dbbc0fe6aa4dd84baaf03e1b2420eb7d3f1d977f148cfd4fbbf85701d9206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583030400000008150334014202560257017002710273027f0163017f057f14017f017f007f03",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R8",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "REF-R9-mark",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R9): operations refer only to the change's causal history",
+        "description": "Automerge's own mark of the first character of a text",
+        "history_hex": [
+          "856f4a833c6e4d98016800206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100085245462e74657874000a0104020411041305150534024204560457027002000102000001020100027f0000017e00027f0174000201027f0402017f00021661620300"
+        ],
+        "change_hex": "856f4a8373d40091017f013c6e4d98bf9d1f16f0e581f87d68b165e7cf2bf89be7e236606b94edc7dbfae4206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020400085245462e6d61726b000901020202110413033402420256037002a501080200020100017f007e0002000202077e020002007f04626f6c640001",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R9",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
       }
     ]
   }

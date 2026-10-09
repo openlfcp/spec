@@ -1331,6 +1331,32 @@ function checkStructure(change) {
     pred,
   });
   if (A.decodeChange(lHist[0]).ops.length !== 6) throw new Error("REF.lists: expected 6 operations");
+  const inc = (key, pred) => ({ action: "inc", obj: "_root", key, value: 1, pred });
+  // pavel's concurrent counter c; andrey's own increment after merging it
+  // names both puts (R8 admits it).
+  const pavelC = last(commit(A.init({ actor: PAVEL }), "REF.pavel-counter", (d) => {
+    d.c = new A.Counter(5);
+  }));
+  const twoCounters = last(
+    commit(A.applyChanges(A.clone(counters, { actor: ANDREY }), [pavelC])[0], "REF.inc-two", (d) => {
+      d.c.increment(1);
+    }),
+  );
+  {
+    const ops = A.decodeChange(twoCounters).ops;
+    if (ops.length !== 1 || ops[0].action !== "inc" || ops[0].pred.length !== 2) throw new Error("REF.inc-two: expected one increment naming both counters");
+  }
+  // A text t, then Automerge's own mark of its first character (R9).
+  const text = commit(A.init({ actor: ANDREY }), "REF.text", (d) => {
+    d.t = "ab";
+  });
+  const tHist = changesOf(text);
+  const markChange = last(
+    commit(text, "REF.mark", (d) => {
+      A.mark(d, ["t"], { start: 0, end: 1, expand: "none" }, "bold", true);
+    }),
+  );
+  if (!A.decodeChange(markChange).ops.every((o) => /^mark/.test(o.action))) throw new Error("REF.mark: expected mark operations");
   // pavel's concurrent k, not in the history of andrey's next change.
   const pavelK = last(commit(A.init({ actor: PAVEL }), "REF.pavel", (d) => {
     d.k = 2;
@@ -1371,6 +1397,13 @@ function checkStructure(change) {
       false,
     ),
     reference("REF-R7-delete-without-pred-F3d", "R7", "a deletion without a predecessor (finding F3d)", cHist, next([{ action: "del", obj: "_root", key: "k", pred: [] }]), false),
+    // Added after the cases of earlier baselines, which are addressed by index.
+    reference("REF-control-increment", "R8", "an increment of the counter, predecessor the put that set it", cHist, next([inc("c", [lid(1)])]), true),
+    reference("REF-R8-increment-not-counter", "R8", "an increment of k, whose put is an integer, not a counter", cHist, next([inc("k", [lid(2)])]), false),
+    reference("REF-control-increment-two-counters", "R8", "Automerge's own increment of two concurrent counters: both puts are its predecessors", [...cHist, pavelC], twoCounters, true),
+    reference("REF-R8-increment-no-pred", "R8", "an increment without a predecessor", cHist, next([inc("c", [])]), false),
+    reference("REF-R8-increment-pred-increment", "R8", "an increment whose predecessor is the increment, not the counter's put", cHist, next([inc("c", [lid(3)])]), false),
+    reference("REF-R9-mark", "R9", "Automerge's own mark of the first character of a text", tHist, markChange, false),
   ];
   corpus.references = {
     rule: "SHARED-OBJECTS-PROFILE-01 §11.4: a receiver rejects, before its engine, a change whose operations refer outside its causal history",

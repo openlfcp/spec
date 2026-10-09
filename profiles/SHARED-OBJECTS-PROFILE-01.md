@@ -393,7 +393,7 @@ A receiver MUST check these rules after the limits of Section 11.1 and before it
 
 ### 11.4 Operation references
 
-An Automerge engine also applies a change whose operations refer where they cannot: a predecessor on another key, an element of another list, an object that is not one. It then cannot write its changes back out (automerge-rs 0.12 aborts handing them out, and its save does not load), and some such changes make the apply itself abort, which in Automerge JS terminates its wasm module. A receiver MUST check these rules before its engine applies a change, and MUST reject a change that breaks one with `PROFILE_INVALID` and the diagnostic `INVALID_AUTOMERGE_BYTES` (Section 74.1). A writer MUST NOT emit such a change; an Automerge writer that commits on its document never does.
+An Automerge engine also applies a change whose operations refer where they cannot: a predecessor on another key, an element of another list, an object that is not one. It then cannot write its changes back out (automerge-rs 0.12 aborts handing them out, and its save does not load), and some such changes make the apply itself abort, which in Automerge JS terminates its wasm module. A receiver MUST check these rules before its engine applies a change, and MUST reject a change that breaks one with `PROFILE_INVALID` and the diagnostic `INVALID_AUTOMERGE_BYTES` (Section 74.1). A writer MUST NOT emit such a change; an Automerge writer that commits on its document never does, except that it can write marks (R9), which a writer of this profile does not.
 
 The rules are decided against the change's **causal history** `H`: its dependencies and all their ancestors, never anything else the receiver holds, so every replica decides alike (Section 14.1). An operation may also refer to an operation earlier in the same change. The operations of a change have the IDs `start op`, `start op + 1`, … of the change's actor, in order.
 
@@ -404,6 +404,8 @@ The rules are decided against the change's **causal history** `H`: its dependenc
 5. **R5, sequence operations.** An operation on a list or text that does not insert names an element of the same object, not the head.
 6. **R6, predecessors.** Each predecessor is an operation of `H` (or earlier in the change) that is not a deletion, on the same object and the same key as the operation; the key of an insertion is its own element. A predecessor concurrent with the change (not in `H`) is refused, even where the receiver holds it.
 7. **R7, deletions.** A deletion has at least one predecessor.
+8. **R8, increments.** An increment (action 5) has at least one predecessor, and every predecessor is a put of a counter value (value type 8) on the same object and key. This is what Automerge writes: an increment names the puts that set the counter (two after a merge of two concurrent counters), never another increment.
+9. **R9, marks.** No operation is a mark (action 7). Neither this profile nor Shared Sections writes marks, and their pairing and placement are not defined here.
 
 Section 11.1's rule that a change's other actors are actors of the document follows from these: every actor the change names is named by a reference into `H`.
 

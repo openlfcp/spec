@@ -165,7 +165,7 @@ export function referenceRule(history,d){
     const c=who===d.actor&&ctr>=d.startOp&&ctr<upTo?d:(byActor.get(who)||[]).find(x=>ctr>=x.startOp&&ctr<x.startOp+x.ops.length);
     const op=c?.ops[ctr-c.startOp];
     if(op===undefined||op.action==='del')return undefined;
-    return {obj:op.obj,slot:slotOf(op,id),insert:!!op.insert,make:MAKE.has(op.action)?op.action:null};
+    return {obj:op.obj,slot:slotOf(op,id),insert:!!op.insert,make:MAKE.has(op.action)?op.action:null,action:op.action,datatype:op.datatype};
   };
   const MAPS=new Set(['makeMap','makeTable']);
   for(const [i,op]of d.ops.entries()){
@@ -186,6 +186,10 @@ export function referenceRule(history,d){
     for(const p of op.pred){const t=target(p);if(t===undefined||t.obj!==op.obj||t.slot!==slot)return 'R6';}
     // R7: a deletion has a predecessor.
     if(op.action==='del'&&op.pred.length===0)return 'R7';
+    // R8: an increment names the puts of a counter value it adds to.
+    if(op.action==='inc'&&(op.pred.length===0||op.pred.some(p=>{const t=target(p);return t?.action!=='set'||t.datatype!=='counter';})))return 'R8';
+    // R9: no marks.
+    if(/^mark/.test(op.action))return 'R9';
     upTo=d.startOp+i+1;
   }
   return null;
