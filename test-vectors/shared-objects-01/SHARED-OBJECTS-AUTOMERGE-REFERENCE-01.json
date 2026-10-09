@@ -2650,6 +2650,42 @@
             "diagnostic": "INVALID_AUTOMERGE_BYTES"
           }
         }
+      },
+      {
+        "id": "REF-R10-make-table",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R10): operations refer only to the change's causal history",
+        "description": "a table made at the root key t",
+        "history_hex": [
+          "856f4a8335f31aa9014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100085245462e6261736500061505340142025603570270027e0163016b0202017e181401010200",
+          "856f4a835cec91db016e0135f31aa98dce42d8561614625c0029ff1018a7149ea2d7496ebb45a1a3fee9e4206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020300075245462e696e630008150334014202560257017002710273027f0163017f057f14027f017f007f01"
+        ],
+        "change_hex": "856f4a83b189a2fe015c015cec91dbbc0fe6aa4dd84baaf03e1b2420eb7d3f1d977f148cfd4fbbf85701d9206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583030400000005150334014202560270027f0174017f067f007f00",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R10",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
+      },
+      {
+        "id": "REF-R10-write-into-table-D1",
+        "rule": "SHARED-OBJECTS-PROFILE-01 §11.4 (R10): operations refer only to the change's causal history",
+        "description": "a table made and written into in one change (finding D1: automerge 0.12 aborts applying it)",
+        "history_hex": [
+          "856f4a8335f31aa9014b00206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583010100085245462e6261736500061505340142025603570270027e0163016b0202017e181401010200",
+          "856f4a835cec91db016e0135f31aa98dce42d8561614625c0029ff1018a7149ea2d7496ebb45a1a3fee9e4206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c583020300075245462e696e630008150334014202560257017002710273027f0163017f057f14027f017f007f01"
+        ],
+        "change_hex": "856f4a836a762e74016f015cec91dbbc0fe6aa4dd84baaf03e1b2420eb7d3f1d977f148cfd4fbbf85701d9206c9e962e697f0691ba727ddc378cc21f9b1d580e67f7b1e7f9612ebdab63c5830304000000080104020415053401420356035701700200017f0000017f047e01740178027e06017e0014010200",
+        "expected": {
+          "admitted": false,
+          "broken_rule": "R10",
+          "error": {
+            "code": "PROFILE_INVALID",
+            "diagnostic": "INVALID_AUTOMERGE_BYTES"
+          }
+        }
       }
     ]
   }

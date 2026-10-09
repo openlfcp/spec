@@ -45,3 +45,14 @@ its nodes, and an SDK did not report remote edits of Task fields or of the
 title (the native run of LFCP-02-066, sdk-ts 06ead0d). An SDK may list more
 nodes, never fewer. No vector changes.
 
+SHARED-OBJECTS-PROFILE-01 §11.4 also gains R10: no operation makes a
+table (action 6). A change that makes a table and writes into it is
+canonical and refers only into its history, but automerge 0.12 aborts
+applying it ("Missing from Index"), and Automerge JS terminates its wasm
+module (finding D1 of the fuzzing). No writer of either profile makes
+tables, and no corpus change does. The references section gains
+`REF-R10-make-table` and `REF-R10-write-into-table-D1`, and the shared
+sections corpus SS64, the same change on the section receive path; all
+refused. An implementation refuses a table before its engine sees the
+change.
+

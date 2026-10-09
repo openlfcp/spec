@@ -406,6 +406,7 @@ The rules are decided against the change's **causal history** `H`: its dependenc
 7. **R7, deletions.** A deletion has at least one predecessor.
 8. **R8, increments.** An increment (action 5) has at least one predecessor, and every predecessor is a put of a counter value (value type 8) on the same object and key. This is what Automerge writes: an increment names the puts that set the counter (two after a merge of two concurrent counters), never another increment.
 9. **R9, marks.** No operation is a mark (action 7). Neither this profile nor Shared Sections writes marks, and their pairing and placement are not defined here.
+10. **R10, tables.** No operation makes a table (action 6). Neither this profile nor Shared Sections uses tables, and automerge 0.12 cannot apply a write into one: the apply aborts (Automerge JS terminates its wasm module), although the change is canonical and refers only into its history.
 
 Section 11.1's rule that a change's other actors are actors of the document follows from these: every actor the change names is named by a reference into `H`.
 

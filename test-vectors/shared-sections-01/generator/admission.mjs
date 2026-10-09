@@ -190,6 +190,8 @@ export function referenceRule(history,d){
     if(op.action==='inc'&&(op.pred.length===0||op.pred.some(p=>{const t=target(p);return t?.action!=='set'||t.datatype!=='counter';})))return 'R8';
     // R9: no marks.
     if(/^mark/.test(op.action))return 'R9';
+    // R10: no tables.
+    if(op.action==='makeTable')return 'R10';
     upTo=d.startOp+i+1;
   }
   return null;

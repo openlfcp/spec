@@ -453,6 +453,18 @@ record('SS63','A change carrying more than 4 MiB of key strings is refused',{
   inject:d=>[{bytes:hostileOfA(d,'SS63/strings-bomb',16384,{key:'x'.repeat(257)}),signer:'A'}],
   requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
   notes:hostileNotes('16,384 rows of a 257-byte key, above 4 MiB of strings')});
+// R10 (finding D1): a table made and written into on the section receive
+// path; refused before the engine, which aborts applying it.
+record('SS64','A change making a table is refused',{
+  inject:d=>{
+    const c=A.decodeChange(nextOfA(d,'SS64/table'));
+    const made=`${c.startOp}@${c.actor}`;
+    return [{bytes:A.encodeChange({...c,ops:[
+      {action:'makeTable',obj:'_root',key:'t',pred:[]},
+      {action:'set',obj:made,key:'x',value:1,datatype:'int',pred:[]}]}),signer:'A'}];
+  },
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
+  notes:['SHARED-OBJECTS-PROFILE-01 §11.4 R10: no operation makes a table; automerge 0.12 aborts applying a write into one (finding D1), so the change is refused before the engine.']});
 const doc={
   format:'lfcp-vector-format/1',
   suite:{

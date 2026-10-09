@@ -1404,6 +1404,18 @@ function checkStructure(change) {
     reference("REF-R8-increment-no-pred", "R8", "an increment without a predecessor", cHist, next([inc("c", [])]), false),
     reference("REF-R8-increment-pred-increment", "R8", "an increment whose predecessor is the increment, not the counter's put", cHist, next([inc("c", [lid(3)])]), false),
     reference("REF-R9-mark", "R9", "Automerge's own mark of the first character of a text", tHist, markChange, false),
+    reference("REF-R10-make-table", "R10", "a table made at the root key t", cHist, next([{ action: "makeTable", obj: "_root", key: "t", pred: [] }]), false),
+    reference(
+      "REF-R10-write-into-table-D1",
+      "R10",
+      "a table made and written into in one change (finding D1: automerge 0.12 aborts applying it)",
+      cHist,
+      next([
+        { action: "makeTable", obj: "_root", key: "t", pred: [] },
+        { action: "set", obj: lid(4), key: "x", value: 1, datatype: "int", pred: [] },
+      ]),
+      false,
+    ),
   ];
   corpus.references = {
     rule: "SHARED-OBJECTS-PROFILE-01 §11.4: a receiver rejects, before its engine, a change whose operations refer outside its causal history",
