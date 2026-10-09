@@ -5,8 +5,7 @@ differs from the previous baseline, `mvp-0.2-baseline.2`, with the decision
 that approved it. `scripts/check-baseline-changes.mjs` always checks the
 newest `mvp-0.M-baseline.N` directory; see
 [`../mvp-0.1-baseline.3/`](../mvp-0.1-baseline.3/README.md) for how the
-check works. Until `mvp-0.2-baseline.2` is tagged, the manifest names the
-commit that tag names.
+check works.
 
 `mvp-0.2-baseline.3` changes no published value. It clarifies
 SHARED-SECTIONS-PROFILE-01 §7.6: a node whose lifecycle is in conflict is
