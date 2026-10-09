@@ -9,7 +9,7 @@ MVP 0.2?* The answer is every file listed below, at the Git tag
 
 | Tag | Status |
 | --- | --- |
-| mvp-0.2-baseline.4 | **Prepared, not tagged.** `mvp-0.2-baseline.3` with SDK-SECTIONS-INTEGRATION-01 §3.4, §3.5 and §7.7 clarified: releasing a receipt ends the adapter's use of the operation ID, and a batch released before its status is final is still reported until it is final. No vector changes (`migrations/mvp-0.2-baseline.4/value-changes.json` lists no change). |
+| mvp-0.2-baseline.4 | **Prepared, not tagged.** `mvp-0.2-baseline.3` with SDK-SECTIONS-INTEGRATION-01 §3.4, §3.5 and §7.7 clarified: releasing a receipt ends the adapter's use of the operation ID, and a batch released before its status is final is still reported until it is final. The shared sections corpus gains SS61 to SS63, hostile changes above the SHARED-OBJECTS-PROFILE-01 §11.1 expansion limits on the section receive path; no vector value changes (`migrations/mvp-0.2-baseline.4/value-changes.json` lists no change). |
 | mvp-0.2-baseline.3 | **Current.** `mvp-0.2-baseline.2` with SHARED-SECTIONS-PROFILE-01 §7.6 clarified: a node in lifecycle conflict is blocked, not hidden, and an edit under it is not under a deleted ancestor. The shared sections corpus gains SS60; no vector value changes (`migrations/mvp-0.2-baseline.3/value-changes.json`). |
 | mvp-0.2-baseline.2 | Superseded by `mvp-0.2-baseline.3`, because the §7.6 clarification changes a normative rule and adds a vector. Never moved. The MVP 0.1 baseline `mvp-0.1-baseline.10` unchanged, plus shared sections as in `mvp-0.2-baseline.1`. Applies SPEC-PATCH-10 (ADR 0010): canonical change encoding and operation references (SHARED-OBJECTS-PROFILE-01 §11.3, §11.4), which shared sections inherit unchanged (SHARED-SECTIONS-PROFILE-01 §2). No vector value changes (`migrations/mvp-0.2-baseline.2/value-changes.json` lists no change); the Automerge reference corpus gains the `canonical` and `references` sections, the shared sections corpus the cases SS57 to SS59. |
 | mvp-0.2-baseline.1 | Superseded by `mvp-0.2-baseline.2`, because SPEC-PATCH-10 changes normative rules and adds vectors. Never moved. The MVP 0.1 baseline `mvp-0.1-baseline.9` unchanged, plus shared sections: the profile `org.openlfcp.shared-sections.v1` (SHARED-SECTIONS-PROFILE-01, ADR 0009), its Markdown bindings (MARKDOWN-SECTIONS-01), the SDK integration contracts (SDK-SECTIONS-INTEGRATION-01), the corpus and the Markdown fixtures. No published value of MVP 0.1 changes (`migrations/mvp-0.2-baseline.1/value-changes.json` lists no change); the two shared sections suites are new. |
@@ -139,7 +139,7 @@ The checks are those of MVP-0.1-BASELINE.md, plus:
 | Kind | Files |
 | --- | --- |
 | Changed, normative | `integration/SDK-SECTIONS-INTEGRATION-01.md` §3.4, §3.5, §7.7: a released batch is reported until its status is final |
-| Changed, vectors | None |
+| Changed, vectors | `test-vectors/shared-sections-01/` (SS61 to SS63: changes above the §11.1 expansion limits, refused before they are decoded; the reference admission checks §11.1 on the raw bytes, `generator/expansion.mjs`) |
 | Added, migration | `migrations/mvp-0.2-baseline.4/` |
 | Changed, MVP 0.1 files | None |
 

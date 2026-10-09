@@ -7,8 +7,8 @@ newest `mvp-0.M-baseline.N` directory; see
 [`../mvp-0.1-baseline.3/`](../mvp-0.1-baseline.3/README.md) for how the
 check works.
 
-`mvp-0.2-baseline.4` changes no published value and adds no vector. It
-clarifies SDK-SECTIONS-INTEGRATION-01 §3.4, §3.5 and §7.7: releasing a
+`mvp-0.2-baseline.4` changes no published value. It adds SS61 to SS63
+to the shared sections corpus (below) and clarifies SDK-SECTIONS-INTEGRATION-01 §3.4, §3.5 and §7.7: releasing a
 receipt ends the adapter's use of the operation ID, not the batch's status.
 A batch released before its status is final (accepted or rejected) is still
 reported in the batch statuses, the status snapshot and its events until it
@@ -27,3 +27,13 @@ such a batch, with the earlier release only recommended against.
 For an implementation the change is: on `releaseReceipt` of a batch that is
 not final, stop answering `receiptOf` for it but keep reporting its status
 until it is final.
+
+The shared sections corpus gains SS61 to SS63 (B18, hostile maps): A's
+next change, valid in every other respect, whose operations exceed a
+SHARED-OBJECTS-PROFILE-01 §11.1 limit: 1,000,000 operations in one
+run-length-encoded column, one operation with 16,385 predecessors, and
+16,384 rows of a 257-byte key. Each is refused with
+`INVALID_AUTOMERGE_BYTES` before it is decoded and named by its hash, the
+SHA-256 of its chunk from the type byte on. Until now this was checked
+only in sdk-ts. The reference admission now applies §11.1 to the raw bytes
+(`generator/expansion.mjs`); SS01 to SS60 regenerate byte for byte.

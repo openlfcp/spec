@@ -5,6 +5,7 @@
 // after the change rather than walking the change's operations, which
 // decides the same rules for the changes of this corpus.
 import {A,PROFILE,actor,pref,str,canon} from './section-model.mjs';
+import {changeHeader,expansionRefusal} from './expansion.mjs';
 
 /** Diagnostics in their order of precedence (§14.1). */
 export const ADMISSION_ORDER=['INVALID_AUTOMERGE_BYTES','CHANGE_ACTOR_MISMATCH','CONTAINER_REPLACED','CHILDREN_LIST_MUTATED','PLACEMENT_NOT_ATOMIC','IMMUTABLE_FIELD_MUTATED','INVALID_FIELD_TYPE'];
@@ -115,6 +116,8 @@ export function admit(prev,bytes){
 /** SHARED-OBJECTS-PROFILE-01's checks before the engine (§8, §11, §11.2, §11.3, §11.4, §14.1). */
 function sopRefusal(history,bytes,signer){
   // `history`: the decoded changes of the causal history.
+  // §11.1: the expansion limits, on the raw bytes, before anything is decoded.
+  if(expansionRefusal(bytes)!==null)return 'INVALID_AUTOMERGE_BYTES';
   // §11: an uncompressed change chunk (type 1) whose checksum matches.
   if(bytes[8]!==1)return 'INVALID_AUTOMERGE_BYTES';
   const d=A.decodeChange(bytes);
@@ -194,18 +197,35 @@ export function referenceRule(history,d){
  * admitted document, the refused changes with their diagnostic, and the
  * changes held because a dependency was refused or held.
  */
+/**
+ * A change's hash and dependencies. A change above an expansion limit
+ * (§11.1) is read from its header only: decoding it is what the limits
+ * prevent. Any other change, including a malformed one, is decoded.
+ */
+export function changeInfo(b){
+  if(isExpansionBomb(b)){const h=changeHeader(b);return {hash:h.hash,deps:h.deps,actor:h.actor,seq:h.seq};}
+  const d=A.decodeChange(b);
+  return {hash:d.hash,deps:d.deps,actor:d.actor,seq:d.seq,decoded:d};
+}
+/** A type 1 change chunk whose header reads, above a §11.1 limit. */
+const bombs=new WeakMap();
+export function isExpansionBomb(b){
+  if(!bombs.has(b)){const r=expansionRefusal(b);bombs.set(b,r!==null&&b[8]===1&&!r.startsWith('malformed'));}
+  return bombs.get(b);
+}
+
 export function admitReplay(changes,initActor){
   // An entry is the change bytes, or {bytes, signer} for a Data Unit whose
   // signer the corpus names.
   const byHash=new Map(),order=[],signers=new Map();
   for(const item of changes){
     const b=item instanceof Uint8Array?item:item.bytes;
-    const h=A.decodeChange(b).hash;
+    const h=changeInfo(b).hash;
     if(!byHash.has(h)){byHash.set(h,b);order.push(h);if(item.signer!==undefined)signers.set(h,item.signer);}
   }
   const decoded=new Map();
   const decode=h=>{if(!decoded.has(h))decoded.set(h,A.decodeChange(byHash.get(h)));return decoded.get(h);};
-  const deps=h=>decode(h).deps;
+  const deps=h=>isExpansionBomb(byHash.get(h))?changeHeader(byHash.get(h)).deps:decode(h).deps;
   const admitted=new Set(),refused=[],held=new Set();
   // Causal order: a change after its dependencies, whatever the input order.
   const placed=new Set(),sorted=[];

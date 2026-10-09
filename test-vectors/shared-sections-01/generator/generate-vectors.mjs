@@ -3,7 +3,7 @@ import {createRequire} from 'node:module';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import {A,PROFILE,hash,resource,principal,actor,pref,uid,ids,S,str,plain,fork,change,place,add,setLife,textEdit,initial,genesis,inspect,assertExpected,snapshotCounts} from './section-model.mjs';
-import {admitReplay} from './admission.mjs';
+import {admitReplay,changeInfo} from './admission.mjs';
 const out=process.argv[2]||path.dirname(path.dirname(new URL(import.meta.url).pathname));
 // The engine that generated the corpus: the installed package, not a literal.
 const ENGINE=(()=>{
@@ -27,7 +27,8 @@ function frame(b){
   return Buffer.concat([Buffer.from([0x82,0x01]),h,b]);
 }
 function summarizeChange(b,signer){
-  const c=A.decodeChange(b);
+  // A change above an expansion limit is read from its header (expansion.mjs).
+  const c=changeInfo(b);
   return {...bytesInfo(b),change_hash:c.hash,actor:c.actor,seq:c.seq,deps:c.deps,framed_plaintext:bytesInfo(frame(b)),...(signer?{signer}:{})};
 }
 function record(id,title,{base=seeds,a=[],b=[],after=[],inject,requirements={},coverage='model',notes=[],snapshot=false}={}){
@@ -429,6 +430,29 @@ record('SS60','Delete versus restore of a paragraph with a concurrent edit',{
   b:[['edit-X',d=>textEdit(d,ids.x,0,0,'Unrelated ')],['delete',d=>setLife(d,ids.para,'deleted')]],
   requirements:{classification:'STRUCTURAL_ATTENTION',recovery:{[ids.para]:'LIFECYCLE_CONFLICT'},absent:[ids.para],notHidden:[ids.para],notRetained:[ids.para],texts:{[ids.para]:'Kept Draft contract'}},
   notes:['§7.6: a lifecycle conflict blocks its branch; no value is chosen, whichever one the engine shows provisionally, so the node is not hidden and its concurrent edit is not under a deleted ancestor. The delete by B comes after an unrelated edit, so its operation ID is the larger and it is the value Automerge shows provisionally. Found by the seeded schedules (LFCP-02-024, seed 2): the two SDKs differed.']});
+// B18, hostile bytes on the section receive path (SHARED-OBJECTS-PROFILE-01
+// §11.1, as in its expansion corpus): A's next change, valid in every
+// other respect, whose operations exceed a change limit. The limits are
+// checked before the engine; the refused change is named by its hash, the
+// SHA-256 of its chunk from the type byte on, which needs no expansion.
+const hostileOfA=(doc,label,n,{key='k',preds=()=>[]}={})=>{
+  const c=A.decodeChange(nextOfA(doc,label));
+  return A.encodeChange({...c,ops:Array.from({length:n},()=>({action:'set',obj:'_root',key,value:null,pred:preds(c)}))});
+};
+const hostileNotes=(what)=>[`SHARED-OBJECTS-PROFILE-01 §11.1: ${what}; the limits are checked before the engine, so the change is never expanded.`,
+  'The refused change is named by its hash, the SHA-256 of its chunk from the type byte on (the bytes after the magic number and checksum), which a receiver computes without decoding the operations.'];
+record('SS61','A change expanding to 1,000,000 operations is refused',{
+  inject:d=>[{bytes:hostileOfA(d,'SS61/rle-bomb',1_000_000),signer:'A'}],
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
+  notes:hostileNotes('one run-length-encoded column of 1,000,000 operations in about a hundred bytes, above 16,384 rows')});
+record('SS62','An operation with 16,385 predecessors is refused',{
+  inject:d=>[{bytes:hostileOfA(d,'SS62/preds-bomb',1,{preds:c=>Array.from({length:16385},(_,i)=>`${i+1}@${c.actor}`)}),signer:'A'}],
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
+  notes:hostileNotes('one operation whose predecessor group sums above 16,384')});
+record('SS63','A change carrying more than 4 MiB of key strings is refused',{
+  inject:d=>[{bytes:hostileOfA(d,'SS63/strings-bomb',16384,{key:'x'.repeat(257)}),signer:'A'}],
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
+  notes:hostileNotes('16,384 rows of a 257-byte key, above 4 MiB of strings')});
 const doc={
   format:'lfcp-vector-format/1',
   suite:{
