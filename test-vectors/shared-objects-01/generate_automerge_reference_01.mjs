@@ -1260,6 +1260,17 @@ function checkStructure(change) {
       twoHistory,
       false,
     ),
+    // Added after the cases of earlier baselines, which are addressed by index.
+    canonicalCase(
+      "CAN-8-start-op-empty",
+      "8",
+      "a change without operations whose start op is 2^32 (finding N1: automerge-rs 0.12 refuses it)",
+      edit(A.encodeChange({ ...A.decodeChange(good), ops: [] }), (p) => {
+        p.startOp = 2 ** 32;
+      }),
+      goodHistory,
+      false,
+    ),
   ];
   // F2 and F3a as found: Data Unit plaintexts of the review.
   corpus.canonical = {
