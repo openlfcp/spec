@@ -424,6 +424,11 @@ record('SS59','A change that is not in its canonical encoding is refused',{
   inject:d=>[{bytes:extraRows(nextOfA(d,'SS59/rows')),signer:'A'}],
   requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
   notes:['SHARED-OBJECTS-PROFILE-01 §11.3 (4): every operation column has one row per operation; the insert column has 10 more (finding F3a). Automerge applies it, and its save then does not load: the heads mismatch.']});
+record('SS60','Delete versus restore of a paragraph with a concurrent edit',{
+  a:[['restore',d=>setLife(d,ids.para,'active')],['edit',d=>textEdit(d,ids.para,0,0,'Kept ')]],
+  b:[['edit-X',d=>textEdit(d,ids.x,0,0,'Unrelated ')],['delete',d=>setLife(d,ids.para,'deleted')]],
+  requirements:{classification:'STRUCTURAL_ATTENTION',recovery:{[ids.para]:'LIFECYCLE_CONFLICT'},absent:[ids.para],notHidden:[ids.para],notRetained:[ids.para],texts:{[ids.para]:'Kept Draft contract'}},
+  notes:['§7.6: a lifecycle conflict blocks its branch; no value is chosen, whichever one the engine shows provisionally, so the node is not hidden and its concurrent edit is not under a deleted ancestor. The delete by B comes after an unrelated edit, so its operation ID is the larger and it is the value Automerge shows provisionally. Found by the seeded schedules (LFCP-02-024, seed 2): the two SDKs differed.']});
 const doc={
   format:'lfcp-vector-format/1',
   suite:{

@@ -178,7 +178,9 @@ export function inspect(doc) {
   for(const n of Object.keys(nodes)) {
     let p=n;const seen=new Set();
     while(p!==ids.section && nodes[p]&&!seen.has(p)) {
-      seen.add(p);if(str(life(p)?.lifecycle)==='deleted'){hidden.add(n);break;}p=parents[p];
+      // §7.6: deleted is hidden; a lifecycle conflict blocks instead, whatever
+      // value the engine shows provisionally.
+      seen.add(p);const l=life(p);if(l&&values(l,'lifecycle').every(v=>v==='deleted')&&values(l,'lifecycle').length>0){hidden.add(n);break;}p=parents[p];
     }
   }
   const isAncestor=(a,b,seen=new Set())=>{
@@ -241,6 +243,7 @@ export function assertExpected(actual, requirements, assert) {
   for(const n of requirements.visible||[])assert(present.includes(n),'not visible: '+n);
   for(const n of requirements.absent||[])assert(!present.includes(n),'unexpected visible: '+n);
   for(const n of requirements.hidden||[])assert(actual.hidden.includes(n),'not retained hidden: '+n);
+  for(const n of requirements.notHidden||[])assert(!actual.hidden.includes(n),'unexpected hidden: '+n);
   for(const [n,code] of Object.entries(requirements.recovery||{}))assert(actual.recovery.some(x=>x.id===n&&x.code===code),'missing recovery '+code);
   for(const [n,d] of Object.entries(requirements.invalid||{}))assert(actual.invalid.some(x=>x.id===n&&x.diagnostic===d),'missing invalid '+n+' '+d);
   for(const d of requirements.refused||[])assert(actual.refused?.some(x=>x.diagnostic===d),'missing refusal '+d);
@@ -248,6 +251,7 @@ export function assertExpected(actual, requirements, assert) {
   for(const [n,t] of Object.entries(requirements.texts||{}))assert.equal(actual.texts[n],t);
   for(const [n,fields] of Object.entries(requirements.tasks||{}))for(const [k,v] of Object.entries(fields))assert.deepEqual(actual.tasks[n][k],v);
   for(const n of requirements.retainedConcurrentEdits||[])assert(actual.retainedConcurrentEdits.includes(n));
+  for(const n of requirements.notRetained||[])assert(!actual.retainedConcurrentEdits.includes(n),'unexpected retained edit: '+n);
   if(requirements.classification)assert.equal(actual.classification,requirements.classification);
   if(requirements.slotCount!==undefined)assert.equal(actual.slotCount,requirements.slotCount);
   if(requirements.nodeCount!==undefined)assert.equal(actual.nodeCount,requirements.nodeCount);
