@@ -76,7 +76,7 @@ An import is therefore one operation with one receipt. A provider whose storage 
 receiptOf(resource, operationId) -> Receipt | none
 ```
 
-The answer is definitive and survives a restart. Because the receipt is written in the commit's transaction (§3.1), `none` means that no part of the batch was committed, and the adapter may submit the operation again with the same `operationId` and the same IDs.
+The answer is definitive and survives a restart. Because the receipt is written in the commit's transaction (§3.1), `none` for an operation the adapter has not released (§3.5) means that no part of the batch was committed, and the adapter may submit the operation again with the same `operationId` and the same IDs.
 
 ### 3.5 Retention
 
@@ -86,7 +86,11 @@ A receipt is kept until the adapter releases it:
 releaseReceipt(resource, operationId)
 ```
 
-An adapter releases a receipt when its journal finishes the operation (§7.7). An SDK MAY also drop a receipt after a ceiling counted from the batch's final status, accepted or rejected (§4.1); the default ceiling is 30 days. That number is a default of the SDK, not a protocol rule. A batch that is still pending, including one pending again (§4.2), never loses its receipt to the ceiling.
+An adapter releases a receipt when its journal finishes the operation (§7.7). It SHOULD release it only once the batch's status is final, accepted or rejected (§4.1).
+
+Releasing ends the adapter's use of the operation ID: `receiptOf` answers `none` for it, and a later `commit` with the same `operationId` is a new operation. Releasing does not end the batch's status. A batch released before its status is final is still reported in the batch statuses and the status snapshot (§4, §5), and its status events go on, until its status is final; the SDK then forgets it. A new `commit` with its `operationId` replaces it.
+
+An SDK MAY also drop a receipt after a ceiling counted from the batch's final status, accepted or rejected (§4.1); the default ceiling is 30 days. That number is a default of the SDK, not a protocol rule. A batch that is still pending, including one pending again (§4.2), never loses its receipt to the ceiling.
 
 ### 3.6 Refusals before commit
 
@@ -246,7 +250,7 @@ The adapter's journal records each operation through its phases, for example:
 captured -> ids-allocated -> committed -> projected -> done | abandoned
 ```
 
-An operation reaches `committed` with its receipt, and records the receipt's `modelRevision` as its new base. After a crash, an operation found before `committed` asks `receiptOf` (§3.4): a receipt moves it to `committed`; `none` lets it submit again with the same `operationId` and IDs. A `rejected` batch (§4.1) turns its operation into a rejected local candidate. `held`, `reoffered`, `rehost` and `importing` are inputs to status, not journal phases.
+An operation reaches `committed` with its receipt, and records the receipt's `modelRevision` as its new base. After a crash, an operation found before `committed` asks `receiptOf` (§3.4): a receipt moves it to `committed`; `none` lets it submit again with the same `operationId` and IDs. A `rejected` batch (§4.1) turns its operation into a rejected local candidate. At `done` the adapter releases the receipt (§3.5); an operation that reaches `done` before its batch's status is final keeps that batch in the status until it is. `held`, `reoffered`, `rehost` and `importing` are inputs to status, not journal phases.
 
 ## 8. Contract examples
 
