@@ -57,7 +57,7 @@ An import is therefore one operation with one receipt. A provider whose storage 
 | --- | --- |
 | `operationId` | The caller's operation ID |
 | `unitIds` | The Data Unit IDs of the batch, in the order of their changes |
-| `affectedNodeIds` | The nodes whose fields, Text, placement or lifecycle the batch writes, and the section when it writes the title |
+| `affectedNodeIds` | The nodes whose fields, Text, placement or lifecycle the batch writes (a Task's fields are its task node's), and the section when it writes the title |
 | `modelRevision` | The local document's heads after the commit, sorted, as one opaque string; the same value and name as the revision of the section snapshot |
 | `intentsHash` | SHA-256 of the batch's canonical form (§3.3) |
 | `durable` | Always `true`: a receipt exists only for a durable commit |
@@ -178,6 +178,8 @@ The SDK reports facts as one event stream per Resource. Every event carries `rev
 | `received` | `fact`: `held`, `waiting` or `refused`; the change or unit IDs; the diagnostic when refused |
 | `rehost` | The route on which the Resource was hosted again |
 | `access` | The new access state (§6) |
+
+The `nodeIds` of a `nodes-changed` event follow the rule of `affectedNodeIds` (§3.2), whatever the `origin`: every node whose fields, Text, placement or lifecycle the changes it reports write, the task node of every Task whose fields they write, and the section when they write its title. For `local` the changes are the batch's; for `remote`, the changes received and applied since the previous `nodes-changed` event; for `rebuild`, everything a rebuild or a loaded Snapshot may have changed. An SDK MAY list more nodes than this rule names, never fewer: a consumer reads each listed node again and takes it as possibly changed, not as changed.
 
 A consumer that sees a revision other than the next one has missed events. It asks for a complete state:
 

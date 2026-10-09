@@ -36,3 +36,12 @@ appended after the earlier cases, which are addressed by index.
 For an implementation the change is: refuse an increment without a
 predecessor or with a predecessor that is not a counter put, and refuse any mark operation, with
 `INVALID_AUTOMERGE_BYTES`.
+
+SDK-SECTIONS-INTEGRATION-01 §5 now says which nodes a `nodes-changed`
+event lists: those of the `affectedNodeIds` rule of §3.2, for every origin
+(`local`, `remote`, `rebuild`), with a Task's fields counted as its task
+node's and the title as the section's. §5 listed the event's fields but not
+its nodes, and an SDK did not report remote edits of Task fields or of the
+title (the native run of LFCP-02-066, sdk-ts 06ead0d). An SDK may list more
+nodes, never fewer. No vector changes.
+
