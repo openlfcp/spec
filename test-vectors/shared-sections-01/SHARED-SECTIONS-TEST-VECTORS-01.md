@@ -142,7 +142,7 @@ The application framing is plaintext inside the LFCP security envelope. This sui
 | SS41 | 16,385 characters in one change | Refused: `INVALID_AUTOMERGE_BYTES` (SOP §11.1) |
 | SS42 | A's change signed by B | Refused: `CHANGE_ACTOR_MISMATCH` (SOP §8, §11) |
 | SS43 | A change skipping a sequence number | Refused: `INVALID_AUTOMERGE_BYTES` (SOP §14.1) |
-| SS44 | A compressed change chunk | Refused: `INVALID_AUTOMERGE_BYTES` (SOP §11) |
+| SS44 | A compressed change chunk | Refused: `INVALID_AUTOMERGE_BYTES` (SOP §11); not named, since naming it would mean inflating it (§14.1; named by the inflated change's hash before `mvp-0.2-baseline.4`) |
 | SS45 | A change whose checksum is wrong | Refused: `INVALID_AUTOMERGE_BYTES` (SOP §11) |
 | SS46 | A change nesting an object 257 levels deep | Refused: `INVALID_AUTOMERGE_BYTES` (SOP §11.2) |
 | SS47 | Concurrent splits of one paragraph | `VALID`: both new nodes kept; the prefix keeps the union of the deletions (§10) |

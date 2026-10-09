@@ -296,6 +296,8 @@ A receiver checks a change when every dependency of it is in the document (SOP �
 
 A change that breaks a rule is `PROFILE_INVALID` with that rule's diagnostic and is not merged. When it breaks several, the diagnostic is the first that applies in the order `INVALID_AUTOMERGE_BYTES`, `CHANGE_ACTOR_MISMATCH`, `CONTAINER_REPLACED`, `CHILDREN_LIST_MUTATED`, `PLACEMENT_NOT_ATOMIC`, `IMMUTABLE_FIELD_MUTATED`, `INVALID_FIELD_TYPE`. A refused change blocks the changes that depend on it, as SOP §14.1 holds any change with a missing dependency.
 
+A receiver names a refused change by its change hash only when the bytes are one change chunk of type 1 whose length field covers exactly the rest of the bytes: the hash is then the SHA-256 of the chunk from its type byte on, which needs no decoding, so a change refused for its expansion limits (SOP §11.1) is named without being expanded. Any other refused bytes are not named, a compressed chunk (type 2) included: naming it would mean inflating it, for which this profile sets no limit, so a receiver does not inflate or decode refused bytes to name them. A change that depends on an unnamed refused change waits, as for any missing dependency (SOP §14.1).
+
 ### 14.2 Values: isolation per subtree
 
 Every other invalid value is merged and isolated, as SOP §77 isolates an invalid object. A failing value reports one diagnostic from this registry, which is SOP §74.1's with the section rows added; when one value breaks several rules, its diagnostic is the first that applies in this order.

@@ -140,7 +140,9 @@
       "cases[id=$1].expected.reference_snapshot_plaintext"
     ]
   ],
-  "changed": [],
+  "changed": [
+    { "path": "cases[id=SS44].expected.refused[0].change", "from": "0940c938193d3dff1811e7ba47443242d733fe00385c973e3373fbdfd6ea324b", "to": null, "rule": "mvp-0.2-baseline.4, SHARED-SECTIONS-PROFILE-01 §14.1 (orchestrator decision, 2026-10-09, option a): a refused compressed chunk is not named, since naming it meant inflating refused bytes with no limit; the refusal keeps its diagnostic and loses its change field." }
+  ],
   "structural": [
     {
       "path": "schema_version",

@@ -121,6 +121,22 @@ function walkColumn(column) {
 }
 
 /**
+ * The name of refused bytes (SHARED-SECTIONS-PROFILE-01 §14.1): the change
+ * hash of one type 1 change chunk whose length field covers exactly the
+ * rest, computed without decoding; null for anything else, a compressed
+ * chunk (type 2) included, which is never inflated to be named.
+ */
+export function refusalName(bytes) {
+  try {
+    const h = changeHeader(bytes);
+    return h.type === 1 ? h.hash : null;
+  } catch (e) {
+    if (e instanceof Malformed) return null;
+    throw e;
+  }
+}
+
+/**
  * §11.1: null when `bytes` is one uncompressed change chunk within every
  * limit and the structural rules 7 to 9; otherwise the reason. Linear in
  * the length of `bytes`; nothing is decoded into a document.

@@ -5,7 +5,7 @@
 // after the change rather than walking the change's operations, which
 // decides the same rules for the changes of this corpus.
 import {A,PROFILE,actor,pref,str,canon} from './section-model.mjs';
-import {changeHeader,expansionRefusal} from './expansion.mjs';
+import {changeHeader,expansionRefusal,refusalName} from './expansion.mjs';
 
 /** Diagnostics in their order of precedence (§14.1). */
 export const ADMISSION_ORDER=['INVALID_AUTOMERGE_BYTES','CHANGE_ACTOR_MISMATCH','CONTAINER_REPLACED','CHILDREN_LIST_MUTATED','PLACEMENT_NOT_ATOMIC','IMMUTABLE_FIELD_MUTATED','INVALID_FIELD_TYPE'];
@@ -226,7 +226,9 @@ export function admitReplay(changes,initActor){
   const decoded=new Map();
   const decode=h=>{if(!decoded.has(h))decoded.set(h,A.decodeChange(byHash.get(h)));return decoded.get(h);};
   const deps=h=>isExpansionBomb(byHash.get(h))?changeHeader(byHash.get(h)).deps:decode(h).deps;
-  const admitted=new Set(),refused=[],held=new Set();
+  // `refusedKeys`: the replay's keys of refused changes; `refused` reports
+  // them by name, without one for bytes that are not named (§14.1).
+  const admitted=new Set(),refused=[],refusedKeys=new Set(),held=new Set();
   // Causal order: a change after its dependencies, whatever the input order.
   const placed=new Set(),sorted=[];
   const visit=h=>{if(placed.has(h)||!byHash.has(h))return;placed.add(h);for(const d of deps(h))visit(d);sorted.push(h);};
@@ -235,14 +237,18 @@ export function admitReplay(changes,initActor){
   // change whose history is exactly those changes, as in a linear run.
   let running=A.init({actor:initActor});
   for(const h of sorted){
-    if(deps(h).some(d=>held.has(d)||refused.some(r=>r.change===d)||!byHash.has(d))){held.add(h);continue;}
+    if(deps(h).some(d=>held.has(d)||refusedKeys.has(d)||!byHash.has(d))){held.add(h);continue;}
     const past=new Set();const collect=x=>{if(past.has(x))return;past.add(x);for(const d of deps(x))collect(d);};
     for(const d of deps(h))collect(d);
     const linear=past.size===admitted.size&&[...past].every(x=>admitted.has(x));
     const prev=linear?running:A.applyChanges(A.init({actor:initActor}),sorted.filter(x=>past.has(x)).map(x=>byHash.get(x)))[0];
     const history=sorted.filter(x=>past.has(x)).map(decode);
     const diagnostic=sopRefusal(history,byHash.get(h),signers.get(h))??admit(prev,byHash.get(h));
-    if(diagnostic)refused.push({change:h,diagnostic});
+    if(diagnostic){
+      refusedKeys.add(h);
+      const name=refusalName(byHash.get(h));
+      refused.push(name===null?{diagnostic}:{change:name,diagnostic});
+    }
     else{admitted.add(h);running=A.applyChanges(running,[byHash.get(h)])[0];}
   }
   return {doc:running,refused,held:[...held].sort()};

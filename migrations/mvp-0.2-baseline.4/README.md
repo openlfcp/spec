@@ -7,7 +7,7 @@ newest `mvp-0.M-baseline.N` directory; see
 [`../mvp-0.1-baseline.3/`](../mvp-0.1-baseline.3/README.md) for how the
 check works.
 
-`mvp-0.2-baseline.4` changes no published value. It adds SS61 to SS63
+`mvp-0.2-baseline.4` changes one published value (below). It adds SS61 to SS63
 to the shared sections corpus (below) and clarifies SDK-SECTIONS-INTEGRATION-01 §3.4, §3.5 and §7.7: releasing a
 receipt ends the adapter's use of the operation ID, not the batch's status.
 A batch released before its status is final (accepted or rejected) is still
@@ -37,3 +37,17 @@ run-length-encoded column, one operation with 16,385 predecessors, and
 SHA-256 of its chunk from the type byte on. Until now this was checked
 only in sdk-ts. The reference admission now applies §11.1 to the raw bytes
 (`generator/expansion.mjs`); SS01 to SS60 regenerate byte for byte.
+
+The one changed value: SS44 no longer names its refused change.
+SHARED-SECTIONS-PROFILE-01 §14.1 now says how a refused change is named:
+by its hash only when its bytes are one type 1 change chunk whose length
+field covers exactly the rest, computed without decoding. SS44 is a
+compressed chunk (type 2); its name until now was the hash of the inflated
+change, so a receiver had to inflate refused bytes to name them, with no
+limit on that (a zip bomb). The orchestrator decided that such bytes are
+not named. The refusal and its diagnostic are unchanged; the entry has no
+`change` field (`value-changes.json` records the field as removed).
+
+For an implementation the change is: name a refused change only from the
+header of a type 1 chunk of exact length, and never inflate or decode
+refused bytes to name them.

@@ -16,7 +16,9 @@
 //
 // A later, explicitly approved change to a migrated value is listed under
 // `changed` (old path, old value, new value, approval). Such a value must
-// match both sides exactly and is left out of the multiset comparison.
+// match both sides exactly and is left out of the multiset comparison. A
+// new value of null means the value was removed: it must be absent from the
+// new file.
 //
 // Path syntax in mapping files: dot-separated keys; `name[id=X]` selects the
 // array element whose `id` is X; `[N]` the element at index N; `*` matches
@@ -186,6 +188,11 @@ function checkSuite(mappingFile) {
     const targetText = pathText(target);
     const found = getAt(newDoc, target);
     if (!found.found) {
+      const approved = changed.get(where);
+      if (approved && approved.to === null && same(approved.from, leaf.value)) {
+        changedValues.push(`${where}: removed; ${approved.rule}`);
+        continue;
+      }
       errors.push(`old value at ${where} is missing from the new file (expected at ${targetText})`);
     } else if (!same(found.value, leaf.value)) {
       const approved = changed.get(where);
