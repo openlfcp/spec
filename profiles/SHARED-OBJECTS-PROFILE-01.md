@@ -503,6 +503,8 @@ Honest writers reach this only after an equivocation (LFCP-WIRE-01 §26.2). A co
 
 When every dependency of a change is in the document, its sequence number is exactly one more than that of the latest change of its actor in the document, or `1` for the actor's first change. A change with a higher sequence number is invalid. A receiver checks this before the engine sees the change, because an Automerge implementation may abort on it rather than return an error. It rejects the plaintext with `PROFILE_INVALID` and the diagnostic `INVALID_AUTOMERGE_BYTES` (Section 74.1).
 
+A change whose extra bytes (Section 11.1, rule 2) begin with an Automerge author has the sequence number `1`: an author names the actor's writer once, in its first change. The extra bytes begin with an author when they read as an unsigned LEB128 number equal to 1, then an unsigned LEB128 length `L`, followed by at least `L` more bytes; each number is read as automerge 0.12 reads it, in at most 10 bytes and below 2^64, in any encoding, the shortest or not. A receiver checks this with the sequence number, before the engine sees the change, because automerge 0.12 aborts on an author in a later change (finding D5 of the differential fuzzing). It rejects the plaintext with `PROFILE_INVALID` and the diagnostic `INVALID_AUTOMERGE_BYTES` (Section 74.1).
+
 ---
 
 # Part IV. Document Model

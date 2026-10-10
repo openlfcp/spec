@@ -95,7 +95,8 @@ export function changeHeader(bytes) {
   const meta = [];
   for (let i = 0; i < columnCount; i++) meta.push({ spec: r.uleb(), length: r.uleb() });
   const columns = meta.map((m) => ({ ...m, start: r.at(), data: r.take(m.length) }));
-  return { type, hash, depCount, deps, actor, seq, startOp, time, otherCount, others, columns };
+  // `end`: where the extra bytes start (§11.1 rule 2).
+  return { type, hash, bodyStart, end: r.at(), depCount, deps, actor, seq, startOp, time, otherCount, others, columns };
 }
 
 /** A column's values (§11.1 rule 4): counts, and the values when they are needed. */
@@ -147,6 +148,34 @@ export function beyondSafeNumbers(bytes) {
     if (e instanceof Malformed) return false;
     throw e;
   }
+}
+
+/**
+ * SHARED-OBJECTS-PROFILE-01 §14.1: whether the extra bytes of the change
+ * chunk `bytes` begin with an Automerge author, as automerge 0.12 reads it:
+ * an unsigned LEB128 1, then a length L, then at least L more bytes. Each
+ * number is read as the leb128 crate reads it: any encoding, at most 10
+ * bytes, below 2^64.
+ */
+export function hasAuthor(bytes) {
+  const h = changeHeader(bytes);
+  if (h.end === undefined) return false;
+  const extra = bytes.subarray(h.end);
+  const leb128 = (pos) => {
+    let v = 0n, shift = 0n;
+    for (;;) {
+      if (pos >= extra.length) return null;
+      const b = extra[pos++];
+      if (shift === 63n && b !== 0 && b !== 1) return null;
+      v |= BigInt(b & 0x7f) << shift;
+      if ((b & 0x80) === 0) return [v, pos];
+      shift += 7n;
+    }
+  };
+  const id = leb128(0);
+  if (id === null || id[0] !== 1n) return false;
+  const len = leb128(id[1]);
+  return len !== null && BigInt(extra.length - len[1]) >= len[0];
 }
 
 /**

@@ -5,7 +5,7 @@
 // after the change rather than walking the change's operations, which
 // decides the same rules for the changes of this corpus.
 import {A,PROFILE,actor,pref,str,canon} from './section-model.mjs';
-import {beyondSafeNumbers,changeHeader,expansionRefusal,refusalName} from './expansion.mjs';
+import {beyondSafeNumbers,changeHeader,expansionRefusal,hasAuthor,refusalName} from './expansion.mjs';
 
 /** Diagnostics in their order of precedence (§14.1). */
 export const ADMISSION_ORDER=['INVALID_AUTOMERGE_BYTES','CHANGE_ACTOR_MISMATCH','CONTAINER_REPLACED','CHILDREN_LIST_MUTATED','PLACEMENT_NOT_ATOMIC','IMMUTABLE_FIELD_MUTATED','INVALID_FIELD_TYPE'];
@@ -133,9 +133,11 @@ function bytesRefusal(bytes,signer){
   if(beyondSafeNumbers(bytes))return 'INVALID_AUTOMERGE_BYTES';
   const d=A.decodeChange(bytes);
   if(Buffer.from(bytes.subarray(4,8)).toString('hex')!==d.hash.slice(0,8))return 'INVALID_AUTOMERGE_BYTES';
-  // §11.3: the canonical encoding. Re-encoding with Automerge is a way to
-  // check it for the changes of this corpus, not the definition.
-  if(!Buffer.from(A.encodeChange(d)).equals(Buffer.from(bytes)))return 'INVALID_AUTOMERGE_BYTES';
+  // §11.3: the canonical encoding, up to the extra bytes (rule 4 allows
+  // any). Re-encoding with Automerge is a way to check it for the changes
+  // of this corpus, not the definition.
+  const again=A.encodeChange(d),h=changeHeader(bytes),g=changeHeader(again);
+  if(again.length-g.end!==0||!Buffer.from(again.subarray(g.bodyStart,g.end)).equals(Buffer.from(bytes.subarray(h.bodyStart,h.end))))return 'INVALID_AUTOMERGE_BYTES';
   // §8: the change is the signer's.
   if(signer!==undefined&&actor(signer)!==d.actor)return 'CHANGE_ACTOR_MISMATCH';
   return null;
@@ -152,6 +154,9 @@ function sopRefusal(history,bytes){
   const own=history.filter(c=>c.actor===d.actor);
   const latest=own.reduce((m,c)=>Math.max(m,c.seq),0);
   if(d.seq!==latest+1)return 'INVALID_AUTOMERGE_BYTES';
+  // §14.1: an author only in the actor's first change (automerge 0.12
+  // aborts on one in a later change, finding D5).
+  if(d.seq!==1&&hasAuthor(bytes))return 'INVALID_AUTOMERGE_BYTES';
   // §11.2: no object deeper than 256 below the root.
   const depth=new Map([['_root',0]]);
   for(const c of [...history,d]){

@@ -520,6 +520,23 @@ record('SS69','A change signed by another Principal whose sequence number is 2^5
   inject:d=>[{bytes:withHeader(nextOfA(d,'SS69/foreign-seq'),{seq:2n**53n}),signer:'B'}],
   requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],heldCount:0,visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
   notes:[...d2Notes('A\'s change, signed by B, with the sequence number 2^53 (the D7 form)'),'§14.1: INVALID_AUTOMERGE_BYTES comes before CHANGE_ACTOR_MISMATCH.']});
+// D5 (differential fuzzing): an Automerge author in the extra bytes of a
+// change other than the actor's first; automerge 0.12 asserts it away.
+/** The change chunk `bytes` with `extra` appended after its columns, its length and checksum recomputed. */
+const withExtra=(bytes,extra)=>{
+  const b=Buffer.from(bytes);
+  let pos=9;
+  while(b[pos++]&0x80);
+  const body=Buffer.concat([b.subarray(pos),Buffer.from(extra)]);
+  const len=Buffer.from(ulebBig(BigInt(body.length)));
+  const sum=Buffer.from(hash(Buffer.concat([Buffer.from([1]),len,body])),'hex').subarray(0,4);
+  return Uint8Array.from(Buffer.concat([b.subarray(0,4),sum,Buffer.from([1]),len,body]));
+};
+record('SS70','A later change carrying an Automerge author is refused',{
+  inject:d=>[{bytes:withExtra(nextOfA(d,'SS70/author'),[0x01,0x02,0xa1,0xb2]),signer:'A'}],
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],heldCount:0,visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
+  notes:['SHARED-OBJECTS-PROFILE-01 §14.1: a change whose extra bytes begin with an Automerge author (1, a length of 2, two bytes) has the sequence number 1; this is A\'s third change. automerge 0.12 aborts applying it (finding D5 of the differential fuzzing), so it is refused before the engine.',
+    'SHARED-OBJECTS-PROFILE-01 §11.3 rule 4 allows extra bytes: the change is canonical, and refused only by the author rule.']});
 const doc={
   format:'lfcp-vector-format/1',
   suite:{

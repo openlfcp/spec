@@ -43,3 +43,18 @@ is 2^53 or more, or whose time is 2^53 or more or -2^53 or less, with
 `INVALID_AUTOMERGE_BYTES`, as part of the canonical check; and make the
 checks of a change's bytes, then its actor, before waiting for its
 dependencies.
+
+SHARED-OBJECTS-PROFILE-01 §14.1 also allows an Automerge author only in an
+actor's first change. The extra bytes after a change's columns are free
+(§11.3 rule 4), but automerge 0.12 reads an author from them (an unsigned
+LEB128 1, a length `L`, then `L` bytes) and asserts that the change's
+sequence number is 1: on a later change, Automerge JS aborts applying it
+while sdk-rs refused it (finding D5). A receiver checks this with the
+sequence number, once the dependencies are present. The shared sections
+corpus gains SS70: A's third change with an author, refused with
+`INVALID_AUTOMERGE_BYTES`. The sections reference admission now compares
+its canonical re-encoding up to the extra bytes, which rule 4 allows.
+
+For an implementation the change is: refuse, with `INVALID_AUTOMERGE_BYTES`,
+a change whose extra bytes begin with an author and whose sequence number
+is not 1.
