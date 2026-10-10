@@ -18251,6 +18251,90 @@
           "SHARED-OBJECTS-PROFILE-01 §11.4 R10: no operation makes a table; automerge 0.12 aborts applying a write into one (finding D1), so the change is refused before the engine."
         ]
       }
+    },
+    {
+      "id": "SS65",
+      "type": "behavioral",
+      "kind": "section_scenario",
+      "description": "A section created with ready false is refused",
+      "inputs": {
+        "base_snapshot": {
+          "b64url": "hW9Kg7galUQABAAAAAA",
+          "sha256": "a8494911b186f768c70af6a0b84d0b0c36a154e5ad483c9f3503f4c0c173ee93",
+          "length": 14
+        },
+        "base_changes": [],
+        "branches": {
+          "A": [
+            {
+              "b64url": "hW9KgwjbgpwBzAIAIK6iWaINNZTj-UQp8yKgVwTnc5Uq806Bf75AknuP4pCrAQEADFNTNjUvZ2VuZXNpcwAIAQYCBhVjNAFCClYQV3xwAgACBgAABAACBgIABHQHcHJvZmlsZQdzZWN0aW9uCGNoaWxkcmVuCmNyZWF0ZWRfYnkKZXh0ZW5zaW9ucwJpZAVyZWFkeQV0aXRsZQdvYmplY3RzBW5vZGVzCnBsYWNlbWVudHMKZXh0ZW5zaW9ucwx7AQACAQADAQQAf_YDAgB71gUAxgQBxgEEAG9yZy5vcGVubGZjcC5zaGFyZWQtc2VjdGlvbnMudjFwOk91TTVQQlVRQXBodmhCVVZyU21jRzZHWDZjZUFETXhuREdGWFFFQ3hPd1UyNjhhMTY2Zi00ODkxLTcyNDMtODQwZS1lN2ZlYTlmZTYzOTBKb2ludCBsYXVuY2gMAA",
+              "sha256": "de414e2f8fa64d851c5ea50d6de49d619fba39f82a132d55f9d7556b4e9c9aec",
+              "length": 343,
+              "change_hash": "08db829c64e6fd76dd13ec653fba1c9d9c4d3edf82b637467e649b37ae6e5e80",
+              "actor": "aea259a20d3594e3f94429f322a05704e773952af34e817fbe40927b8fe290ab",
+              "seq": 1,
+              "deps": [],
+              "framed_plaintext": {
+                "b64url": "ggFZAVeFb0qDCNuCnAHMAgAgrqJZog01lOP5RCnzIqBXBOdzlSrzToF_vkCSe4_ikKsBAQAMU1M2NS9nZW5lc2lzAAgBBgIGFWM0AUIKVhBXfHACAAIGAAAEAAIGAgAEdAdwcm9maWxlB3NlY3Rpb24IY2hpbGRyZW4KY3JlYXRlZF9ieQpleHRlbnNpb25zAmlkBXJlYWR5BXRpdGxlB29iamVjdHMFbm9kZXMKcGxhY2VtZW50cwpleHRlbnNpb25zDHsBAAIBAAMBBAB_9gMCAHvWBQDGBAHGAQQAb3JnLm9wZW5sZmNwLnNoYXJlZC1zZWN0aW9ucy52MXA6T3VNNVBCVVFBcGh2aEJVVnJTbWNHNkdYNmNlQURNeG5ER0ZYUUVDeE93VTI2OGExNjZmLTQ4OTEtNzI0My04NDBlLWU3ZmVhOWZlNjM5MEpvaW50IGxhdW5jaAwA",
+                "sha256": "adf3379c59d427d043a62820032b729b7a79ce1f675d8b27849c9acd659509a9",
+                "length": 348
+              },
+              "signer": "A"
+            }
+          ],
+          "B": []
+        },
+        "after_merge": []
+      },
+      "expected": {
+        "state": {
+          "classification": "PROFILE_INVALID",
+          "errors": [
+            "INVALID_ROOT"
+          ],
+          "tree": [],
+          "hidden": [],
+          "invalid": [],
+          "recovery": [],
+          "retainedConcurrentEdits": [],
+          "scalarConflicts": [],
+          "texts": {},
+          "tasks": {},
+          "slotCount": 0,
+          "nodeCount": 0,
+          "types": {
+            "taskTitleScalar": true,
+            "paragraphText": true
+          },
+          "refused": [
+            {
+              "change": "08db829c64e6fd76dd13ec653fba1c9d9c4d3edf82b637467e649b37ae6e5e80",
+              "diagnostic": "IMMUTABLE_FIELD_MUTATED"
+            }
+          ],
+          "held": []
+        },
+        "heads": [],
+        "reference_snapshot": {
+          "b64url": "hW9Kg7galUQABAAAAAA",
+          "sha256": "a8494911b186f768c70af6a0b84d0b0c36a154e5ad483c9f3503f4c0c173ee93",
+          "length": 14
+        },
+        "reference_snapshot_plaintext": {
+          "b64url": "ggFOhW9Kg7galUQABAAAAAA",
+          "sha256": "452608460839e0735ee77103eba2d44c3211f89b013826ded7d8dd1d816f67ce",
+          "length": 17
+        },
+        "requirements": {
+          "refused": [
+            "IMMUTABLE_FIELD_MUTATED"
+          ]
+        },
+        "coverage": "negative-admission",
+        "notes": [
+          "§12.1: ready is true when written, also in the change that creates the section (finding D4 of the differential fuzzing: one SDK checked only later changes)."
+        ]
+      }
     }
   ]
 }

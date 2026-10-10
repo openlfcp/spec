@@ -60,6 +60,12 @@ export function admit(prev,bytes){
       const creator=NAMES.find(n=>pref(n)===str(next.section?.created_by));
       if(after.length===0||after.some(v=>v!==true)||!creator||actor(creator)!==changeActor)found.add('IMMUTABLE_FIELD_MUTATED');
     }
+  }else if(next.section){
+    // §12.1 for the change that creates the section: ready, if it writes
+    // it, is true and written by the creator (an import leaves it absent).
+    const after=conflictValues(next.section,'ready');
+    const creator=NAMES.find(n=>pref(n)===str(next.section.created_by));
+    if(after.length>0&&(after.some(v=>v!==true)||!creator||actor(creator)!==changeActor))found.add('IMMUTABLE_FIELD_MUTATED');
   }
   // Existing nodes: their map, containers and immutable fields.
   for(const [n,old]of Object.entries(prev.nodes||{})){

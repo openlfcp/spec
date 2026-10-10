@@ -56,3 +56,10 @@ sections corpus SS64, the same change on the section receive path; all
 refused. An implementation refuses a table before its engine sees the
 change.
 
+The shared sections corpus also gains SS65: the change that creates a
+section writes `ready = false`, and is refused with
+`IMMUTABLE_FIELD_MUTATED`. SHARED-SECTIONS-PROFILE-01 §12.1 already binds
+that change ("writes a value other than `true`"); the reference admission,
+and one SDK, checked `ready` only in changes after the section existed
+(finding D4 of the differential fuzzing). No rule text changes.
+

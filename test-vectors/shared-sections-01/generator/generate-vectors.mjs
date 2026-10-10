@@ -465,6 +465,16 @@ record('SS64','A change making a table is refused',{
   },
   requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
   notes:['SHARED-OBJECTS-PROFILE-01 §11.4 R10: no operation makes a table; automerge 0.12 aborts applying a write into one (finding D1), so the change is refused before the engine.']});
+// D4 (differential fuzzing): §12.1 also binds the change that creates the
+// section; a ready other than true there is refused like any later one.
+record('SS65','A section created with ready false is refused',{base:A.init({actor:actor('A')}),
+  inject:()=>[{bytes:A.getLastLocalChange(change(A.init({actor:actor('A')}),'SS65/genesis',x=>{
+    x.profile=S(PROFILE);
+    x.section={id:S(ids.section),title:S('Joint launch'),created_by:S(pref('A')),ready:false,children:[],extensions:{}};
+    x.objects={};x.nodes={};x.placements={};x.extensions={};
+  })),signer:'A'}],
+  requirements:{refused:['IMMUTABLE_FIELD_MUTATED']},coverage:'negative-admission',
+  notes:['§12.1: ready is true when written, also in the change that creates the section (finding D4 of the differential fuzzing: one SDK checked only later changes).']});
 const doc={
   format:'lfcp-vector-format/1',
   suite:{
