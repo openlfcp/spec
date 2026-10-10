@@ -559,6 +559,15 @@ record('SS74','Text in a Task\'s extensions is refused',{
   inject:textOf('SS74/extension',x=>{x.objects[ids.task].extensions['org.example.notes']={body:'Call the client'};}),
   requirements:{classification:'VALID',refused:['INVALID_FIELD_TYPE'],heldCount:0,visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
   notes:d3Notes('in a map inside a Task\'s extensions (SOP §30: every string of a Task is a scalar)')});
+// D8 (differential fuzzing): a table made as a node breaks R10 and A2; the
+// SHARED-OBJECTS-PROFILE-01 diagnostic comes first (§14.1).
+record('SS75','A table made as a node is refused for R10 before the section rules',{
+  inject:d=>{
+    const c=A.decodeChange(nextOfA(d,'SS75/table-node'));
+    return [{bytes:A.encodeChange({...c,ops:[{action:'makeTable',obj:A.getObjectId(d,'nodes'),key:uid('SS75-node'),pred:[]}]}),signer:'A'}];
+  },
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],heldCount:0,visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
+  notes:['SHARED-OBJECTS-PROFILE-01 §11.4 R10: no operation makes a table. The table is also a node without a placement (A2, PLACEMENT_NOT_ATOMIC); §14.1 orders INVALID_AUTOMERGE_BYTES first (finding D8 of the differential fuzzing: one SDK reported the section rule).']});
 const doc={
   format:'lfcp-vector-format/1',
   suite:{

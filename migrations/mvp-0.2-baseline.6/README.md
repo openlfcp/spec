@@ -70,3 +70,8 @@ the section, a new placement and in a Task's `extensions`, all refused with
 
 For an implementation the change is: refuse, with `INVALID_FIELD_TYPE`, a
 change that makes Text in any such field, not only in the fields of §4.
+
+The shared sections corpus also gains SS75: a change that makes a table as
+a node, without a placement. It breaks R10 and A2; §14.1 orders
+`INVALID_AUTOMERGE_BYTES` first, which is the diagnostic (finding D8: one
+SDK reported `PLACEMENT_NOT_ATOMIC`). No rule text changes for it.
