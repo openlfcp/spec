@@ -58,3 +58,15 @@ its canonical re-encoding up to the extra bytes, which rule 4 allows.
 For an implementation the change is: refuse, with `INVALID_AUTOMERGE_BYTES`,
 a change whose extra bytes begin with an author and whose sequence number
 is not 1.
+
+SHARED-SECTIONS-PROFILE-01 A5 now names where collaborative Text is
+refused: in any field of the section, of a node other than its `text` and
+of a placement, and anywhere in a Task (SOP §30), whether or not the
+profile defines the field. One SDK checked only the fields the profile
+names, and admitted Text in a node field `texr` (finding D3). The shared
+sections corpus gains SS71 to SS74, Text in an undefined field of a node,
+the section, a new placement and in a Task's `extensions`, all refused with
+`INVALID_FIELD_TYPE`; the reference admission checks every field.
+
+For an implementation the change is: refuse, with `INVALID_FIELD_TYPE`, a
+change that makes Text in any such field, not only in the fields of §4.

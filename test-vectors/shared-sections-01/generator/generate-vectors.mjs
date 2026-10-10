@@ -537,6 +537,28 @@ record('SS70','A later change carrying an Automerge author is refused',{
   requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],heldCount:0,visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
   notes:['SHARED-OBJECTS-PROFILE-01 §14.1: a change whose extra bytes begin with an Automerge author (1, a length of 2, two bytes) has the sequence number 1; this is A\'s third change. automerge 0.12 aborts applying it (finding D5 of the differential fuzzing), so it is refused before the engine.',
     'SHARED-OBJECTS-PROFILE-01 §11.3 rule 4 allows extra bytes: the change is canonical, and refused only by the author rule.']});
+// D3 (differential fuzzing): A5 refuses collaborative Text in any field of
+// the section, a node (but its text) or a placement, and anywhere in a
+// Task, whether or not the profile defines the field. A plain JavaScript
+// string assigned in Automerge JS 3 is Text.
+const textOf=(label,fn)=>d=>[{bytes:A.getLastLocalChange(change(d,label,fn)),signer:'A'}];
+const d3Notes=where=>[`§14.1 A5: collaborative Text ${where} is refused with INVALID_FIELD_TYPE, whether or not the profile defines the field (finding D3 of the differential fuzzing: one SDK checked only the fields it knew).`];
+record('SS71','Text in a node field the profile does not define is refused',{
+  inject:textOf('SS71/texr',x=>{x.nodes[ids.para].texr='Draft';}),
+  requirements:{classification:'VALID',refused:['INVALID_FIELD_TYPE'],heldCount:0,visible,texts:{[ids.para]:'Draft contract'}},coverage:'negative-admission',
+  notes:d3Notes('in the field `texr` of an existing paragraph (the D3 form)')});
+record('SS72','Text in a section field the profile does not define is refused',{
+  inject:textOf('SS72/subtitle',x=>{x.section.subtitle='Q3';}),
+  requirements:{classification:'VALID',refused:['INVALID_FIELD_TYPE'],heldCount:0,visible},coverage:'negative-admission',
+  notes:d3Notes('in the field `subtitle` of the section')});
+record('SS73','Text in a placement field the profile does not define is refused',{
+  inject:textOf('SS73/note',x=>{add(x,ids.a,'paragraph',ids.section,ids.task,'SS73-slot','A note','A');x.placements[str(x.nodes[ids.a].placement)].note='Placed by A';}),
+  requirements:{classification:'VALID',refused:['INVALID_FIELD_TYPE'],heldCount:0,visible},coverage:'negative-admission',
+  notes:d3Notes('in the field `note` of a placement the change creates, with its node')});
+record('SS74','Text in a Task\'s extensions is refused',{
+  inject:textOf('SS74/extension',x=>{x.objects[ids.task].extensions['org.example.notes']={body:'Call the client'};}),
+  requirements:{classification:'VALID',refused:['INVALID_FIELD_TYPE'],heldCount:0,visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
+  notes:d3Notes('in a map inside a Task\'s extensions (SOP §30: every string of a Task is a scalar)')});
 const doc={
   format:'lfcp-vector-format/1',
   suite:{

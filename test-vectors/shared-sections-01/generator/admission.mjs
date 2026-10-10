@@ -12,13 +12,13 @@ export const ADMISSION_ORDER=['INVALID_AUTOMERGE_BYTES','CHANGE_ACTOR_MISMATCH',
 const ROOT_CONTAINERS=['section','objects','nodes','placements','extensions'];
 const TEXT_KINDS=new Set(['paragraph','item','raw']);
 const NODE_IMMUTABLE=['id','kind','created_by','task_id'];
-const NODE_SCALARS=['id','kind','created_by','lifecycle','placement','task_id','list_style'];
 const TASK_IMMUTABLE=['id','type','created_by'];
-const TASK_SCALARS=['id','type','created_by','lifecycle','title','status','priority','due','scheduled','completion_date','created_at'];
 const NAMES=['A','B','C'];
 const MAKE=new Set(['makeMap','makeList','makeText','makeTable']);
 
 const oid=(obj,key)=>obj==null?null:A.getObjectId(obj,key);
+/** Whether `v` is an Automerge map or list (not a scalar such as an ImmutableString, a counter or a date). */
+const isObject=v=>{if(v===null||typeof v!=='object'||A.isImmutableString(v))return false;try{return /@|^_root$/.test(A.getObjectId(v)??'');}catch{return false;}};
 const isText=(obj,key)=>{const v=obj?.[key];return v!==undefined&&!A.isImmutableString(v)&&typeof v==='string'&&!!oid(obj,key);};
 const lanes=doc=>{
   const out=[];
@@ -106,16 +106,23 @@ export function admit(prev,bytes){
     if(owners.length!==1||owners[0]!==parent)found.add('PLACEMENT_NOT_ATOMIC');
     if(!conflictValues(next.nodes?.[node],'placement').map(str).includes(p))found.add('PLACEMENT_NOT_ATOMIC');
   }
-  // A5: scalars stay scalar, node text is Text.
+  // A5: no Text but a node's text, in any field, whether or not the profile
+  // defines it (finding D3); a node's text is Text.
+  const newText=(old,now,except)=>Object.keys(now||{}).some(key=>key!==except&&isText(now,key)&&(!old||oid(old,key)!==oid(now,key)));
+  if(next.section&&newText(prev.section,next.section))found.add('INVALID_FIELD_TYPE');
+  for(const p of created)if(newText(null,next.placements[p]))found.add('INVALID_FIELD_TYPE');
   for(const [n,now]of Object.entries(next.nodes||{})){
     const old=prev.nodes?.[n];
-    for(const key of NODE_SCALARS)if(isText(now,key)&&(!old||oid(old,key)!==oid(now,key)))found.add('INVALID_FIELD_TYPE');
+    if(newText(old,now,'text'))found.add('INVALID_FIELD_TYPE');
     if(TEXT_KINDS.has(str(now.kind))&&now.text!==undefined&&!oid(now,'text')&&(!old||str(old.text)!==str(now.text)||oid(old,'text')))found.add('INVALID_FIELD_TYPE');
   }
-  for(const [id,now]of Object.entries(next.objects||{})){
-    const old=prev.objects?.[id];
-    for(const key of TASK_SCALARS)if(isText(now,key)&&(!old||oid(old,key)!==oid(now,key)))found.add('INVALID_FIELD_TYPE');
-  }
+  // SOP §30: no Text anywhere in a Task, its nested maps and lists included.
+  const before=new Set(),walk=(obj,out)=>{const stack=[obj];while(stack.length){const o=stack.pop();
+    for(const key of Object.keys(o)){const v=o[key];if(isText(o,key))out.add(oid(o,key));else if(isObject(v))stack.push(v);}}};
+  for(const t of Object.values(prev.objects||{}))if(t&&typeof t==='object')walk(t,before);
+  const after=new Set();
+  for(const t of Object.values(next.objects||{}))if(t&&typeof t==='object')walk(t,after);
+  if([...after].some(x=>!before.has(x)))found.add('INVALID_FIELD_TYPE');
   return ADMISSION_ORDER.find(d=>found.has(d))||null;
 }
 
