@@ -48,7 +48,19 @@ function reader(bytes, start = 0, end = bytes.length) {
     pos += n;
     return out;
   };
-  return { uleb, sleb, take, at: () => pos, done: () => pos >= end };
+  // A signed number exactly, as a BigInt, in at most 10 bytes (§11.3 rule 1).
+  const slebBig = () => {
+    let v = 0n, shift = 0n, b;
+    do {
+      need(1);
+      b = bytes[pos++];
+      v |= BigInt(b & 0x7f) << shift;
+      shift += 7n;
+      if (shift > 70n) throw new Malformed('number too long');
+    } while (b & 0x80);
+    return b & 0x40 ? v - (1n << shift) : v;
+  };
+  return { uleb, sleb, slebBig, take, at: () => pos, done: () => pos >= end };
 }
 
 const hex = (b) => Buffer.from(b).toString('hex');
@@ -74,7 +86,7 @@ export function changeHeader(bytes) {
   const actor = hex(r.take(r.uleb()));
   const seq = r.uleb();
   const startOp = r.uleb();
-  r.sleb(); // time
+  const time = r.slebBig();
   r.take(r.uleb()); // message
   const otherCount = r.uleb();
   if (otherCount > LIMITS.actors) return { type, hash, depCount, deps, actor, seq, startOp, otherCount };
@@ -83,7 +95,7 @@ export function changeHeader(bytes) {
   const meta = [];
   for (let i = 0; i < columnCount; i++) meta.push({ spec: r.uleb(), length: r.uleb() });
   const columns = meta.map((m) => ({ ...m, start: r.at(), data: r.take(m.length) }));
-  return { type, hash, depCount, deps, actor, seq, startOp, otherCount, others, columns };
+  return { type, hash, depCount, deps, actor, seq, startOp, time, otherCount, others, columns };
 }
 
 /** A column's values (§11.1 rule 4): counts, and the values when they are needed. */
@@ -118,6 +130,23 @@ function walkColumn(column) {
     else count += r.uleb();
   }
   return { count, sum, strings, maxValue };
+}
+
+/**
+ * §11.3 rule 2: whether `bytes` is a change chunk whose sequence number is
+ * 2^53 or more, or whose time is not between -2^53 and 2^53 (exclusive):
+ * numbers a JavaScript number does not hold exactly, so Automerge JS does
+ * not decode the change. Its hash and dependencies are read from its header.
+ */
+export function beyondSafeNumbers(bytes) {
+  try {
+    const h = changeHeader(bytes);
+    if (h.type !== 1 || h.time === undefined) return false;
+    return h.seq >= 2 ** 53 || h.time >= 2n ** 53n || h.time <= -(2n ** 53n);
+  } catch (e) {
+    if (e instanceof Malformed) return false;
+    throw e;
+  }
 }
 
 /**

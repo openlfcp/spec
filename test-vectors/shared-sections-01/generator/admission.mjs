@@ -5,7 +5,7 @@
 // after the change rather than walking the change's operations, which
 // decides the same rules for the changes of this corpus.
 import {A,PROFILE,actor,pref,str,canon} from './section-model.mjs';
-import {changeHeader,expansionRefusal,refusalName} from './expansion.mjs';
+import {beyondSafeNumbers,changeHeader,expansionRefusal,refusalName} from './expansion.mjs';
 
 /** Diagnostics in their order of precedence (§14.1). */
 export const ADMISSION_ORDER=['INVALID_AUTOMERGE_BYTES','CHANGE_ACTOR_MISMATCH','CONTAINER_REPLACED','CHILDREN_LIST_MUTATED','PLACEMENT_NOT_ATOMIC','IMMUTABLE_FIELD_MUTATED','INVALID_FIELD_TYPE'];
@@ -119,17 +119,35 @@ export function admit(prev,bytes){
   return ADMISSION_ORDER.find(d=>found.has(d))||null;
 }
 
-/** SHARED-OBJECTS-PROFILE-01's checks before the engine (§8, §11, §11.2, §11.3, §11.4, §14.1). */
-function sopRefusal(history,bytes,signer){
-  // `history`: the decoded changes of the causal history.
+/**
+ * SHARED-OBJECTS-PROFILE-01's checks of the bytes alone, made when a change
+ * arrives, before its dependencies are looked for (§14.1): §11, §11.1,
+ * §11.3, then the actor (§8).
+ */
+function bytesRefusal(bytes,signer){
   // §11.1: the expansion limits, on the raw bytes, before anything is decoded.
   if(expansionRefusal(bytes)!==null)return 'INVALID_AUTOMERGE_BYTES';
   // §11: an uncompressed change chunk (type 1) whose checksum matches.
   if(bytes[8]!==1)return 'INVALID_AUTOMERGE_BYTES';
+  // §11.3 rule 2: header numbers a JavaScript number holds exactly.
+  if(beyondSafeNumbers(bytes))return 'INVALID_AUTOMERGE_BYTES';
   const d=A.decodeChange(bytes);
   if(Buffer.from(bytes.subarray(4,8)).toString('hex')!==d.hash.slice(0,8))return 'INVALID_AUTOMERGE_BYTES';
+  // §11.3: the canonical encoding. Re-encoding with Automerge is a way to
+  // check it for the changes of this corpus, not the definition.
+  if(!Buffer.from(A.encodeChange(d)).equals(Buffer.from(bytes)))return 'INVALID_AUTOMERGE_BYTES';
   // §8: the change is the signer's.
   if(signer!==undefined&&actor(signer)!==d.actor)return 'CHANGE_ACTOR_MISMATCH';
+  return null;
+}
+
+/**
+ * SHARED-OBJECTS-PROFILE-01's checks that read the causal history, once
+ * every dependency is present (§11.2, §11.4, §14.1).
+ */
+function sopRefusal(history,bytes){
+  // `history`: the decoded changes of the causal history.
+  const d=A.decodeChange(bytes);
   // §14.1: the actor's next sequence number.
   const own=history.filter(c=>c.actor===d.actor);
   const latest=own.reduce((m,c)=>Math.max(m,c.seq),0);
@@ -142,9 +160,6 @@ function sopRefusal(history,bytes,signer){
     for(const [id,obj]of c.made)depth.set(id,(depth.get(obj)??0)+1);
   }
   for(const v of depth.values())if(v>256)return 'INVALID_AUTOMERGE_BYTES';
-  // §11.3: the canonical encoding. Re-encoding with Automerge is a way to
-  // check it for the changes of this corpus, not the definition.
-  if(!Buffer.from(A.encodeChange(d)).equals(Buffer.from(bytes)))return 'INVALID_AUTOMERGE_BYTES';
   // §11.4: operations refer only to the change's causal history.
   if(referenceRule(history,d))return 'INVALID_AUTOMERGE_BYTES';
   return null;
@@ -215,10 +230,12 @@ export function referenceRule(history,d){
  * prevent. Any other change, including a malformed one, is decoded.
  */
 export function changeInfo(b){
-  if(isExpansionBomb(b)){const h=changeHeader(b);return {hash:h.hash,deps:h.deps,actor:h.actor,seq:h.seq};}
+  if(fromHeader(b)){const h=changeHeader(b);return {hash:h.hash,deps:h.deps,actor:h.actor,seq:h.seq};}
   const d=A.decodeChange(b);
   return {hash:d.hash,deps:d.deps,actor:d.actor,seq:d.seq,decoded:d};
 }
+/** A change read from its header only: above a §11.1 limit, or with header numbers Automerge JS does not decode (§11.3 rule 2). */
+const fromHeader=b=>isExpansionBomb(b)||beyondSafeNumbers(b);
 /** A type 1 change chunk whose header reads, above a §11.1 limit. */
 const bombs=new WeakMap();
 export function isExpansionBomb(b){
@@ -237,7 +254,7 @@ export function admitReplay(changes,initActor){
   }
   const decoded=new Map();
   const decode=h=>{if(!decoded.has(h))decoded.set(h,A.decodeChange(byHash.get(h)));return decoded.get(h);};
-  const deps=h=>isExpansionBomb(byHash.get(h))?changeHeader(byHash.get(h)).deps:decode(h).deps;
+  const deps=h=>fromHeader(byHash.get(h))?changeHeader(byHash.get(h)).deps:decode(h).deps;
   // `refusedKeys`: the replay's keys of refused changes; `refused` reports
   // them by name, without one for bytes that are not named (§14.1).
   const admitted=new Set(),refused=[],refusedKeys=new Set(),held=new Set();
@@ -248,19 +265,24 @@ export function admitReplay(changes,initActor){
   // The document of the admitted changes so far: the causal history of a
   // change whose history is exactly those changes, as in a linear run.
   let running=A.init({actor:initActor});
+  const refuse=(h,diagnostic)=>{
+    refusedKeys.add(h);
+    const name=refusalName(byHash.get(h));
+    refused.push(name===null?{diagnostic}:{change:name,diagnostic});
+  };
   for(const h of sorted){
+    // §14.1: what the bytes alone decide, when the change arrives, whether
+    // or not its dependencies are present.
+    const early=bytesRefusal(byHash.get(h),signers.get(h));
+    if(early){refuse(h,early);continue;}
     if(deps(h).some(d=>held.has(d)||refusedKeys.has(d)||!byHash.has(d))){held.add(h);continue;}
     const past=new Set();const collect=x=>{if(past.has(x))return;past.add(x);for(const d of deps(x))collect(d);};
     for(const d of deps(h))collect(d);
     const linear=past.size===admitted.size&&[...past].every(x=>admitted.has(x));
     const prev=linear?running:A.applyChanges(A.init({actor:initActor}),sorted.filter(x=>past.has(x)).map(x=>byHash.get(x)))[0];
     const history=sorted.filter(x=>past.has(x)).map(decode);
-    const diagnostic=sopRefusal(history,byHash.get(h),signers.get(h))??admit(prev,byHash.get(h));
-    if(diagnostic){
-      refusedKeys.add(h);
-      const name=refusalName(byHash.get(h));
-      refused.push(name===null?{diagnostic}:{change:name,diagnostic});
-    }
+    const diagnostic=sopRefusal(history,byHash.get(h))??admit(prev,byHash.get(h));
+    if(diagnostic)refuse(h,diagnostic);
     else{admitted.add(h);running=A.applyChanges(running,[byHash.get(h)])[0];}
   }
   return {doc:running,refused,held:[...held].sort()};

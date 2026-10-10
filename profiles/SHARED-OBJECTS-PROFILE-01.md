@@ -366,7 +366,7 @@ A receiver MUST check these rules after the limits of Section 11.1 and before it
 `N` is the row count of the action column (0 when the column is absent). The terms are those of Section 11.1.
 
 1. **Numbers.** Every LEB128 number of the chunk has its shortest encoding: the chunk length, every header number, the column metadata, every run header and every number value. An unsigned number of 2^64 or more, or a signed one outside the 64-bit range, is refused.
-2. **Header.** The dependencies are strictly ascending as 32-byte strings. The sequence number and the start op are at least 1. The message is valid UTF-8 (an empty message and no message are the same, a length of 0). The other actors are strictly ascending as byte strings, none of them is the change's actor, and they are exactly the actors other than the change's own that its operations name: in an object, a key element or a predecessor.
+2. **Header.** The dependencies are strictly ascending as 32-byte strings. The sequence number and the start op are at least 1. The sequence number is below 2^53, and the time is above -2^53 and below 2^53: a JavaScript number holds these exactly, and Automerge JS refuses a change outside them (finding D2 of the differential fuzzing); rule 8 bounds the start op. The message is valid UTF-8 (an empty message and no message are the same, a length of 0). The other actors are strictly ascending as byte strings, none of them is the change's actor, and they are exactly the actors other than the change's own that its operations name: in an object, a key element or a predecessor.
 3. **Columns.** The change has only the columns of this table, in the order of their specifications, each at most once, none with empty data and none deflated. A column is present exactly when the table says.
 
    | Specification | Column | Present when |
@@ -492,6 +492,8 @@ When a unit that a replica has already merged leaves the accepted set, the repli
 - the unit turns out to be one of an equivocating pair, of which neither stays merged (LFCP-WIRE-01 §26.2).
 
 A rebuild starts from the profile's initial document (Section 16), or from a Snapshot whose frontier excludes the removed units, and applies the remaining accepted changes.
+
+A receiver checks what a change's bytes alone decide when the change arrives, before it looks for the change's dependencies: the chunk (Section 11), the limits and rules of Section 11.1 that the walk of its columns decides, and the canonical encoding (Section 11.3), then the change's actor (`CHANGE_ACTOR_MISMATCH`, Section 11). A change that fails them is rejected at once, whether or not its dependencies are present; it never waits for them. The checks that read the document, the other actors of Section 11.1, the depth of Section 11.2, the references of Section 11.4 and the sequence checks below, apply when every dependency is in the document.
 
 A replica gives a change to its Automerge engine only when every dependency of the change is in its document. A change with a missing dependency, including one that depends on an excluded change, stays outside the document until its dependencies arrive. It is not handed to the engine as a pending change. Automerge refuses a change whose actor and sequence number match a change it holds, merged or pending. A pending change that can never be merged would therefore block its writer's next change (Section 9).
 

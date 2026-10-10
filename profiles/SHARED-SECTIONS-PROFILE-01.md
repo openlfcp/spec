@@ -284,7 +284,7 @@ The exact portable syntax and external-file behavior are defined by MARKDOWN-SEC
 
 ### 14.1 Admission
 
-A receiver checks a change when every dependency of it is in the document (SOP §14.1), before its engine applies it: first SOP's checks (§11, §11.1, §11.2, §11.3, §11.4, the sequence check of §14.1, `CHANGE_ACTOR_MISMATCH`), then the structural rules below (ADR 0009, P2). Each rule is decided from the change's operations and the objects they write into, which are in the change's causal history; every replica decides it the same way, in time linear in the change.
+A receiver checks a change in two steps (SOP §14.1). When the change arrives, the checks of its bytes alone: SOP §11, the column walk of §11.1 and §11.3, then `CHANGE_ACTOR_MISMATCH`; a change they refuse is refused at once, even while a dependency of it is missing. When every dependency of it is in the document, before its engine applies it: SOP's other checks (the other actors of §11.1, §11.2, §11.4, the sequence checks of §14.1), then the structural rules below (ADR 0009, P2). Each rule is decided from the change's operations and the objects they write into, which are in the change's causal history; every replica decides it the same way, in time linear in the change.
 
 | Rule | The change … | Diagnostic |
 | --- | --- | --- |

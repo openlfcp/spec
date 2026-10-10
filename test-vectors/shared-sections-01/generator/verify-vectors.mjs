@@ -3,7 +3,7 @@ import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import assert from 'node:assert/strict';
 import {A,PROFILE,hash,actor,ids,inspect,assertExpected,str,snapshotCounts} from './section-model.mjs';
-import {admitReplay} from './admission.mjs';
+import {admitReplay,changeInfo} from './admission.mjs';
 const out=process.argv[2]||'generated';
 const suite=JSON.parse(fs.readFileSync(path.join(out,'SHARED-SECTIONS-TEST-VECTORS-01.json'),'utf8'));
 const adapterAt=process.argv.indexOf('--adapter');
@@ -36,7 +36,8 @@ for(const vector of suite.cases) {
   const base=decode(c.base_snapshot), target=decode(c.reference_snapshot);
   const ordered=[...c.base_changes,...c.branches.A,...c.branches.B,...c.after_merge];
   const changes=ordered.map(x=>{
-    const b=decode(x),dc=A.decodeChange(b);
+    // Read from the header when Automerge cannot or must not decode it (§11.1, §11.3 rule 2).
+    const b=decode(x),dc=changeInfo(b);
     assert.equal(dc.hash,x.change_hash);assert.equal(dc.actor,x.actor);assert.equal(dc.seq,x.seq);assert.deepEqual(dc.deps,x.deps);
     assert.deepEqual(unframe(x.framed_plaintext),b);
     return x.signer?{bytes:b,signer:x.signer}:b;

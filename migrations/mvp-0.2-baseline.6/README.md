@@ -1,0 +1,45 @@
+# Value changes for `mvp-0.2-baseline.6`
+
+[`value-changes.json`](value-changes.json) lists every vector value that
+differs from the previous baseline, `mvp-0.2-baseline.5`, with the decision
+that approved it. `scripts/check-baseline-changes.mjs` always checks the
+newest `mvp-0.M-baseline.N` directory; see
+[`../mvp-0.1-baseline.3/`](../mvp-0.1-baseline.3/README.md) for how the
+check works.
+
+`mvp-0.2-baseline.6` changes no published value. It bounds the header
+numbers of a change in SHARED-OBJECTS-PROFILE-01 §11.3 rule 2: the sequence
+number is below 2^53, and the time is above -2^53 and below 2^53. A
+JavaScript number holds these exactly; Automerge JS does not decode a change
+outside them ("can't be represented as a JavaScript number"), while
+automerge-rs 0.12 applies it, so the two SDKs disagreed (finding D2 of the
+differential fuzzing). Rule 8 already bounds the start op below 2^32.
+
+SHARED-OBJECTS-PROFILE-01 §14.1 and SHARED-SECTIONS-PROFILE-01 §14.1 now
+say when each check is made. What a change's bytes alone decide (the chunk
+of §11, the column walk of §11.1, the canonical encoding of §11.3, then the
+change's actor) is checked when the change arrives: a change that fails it
+is refused at once, before its actor is compared with the signer's and
+whether or not its dependencies are present. The checks that read the
+document (the other actors of §11.1, §11.2, §11.4, the sequence checks of
+§14.1, the section rules) wait for the dependencies. One SDK held a change
+with a missing dependency and a time beyond 2^53 until the dependency came,
+the other refused it (the D2b form); one refused a foreign change with a
+sequence number of 2^53 for its actor, the other for its bytes (the D7
+form).
+
+The Automerge reference corpus gains five `canonical` cases, appended after
+the earlier ones, which are addressed by index: `CAN-2-time-largest` and
+`CAN-2-time-smallest` (the times 2^53 - 1 and -(2^53 - 1), admitted), and
+`CAN-2-time-2pow53`, `CAN-2-time-minus-2pow53` and `CAN-2-seq-2pow53`
+(refused). The shared sections corpus gains SS66 to SS69, all refused with
+`INVALID_AUTOMERGE_BYTES`: the time 2^53; the time 2^56 - 1 with a
+dependency no replica holds, and the sequence number 2^53 with one, refused
+rather than held; and a change signed by another Principal with the sequence number 2^53,
+refused for its bytes rather than its actor.
+
+For an implementation the change is: refuse a change whose sequence number
+is 2^53 or more, or whose time is 2^53 or more or -2^53 or less, with
+`INVALID_AUTOMERGE_BYTES`, as part of the canonical check; and make the
+checks of a change's bytes, then its actor, before waiting for its
+dependencies.

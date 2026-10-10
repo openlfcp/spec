@@ -1271,6 +1271,58 @@ function checkStructure(change) {
       goodHistory,
       false,
     ),
+    // Finding D2 of the differential fuzzing: header numbers a JavaScript
+    // number holds exactly; Automerge JS does not decode the others.
+    canonicalCase(
+      "CAN-2-time-largest",
+      "2",
+      "the time 2^53 - 1, the largest a change may have",
+      edit(good, (p) => {
+        p.time = 2 ** 53 - 1;
+      }),
+      goodHistory,
+      true,
+    ),
+    canonicalCase(
+      "CAN-2-time-smallest",
+      "2",
+      "the time -(2^53 - 1), the smallest a change may have",
+      edit(good, (p) => {
+        p.time = -(2 ** 53 - 1);
+      }),
+      goodHistory,
+      true,
+    ),
+    canonicalCase(
+      "CAN-2-time-2pow53",
+      "2",
+      "the time 2^53 (finding D2: Automerge JS does not decode it)",
+      edit(good, (p) => {
+        p.time = 2 ** 53;
+      }),
+      goodHistory,
+      false,
+    ),
+    canonicalCase(
+      "CAN-2-time-minus-2pow53",
+      "2",
+      "the time -2^53",
+      edit(good, (p) => {
+        p.time = -(2 ** 53);
+      }),
+      goodHistory,
+      false,
+    ),
+    canonicalCase(
+      "CAN-2-seq-2pow53",
+      "2",
+      "the sequence number 2^53 (finding D2: Automerge JS does not decode it)",
+      edit(good, (p) => {
+        p.seq = 2 ** 53;
+      }),
+      goodHistory,
+      false,
+    ),
   ];
   // F2 and F3a as found: Data Unit plaintexts of the review.
   corpus.canonical = {

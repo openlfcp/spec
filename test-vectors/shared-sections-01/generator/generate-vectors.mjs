@@ -475,6 +475,51 @@ record('SS65','A section created with ready false is refused',{base:A.init({acto
   })),signer:'A'}],
   requirements:{refused:['IMMUTABLE_FIELD_MUTATED']},coverage:'negative-admission',
   notes:['§12.1: ready is true when written, also in the change that creates the section (finding D4 of the differential fuzzing: one SDK checked only later changes).']});
+// D2 (differential fuzzing): SHARED-OBJECTS-PROFILE-01 §11.3 rule 2 bounds
+// the sequence number below 2^53 and the time between -2^53 and 2^53, which
+// a JavaScript number holds exactly. The bytes alone decide it, so the
+// change is refused when it arrives (§14.1): before its actor is checked,
+// and while a dependency is missing, instead of waiting.
+const ulebBig=v=>{const o=[];do{let b=Number(v&0x7fn);v>>=7n;if(v)b|=0x80;o.push(b);}while(v);return o;};
+const slebBig=v=>{const o=[];for(;;){const b=Number(v&0x7fn);v>>=7n;const done=(v===0n&&!(b&0x40))||(v===-1n&&(b&0x40));o.push(done?b:b|0x80);if(done)return o;}};
+/** The change chunk `bytes` with its header's `seq`, `time` or dependencies replaced (BigInts, hex hashes), its checksum recomputed. */
+const withHeader=(bytes,{seq,time,deps})=>{
+  const b=Buffer.from(bytes);
+  let pos=9;
+  const u=()=>{let v=0n,shift=0n;for(;;){const x=b[pos++];v|=BigInt(x&0x7f)<<shift;shift+=7n;if(!(x&0x80))return v;}};
+  const s=()=>{let v=0n,shift=0n,x;do{x=b[pos++];v|=BigInt(x&0x7f)<<shift;shift+=7n;}while(x&0x80);return x&0x40?v-(1n<<shift):v;};
+  u();const start=pos;
+  const oldDeps=Array.from({length:Number(u())},()=>{const h=b.subarray(pos,pos+32).toString('hex');pos+=32;return h;});
+  const actorStart=pos;const actorLength=Number(u());pos+=actorLength;const actorEnd=pos;
+  const oldSeq=u(),startOp=u(),oldTime=s();
+  const rest=b.subarray(pos);
+  const ds=(deps??oldDeps).slice().sort();
+  const body=Buffer.concat([Buffer.from(ulebBig(BigInt(ds.length))),...ds.map(h=>Buffer.from(h,'hex')),b.subarray(actorStart,actorEnd),
+    Buffer.from([...ulebBig(seq??oldSeq),...ulebBig(startOp),...slebBig(time??oldTime)]),rest]);
+  const len=Buffer.from(ulebBig(BigInt(body.length)));
+  const sum=Buffer.from(hash(Buffer.concat([Buffer.from([1]),len,body])),'hex').subarray(0,4);
+  return Uint8Array.from(Buffer.concat([b.subarray(0,4),sum,Buffer.from([1]),len,body]));
+};
+const MISSING='ff'.repeat(32); // a dependency no replica holds
+const depsOf=bytes=>A.decodeChange(bytes).deps;
+const d2Notes=what=>[`SHARED-OBJECTS-PROFILE-01 §11.3 rule 2: ${what}. Automerge JS does not decode it (a JavaScript number cannot hold the value exactly), so every receiver refuses it with INVALID_AUTOMERGE_BYTES (finding D2 of the differential fuzzing).`,
+  'SHARED-OBJECTS-PROFILE-01 §14.1, SHARED-SECTIONS-PROFILE-01 §14.1: the bytes alone decide it, so the change is refused when it arrives, before its actor is checked and whether or not its dependencies are present.'];
+record('SS66','A change whose time is 2^53 is refused',{
+  inject:d=>[{bytes:withHeader(nextOfA(d,'SS66/time'),{time:2n**53n}),signer:'A'}],
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],heldCount:0,visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
+  notes:d2Notes('the time is 2^53, one more than the largest time a change may have')});
+record('SS67','A change with a missing dependency and the time 2^56 - 1 is refused, not held',{
+  inject:d=>{const c=nextOfA(d,'SS67/missing-time');return [{bytes:withHeader(c,{time:2n**56n-1n,deps:[...depsOf(c),MISSING]}),signer:'A'}];},
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],heldCount:0,visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
+  notes:d2Notes('the time is 2^56 - 1, and one dependency is a hash no replica holds (the D2b form)')});
+record('SS68','A change with a missing dependency and the sequence number 2^53 is refused, not held',{
+  inject:d=>{const c=nextOfA(d,'SS68/missing-seq');return [{bytes:withHeader(c,{seq:2n**53n,deps:[...depsOf(c),MISSING]}),signer:'A'}];},
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],heldCount:0,visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
+  notes:d2Notes('the sequence number is 2^53, and one dependency is a hash no replica holds')});
+record('SS69','A change signed by another Principal whose sequence number is 2^53 is refused for its bytes, not its actor',{
+  inject:d=>[{bytes:withHeader(nextOfA(d,'SS69/foreign-seq'),{seq:2n**53n}),signer:'B'}],
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],heldCount:0,visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
+  notes:[...d2Notes('A\'s change, signed by B, with the sequence number 2^53 (the D7 form)'),'§14.1: INVALID_AUTOMERGE_BYTES comes before CHANGE_ACTOR_MISMATCH.']});
 const doc={
   format:'lfcp-vector-format/1',
   suite:{

@@ -1,0 +1,11 @@
+{
+  "description": "Published vector values that changed between mvp-0.2-baseline.5 and mvp-0.2-baseline.6, each with the decision that approved it. Checked by scripts/check-baseline-changes.mjs; any other changed or removed value fails validation.",
+  "previous_baseline": "mvp-0.2-baseline.5",
+  "suites": [
+    { "suite_file": "test-vectors/lfcp-wire-01/LFCP-TEST-VECTORS-01.json", "changed": [] },
+    { "suite_file": "test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.json", "changed": [] },
+    { "suite_file": "test-vectors/shared-objects-01/SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json", "changed": [] },
+    { "suite_file": "test-vectors/shared-sections-01/SHARED-SECTIONS-TEST-VECTORS-01.json", "changed": [] },
+    { "suite_file": "test-vectors/shared-sections-01/MARKDOWN-SECTIONS-FIXTURES-01.json", "changed": [] }
+  ]
+}
