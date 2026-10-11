@@ -622,6 +622,27 @@ record('SS79','A change whose header runs past its end is refused and named',{
   const c=cases.find(c=>c.id==='SS79');
   assert.deepEqual(c.expected.state.refused,[{change:c.inputs.branches.A.at(-1).change_hash,diagnostic:'INVALID_AUTOMERGE_BYTES'}]);
 }
+// §9 (finding of the Obsidian integration): a new placement of a node,
+// concurrent with the deletion of the node or an effective ancestor, is
+// retained hidden and surfaced as EDIT_UNDER_DELETED_ANCESTOR, like a
+// concurrent content edit; a move the deletion saw is not.
+const moveNotes=['SHARED-SECTIONS-PROFILE-01 §9: a node placed anew (a move or node.resolve_placement) concurrently with the deletion of the node or of an effective ancestor stays hidden and is surfaced as EDIT_UNDER_DELETED_ANCESTOR (retainedConcurrentEdits), decided from the changes\' dependencies; it does not alter convergence.'];
+record('SS80','A move concurrent with the deletion of the moved node is surfaced',{
+  a:[['move-X',d=>place(d,ids.task,ids.x,null,'SS80-A','A')]],
+  b:[['delete',d=>setLife(d,ids.task,'deleted')]],
+  requirements:{classification:'VALID',hidden:[ids.task,ids.para],visible:[ids.x,ids.y],retainedConcurrentEdits:[ids.task]},
+  notes:moveNotes});
+record('SS81','A move under a concurrently deleted ancestor is surfaced',{
+  a:[['move-under-Y',d=>place(d,ids.task,ids.y,null,'SS81-A','A')]],
+  b:[['delete-Y',d=>setLife(d,ids.y,'deleted')]],
+  requirements:{classification:'VALID',hidden:[ids.task,ids.para,ids.y],visible:[ids.x],retainedConcurrentEdits:[ids.task]},
+  notes:[...moveNotes,'Y is T\'s effective ancestor after the merge, since A placed T under Y; it was not before.']});
+record('SS82','A move after the deletion it saw is not surfaced',{
+  a:[['delete',d=>setLife(d,ids.task,'deleted')],['move-X',d=>place(d,ids.task,ids.x,null,'SS82-A','A')]],
+  requirements:{classification:'VALID',hidden:[ids.task,ids.para],visible:[ids.x,ids.y],notRetained:[ids.task]},
+  notes:[...moveNotes,'Control: the move depends on the deletion, so it is not concurrent with it.']});
+for(const [id,want] of [['SS80',[ids.task]],['SS81',[ids.task]],['SS82',[]]])
+  assert.deepEqual(cases.find(c=>c.id===id).expected.state.retainedConcurrentEdits,want,id);
 const doc={
   format:'lfcp-vector-format/1',
   suite:{

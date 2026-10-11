@@ -197,7 +197,7 @@ Restore changes only the selected node or Task lifecycle to `active`; descendant
 
 An explicit lifecycle intent is a fresh causal register assignment even when the requested value equals the currently visible value. Some Automerge bindings suppress same-value assignment; implementers MUST ensure that the intent creates the required operation. For the two-valued lifecycle register, the JavaScript reference corpus writes the opposite valid value and then the requested value within one atomic change when necessary. Only the final value is exposed as the semantic result. This is not two user actions or two Data Units. Ordinary rendering/reconciliation MUST NOT emit repeated lifecycle intents merely to refresh state. The corpus includes concurrent delete versus explicit restore and resolution back to the already visible value.
 
-Clients MUST make retained hidden content inspectable. If a content change is concurrent with deletion of its effective ancestor, surface `EDIT_UNDER_DELETED_ANCESTOR` as recoverable attention rather than claiming the edit is visibly applied. Compare change dependencies for this diagnostic; it does not alter convergence.
+Clients MUST make retained hidden content inspectable. If a content change is concurrent with deletion of its effective ancestor, surface `EDIT_UNDER_DELETED_ANCESTOR` as recoverable attention rather than claiming the edit is visibly applied. A new placement of a node (a move, or `node.resolve_placement`, §8) concurrent with deletion of the node itself or of an effective ancestor is surfaced the same way, on that node: the move is retained but not visible. This differs from a child moved out of a deleted subtree, which is visible in its new location with no diagnostic. A node's effective ancestors are those of the merged state. Compare change dependencies for this diagnostic; it does not alter convergence.
 
 Removing a local section/Task projection or deleting a host file is not one of these shared delete intents.
 
@@ -335,7 +335,7 @@ These are not errors: the history is valid, and a user resolves them (§8).
 | `PARENT_CYCLE` | A cycle in the selected parent graph |
 | `BLOCKED_PARENT` | A node under a conflicted, cyclic or invalid parent; content retained |
 | `LIFECYCLE_CONFLICT` | Concurrent active/deleted values; concurrent equal values agree and are not a conflict |
-| `EDIT_UNDER_DELETED_ANCESTOR` | Retained content changed concurrently with its ancestor's deletion |
+| `EDIT_UNDER_DELETED_ANCESTOR` | Retained content changed, or a node placed anew, concurrently with the deletion of the node or its ancestor (§9) |
 
 A valid concurrent merge may have placement conflicts or cycles; they are not grounds to discard a peer's valid history. A client that does not implement this profile reports the Resource as `PROFILE_UNSUPPORTED` (LFCP-WIRE-01 §62) and neither interprets nor writes it.
 

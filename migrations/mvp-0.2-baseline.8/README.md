@@ -26,3 +26,24 @@ does not decode.
 
 For an implementation the change is: name a refused type 1 chunk of exact
 length whose checksum matches without parsing its header.
+
+SHARED-SECTIONS-PROFILE-01 §9 also surfaces a move that a deletion hides.
+A new placement of a node (a move or `node.resolve_placement`) concurrent
+with the deletion of the node itself or of an effective ancestor (in the
+merged state) is reported as `EDIT_UNDER_DELETED_ANCESTOR` on that node,
+as a concurrent content edit already was; before, the node was hidden and
+the move was lost silently (a finding of the Obsidian integration). A
+child moved out of a deleted subtree stays visible with no diagnostic, as
+before. The diagnostic is decided from the changes' dependencies and does
+not alter convergence. No existing case's value changes: no published case
+had such a move.
+
+The shared sections corpus gains SS80 (a move concurrent with the
+deletion of the moved node), SS81 (a move under a parent that is
+concurrently deleted), both with T in `retainedConcurrentEdits`, and SS82
+(a move after the deletion it saw), without. The reference model records a
+change's writes to a node's `placement` register as moves.
+
+For an implementation the change is: count a write to a node's
+`placement`, like a content change, when checking which hidden nodes were
+changed concurrently with a deletion of the node or an effective ancestor.

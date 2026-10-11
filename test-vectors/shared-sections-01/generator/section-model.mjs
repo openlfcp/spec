@@ -114,6 +114,13 @@ export function historyAudit(doc) {
       if(!old || (str(now.kind)==='task' ? str(prev.objects[n]?.title)!==str(next.objects[n]?.title) || str(prev.objects[n]?.status)!==str(next.objects[n]?.status) : old.text!==now.text))
         events.push({hash:ch.hash,node:n,type:'content'});
     }
+    // §9: a new placement of an existing node (a move or node.resolve_placement)
+    // is the change's write to the node's `placement` register.
+    if(prev.nodes) {
+      const owner=new Map(Object.keys(prev.nodes).map(n=>[A.getObjectId(prev.nodes,n),n]));
+      for(const op of ch.ops)
+        if(op.key==='placement'&&op.action!=='del'&&owner.has(op.obj))events.push({hash:ch.hash,node:owner.get(op.obj),type:'move'});
+    }
     for(const p of Object.keys(prev.placements||{}))
       if(!next.placements?.[p] || canon(prev.placements[p])!==canon(next.placements[p]))errors.push('placement-immutable:'+p);
     if(prev.section && next.section) {
@@ -188,7 +195,9 @@ export function inspect(doc) {
     return (audit.deps[b]||[]).some(p=>isAncestor(a,p,seen));
   };
   const attention=new Set();
-  for(const ev of audit.events.filter(e=>e.type==='content'&&hidden.has(e.node))) {
+  // §9: content changed, or a node placed anew, concurrently with the deletion
+  // of the node or an effective ancestor.
+  for(const ev of audit.events.filter(e=>(e.type==='content'||e.type==='move')&&hidden.has(e.node))) {
     let p=ev.node;const seen=new Set();
     while(p!==ids.section && nodes[p]&&!seen.has(p)) {
       seen.add(p);
