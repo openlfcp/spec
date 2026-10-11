@@ -482,8 +482,8 @@ record('SS65','A section created with ready false is refused',{base:A.init({acto
 // and while a dependency is missing, instead of waiting.
 const ulebBig=v=>{const o=[];do{let b=Number(v&0x7fn);v>>=7n;if(v)b|=0x80;o.push(b);}while(v);return o;};
 const slebBig=v=>{const o=[];for(;;){const b=Number(v&0x7fn);v>>=7n;const done=(v===0n&&!(b&0x40))||(v===-1n&&(b&0x40));o.push(done?b:b|0x80);if(done)return o;}};
-/** The change chunk `bytes` with its header's `seq`, `time` or dependencies replaced (BigInts, hex hashes), its checksum recomputed. */
-const withHeader=(bytes,{seq,time,deps})=>{
+/** The change chunk `bytes` with its header's `seq`, `time`, dependencies or message length replaced (BigInts, hex hashes), its checksum recomputed. */
+const withHeader=(bytes,{seq,time,deps,messageLength})=>{
   const b=Buffer.from(bytes);
   let pos=9;
   const u=()=>{let v=0n,shift=0n;for(;;){const x=b[pos++];v|=BigInt(x&0x7f)<<shift;shift+=7n;if(!(x&0x80))return v;}};
@@ -492,7 +492,8 @@ const withHeader=(bytes,{seq,time,deps})=>{
   const oldDeps=Array.from({length:Number(u())},()=>{const h=b.subarray(pos,pos+32).toString('hex');pos+=32;return h;});
   const actorStart=pos;const actorLength=Number(u());pos+=actorLength;const actorEnd=pos;
   const oldSeq=u(),startOp=u(),oldTime=s();
-  const rest=b.subarray(pos);
+  if(messageLength!==undefined)u(); // the old message length; the message bytes stay
+  const rest=messageLength===undefined?b.subarray(pos):Buffer.concat([Buffer.from(ulebBig(messageLength)),b.subarray(pos)]);
   const ds=(deps??oldDeps).slice().sort();
   const body=Buffer.concat([Buffer.from(ulebBig(BigInt(ds.length))),...ds.map(h=>Buffer.from(h,'hex')),b.subarray(actorStart,actorEnd),
     Buffer.from([...ulebBig(seq??oldSeq),...ulebBig(startOp),...slebBig(time??oldTime)]),rest]);
@@ -607,6 +608,19 @@ record('SS78','A change refused for its checksum, then signed intact by another 
   assert.equal(state.refused.length,2);
   assert.equal(state.refused[0].diagnostic,'CHANGE_ACTOR_MISMATCH');assert(state.refused[0].change);
   assert.deepEqual(state.refused[1],{diagnostic:'INVALID_AUTOMERGE_BYTES'});
+}
+// C3 (differential fuzzing): a refused change is named from its chunk alone
+// (§14.1), without reading its header, so a type 1 chunk of exact length
+// whose checksum matches is named even when a length inside its header runs
+// past its end.
+record('SS79','A change whose header runs past its end is refused and named',{
+  inject:d=>[{bytes:withHeader(nextOfA(d,'SS79/past-end'),{messageLength:2n**20n}),signer:'A'}],
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],heldCount:0,visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
+  notes:['SHARED-OBJECTS-PROFILE-01 §11, §11.1: the change header\'s message length (1 MiB) runs past the end of the chunk, which is malformed.',
+    'SHARED-SECTIONS-PROFILE-01 §14.1: the refusal is named, since the bytes are one type 1 chunk of exact length whose checksum matches; the name needs no decoding, so a malformed header does not leave it unnamed (finding C3 of the differential fuzzing: one SDK named a refusal only when it could read the header).']});
+{
+  const c=cases.find(c=>c.id==='SS79');
+  assert.deepEqual(c.expected.state.refused,[{change:c.inputs.branches.A.at(-1).change_hash,diagnostic:'INVALID_AUTOMERGE_BYTES'}]);
 }
 const doc={
   format:'lfcp-vector-format/1',

@@ -5,7 +5,7 @@
 // after the change rather than walking the change's operations, which
 // decides the same rules for the changes of this corpus.
 import {A,PROFILE,actor,pref,str,canon,hash} from './section-model.mjs';
-import {beyondSafeNumbers,changeHeader,expansionRefusal,hasAuthor,refusalName} from './expansion.mjs';
+import {beyondSafeNumbers,changeHeader,expansionRefusal,hasAuthor,headerPrefix,refusalName} from './expansion.mjs';
 
 /** Diagnostics in their order of precedence (§14.1). */
 export const ADMISSION_ORDER=['INVALID_AUTOMERGE_BYTES','CHANGE_ACTOR_MISMATCH','CONTAINER_REPLACED','CHILDREN_LIST_MUTATED','PLACEMENT_NOT_ATOMIC','IMMUTABLE_FIELD_MUTATED','INVALID_FIELD_TYPE'];
@@ -242,12 +242,17 @@ export function referenceRule(history,d){
  * prevent. Any other change, including a malformed one, is decoded.
  */
 export function changeInfo(b){
+  // A named chunk whose header runs past its end (§14.1): its name and the
+  // start of its header, which Automerge does not decode.
+  if(isTruncatedNamed(b))return headerPrefix(b);
   if(fromHeader(b)){const h=changeHeader(b);return {hash:h.hash,deps:h.deps,actor:h.actor,seq:h.seq};}
   const d=A.decodeChange(b);
   return {hash:d.hash,deps:d.deps,actor:d.actor,seq:d.seq,decoded:d};
 }
-/** A change read from its header only: above a §11.1 limit, or with header numbers Automerge JS does not decode (§11.3 rule 2). */
-const fromHeader=b=>isExpansionBomb(b)||beyondSafeNumbers(b);
+/** A change read from its header only: above a §11.1 limit, with header numbers Automerge JS does not decode (§11.3 rule 2), or named but malformed. */
+const fromHeader=b=>isExpansionBomb(b)||beyondSafeNumbers(b)||isTruncatedNamed(b);
+/** A named change chunk (§14.1) that the §11.1 walk finds malformed, whose header start reads. */
+const isTruncatedNamed=b=>{const r=expansionRefusal(b);return r!==null&&r.startsWith('malformed')&&headerPrefix(b)!==null;};
 /** A type 1 change chunk whose header reads, above a §11.1 limit. */
 const bombs=new WeakMap();
 export function isExpansionBomb(b){
@@ -268,7 +273,7 @@ export function admitReplay(changes,initActor){
   }
   const decoded=new Map();
   const decode=h=>{if(!decoded.has(h))decoded.set(h,A.decodeChange(byHash.get(h)));return decoded.get(h);};
-  const deps=h=>fromHeader(byHash.get(h))?changeHeader(byHash.get(h)).deps:decode(h).deps;
+  const deps=h=>isTruncatedNamed(byHash.get(h))?headerPrefix(byHash.get(h)).deps:fromHeader(byHash.get(h))?changeHeader(byHash.get(h)).deps:decode(h).deps;
   // `refusedKeys`: the replay's keys of refused changes; `refused` reports
   // them by name, without one for bytes that are not named (§14.1).
   const admitted=new Set(),refused=[],refusedKeys=new Set(),held=new Set();

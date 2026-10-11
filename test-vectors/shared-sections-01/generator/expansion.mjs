@@ -187,9 +187,37 @@ export function hasAuthor(bytes) {
  * so a named chunk is the only bytes with its name.
  */
 export function refusalName(bytes) {
+  // Only the chunk structure is read: the inner header may be malformed.
   try {
-    const h = changeHeader(bytes);
-    return h.type === 1 && hex(bytes.subarray(4, 8)) === h.hash.slice(0, 8) ? h.hash : null;
+    if (bytes.length < 9 || hex(bytes.subarray(0, 4)) !== '856f4a83' || bytes[8] !== 1) return null;
+    const outer = reader(bytes, 9);
+    const length = outer.uleb();
+    if (outer.at() + length !== bytes.length) return null;
+  } catch (e) {
+    if (e instanceof Malformed) return null;
+    throw e;
+  }
+  const hash = createHash('sha256').update(bytes.subarray(8)).digest('hex');
+  return hex(bytes.subarray(4, 8)) === hash.slice(0, 8) ? hash : null;
+}
+
+/**
+ * The dependencies, actor and sequence number at the start of a named
+ * change chunk's header (§14.1), read even when a later field of the
+ * header runs past the end; null when they cannot be read.
+ */
+export function headerPrefix(bytes) {
+  const hash = refusalName(bytes);
+  if (hash === null) return null;
+  try {
+    const outer = reader(bytes, 9);
+    outer.uleb();
+    const r = reader(bytes, outer.at());
+    const depCount = r.uleb();
+    if (depCount > LIMITS.deps) return null;
+    const deps = Array.from({ length: depCount }, () => hex(r.take(32)));
+    const actor = hex(r.take(r.uleb()));
+    return { hash, deps, actor, seq: r.uleb() };
   } catch (e) {
     if (e instanceof Malformed) return null;
     throw e;
