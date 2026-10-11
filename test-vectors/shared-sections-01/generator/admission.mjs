@@ -4,7 +4,7 @@
 // support, not a production validator: it compares the state before and
 // after the change rather than walking the change's operations, which
 // decides the same rules for the changes of this corpus.
-import {A,PROFILE,actor,pref,str,canon} from './section-model.mjs';
+import {A,PROFILE,actor,pref,str,canon,hash} from './section-model.mjs';
 import {beyondSafeNumbers,changeHeader,expansionRefusal,hasAuthor,refusalName} from './expansion.mjs';
 
 /** Diagnostics in their order of precedence (§14.1). */
@@ -261,7 +261,9 @@ export function admitReplay(changes,initActor){
   const byHash=new Map(),order=[],signers=new Map();
   for(const item of changes){
     const b=item instanceof Uint8Array?item:item.bytes;
-    const h=changeInfo(b).hash;
+    // A type 1 chunk without a name (a wrong checksum, §14.1) is keyed by
+    // its bytes: its change hash is the one its intact copy has.
+    const h=b.length>8&&b[8]===1&&refusalName(b)===null?'bytes:'+hash(b):changeInfo(b).hash;
     if(!byHash.has(h)){byHash.set(h,b);order.push(h);if(item.signer!==undefined)signers.set(h,item.signer);}
   }
   const decoded=new Map();
@@ -297,5 +299,9 @@ export function admitReplay(changes,initActor){
     if(diagnostic)refuse(h,diagnostic);
     else{admitted.add(h);running=A.applyChanges(running,[byHash.get(h)])[0];}
   }
+  // In a fixed order, whatever the input order: named refusals by change
+  // hash, then the unnamed ones, each by diagnostic.
+  const rank=r=>[r.change===undefined?1:0,r.change??'',r.diagnostic];
+  refused.sort((x,y)=>{const a=rank(x),b=rank(y);return a<b?-1:a>b?1:0;});
   return {doc:running,refused,held:[...held].sort()};
 }

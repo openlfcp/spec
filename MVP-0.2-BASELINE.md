@@ -9,6 +9,7 @@ MVP 0.2?* The answer is every file listed below, at the Git tag
 
 | Tag | Status |
 | --- | --- |
+| mvp-0.2-baseline.7 | **Prepared, not tagged.** `mvp-0.2-baseline.6` with SHARED-SECTIONS-PROFILE-01 §14.1 naming a refused change only when its chunk's checksum matches, so that a copy with a wrong checksum no longer carries its intact copy's hash (finding C1). The shared sections corpus gains SS76 to SS78 (the intact copy applied after a broken one, a dependent waiting behind an unnamed refusal, and the intact copy signed by another Principal refused for its actor, finding C2); SS45's refusal is no longer named (`migrations/mvp-0.2-baseline.7/value-changes.json`). |
 | mvp-0.2-baseline.6 | **Current.** `mvp-0.2-baseline.5` with SHARED-OBJECTS-PROFILE-01 §11.3 rule 2 bounding header numbers: the sequence number is below 2^53 and the time between -2^53 and 2^53 (finding D2); §14.1 and SHARED-SECTIONS-PROFILE-01 §14.1 check a change's bytes when it arrives, before its actor and whether or not its dependencies are present. SHARED-OBJECTS-PROFILE-01 §14.1 also allows an Automerge author only in an actor's first change (finding D5), and SHARED-SECTIONS-PROFILE-01 A5 refuses Text in every field of the section, a node (but its `text`) and a placement, and anywhere in a Task (finding D3). The Automerge reference corpus gains five `canonical` cases, the shared sections corpus SS66 to SS75, among them SS75 (a table made as a node, refused for R10 before the section rules, finding D8); no vector value changes (`migrations/mvp-0.2-baseline.6/value-changes.json` lists no change). |
 | mvp-0.2-baseline.5 | Superseded by `mvp-0.2-baseline.6`, because SHARED-OBJECTS-PROFILE-01 §11.3 rule 2 and §14.1 and SHARED-SECTIONS-PROFILE-01 §14.1 (A5 among it) change normative rules, and vectors are added. Never moved. `mvp-0.2-baseline.4` with SHARED-OBJECTS-PROFILE-01 §11.3 rule 8 clarified: the start op is below 2^32 even for a change without operations; and §11.4 R8 to R10: an increment names only the counter puts it adds to, no operation is a mark and none makes a table (finding D1). The Automerge reference corpus gains `CAN-8-start-op-empty` and eight references cases; the shared sections corpus gains SS64 (a table, refused) and SS65 (a section created with `ready = false`, refused: SHARED-SECTIONS-PROFILE-01 §12.1 binds the creating change, finding D4). SDK-SECTIONS-INTEGRATION-01 §5 says which nodes a `nodes-changed` event lists: those of the `affectedNodeIds` rule, for every origin; no vector value changes (`migrations/mvp-0.2-baseline.5/value-changes.json` lists no change). |
 | mvp-0.2-baseline.4 | Superseded by `mvp-0.2-baseline.5`, because SHARED-OBJECTS-PROFILE-01 §11.3 rule 8 and §11.4 R8 to R10 and SDK-SECTIONS-INTEGRATION-01 §5 change normative rules, and vectors are added. Never moved. `mvp-0.2-baseline.3` with SDK-SECTIONS-INTEGRATION-01 §3.4, §3.5 and §7.7 clarified: releasing a receipt ends the adapter's use of the operation ID, and a batch released before its status is final is still reported until it is final. The shared sections corpus gains SS61 to SS63, hostile changes above the SHARED-OBJECTS-PROFILE-01 §11.1 expansion limits on the section receive path. SHARED-SECTIONS-PROFILE-01 §14.1 says how a refused change is named: by its hash only when it is a type 1 change chunk, so SS44's refused compressed chunk is no longer named, the one value change (`migrations/mvp-0.2-baseline.4/value-changes.json`). |
@@ -72,7 +73,7 @@ directory).
 | `test-vectors/shared-objects-01/generate_shared_objects_test_vectors_01.py` | Generator; reproduces both Shared Objects vector files byte for byte |
 | `test-vectors/shared-objects-01/SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json` | Automerge reference corpus for S01–S16: exact changes, save images, logical states and conflict sets, plus `validations` (save images with the expected profile problems) `expansion` (chunks at and past the §11.1 and §13.1 limits), `depth` (change sequences and Snapshots at and past the §11.2 depth bound) `collision` (a change held for a taken actor sequence until a rebuild, §14.1), `canonical` (changes in and out of the canonical encoding, §11.3) and `references` (changes whose operations refer inside and outside their history, §11.4) (supplementary; bytes not normative) |
 | `test-vectors/shared-objects-01/generate_automerge_reference_01.mjs` | Corpus generator; with the pinned `@automerge/automerge` 3.5.0 it reproduces the corpus byte for byte |
-| `test-vectors/shared-sections-01/SHARED-SECTIONS-TEST-VECTORS-01.json` | Shared sections corpus, machine-readable: 75 cases of Automerge changes, admission, isolation, budgets and the Snapshot floor |
+| `test-vectors/shared-sections-01/SHARED-SECTIONS-TEST-VECTORS-01.json` | Shared sections corpus, machine-readable: 78 cases of Automerge changes, admission, isolation, budgets and the Snapshot floor |
 | `test-vectors/shared-sections-01/SHARED-SECTIONS-TEST-VECTORS-01.md` | Shared sections corpus, human-readable |
 | `test-vectors/shared-sections-01/MARKDOWN-SECTIONS-FIXTURES-01.json` | Markdown fixtures of MARKDOWN-SECTIONS-01, machine-readable: before, event and after files |
 | `test-vectors/shared-sections-01/MARKDOWN-SECTIONS-FIXTURES-01.md` | Markdown fixtures, human-readable |
@@ -135,6 +136,15 @@ The checks are those of MVP-0.1-BASELINE.md, plus:
   regenerated byte for byte with the pinned `@automerge/automerge` and
   replayed by the reference verifiers (`scripts/check-shared-sections-corpus.mjs`);
 - this manifest's file list, as for MVP-0.1-BASELINE.md.
+
+## Changes from `mvp-0.2-baseline.6` (`mvp-0.2-baseline.7`, prepared)
+
+| Kind | Files |
+| --- | --- |
+| Changed, normative | `profiles/SHARED-SECTIONS-PROFILE-01.md` §14.1: a refused change is named only when its chunk's checksum matches |
+| Changed, vectors | `test-vectors/shared-sections-01/` (SS76 to SS78: a change refused for its checksum blocks neither its intact copy nor, through it, its dependents; a dependent of the broken copy alone waits; the intact copy signed by another Principal is refused for its actor; SS45's refusal is no longer named); the sections reference admission names a chunk only with a matching checksum, keeps a broken copy apart from its intact one and lists refusals in a fixed order |
+| Added, migration | `migrations/mvp-0.2-baseline.7/`; `migrations/vector-format-1/shared-sections-01.mapping.json` lists SS45's removed name |
+| Changed, MVP 0.1 files | None |
 
 ## Changes from `mvp-0.2-baseline.5` (`mvp-0.2-baseline.6`)
 

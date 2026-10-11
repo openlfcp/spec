@@ -568,6 +568,46 @@ record('SS75','A table made as a node is refused for R10 before the section rule
   },
   requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],heldCount:0,visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
   notes:['SHARED-OBJECTS-PROFILE-01 §11.4 R10: no operation makes a table. The table is also a node without a placement (A2, PLACEMENT_NOT_ATOMIC); §14.1 orders INVALID_AUTOMERGE_BYTES first (finding D8 of the differential fuzzing: one SDK reported the section rule).']});
+// C1 (differential fuzzing): a change chunk is named only when its checksum
+// matches (§14.1). A copy with a wrong checksum is refused without a name,
+// so it blocks neither the intact copy, which has the same change hash, nor
+// the changes that depend on it.
+/** A's next change on `doc` (a title edit), a copy of it with a wrong checksum, and A's change after it. */
+const checksumTwin=(doc,label)=>{
+  // Each change is taken before the next one is made on its document.
+  const x=change(doc,label+'/x',d=>{d.objects[ids.task].title=S('Edited by A');});
+  const intact=A.getLastLocalChange(x),broken=Uint8Array.from(intact);broken[4]^=0x01;
+  const y=change(x,label+'/y',d=>{d.objects[ids.task].title=S('Edited again by A');});
+    return {broken,intact,next:A.getLastLocalChange(y)};
+};
+const unnamed=id=>{
+  const state=cases.find(c=>c.id===id).expected.state;
+  assert(state.refused.length===1&&!('change' in state.refused[0]),id+': the broken copy is refused without a name');
+};
+const c1Notes=['SHARED-SECTIONS-PROFILE-01 §14.1: refused bytes are named only by a type 1 chunk of exact length whose checksum matches. The checksum is the first four bytes of the change hash, so the broken copy would otherwise be named by the hash of its intact copy (finding C1 of the differential fuzzing).'];
+record('SS76','A change refused for its checksum does not block its intact copy',{
+  inject:d=>{const t=checksumTwin(d,'SS76');return [{bytes:t.broken,signer:'A'},{bytes:t.intact,signer:'A'},{bytes:t.next,signer:'A'}];},
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],heldCount:0,visible,tasks:{[ids.task]:{title:'Edited again by A'}}},coverage:'negative-admission',
+  notes:[...c1Notes,'The copy with a wrong checksum is refused and not named; the intact copy and A\'s change that depends on it are applied.']});
+unnamed('SS76');
+record('SS77','A change depending on a change refused for its checksum waits',{
+  inject:d=>{const t=checksumTwin(d,'SS77');return [{bytes:t.broken,signer:'A'},{bytes:t.next,signer:'A'}];},
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],heldCount:1,visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
+  notes:[...c1Notes,'The refused copy has no name, so A\'s change that depends on it waits for its dependency (SHARED-OBJECTS-PROFILE-01 §14.1).']});
+unnamed('SS77');
+// C2 (differential fuzzing): the unnamed refusal of the broken copy says
+// nothing about the intact copy, which a receiver checks in full; signed by
+// another Principal, it is refused for its actor.
+record('SS78','A change refused for its checksum, then signed intact by another Principal, is refused for its actor',{
+  inject:d=>{const t=checksumTwin(d,'SS78');return [{bytes:t.broken,signer:'A'},{bytes:t.intact,signer:'B'}];},
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES','CHANGE_ACTOR_MISMATCH'],heldCount:0,visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
+  notes:[...c1Notes,'The intact copy, in a Data Unit signed by B, is refused with CHANGE_ACTOR_MISMATCH and named by its hash (SHARED-OBJECTS-PROFILE-01 §8, §11; finding C2 of the differential fuzzing). The refusals are listed named first.']});
+{
+  const state=cases.find(c=>c.id==='SS78').expected.state;
+  assert.equal(state.refused.length,2);
+  assert.equal(state.refused[0].diagnostic,'CHANGE_ACTOR_MISMATCH');assert(state.refused[0].change);
+  assert.deepEqual(state.refused[1],{diagnostic:'INVALID_AUTOMERGE_BYTES'});
+}
 const doc={
   format:'lfcp-vector-format/1',
   suite:{
