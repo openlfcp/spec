@@ -107,10 +107,6 @@ export function historyAudit(doc) {
         if(A.getObjectId(prev.nodes,n)!==A.getObjectId(next.nodes,n))errors.push('node-map-replaced:'+n);
         if(old.text!==undefined && A.getObjectId(old,'text')!==A.getObjectId(now,'text'))errors.push('text-object-replaced:'+n);
       }
-      const oldEntity=old ? (str(old.kind)==='task'?prev.objects[n]:old) : undefined;
-      const entity=str(now.kind)==='task'?next.objects[n]:now;
-      if(entity && str(entity.lifecycle)==='deleted' && (!oldEntity||str(oldEntity.lifecycle)!=='deleted'))
-        events.push({hash:ch.hash,node:n,type:'delete'});
       if(!old || (str(now.kind)==='task' ? str(prev.objects[n]?.title)!==str(next.objects[n]?.title) || str(prev.objects[n]?.status)!==str(next.objects[n]?.status) : old.text!==now.text))
         events.push({hash:ch.hash,node:n,type:'content'});
     }
@@ -120,6 +116,18 @@ export function historyAudit(doc) {
       const owner=new Map(Object.keys(prev.nodes).map(n=>[A.getObjectId(prev.nodes,n),n]));
       for(const op of ch.ops)
         if(op.key==='placement'&&op.action!=='del'&&owner.has(op.obj))events.push({hash:ch.hash,node:owner.get(op.obj),type:'move'});
+    }
+    // §9: a change's write to a node's lifecycle register (the Task's for a
+    // task node); the last write of the change is its value.
+    if(next.nodes) {
+      const owner=new Map();
+      for(const n of Object.keys(next.nodes)){
+        const id=str(next.nodes[n].kind)==='task'?A.getObjectId(next.objects||{},n):A.getObjectId(next.nodes,n);
+        if(id)owner.set(id,n);
+      }
+      const written=new Map();
+      for(const op of ch.ops)if(op.key==='lifecycle'&&owner.has(op.obj))written.set(owner.get(op.obj),op.action==='del'?undefined:str(op.value));
+      for(const [n,value] of written)events.push({hash:ch.hash,node:n,type:'lifecycle',value});
     }
     for(const p of Object.keys(prev.placements||{}))
       if(!next.placements?.[p] || canon(prev.placements[p])!==canon(next.placements[p]))errors.push('placement-immutable:'+p);
@@ -194,14 +202,19 @@ export function inspect(doc) {
     if(a===b)return true;if(seen.has(b))return false;seen.add(b);
     return (audit.deps[b]||[]).some(p=>isAncestor(a,p,seen));
   };
+  // §9: a deletion counts while the lifecycle register still holds it, that
+  // is while no later write to the same register depends on it.
+  const lifecycle=audit.events.filter(e=>e.type==='lifecycle');
+  const held=del=>!lifecycle.some(l=>l.node===del.node&&l.hash!==del.hash&&isAncestor(del.hash,l.hash));
+  const deletions=lifecycle.filter(e=>e.value==='deleted'&&held(e));
   const attention=new Set();
-  // §9: content changed, or a node placed anew, concurrently with the deletion
-  // of the node or an effective ancestor.
+  // §9: content changed, or a node placed anew, concurrently with a held
+  // deletion of the node or an effective ancestor.
   for(const ev of audit.events.filter(e=>(e.type==='content'||e.type==='move')&&hidden.has(e.node))) {
     let p=ev.node;const seen=new Set();
     while(p!==ids.section && nodes[p]&&!seen.has(p)) {
       seen.add(p);
-      for(const del of audit.events.filter(e=>e.type==='delete'&&e.node===p))
+      for(const del of deletions.filter(e=>e.node===p))
         if(!isAncestor(del.hash,ev.hash)&&!isAncestor(ev.hash,del.hash)) attention.add(ev.node);
       p=parents[p];
     }

@@ -9,6 +9,7 @@ MVP 0.2?* The answer is every file listed below, at the Git tag
 
 | Tag | Status |
 | --- | --- |
+| mvp-0.2-baseline.9 | **Prepared, not tagged.** `mvp-0.2-baseline.8` with SHARED-SECTIONS-PROFILE-01 §9 comparing an edit or a new placement only with the deletions the lifecycle register still holds, so that deleting a node again clears `EDIT_UNDER_DELETED_ANCESTOR` and a user can keep it deleted. The shared sections corpus gains SS83 to SS87 (deleting the node or an ancestor again, with and without a concurrent edit, and two concurrent deletions); no vector value changes (`migrations/mvp-0.2-baseline.9/value-changes.json` lists no change). |
 | mvp-0.2-baseline.8 | **Current.** `mvp-0.2-baseline.7` with SHARED-SECTIONS-PROFILE-01 §14.1 saying outright that a refused change is named without reading its header, so a chunk whose header is malformed is named too (finding C3); and SHARED-SECTIONS-PROFILE-01 §9 reports a move concurrent with the deletion of the moved node or an effective ancestor as `EDIT_UNDER_DELETED_ANCESTOR`, which was lost silently before. The shared sections corpus gains SS79 (a header whose message length runs past the end, refused and named) and SS80 to SS82 (moves against deletions, and a control); no vector value changes (`migrations/mvp-0.2-baseline.8/value-changes.json` lists no change). |
 | mvp-0.2-baseline.7 | Superseded by `mvp-0.2-baseline.8`, because SHARED-SECTIONS-PROFILE-01 §14.1 (naming a refused change without reading its header) and §9 (a move a concurrent deletion hides is surfaced) change normative rules, and SS79 to SS82 are added. Never moved. `mvp-0.2-baseline.6` with SHARED-SECTIONS-PROFILE-01 §14.1 naming a refused change only when its chunk's checksum matches, so that a copy with a wrong checksum no longer carries its intact copy's hash (finding C1). The shared sections corpus gains SS76 to SS78 (the intact copy applied after a broken one, a dependent waiting behind an unnamed refusal, and the intact copy signed by another Principal refused for its actor, finding C2); SS45's refusal is no longer named (`migrations/mvp-0.2-baseline.7/value-changes.json`). |
 | mvp-0.2-baseline.6 | Superseded by `mvp-0.2-baseline.7`, because SHARED-SECTIONS-PROFILE-01 §14.1 (how a refused change is named) changes a normative rule, SS45's refusal is no longer named and SS76 to SS78 are added. Never moved. `mvp-0.2-baseline.5` with SHARED-OBJECTS-PROFILE-01 §11.3 rule 2 bounding header numbers: the sequence number is below 2^53 and the time between -2^53 and 2^53 (finding D2); §14.1 and SHARED-SECTIONS-PROFILE-01 §14.1 check a change's bytes when it arrives, before its actor and whether or not its dependencies are present. SHARED-OBJECTS-PROFILE-01 §14.1 also allows an Automerge author only in an actor's first change (finding D5), and SHARED-SECTIONS-PROFILE-01 A5 refuses Text in every field of the section, a node (but its `text`) and a placement, and anywhere in a Task (finding D3). The Automerge reference corpus gains five `canonical` cases, the shared sections corpus SS66 to SS75, among them SS75 (a table made as a node, refused for R10 before the section rules, finding D8); no vector value changes (`migrations/mvp-0.2-baseline.6/value-changes.json` lists no change). |
@@ -74,7 +75,7 @@ directory).
 | `test-vectors/shared-objects-01/generate_shared_objects_test_vectors_01.py` | Generator; reproduces both Shared Objects vector files byte for byte |
 | `test-vectors/shared-objects-01/SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json` | Automerge reference corpus for S01–S16: exact changes, save images, logical states and conflict sets, plus `validations` (save images with the expected profile problems) `expansion` (chunks at and past the §11.1 and §13.1 limits), `depth` (change sequences and Snapshots at and past the §11.2 depth bound) `collision` (a change held for a taken actor sequence until a rebuild, §14.1), `canonical` (changes in and out of the canonical encoding, §11.3) and `references` (changes whose operations refer inside and outside their history, §11.4) (supplementary; bytes not normative) |
 | `test-vectors/shared-objects-01/generate_automerge_reference_01.mjs` | Corpus generator; with the pinned `@automerge/automerge` 3.5.0 it reproduces the corpus byte for byte |
-| `test-vectors/shared-sections-01/SHARED-SECTIONS-TEST-VECTORS-01.json` | Shared sections corpus, machine-readable: 82 cases of Automerge changes, admission, isolation, budgets and the Snapshot floor |
+| `test-vectors/shared-sections-01/SHARED-SECTIONS-TEST-VECTORS-01.json` | Shared sections corpus, machine-readable: 87 cases of Automerge changes, admission, isolation, budgets and the Snapshot floor |
 | `test-vectors/shared-sections-01/SHARED-SECTIONS-TEST-VECTORS-01.md` | Shared sections corpus, human-readable |
 | `test-vectors/shared-sections-01/MARKDOWN-SECTIONS-FIXTURES-01.json` | Markdown fixtures of MARKDOWN-SECTIONS-01, machine-readable: before, event and after files |
 | `test-vectors/shared-sections-01/MARKDOWN-SECTIONS-FIXTURES-01.md` | Markdown fixtures, human-readable |
@@ -137,6 +138,15 @@ The checks are those of MVP-0.1-BASELINE.md, plus:
   regenerated byte for byte with the pinned `@automerge/automerge` and
   replayed by the reference verifiers (`scripts/check-shared-sections-corpus.mjs`);
 - this manifest's file list, as for MVP-0.1-BASELINE.md.
+
+## Changes from `mvp-0.2-baseline.8` (`mvp-0.2-baseline.9`, prepared)
+
+| Kind | Files |
+| --- | --- |
+| Changed, normative | `profiles/SHARED-SECTIONS-PROFILE-01.md` §9 and the `EDIT_UNDER_DELETED_ANCESTOR` row: only a deletion the lifecycle register still holds counts, so deleting again clears the diagnostic |
+| Changed, vectors | `test-vectors/shared-sections-01/` (SS83 to SS87: deleting the node or an ancestor again after a concurrent move, not surfaced; deleting again concurrently with a title edit, surfaced; a move concurrent with one of two concurrent deletions, surfaced, and deleting again after both, not surfaced); the reference model records writes to the lifecycle register from a change's operations and counts only the deletions it holds |
+| Added, migration | `migrations/mvp-0.2-baseline.9/` |
+| Changed, MVP 0.1 files | None |
 
 ## Changes from `mvp-0.2-baseline.7` (`mvp-0.2-baseline.8`)
 

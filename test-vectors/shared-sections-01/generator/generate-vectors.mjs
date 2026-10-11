@@ -643,6 +643,47 @@ record('SS82','A move after the deletion it saw is not surfaced',{
   notes:[...moveNotes,'Control: the move depends on the deletion, so it is not concurrent with it.']});
 for(const [id,want] of [['SS80',[ids.task]],['SS81',[ids.task]],['SS82',[]]])
   assert.deepEqual(cases.find(c=>c.id===id).expected.state.retainedConcurrentEdits,want,id);
+// §9 (keep deleted): a deletion counts only while the node's lifecycle
+// register holds it. Deleting again after seeing the concurrent edit writes
+// the register anew and clears the attention; an edit concurrent with that
+// new deletion still raises it.
+const redeleteNotes=['SHARED-SECTIONS-PROFILE-01 §9: an edit or a new placement is compared only with the deletions the lifecycle register of the node or of an effective ancestor holds now; a deletion followed, through the dependencies, by a later write to the same register no longer counts. Deleting again is how a user keeps a node deleted.'];
+record('SS83','Deleting again after a concurrent move clears the attention',{
+  a:[['move-X',d=>place(d,ids.task,ids.x,null,'SS83-A','A')]],
+  b:[['delete',d=>setLife(d,ids.task,'deleted')]],
+  after:[['delete-again',d=>setLife(d,ids.task,'deleted')]],
+  requirements:{classification:'VALID',hidden:[ids.task,ids.para],visible:[ids.x,ids.y],notRetained:[ids.task]},
+  notes:[...redeleteNotes,'SS80 followed by C deleting T again after the merge: B\'s deletion is no longer held, and C\'s saw the move.']});
+const redeleteBase=(()=>{
+  const da=change(fork(seeds,'A'),'SS84/base-move-X',d=>place(d,ids.task,ids.x,null,'SS84-base','A'));
+  const db=change(fork(seeds,'B'),'SS84/base-delete',d=>setLife(d,ids.task,'deleted'));
+  return A.merge(fork(da,'merge'),db);
+})();
+record('SS84','Deleting again concurrently with another edit keeps the attention',{
+  base:redeleteBase,
+  a:[['retitle',d=>{d.objects[ids.task].title=S('Prepare signed contract');}]],
+  b:[['delete-again',d=>setLife(d,ids.task,'deleted')]],
+  requirements:{classification:'VALID',hidden:[ids.task,ids.para],visible:[ids.x,ids.y],retainedConcurrentEdits:[ids.task]},
+  notes:[...redeleteNotes,'The base holds SS80\'s move and deletion, merged. B deletes T again, which clears the move; A\'s concurrent title edit is concurrent with that held deletion.']});
+record('SS85','Deleting an ancestor again after a concurrent move under it clears the attention',{
+  a:[['move-under-Y',d=>place(d,ids.task,ids.y,null,'SS85-A','A')]],
+  b:[['delete-Y',d=>setLife(d,ids.y,'deleted')]],
+  after:[['delete-Y-again',d=>setLife(d,ids.y,'deleted')]],
+  requirements:{classification:'VALID',hidden:[ids.task,ids.para,ids.y],visible:[ids.x],notRetained:[ids.task]},
+  notes:[...redeleteNotes,'SS81 followed by C deleting Y again after the merge.']});
+record('SS86','A move concurrent with one of two concurrent deletions is surfaced',{
+  a:[['move-X',d=>place(d,ids.task,ids.x,null,'SS86-A','A')],['delete',d=>setLife(d,ids.task,'deleted')]],
+  b:[['delete',d=>setLife(d,ids.task,'deleted')]],
+  requirements:{classification:'VALID',hidden:[ids.task,ids.para],visible:[ids.x,ids.y],retainedConcurrentEdits:[ids.task]},
+  notes:[...redeleteNotes,'Control for SS87: A moves T and then deletes it; B deletes T concurrently. The register holds both deletions, and A\'s move is concurrent with B\'s.']});
+record('SS87','Deleting again overrides two concurrent deletions',{
+  a:[['move-X',d=>place(d,ids.task,ids.x,null,'SS87-A','A')],['delete',d=>setLife(d,ids.task,'deleted')]],
+  b:[['delete',d=>setLife(d,ids.task,'deleted')]],
+  after:[['delete-again',d=>setLife(d,ids.task,'deleted')]],
+  requirements:{classification:'VALID',hidden:[ids.task,ids.para],visible:[ids.x,ids.y],notRetained:[ids.task]},
+  notes:[...redeleteNotes,'SS86 followed by C deleting T again after the merge: C\'s deletion depends on both deletions, so the register holds neither.']});
+for(const [id,want] of [['SS83',[]],['SS84',[ids.task]],['SS85',[]],['SS86',[ids.task]],['SS87',[]]])
+  assert.deepEqual(cases.find(c=>c.id===id).expected.state.retainedConcurrentEdits,want,id);
 const doc={
   format:'lfcp-vector-format/1',
   suite:{
