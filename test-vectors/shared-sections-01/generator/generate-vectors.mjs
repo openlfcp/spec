@@ -29,7 +29,9 @@ function frame(b){
 function summarizeChange(b,signer){
   // A change above an expansion limit is read from its header (expansion.mjs).
   const c=changeInfo(b);
-  return {...bytesInfo(b),change_hash:c.hash,actor:c.actor,seq:c.seq,deps:c.deps,framed_plaintext:bytesInfo(frame(b)),...(signer?{signer}:{})};
+  // A named change whose header does not read (finding F1) carries its name alone.
+  const header=c.unreadable?{}:{actor:c.actor,seq:c.seq,deps:c.deps};
+  return {...bytesInfo(b),change_hash:c.hash,...header,framed_plaintext:bytesInfo(frame(b)),...(signer?{signer}:{})};
 }
 function record(id,title,{base=seeds,a=[],b=[],after=[],inject,requirements={},coverage='model',notes=[],snapshot=false}={}){
   let da=fork(base,'A'),db=fork(base,'B');
@@ -684,6 +686,76 @@ record('SS87','Deleting again overrides two concurrent deletions',{
   notes:[...redeleteNotes,'SS86 followed by C deleting T again after the merge: C\'s deletion depends on both deletions, so the register holds neither.']});
 for(const [id,want] of [['SS83',[]],['SS84',[ids.task]],['SS85',[]],['SS86',[ids.task]],['SS87',[]]])
   assert.deepEqual(cases.find(c=>c.id===id).expected.state.retainedConcurrentEdits,want,id);
+// E1 (differential fuzzing): SHARED-SECTIONS-PROFILE-01 §14.1 checks the
+// sequence (SHARED-OBJECTS-PROFILE-01 §14.1) before the structural rules, so
+// a second change of an actor at a sequence number another change holds is
+// held whatever it writes, even when it would break a section rule.
+record('SS88','A second change of an actor at a taken sequence number is held, not refused for what it writes',{
+  inject:()=>{
+    const twin=change(A.init({actor:actor('A')}),'SS88/second-genesis',x=>{
+      x.profile=S(PROFILE);
+      x.section={id:S(ids.section),title:S('Joint launch'),created_by:S(pref('A')),ready:S('yes'),children:[],extensions:{}};
+      x.objects={};x.nodes={};x.placements={};x.extensions={};
+    });
+    return [{bytes:A.getLastLocalChange(twin),signer:'A'}];
+  },
+  requirements:{classification:'VALID',refused:[],heldCount:1,visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
+  notes:['The injected change is A\'s at sequence number 1, without dependencies, like the genesis change the base holds: it creates the section with ready = "yes", which §12.1 refuses (IMMUTABLE_FIELD_MUTATED) in its own causal history.',
+    'SHARED-SECTIONS-PROFILE-01 §14.1, SHARED-OBJECTS-PROFILE-01 §14.1 (POST-001): another change holds A\'s sequence number 1, so the change is held for a rebuild; the sequence is checked before the structural rules (finding E1 of the differential fuzzing: one SDK refused it for its section rule).',
+    'The outcome depends on the order of arrival: received before the base\'s genesis change, the injected change finds the sequence number free, is checked as any change and is refused with IMMUTABLE_FIELD_MUTATED; the genesis change is then admitted. The reference verifier checks that order too.']});
+{
+  const c=cases.find(c=>c.id==='SS88');
+  assert.deepEqual(c.expected.state.held,[c.inputs.branches.A.at(-1).change_hash]);
+}
+// E2 (differential fuzzing): A5 refuses a change that writes a scalar to a
+// node's text, whatever the node's kind and whatever value the merge shows.
+const e2Notes='SHARED-SECTIONS-PROFILE-01 A5: the change writes a scalar to a node\'s text, so it is refused with INVALID_FIELD_TYPE, whatever the node\'s kind (finding E2 of the differential fuzzing: one SDK checked the text only of a paragraph, item or raw node, as the value the merge shows).';
+record('SS89','A new node without a kind whose text is a scalar is refused',{
+  inject:d=>{
+    const next=change(d,'SS89/scalar-text',x=>{
+      add(x,ids.a,'item',ids.section,ids.y,'SS89-A','','A');
+      delete x.nodes[ids.a].kind;
+      x.nodes[ids.a].text=S('item');
+    });
+    return [{bytes:A.getLastLocalChange(next),signer:'A'}];
+  },
+  requirements:{classification:'VALID',refused:['INVALID_FIELD_TYPE'],heldCount:0,visible,nodeCount:4},coverage:'negative-admission',
+  notes:[e2Notes]});
+// The text is written twice in one change, a scalar and then Text, both
+// without predecessors: the Text wins the merge, the scalar stays a
+// conflicting value.
+function scalarBesideText(bytes){
+  const c=A.decodeChange(bytes);
+  const i=c.ops.findIndex(op=>op.action==='makeText'&&op.key==='text');
+  assert(i>=0);
+  const at=c.startOp+i,bump=id=>{const m=/^(\d+)@(.+)$/.exec(id);return m&&m[2]===c.actor&&Number(m[1])>=at?`${Number(m[1])+1}@${m[2]}`:id;};
+  const ops=c.ops.map(op=>({...op,obj:bump(op.obj),...(op.elemId?{elemId:bump(op.elemId)}:{}),pred:op.pred.map(bump)}));
+  ops.splice(i,0,{action:'set',obj:ops[i].obj,key:'text',value:'item',pred:[]});
+  return A.encodeChange({...c,ops,hash:undefined});
+}
+record('SS90','A scalar written to a node\'s text beside its Text is refused',{
+  inject:d=>[{bytes:scalarBesideText(A.getLastLocalChange(change(d,'SS90/scalar-beside-text',x=>add(x,ids.a,'item',ids.section,ids.y,'SS90-A','Group A','A')))),signer:'A'}],
+  requirements:{classification:'VALID',refused:['INVALID_FIELD_TYPE'],heldCount:0,visible,nodeCount:4},coverage:'negative-admission',
+  notes:[e2Notes,'The change makes the item and writes its text twice without predecessors, a scalar and then Text: the Text wins the merge and the scalar stays a conflicting value, so the merged node shows Text.']});
+// F1 (differential fuzzing): §14.1 names a refused chunk without reading
+// its header, so a chunk whose dependencies do not even read is named, not
+// only one whose header runs past its end (SS79).
+const unreadableHeader=(()=>{
+  const body=Buffer.from([0x01,0x03,0xe9,0xff,0xff]);
+  const sum=Buffer.from(hash(body),'hex').subarray(0,4);
+  return new Uint8Array(Buffer.concat([Buffer.from('856f4a83','hex'),sum,body]));
+})();
+record('SS91','A change whose dependencies do not read is refused and named',{
+  inject:()=>[{bytes:unreadableHeader,signer:'A'}],
+  requirements:{classification:'VALID',refused:['INVALID_AUTOMERGE_BYTES'],heldCount:0,visible,tasks:{[ids.task]:{title:'Prepare contract'}}},coverage:'negative-admission',
+  notes:['SHARED-OBJECTS-PROFILE-01 §11, §11.1: the chunk is type 1, its length field (3) covers exactly the rest and its checksum matches, but its body is an unterminated ULEB128 dependency count, which is malformed.',
+    'SHARED-SECTIONS-PROFILE-01 §14.1: the refusal is named by the SHA-256 of the chunk from its type byte on, which needs no decoding; the change record carries only that name, since neither dependencies, actor nor sequence number read (finding F1 of the differential fuzzing: one SDK named a refusal only when it could read the dependencies and the actor).']});
+{
+  const c=cases.find(c=>c.id==='SS91');
+  const name=hash(unreadableHeader.subarray(8));
+  assert.deepEqual(c.expected.state.refused,[{change:name,diagnostic:'INVALID_AUTOMERGE_BYTES'}]);
+  assert.equal(c.inputs.branches.A.at(-1).change_hash,name);
+}
 const doc={
   format:'lfcp-vector-format/1',
   suite:{

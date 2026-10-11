@@ -38,7 +38,8 @@ for(const vector of suite.cases) {
   const changes=ordered.map(x=>{
     // Read from the header when Automerge cannot or must not decode it (§11.1, §11.3 rule 2).
     const b=decode(x),dc=changeInfo(b);
-    assert.equal(dc.hash,x.change_hash);assert.equal(dc.actor,x.actor);assert.equal(dc.seq,x.seq);assert.deepEqual(dc.deps,x.deps);
+    // A named change whose header does not read (SS91) records its name alone.
+    assert.equal(dc.hash,x.change_hash);assert.equal(dc.actor,x.actor);assert.equal(dc.seq,x.seq);assert.deepEqual(dc.unreadable?undefined:dc.deps,x.deps);
     assert.deepEqual(unframe(x.framed_plaintext),b);
     return x.signer?{bytes:b,signer:x.signer}:b;
   });
@@ -48,7 +49,17 @@ for(const vector of suite.cases) {
   // (the CI environment variable) replays every case all three ways.
   const full=!c.expected.snapshot||!!process.env.CI;
   const normal=admitReplay(changes,actor('verify-normal'));
-  const reverse=full?admitReplay([...changes].reverse().flatMap(b=>[b,b]),actor('verify-reverse')):normal;
+  const reversed=full?admitReplay([...changes].reverse().flatMap(b=>[b,b]),actor('verify-reverse')):normal;
+  // SS88: a change at a taken sequence number is held only when the change
+  // holding it came first (§14.1). In reverse it arrives first, finds the
+  // number free and is checked as any change: refused for its section rule.
+  let reverse=reversed;
+  if(c.id==='SS88'&&full){
+    const twin=c.branches.A.at(-1).change_hash;
+    assert.deepEqual(reversed.refused,[{change:twin,diagnostic:'IMMUTABLE_FIELD_MUTATED'}],'SS88 in reverse');
+    assert.deepEqual(reversed.held,[],'SS88 in reverse');
+    reverse=normal;
+  }
   const delta=[...c.branches.A,...c.branches.B,...c.after_merge].map(x=>x.signer?{bytes:decode(x),signer:x.signer}:decode(x));
   const loaded=A.load(base,{actor:actor('verify-checkpoint')});
   const checkpoint=full?admitReplay([...A.getAllChanges(loaded),...delta],actor('verify-checkpoint')):normal;
@@ -67,7 +78,7 @@ for(const vector of suite.cases) {
   if(c.id==='SS18')assert.equal(str(saved.nodes[ids.para].extensions['com.example.future'].value),'keep-me');
   if(c.id==='SS23')assert.equal(Object.keys(saved.objects).length,200);
   if(c.id==='SS28')assert.equal(c.branches.A[0].seq,3);
-  for(const x of c.branches.A)assert.equal(x.actor,suite.fixtures.identities.actors.A.actor_hex);
+  for(const x of c.branches.A)if(!changeInfo(decode(x)).unreadable)assert.equal(x.actor,suite.fixtures.identities.actors.A.actor_hex);
   for(const x of c.branches.B)assert.equal(x.actor,suite.fixtures.identities.actors.B.actor_hex);
   for(const x of c.after_merge)assert.equal(x.actor,suite.fixtures.identities.actors.C.actor_hex);
   if(adapter) {

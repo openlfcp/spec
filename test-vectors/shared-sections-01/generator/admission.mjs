@@ -10,7 +10,6 @@ import {beyondSafeNumbers,changeHeader,expansionRefusal,hasAuthor,headerPrefix,r
 /** Diagnostics in their order of precedence (§14.1). */
 export const ADMISSION_ORDER=['INVALID_AUTOMERGE_BYTES','CHANGE_ACTOR_MISMATCH','CONTAINER_REPLACED','CHILDREN_LIST_MUTATED','PLACEMENT_NOT_ATOMIC','IMMUTABLE_FIELD_MUTATED','INVALID_FIELD_TYPE'];
 const ROOT_CONTAINERS=['section','objects','nodes','placements','extensions'];
-const TEXT_KINDS=new Set(['paragraph','item','raw']);
 const NODE_IMMUTABLE=['id','kind','created_by','task_id'];
 const TASK_IMMUTABLE=['id','type','created_by'];
 const NAMES=['A','B','C'];
@@ -114,8 +113,11 @@ export function admit(prev,bytes){
   for(const [n,now]of Object.entries(next.nodes||{})){
     const old=prev.nodes?.[n];
     if(newText(old,now,'text'))found.add('INVALID_FIELD_TYPE');
-    if(TEXT_KINDS.has(str(now.kind))&&now.text!==undefined&&!oid(now,'text')&&(!old||str(old.text)!==str(now.text)||oid(old,'text')))found.add('INVALID_FIELD_TYPE');
   }
+  // A5: a change that writes a scalar to a node's text, whatever the node's
+  // kind and whether or not the scalar is the value the merge shows.
+  const nodeMaps=new Set(Object.keys(next.nodes||{}).map(n=>oid(next.nodes,n)));
+  if(decoded.ops.some(op=>op.key==='text'&&op.action==='set'&&nodeMaps.has(op.obj)))found.add('INVALID_FIELD_TYPE');
   // SOP §30: no Text anywhere in a Task, its nested maps and lists included.
   const before=new Set(),walk=(obj,out)=>{const stack=[obj];while(stack.length){const o=stack.pop();
     for(const key of Object.keys(o)){const v=o[key];if(isText(o,key))out.add(oid(o,key));else if(isObject(v))stack.push(v);}}};
@@ -242,17 +244,18 @@ export function referenceRule(history,d){
  * prevent. Any other change, including a malformed one, is decoded.
  */
 export function changeInfo(b){
-  // A named chunk whose header runs past its end (§14.1): its name and the
-  // start of its header, which Automerge does not decode.
-  if(isTruncatedNamed(b))return headerPrefix(b);
+  // A named chunk whose header Automerge does not decode (§14.1): its name
+  // and, when they read, the dependencies, actor and sequence number at the
+  // start of its header (finding F1: they may not).
+  if(isTruncatedNamed(b))return headerPrefix(b)??{hash:refusalName(b),deps:[],unreadable:true};
   if(fromHeader(b)){const h=changeHeader(b);return {hash:h.hash,deps:h.deps,actor:h.actor,seq:h.seq};}
   const d=A.decodeChange(b);
   return {hash:d.hash,deps:d.deps,actor:d.actor,seq:d.seq,decoded:d};
 }
 /** A change read from its header only: above a §11.1 limit, with header numbers Automerge JS does not decode (§11.3 rule 2), or named but malformed. */
 const fromHeader=b=>isExpansionBomb(b)||beyondSafeNumbers(b)||isTruncatedNamed(b);
-/** A named change chunk (§14.1) that the §11.1 walk finds malformed, whose header start reads. */
-const isTruncatedNamed=b=>{const r=expansionRefusal(b);return r!==null&&r.startsWith('malformed')&&headerPrefix(b)!==null;};
+/** A named change chunk (§14.1) that the §11.1 walk finds malformed. */
+const isTruncatedNamed=b=>{const r=expansionRefusal(b);return r!==null&&r.startsWith('malformed')&&refusalName(b)!==null;};
 /** A type 1 change chunk whose header reads, above a §11.1 limit. */
 const bombs=new WeakMap();
 export function isExpansionBomb(b){
@@ -273,7 +276,7 @@ export function admitReplay(changes,initActor){
   }
   const decoded=new Map();
   const decode=h=>{if(!decoded.has(h))decoded.set(h,A.decodeChange(byHash.get(h)));return decoded.get(h);};
-  const deps=h=>isTruncatedNamed(byHash.get(h))?headerPrefix(byHash.get(h)).deps:fromHeader(byHash.get(h))?changeHeader(byHash.get(h)).deps:decode(h).deps;
+  const deps=h=>isTruncatedNamed(byHash.get(h))?changeInfo(byHash.get(h)).deps:fromHeader(byHash.get(h))?changeHeader(byHash.get(h)).deps:decode(h).deps;
   // `refusedKeys`: the replay's keys of refused changes; `refused` reports
   // them by name, without one for bytes that are not named (§14.1).
   const admitted=new Set(),refused=[],refusedKeys=new Set(),held=new Set();
@@ -295,6 +298,11 @@ export function admitReplay(changes,initActor){
     const early=bytesRefusal(byHash.get(h),signers.get(h));
     if(early){refuse(h,early);continue;}
     if(deps(h).some(d=>held.has(d)||refusedKeys.has(d)||!byHash.has(d))){held.add(h);continue;}
+    // §14.1 (SOP §14.1, POST-001): a change whose actor and sequence number
+    // an admitted change holds is held, before any other check of its
+    // history or the structural rules.
+    const own=decode(h);
+    if([...admitted].some(x=>decode(x).actor===own.actor&&decode(x).seq===own.seq)){held.add(h);continue;}
     const past=new Set();const collect=x=>{if(past.has(x))return;past.add(x);for(const d of deps(x))collect(d);};
     for(const d of deps(h))collect(d);
     const linear=past.size===admitted.size&&[...past].every(x=>admitted.has(x));
