@@ -5,12 +5,12 @@ full WIRE-01 conformance, documents remain Working Drafts.**
 
 This file answers one question: *what exactly do I implement against for
 MVP 0.2?* The answer is every file listed below, at the Git tag
-`mvp-0.2-baseline.10` of this repository.
+`mvp-0.2-baseline.11` of this repository.
 
 | Tag | Status |
 | --- | --- |
-| mvp-0.2-baseline.11 | **Prepared, not tagged.** `mvp-0.2-baseline.10` with three negative Wire vectors for the LFCP-WIRE-01 §48 rule that every live Have Vector rejects a reversed range or one that includes sequence `0`: `resource_open_reversed_range`, `resource_open_range_sequence_zero` and `resource_opened_reversed_range` (finding S2, a server that did not read the Have of `RESOURCE_OPEN`); and LFCP-WIRE-01 §32 and §33 saying that the envelope is checked before the message type, so an unassigned type without a Message ID is `MALFORMED_MESSAGE`, with the vector `unassigned_type_without_message_id` (finding W3). No vector value changes (`migrations/mvp-0.2-baseline.11/value-changes.json` lists no change). |
-| mvp-0.2-baseline.10 | **Current.** `mvp-0.2-baseline.9` with SHARED-SECTIONS-PROFILE-01 §14.1 saying outright that the sequence checks count every change of the document, so a change at a taken sequence number is held before the structural rules (finding E1); that A5 refuses a scalar written to a node's `text` whatever the node's kind and even when the merge shows a Text (finding E2); and that a chunk whose dependencies or actor do not read is named too (finding F1). The shared sections corpus gains SS88 to SS91; no vector value changes (`migrations/mvp-0.2-baseline.10/value-changes.json` lists no change). |
+| mvp-0.2-baseline.11 | **Current.** `mvp-0.2-baseline.10` with three negative Wire vectors for the LFCP-WIRE-01 §48 rule that every live Have Vector rejects a reversed range or one that includes sequence `0`: `resource_open_reversed_range`, `resource_open_range_sequence_zero` and `resource_opened_reversed_range` (finding S2, a server that did not read the Have of `RESOURCE_OPEN`); and LFCP-WIRE-01 §32 and §33 saying that the envelope is checked before the message type, so an unassigned type without a Message ID is `MALFORMED_MESSAGE`, with the vector `unassigned_type_without_message_id` (finding W3). No vector value changes (`migrations/mvp-0.2-baseline.11/value-changes.json` lists no change). |
+| mvp-0.2-baseline.10 | Superseded by `mvp-0.2-baseline.11`, because LFCP-WIRE-01 §32 and §33 (the envelope is checked before the message type) change a normative rule, and four negative Wire vectors are added. Never moved. `mvp-0.2-baseline.9` with SHARED-SECTIONS-PROFILE-01 §14.1 saying outright that the sequence checks count every change of the document, so a change at a taken sequence number is held before the structural rules (finding E1); that A5 refuses a scalar written to a node's `text` whatever the node's kind and even when the merge shows a Text (finding E2); and that a chunk whose dependencies or actor do not read is named too (finding F1). The shared sections corpus gains SS88 to SS91; no vector value changes (`migrations/mvp-0.2-baseline.10/value-changes.json` lists no change). |
 | mvp-0.2-baseline.9 | Superseded by `mvp-0.2-baseline.10`, because SHARED-SECTIONS-PROFILE-01 §14.1 (the sequence checks count every change of the document; a chunk whose dependencies or actor do not read is named) and A5 (a scalar written to a node's `text` whatever its kind) are made explicit, and SS88 to SS91 are added. Never moved. `mvp-0.2-baseline.8` with SHARED-SECTIONS-PROFILE-01 §9 comparing an edit or a new placement only with the deletions the lifecycle register still holds, so that deleting a node again clears `EDIT_UNDER_DELETED_ANCESTOR` and a user can keep it deleted. The shared sections corpus gains SS83 to SS87 (deleting the node or an ancestor again, with and without a concurrent edit, and two concurrent deletions); no vector value changes (`migrations/mvp-0.2-baseline.9/value-changes.json` lists no change). |
 | mvp-0.2-baseline.8 | Superseded by `mvp-0.2-baseline.9`, because SHARED-SECTIONS-PROFILE-01 §9 (only a deletion the lifecycle register still holds counts) changes a normative rule, and SS83 to SS87 are added. Never moved. `mvp-0.2-baseline.7` with SHARED-SECTIONS-PROFILE-01 §14.1 saying outright that a refused change is named without reading its header, so a chunk whose header is malformed is named too (finding C3); and SHARED-SECTIONS-PROFILE-01 §9 reports a move concurrent with the deletion of the moved node or an effective ancestor as `EDIT_UNDER_DELETED_ANCESTOR`, which was lost silently before. The shared sections corpus gains SS79 (a header whose message length runs past the end, refused and named) and SS80 to SS82 (moves against deletions, and a control); no vector value changes (`migrations/mvp-0.2-baseline.8/value-changes.json` lists no change). |
 | mvp-0.2-baseline.7 | Superseded by `mvp-0.2-baseline.8`, because SHARED-SECTIONS-PROFILE-01 §14.1 (naming a refused change without reading its header) and §9 (a move a concurrent deletion hides is surfaced) change normative rules, and SS79 to SS82 are added. Never moved. `mvp-0.2-baseline.6` with SHARED-SECTIONS-PROFILE-01 §14.1 naming a refused change only when its chunk's checksum matches, so that a copy with a wrong checksum no longer carries its intact copy's hash (finding C1). The shared sections corpus gains SS76 to SS78 (the intact copy applied after a broken one, a dependent waiting behind an unnamed refusal, and the intact copy signed by another Principal refused for its actor, finding C2); SS45's refusal is no longer named (`migrations/mvp-0.2-baseline.7/value-changes.json`). |
@@ -37,13 +37,13 @@ MVP 0.2?* The answer is every file listed below, at the Git tag
 
 ## Pinning
 
-Implementations pin the current tag, `mvp-0.2-baseline.10`, of
+Implementations pin the current tag, `mvp-0.2-baseline.11`, of
 `openlfcp/spec`, never a branch, in their `spec.lock`. A development pin of
 the shared sections files before this tag (`spec-sections.lock`) is retired
 when an implementation moves to the tag.
 
 A later approved Working Draft correction does not move the tag. It
-produces a new tag, such as `mvp-0.2-baseline.11`, with an updated copy of
+produces a new tag, such as `mvp-0.2-baseline.12`, with an updated copy of
 this file and a `migrations/mvp-0.2-baseline.N/` entry. Implementations
 move to it deliberately.
 
@@ -135,13 +135,13 @@ The checks are those of MVP-0.1-BASELINE.md, plus:
 
 - vector values against the previous baseline tag, from the newest
   `migrations/mvp-0.M-baseline.N/value-changes.json`: for this baseline,
-  against `mvp-0.2-baseline.9`;
+  against `mvp-0.2-baseline.10`;
 - the shared sections corpus and the Markdown fixtures: schema-valid,
   regenerated byte for byte with the pinned `@automerge/automerge` and
   replayed by the reference verifiers (`scripts/check-shared-sections-corpus.mjs`);
 - this manifest's file list, as for MVP-0.1-BASELINE.md.
 
-## Changes from `mvp-0.2-baseline.10` (`mvp-0.2-baseline.11`, prepared)
+## Changes from `mvp-0.2-baseline.10` (`mvp-0.2-baseline.11`)
 
 | Kind | Files |
 | --- | --- |
