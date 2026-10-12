@@ -1421,6 +1421,18 @@ def generate():
             3: {0: S1['id'], 1: 1, 2: S1['frontier']}, 4: 1, 5: COORD_B}, correlation=ro_mid))},
         {'valid': False, 'disposition': 'reject', 'error': {'code': 'MALFORMED_MESSAGE'}},
         cddl=('typed-lfcp-message', 'pass'))
+    # The envelope is checked before the type (§32, §33): an unassigned type
+    # without a Message ID is malformed, not unsupported.
+    neg('unassigned_type_without_message_id', 'wire_message',
+        'PING sent with the unassigned message type 117 and without a Message ID',
+        'PING', 'message type and Message ID (envelope fields 0 and 1)', [5, hexv(msgid('PING'))], [117, None],
+        'LFCP-WIRE-01 §32, §33',
+        'A receiver checks the envelope before it looks up the message type in Section 33. A message that [...] lacks '
+        'field `0`, `1` or `4` [...] is rejected with `MALFORMED_MESSAGE`, whatever its message type, assigned or not.',
+        'Two receivers that order the checks differently would answer the same message with different codes.',
+        {'message_cbor': hexv(cbor({0: 117, 4: {0: ping_payload}}))},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'MALFORMED_MESSAGE'}},
+        cddl=('lfcp-message', 'fail'))
 
     fixtures = {
         'meta': {

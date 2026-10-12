@@ -1604,6 +1604,8 @@ A sender sets `flags` to `0` or omits it; a receiver ignores the value.
 
 Unknown envelope fields from `0` through `15` MUST cause `MALFORMED_MESSAGE` unless a later negotiated version defines them.
 
+A receiver checks the envelope before it looks up the message type in Section 33. A message that is not a map, lacks field `0`, `1` or `4`, holds an envelope field that does not match the CDDL above, or carries an unknown envelope field from `0` through `15` is rejected with `MALFORMED_MESSAGE`, whatever its message type, assigned or not. Only a message whose envelope passes these checks is rejected for its type (Section 33), and only then is its body decoded.
+
 ---
 
 ## 33. Message type registry
@@ -1682,7 +1684,7 @@ Codes `92..127` are reserved for LFCP core.
 
 Codes `128+` are extension message types and MUST be negotiated before use.
 
-A message whose type is not assigned in this registry, or is an extension type that was not negotiated for the session, is rejected with `PROTOCOL_UNSUPPORTED`.
+A message whose type is not assigned in this registry, or is an extension type that was not negotiated for the session, is rejected with `PROTOCOL_UNSUPPORTED`. The envelope checks of Section 32 come first: a message of such a type whose envelope is malformed is rejected with `MALFORMED_MESSAGE`.
 
 ---
 

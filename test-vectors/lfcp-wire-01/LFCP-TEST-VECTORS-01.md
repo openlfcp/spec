@@ -2616,6 +2616,20 @@ a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102a200
 616d706c652e746573742f76312f7773
 ```
 
+#### 17.10.47 unassigned_type_without_message_id: PING sent with the unassigned message type 117 and without a Message ID
+
+- Base case: `PING`
+- Mutation: message type and Message ID (envelope fields 0 and 1): `[5, {"hex": "d857a31e2d9b308199d996caa1c8d58a"}]` → `[117, null]`
+- Rule (LFCP-WIRE-01 §32, §33): A receiver checks the envelope before it looks up the message type in Section 33. A message that [...] lacks field `0`, `1` or `4` [...] is rejected with `MALFORMED_MESSAGE`, whatever its message type, assigned or not.
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
+- Why: Two receivers that order the checks differently would answer the same message with different codes.
+
+message_cbor:
+
+```text
+a200187504a1004850a9c6073731578c
+```
+
 ### 17.11 Strict Ed25519 edge cases
 
 Plain `(public key, message, signature)` triples for the strict verification of `LFCP-WIRE-01` §10.5.1, as `validation` cases of kind `ed25519_signature`. RFC 8032 §7.1 TEST 1 is the valid anchor; each derived case changes one part of it. The two constructed cases are accepted by the cofactored equation and must still be rejected. Every invalid case expects `INVALID_SIGNATURE`.

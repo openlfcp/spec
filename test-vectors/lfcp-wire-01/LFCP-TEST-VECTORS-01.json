@@ -3000,6 +3000,45 @@
       }
     },
     {
+      "id": "unassigned_type_without_message_id",
+      "type": "validation",
+      "kind": "wire_message",
+      "description": "PING sent with the unassigned message type 117 and without a Message ID",
+      "inputs": {
+        "message_cbor": {
+          "hex": "a200187504a1004850a9c6073731578c"
+        }
+      },
+      "derivation": {
+        "base_case": "PING",
+        "mutation": {
+          "field": "message type and Message ID (envelope fields 0 and 1)",
+          "from": [
+            5,
+            {
+              "hex": "d857a31e2d9b308199d996caa1c8d58a"
+            }
+          ],
+          "to": [
+            117,
+            null
+          ]
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §32, §33",
+          "text": "A receiver checks the envelope before it looks up the message type in Section 33. A message that [...] lacks field `0`, `1` or `4` [...] is rejected with `MALFORMED_MESSAGE`, whatever its message type, assigned or not."
+        },
+        "why": "Two receivers that order the checks differently would answer the same message with different codes."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE"
+        }
+      }
+    },
+    {
       "id": "chain_gap_linked_seq4",
       "type": "validation",
       "kind": "actor_chain",
