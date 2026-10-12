@@ -24,9 +24,10 @@ MVP 0.2?* The answer is every file listed below, at the Git tag
 - The listed specifications are Working Drafts. They keep their identifiers;
   nothing is renamed or declared Stable.
 - Every file of `mvp-0.1-baseline.10` is part of this baseline, byte for
-  byte: a Resource of the profile `org.openlfcp.shared-objects.v1` behaves
-  exactly as in MVP 0.1. MVP-0.1-BASELINE.md keeps describing the MVP 0.1
-  tags.
+  byte, except LFCP-WIRE-01 and its vectors, which carry the fixes listed
+  under Changes and reach MVP 0.1 only with a 0.1 patch: a Resource of the
+  profile `org.openlfcp.shared-objects.v1` behaves exactly as in MVP 0.1.
+  MVP-0.1-BASELINE.md keeps describing the MVP 0.1 tags.
 - Software built on this baseline may say "Implements the OpenLFCP MVP 0.2
   subset of LFCP-WIRE-01". It must not claim full LFCP-WIRE-01 conformance
   (`.github: docs/MVP-0.1-PROTOCOL-SCOPE.md` §5; MVP 0.2 adds no Wire
