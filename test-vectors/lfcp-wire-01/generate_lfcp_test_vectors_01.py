@@ -1392,6 +1392,36 @@ def generate():
             'detail': 'AUTH_FAILED when received in HELLO or AUTH (LFCP-WIRE-01 §7)'}},
         cddl=('principal-descriptor', 'pass'))
 
+    # Live Haves in RESOURCE_OPEN and RESOURCE_OPENED follow the DATA_HAVE rule
+    # (§48): a reversed range or one that includes sequence 0 is malformed.
+    LIVE_HAVE_RULE = ('Live Have Vectors (`DATA_HAVE`, `RESOURCE_OPEN`, `RESOURCE_OPENED` and Snapshot summaries) '
+                      '[...]. A range with `start > end`, or one that includes sequence `0`, is rejected with '
+                      '`MALFORMED_MESSAGE`.')
+    neg('resource_open_reversed_range', 'wire_message', 'RESOURCE_OPEN with a BOB extra range written 7..5',
+        'RESOURCE_OPEN', 'BOB extra range (actor-have field 2, absent in the base case)', None, [[7, 5]],
+        'LFCP-WIRE-01 §41, §48', LIVE_HAVE_RULE,
+        'A server that does not read the Have in RESOURCE_OPEN accepts a range that DATA_HAVE rejects, although '
+        'both are live Haves.',
+        {'message_cbor': hexv(wire_msg(12, ro_mid, {**resource_open_body, 2: [{0: BOB.pid, 1: 2, 2: [[7, 5]]}]}))},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'MALFORMED_MESSAGE'}},
+        cddl=('typed-lfcp-message', 'pass'))
+    neg('resource_open_range_sequence_zero', 'wire_message', 'RESOURCE_OPEN with a BOB extra range 0..2',
+        'RESOURCE_OPEN', 'BOB contiguous and extra range', [2, None], [0, [[0, 2]]],
+        'LFCP-WIRE-01 §41, §48', LIVE_HAVE_RULE,
+        'Sequence numbers start at 1, so a range that includes 0 names a Data Unit that cannot exist.',
+        {'message_cbor': hexv(wire_msg(12, ro_mid, {**resource_open_body, 2: [{0: BOB.pid, 1: 0, 2: [[0, 2]]}]}))},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'MALFORMED_MESSAGE'}},
+        cddl=('typed-lfcp-message', 'pass'))
+    neg('resource_opened_reversed_range', 'wire_message', 'RESOURCE_OPENED with a BOB extra range written 7..5',
+        'RESOURCE_OPENED', 'BOB extra range (actor-have field 2, absent in the base case)', None, [[7, 5]],
+        'LFCP-WIRE-01 §42, §48', LIVE_HAVE_RULE,
+        'The rule binds a client reading RESOURCE_OPENED as it binds a server reading RESOURCE_OPEN.',
+        {'message_cbor': hexv(wire_msg(13, mid('RESOURCE-OPENED'), {
+            0: RESOURCE, 1: [control_head_c6], 2: [{0: BOB.pid, 1: 2, 2: [[7, 5]]}, actor_have(CAROL.pid, 1)],
+            3: {0: S1['id'], 1: 1, 2: S1['frontier']}, 4: 1, 5: COORD_B}, correlation=ro_mid))},
+        {'valid': False, 'disposition': 'reject', 'error': {'code': 'MALFORMED_MESSAGE'}},
+        cddl=('typed-lfcp-message', 'pass'))
+
     fixtures = {
         'meta': {
             'wire_spec': 'LFCP-WIRE-01',

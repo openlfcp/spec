@@ -2561,6 +2561,61 @@ a3005820e7e0dcffbc581b52a548f8113efbcb3f96458217a57ab55019dafe9ab02f74b301582000
 ca7528fdd5eefb94f26c
 ```
 
+#### 17.10.44 resource_open_reversed_range: RESOURCE_OPEN with a BOB extra range written 7..5
+
+- Base case: `RESOURCE_OPEN`
+- Mutation: BOB extra range (actor-have field 2, absent in the base case): `null` → `[[7, 5]]`
+- Rule (LFCP-WIRE-01 §41, §48): Live Have Vectors (`DATA_HAVE`, `RESOURCE_OPEN`, `RESOURCE_OPENED` and Snapshot summaries) [...]. A range with `start > end`, or one that includes sequence `0`, is rejected with `MALFORMED_MESSAGE`.
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
+- Why: A server that does not read the Have in RESOURCE_OPEN accepts a range that DATA_HAVE rejects, although both are live Haves.
+
+message_cbor:
+
+```text
+a3000c0150d6c84e22d6927a704b906a72b3f8fe2c04a4005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa
+6c0117530d4cfc3cc2410181a20006015820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182ddd
+c5180281a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102028182070504
+03
+```
+
+#### 17.10.45 resource_open_range_sequence_zero: RESOURCE_OPEN with a BOB extra range 0..2
+
+- Base case: `RESOURCE_OPEN`
+- Mutation: BOB contiguous and extra range: `[2, null]` → `[0, [[0, 2]]]`
+- Rule (LFCP-WIRE-01 §41, §48): Live Have Vectors (`DATA_HAVE`, `RESOURCE_OPEN`, `RESOURCE_OPENED` and Snapshot summaries) [...]. A range with `start > end`, or one that includes sequence `0`, is rejected with `MALFORMED_MESSAGE`.
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
+- Why: Sequence numbers start at 1, so a range that includes 0 names a Data Unit that cannot exist.
+
+message_cbor:
+
+```text
+a3000c0150d6c84e22d6927a704b906a72b3f8fe2c04a4005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa
+6c0117530d4cfc3cc2410181a20006015820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182ddd
+c5180281a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50100028182000204
+03
+```
+
+#### 17.10.46 resource_opened_reversed_range: RESOURCE_OPENED with a BOB extra range written 7..5
+
+- Base case: `RESOURCE_OPENED`
+- Mutation: BOB extra range (actor-have field 2, absent in the base case): `null` → `[[7, 5]]`
+- Rule (LFCP-WIRE-01 §42, §48): Live Have Vectors (`DATA_HAVE`, `RESOURCE_OPEN`, `RESOURCE_OPENED` and Snapshot summaries) [...]. A range with `start > end`, or one that includes sequence `0`, is rejected with `MALFORMED_MESSAGE`.
+- Expected: invalid, reject, error code `MALFORMED_MESSAGE`
+- Why: The rule binds a client reading RESOURCE_OPENED as it binds a server reading RESOURCE_OPEN.
+
+message_cbor:
+
+```text
+a4000d01504e9f9102ffb45aa82a8b987ef111b7640250d6c84e22d6927a704b906a72b3f8fe2c04a6005820c8c3041c
+d1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410181a20006015820e67fb23dc530252680216aec
+feadb0951b1d3f8726c49afefd724b182dddc5180282a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95f
+f8e9cedbeb788bf0a9c501020281820705a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe94
+3c1282da48010103a300582085f5035604998e4738c7c698318cf39401c674309da70b3c79e84bb8ee1a09df01010282
+a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102a2005820a6e402657a50
+5a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101040105781f7773733a2f2f73796e632d622e6578
+616d706c652e746573742f76312f7773
+```
+
 ### 17.11 Strict Ed25519 edge cases
 
 Plain `(public key, message, signature)` triples for the strict verification of `LFCP-WIRE-01` §10.5.1, as `validation` cases of kind `ed25519_signature`. RFC 8032 §7.1 TEST 1 is the valid anchor; each derived case changes one part of it. The two constructed cases are accepted by the cofactored equation and must still be rejected. Every invalid case expects `INVALID_SIGNATURE`.

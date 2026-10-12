@@ -2886,6 +2886,120 @@
       }
     },
     {
+      "id": "resource_open_reversed_range",
+      "type": "validation",
+      "kind": "wire_message",
+      "description": "RESOURCE_OPEN with a BOB extra range written 7..5",
+      "inputs": {
+        "message_cbor": {
+          "hex": "a3000c0150d6c84e22d6927a704b906a72b3f8fe2c04a4005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410181a20006015820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180281a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5010202818207050403"
+        }
+      },
+      "derivation": {
+        "base_case": "RESOURCE_OPEN",
+        "mutation": {
+          "field": "BOB extra range (actor-have field 2, absent in the base case)",
+          "from": null,
+          "to": [
+            [
+              7,
+              5
+            ]
+          ]
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §41, §48",
+          "text": "Live Have Vectors (`DATA_HAVE`, `RESOURCE_OPEN`, `RESOURCE_OPENED` and Snapshot summaries) [...]. A range with `start > end`, or one that includes sequence `0`, is rejected with `MALFORMED_MESSAGE`."
+        },
+        "why": "A server that does not read the Have in RESOURCE_OPEN accepts a range that DATA_HAVE rejects, although both are live Haves."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE"
+        }
+      }
+    },
+    {
+      "id": "resource_open_range_sequence_zero",
+      "type": "validation",
+      "kind": "wire_message",
+      "description": "RESOURCE_OPEN with a BOB extra range 0..2",
+      "inputs": {
+        "message_cbor": {
+          "hex": "a3000c0150d6c84e22d6927a704b906a72b3f8fe2c04a4005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410181a20006015820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180281a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5010002818200020403"
+        }
+      },
+      "derivation": {
+        "base_case": "RESOURCE_OPEN",
+        "mutation": {
+          "field": "BOB contiguous and extra range",
+          "from": [
+            2,
+            null
+          ],
+          "to": [
+            0,
+            [
+              [
+                0,
+                2
+              ]
+            ]
+          ]
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §41, §48",
+          "text": "Live Have Vectors (`DATA_HAVE`, `RESOURCE_OPEN`, `RESOURCE_OPENED` and Snapshot summaries) [...]. A range with `start > end`, or one that includes sequence `0`, is rejected with `MALFORMED_MESSAGE`."
+        },
+        "why": "Sequence numbers start at 1, so a range that includes 0 names a Data Unit that cannot exist."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE"
+        }
+      }
+    },
+    {
+      "id": "resource_opened_reversed_range",
+      "type": "validation",
+      "kind": "wire_message",
+      "description": "RESOURCE_OPENED with a BOB extra range written 7..5",
+      "inputs": {
+        "message_cbor": {
+          "hex": "a4000d01504e9f9102ffb45aa82a8b987ef111b7640250d6c84e22d6927a704b906a72b3f8fe2c04a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410181a20006015820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180282a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c501020281820705a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48010103a300582085f5035604998e4738c7c698318cf39401c674309da70b3c79e84bb8ee1a09df01010282a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50102a2005820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480101040105781f7773733a2f2f73796e632d622e6578616d706c652e746573742f76312f7773"
+        }
+      },
+      "derivation": {
+        "base_case": "RESOURCE_OPENED",
+        "mutation": {
+          "field": "BOB extra range (actor-have field 2, absent in the base case)",
+          "from": null,
+          "to": [
+            [
+              7,
+              5
+            ]
+          ]
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §42, §48",
+          "text": "Live Have Vectors (`DATA_HAVE`, `RESOURCE_OPEN`, `RESOURCE_OPENED` and Snapshot summaries) [...]. A range with `start > end`, or one that includes sequence `0`, is rejected with `MALFORMED_MESSAGE`."
+        },
+        "why": "The rule binds a client reading RESOURCE_OPENED as it binds a server reading RESOURCE_OPEN."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "MALFORMED_MESSAGE"
+        }
+      }
+    },
+    {
       "id": "chain_gap_linked_seq4",
       "type": "validation",
       "kind": "actor_chain",
