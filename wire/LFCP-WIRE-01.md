@@ -2023,6 +2023,8 @@ The coordinator MUST NOT ACK before the record has reached the durability level 
 
 A `CONTROL_PUT` of a record the coordinator has already committed is answered with the same `ACK` again; it changes nothing. A proposal that loses the compare-and-swap is not committed and is not stored as fork evidence.
 
+A writer SHOULD keep its own proposals in order. A writer with several of its own Control Records not yet acknowledged chains each new record on its own latest pending record, its local head, not only on the committed head: the new record's `prev_control_id` and the `CONTROL_PUT` expected head are that pending record's ID, so the coordinator commits the records in the order the writer proposed them. On `CONTROL_HEAD_MISMATCH` the writer SHOULD fetch the records up to the current head named in the `NACK` and then re-propose, on that head, each of its pending records that is still authorized and still meaningful in the new state (for example, a revocation of a grant another record already revoked is no longer meaningful). A re-proposal keeps the record's intent: its type and body are those of the original, so an invitation grant keeps its Invitation Principal, abilities and `claim_limit`, and a Key Package already published to that Invitation Principal stays usable. Records chained on a re-proposed record are re-proposed after it, in order. The writer SHOULD bound its attempts and report a record it could not commit instead of re-proposing it without end. A re-proposed record is a new record with its own Control Record ID, so an invitation URI (Section 18.2) names the grant that was committed; a writer gives out the URI only after the `ACK`.
+
 `COORDINATOR_RECOVERY` is the exception described earlier.
 
 ---

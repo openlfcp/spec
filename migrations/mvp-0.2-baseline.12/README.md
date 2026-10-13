@@ -41,3 +41,11 @@ fixture MS17-empty-adjacent is added after MS45, so the published fixtures
 keep their index; the fixture ID pattern of
 `test-vectors/shared-sections-01/schemas/markdown-fixtures.schema.json` allows
 more than one suffix part for it. No fixture value changes.
+
+LFCP-WIRE-01 §47 adds a writer rule (SHOULD): a writer chains each new
+Control Record on its own latest pending record and, on
+`CONTROL_HEAD_MISMATCH`, re-proposes a still-authorized, still-meaningful
+record on the new head with its intent unchanged, with bounded attempts.
+`wire/LFCP-WIRE-01.cddl` and `wire/LFCP-WIRE-01.summary.cddl` are re-extracted
+(source line numbers only). No vector is added or changed: the rule binds a
+writer's choices, which a vector of single messages does not show.
