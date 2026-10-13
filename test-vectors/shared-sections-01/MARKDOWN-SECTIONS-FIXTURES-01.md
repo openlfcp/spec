@@ -95,6 +95,7 @@ Diagnostics depending on a durable projection base or actual model state, such a
 | MS15 | Copy rendered Task title | No SVG, status label or participant popover in clipboard |
 | MS16 | Fence typed inside the region | Becomes a raw node with a new identity (M6); was a suspension in the planning fixtures |
 | MS17-empty | Empty paragraph | Keep its node identity |
+| MS17-empty-adjacent | Empty paragraph directly followed by another node marker | Keep its node identity; the next marker begins its own node (§4.3) |
 | MS17-transient | Incomplete Task syntax while typing | Do not create a new object from damaged binding |
 | MS17-undo | Undo an acknowledged completion | New compensating reopen intent, not retracted history |
 | MS18 | Ambiguous external cut/paste | Preserve content; no physical shared deletion |

@@ -133,7 +133,11 @@ The paragraph marker prefixes its paragraph at the same content indentation. The
 
 Under a Task or item, the paragraph marker and paragraph sit at that parent's content indentation. The paragraph marker and item marker have distinct tokens, so a paragraph directly below a Task or item is not bound to its parent by accident.
 
-Paragraph nodes may contain soft line breaks. Separate paragraphs are separate nodes. An empty paragraph during editing is retained locally; an empty saved paragraph may be represented by its marker followed by an empty line and keeps its node identity. This explicit empty case is the only exception to the immediate non-blank paragraph rule.
+Paragraph nodes may contain soft line breaks. Separate paragraphs are separate nodes. An empty paragraph during editing is retained locally; an empty saved paragraph may be represented by its marker followed by an empty line and keeps its node identity.
+
+A paragraph marker followed directly by another node marker, with no paragraph line between them, binds an empty paragraph in the same way: the paragraph keeps its node identity, its Text is empty, and the following marker begins its own node. A parser MUST NOT read the following marker as the paragraph's content, and MUST NOT drop the empty paragraph or report its binding as lost.
+
+These two explicit empty cases are the only exceptions to the immediate non-blank paragraph rule.
 
 ### 4.4 Raw blocks
 
@@ -372,7 +376,7 @@ Existing `MALFORMED_LFCP_REF`, `DUPLICATE_LFCP_REF`, `LFCP_REF_NOT_AT_LINE_END`,
 | MS14 | Structural conflict freezes unsafe projection while preserving local text |
 | MS15 | No decorative icons/labels in plain or rich clipboard output |
 | MS16 | A fence typed inside the region becomes a raw node (M6); unsupported syntax such as a heading (MS34) remains intact and visible as a problem |
-| MS17 | Empty paragraph, transient list edits and undo preserve identity or diagnose ambiguity |
+| MS17 | Empty paragraph (followed by an empty line, or directly by another node marker), transient list edits and undo preserve identity or diagnose ambiguity |
 | MS18 | Cut/paste across files never physically destroys shared content |
 | MS19 | Mismatched end reference blocks extraction |
 | MS20 | A foreign Resource Task ref is not silently adopted |

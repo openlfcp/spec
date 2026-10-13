@@ -34,3 +34,10 @@ New cases: S17 (equal status writes), S18 (equal restores) and S19 (two
 equal writes and a different one) in SHARED-OBJECTS-TEST-VECTORS-01; SS92
 (equal restores), SS93 (equal status writes) and SS94 (different status
 writes) in the shared sections corpus.
+
+MARKDOWN-SECTIONS-01 §4.3 now says that a paragraph marker followed directly
+by another node marker binds an empty paragraph that keeps its identity. The
+fixture MS17-empty-adjacent is added after MS45, so the published fixtures
+keep their index; the fixture ID pattern of
+`test-vectors/shared-sections-01/schemas/markdown-fixtures.schema.json` allows
+more than one suffix part for it. No fixture value changes.

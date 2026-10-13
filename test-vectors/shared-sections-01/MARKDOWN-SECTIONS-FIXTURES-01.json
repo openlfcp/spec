@@ -2163,6 +2163,55 @@
           "note.md": "abbfda3e465264dfcfdf37683ef12af2cb14c24e0d456528a520be0036246d5d"
         }
       }
+    },
+    {
+      "id": "MS17-empty-adjacent",
+      "title": "Empty paragraph directly followed by another node marker retains its binding",
+      "execution": "lexical-and-contract-only",
+      "projection_base": "trusted",
+      "rationale": "MARKDOWN-SECTIONS-01 §4.3: the marker of 84cf3237-3432-7041-881f-c34897689278 is followed directly by the marker of e9a163ea-76d2-7b98-ad10-1a0e7fbb278a, so 84cf3237-3432-7041-881f-c34897689278 is an empty paragraph that keeps its node identity, as the Obsidian adapter (0.2.0-beta.9) binds it; the second marker is not its content.",
+      "before_files": {
+        "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  <!-- lfcp-node: paragraph:e9a163ea-76d2-7b98-ad10-1a0e7fbb278a -->\n  Second paragraph\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+      },
+      "event": {
+        "kind": "scan",
+        "observed_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  <!-- lfcp-node: paragraph:e9a163ea-76d2-7b98-ad10-1a0e7fbb278a -->\n  Second paragraph\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "requires_ast_assertions": {
+          "empty_paragraphs": [
+            "84cf3237-3432-7041-881f-c34897689278"
+          ],
+          "paragraph_texts": {
+            "84cf3237-3432-7041-881f-c34897689278": "",
+            "e9a163ea-76d2-7b98-ad10-1a0e7fbb278a": "Second paragraph"
+          }
+        }
+      },
+      "expected": {
+        "after_files": {
+          "note.md": "PRIVATE_BEFORE_8f3a: budget and personal thoughts.\n\n## Joint launch\n<!-- lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n- [ ] Prepare contract\n  <!-- lfcp-ref: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#task:2372cd94-58dc-7fd0-bbc6-6e17c0aebc80 -->\n  <!-- lfcp-node: paragraph:84cf3237-3432-7041-881f-c34897689278 -->\n  <!-- lfcp-node: paragraph:e9a163ea-76d2-7b98-ad10-1a0e7fbb278a -->\n  Second paragraph\n<!-- /lfcp-section: lfcp1:LWB1c56f0jsstqrVjCb3kKmiY9K_7wig-OtGwO6EIfo#section:268a166f-4891-7243-840e-e7fea9fe6390 -->\n\nPRIVATE_AFTER_71c2: do not transmit.\n"
+        },
+        "diagnostics": [],
+        "publication": "none",
+        "intents": [],
+        "lexical": {
+          "sections": 1,
+          "task_refs": 1,
+          "node_refs": 2
+        }
+      },
+      "files_sha256": {
+        "before": {
+          "note.md": "71cc5458cc7c90944f00812780a350bded512648f087df214ed07f795780dad1"
+        },
+        "observed": {
+          "note.md": "71cc5458cc7c90944f00812780a350bded512648f087df214ed07f795780dad1"
+        },
+        "after": {
+          "note.md": "71cc5458cc7c90944f00812780a350bded512648f087df214ed07f795780dad1"
+        }
+      }
     }
   ]
 }

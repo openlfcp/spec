@@ -3,7 +3,8 @@
 // fixtures for the grammar decisions M1-M7: the start marker follows the
 // heading, Task refs inside sections are child-line, unsupported blocks are
 // raw nodes, comments follow the sender's setting, an inline ref tolerates a
-// Tasks suffix. Identities MS01-MS26 are kept; MS27-MS45 are added.
+// Tasks suffix. Identities MS01-MS26 are kept; MS27-MS45 and
+// MS17-empty-adjacent are added.
 import fs from 'node:fs';
 import path from 'node:path';
 import {resource,ids,uid,hash} from './section-model.mjs';
@@ -207,6 +208,14 @@ add('MS45','An inline ref after the Tasks fields moves before them (§4.1, H8)',
   kind:'line_idle',after:note(water(ids.task,'2026-10-08')),extra:{settings:{binding_placement:'inline'}},
   checks:{lexical:{sections:1,task_refs:1,node_refs:0},observed_diagnostics:[]},
   rationale:'Host fact H8: Tasks does not see fields before a ref at the end of the line.'});
+// Added after MS45 so that the fixtures already published keep their index.
+// §4.3: a paragraph marker followed directly by another node marker binds an
+// empty paragraph that keeps its identity.
+add('MS17-empty-adjacent','Empty paragraph directly followed by another node marker retains its binding',{
+  before:note(task+'\n  '+node('paragraph',ids.para)+'\n  '+node('paragraph',ids.extra)+'\n  Second paragraph'),
+  checks:{lexical:{sections:1,task_refs:1,node_refs:2}},
+  extra:{requires_ast_assertions:{empty_paragraphs:[ids.para],paragraph_texts:{[ids.para]:'',[ids.extra]:'Second paragraph'}}},
+  rationale:'MARKDOWN-SECTIONS-01 §4.3: the marker of '+ids.para+' is followed directly by the marker of '+ids.extra+', so '+ids.para+' is an empty paragraph that keeps its node identity, as the Obsidian adapter (0.2.0-beta.9) binds it; the second marker is not its content.'});
 
 const result={suite:'MARKDOWN-SECTIONS-FIXTURES-01',schema_version:1,date:'2026-10-08',
   profile:'org.openlfcp.shared-sections.v1',status:'golden expectations for MARKDOWN-SECTIONS-01 (Working Draft); reference lexical/smoke checks only',
