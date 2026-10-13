@@ -2849,7 +2849,7 @@ signature:
 
 ### 17.12 Actor chains across a sequence gap
 
-`validation` cases of kind `actor_chain` for `LFCP-WIRE-01` §26.2 (SPEC-PATCH-05 / G-DP1-GAP). CAROL publishes epoch-1 units at Control Head C6; her sequence 3 was reserved and abandoned, so her sequence 4 links to sequence 2. A receiver receives `accepted_seq1_cose` (D4), then `accepted_seq2_cose`, then `cose_sign1`, and reaches the expected outcome for `cose_sign1`: the gap-linked unit is accepted (the Have Vector keeps the hole, CAROL 1..2 and 4..4); a unit whose `previous` names an unknown unit is held and reported (`disposition` `report`), not merged.
+`validation` cases of kind `actor_chain` for `LFCP-WIRE-01` §26.2 (SPEC-PATCH-05 / G-DP1-GAP). CAROL publishes epoch-1 units at Control Head C6; her sequence 3 was reserved and abandoned, so her sequence 4 links to sequence 2. A receiver receives `accepted_seq1_cose` (D4), then `accepted_seq2_cose`, then `cose_sign1`, and reaches the expected outcome for `cose_sign1`: the gap-linked unit is accepted (the Have Vector keeps the hole, CAROL 1..2 and 4..4); a unit whose `previous` names an unknown unit is held and reported (`disposition` `report`), not merged. Two cases have a null `previous` after sequence 1 (§26.2): `chain_prev_null_first_stale_seq2` has no `accepted_*` inputs, since the receiver has accepted no unit of CAROL (her sequence 1 went stale), so her sequence 2 with a null `previous` links and is accepted; `chain_prev_null_after_accepted_seq3` follows her accepted sequences 1 and 2, so it is held and reported.
 
 #### chain_gap_linked_seq4: CAROL seq 4 linked to seq 2 across the abandoned seq 3
 
@@ -2905,6 +2905,49 @@ c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402
 f653cf1d443bf60b29ebacf7706a49d11ccce0d839b70ed8559c973dfdde381204a243dc9609538f0c00ee19c4fb9671
 4088645840ae20ffbd26c5c332b4f678228804fbab777c3f344f778ecc8735fa5a82e0562c6cba99ba0e57238d099191
 52c27116635ffa405c8e3a66138a5c43145051f200
+```
+
+#### chain_prev_null_first_stale_seq2: CAROL seq 2 with a null previous; the receiver has accepted no unit of CAROL (her seq 1 went stale)
+
+No accepted_* inputs: receive cose_sign1 alone. It links and is accepted. A writer whose only earlier unit went stale or was abandoned holds no own unit as accepted, so its next unit names none, whatever its sequence.
+
+cose_sign1:
+
+```text
+845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058b7a7005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c26
+85ecc3a0457fef86d4e251abd48efe943c1282da48030204f6055820e67fb23dc530252680216aecfeadb0951b1d3f87
+26c49afefd724b182dddc518065844ffa816bf70cb8b6b20a71f548931cfd4fd3354a40482afcc00619056f4d9336aae
+232ea2dd9e5f2f1ecc18ad0f9abf8bc24c31df888464bfe9ccb56ae5e6ebe4985a61aa584004c97d4e7412b768fc8bea
+4e31ee7d041e26ebce09f19223c45ebd50125162e7a77c4d26c0f89ec78353dc2c850403c8ae94fba861cb010a20465c
+3cba444005
+```
+
+#### chain_prev_null_after_accepted_seq3: CAROL seq 3 with a null previous while the receiver has accepted her seq 1 and seq 2
+
+Receive accepted_seq1_cose, then accepted_seq2_cose, then cose_sign1: it is held (reported), not merged.
+
+accepted_seq2_cose:
+
+```text
+845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058c7a7005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c26
+85ecc3a0457fef86d4e251abd48efe943c1282da4803020458209b0c864dbee938ab1f0a106d32947004c7bb444d2924
+211fede31f8bcf411743055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518065833
+ffa816bf70cb8b6b20a71f548931cfd4fd3354a40482afcc00619056f4d9336aae232e2896cca615f0c95af65017f9f5
+4b5d415840b3e1ffc12943909458141fd17e7eca388e398d9618423aec26f8d873b7b2bb2cbe1714ff59317d950467ad
+8dc0320b9bc7e5dc2f34682229b126db35cc44430e
+```
+
+cose_sign1:
+
+```text
+845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058a6a7005820
+c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c26
+85ecc3a0457fef86d4e251abd48efe943c1282da48030304f6055820e67fb23dc530252680216aecfeadb0951b1d3f87
+26c49afefd724b182dddc5180658335e7946bc95bd45d8848dba9bdd162f88ee5ce995d8aaa89c1f252dd337525ab36c
+2e7d80933c489ac9bd3d4dee1659cde152a95840a78a114d6925c018afe4119b9d45c4822fcf5b807f06b42ec2aa3644
+7ec9cc22e59d2693e6e752c4a6a6b585e5a351cec439082e95c87275cc22b8a3bef1cd01
 ```
 
 ### 17.13 Invitation URI parsing

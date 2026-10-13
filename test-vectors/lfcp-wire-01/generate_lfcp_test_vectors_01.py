@@ -1716,6 +1716,11 @@ def generate():
     D_C4 = data_unit(CAROL, 1, 4, D_C2['id'], C6['id'], b'LFCP epoch-1 unit from Carol, seq 4', DEK1)
     unknown_prev = h('LFCP-TV-UNKNOWN-PREVIOUS')
     D_C4_UNKNOWN = data_unit(CAROL, 1, 4, unknown_prev, C6['id'], b'LFCP epoch-1 unit from Carol, seq 4', DEK1)
+    # After a first unit that went stale (or was abandoned), the writer holds
+    # no own unit as accepted: its unit at sequence 2 names none (§26.2).
+    D_C2_NULL = data_unit(CAROL, 1, 2, None, C6['id'], b'LFCP epoch-1 unit from Carol, seq 2, her seq 1 stale', DEK1)
+    # A null previous while the receiver holds an accepted unit of the actor.
+    D_C3_NULL = data_unit(CAROL, 1, 3, None, C6['id'], b'LFCP epoch-1 unit from Carol, seq 3', DEK1)
     CHAIN_RULE = 'LFCP-WIRE-01 §26.2'
     CHAIN_TEXT = ('A unit links when its `previous` names the receiver\'s latest accepted unit of that actor '
                   '[...], even when sequences lie between the two. Such a sequence gap is a hole: it never blocks '
@@ -1748,6 +1753,33 @@ def generate():
                 'rule': {'section': CHAIN_RULE, 'text': CHAIN_TEXT},
                 'why': 'Only a link to the latest accepted unit completes the chain; a link to an unknown unit '
                        'waits for it.',
+            },
+            'expected': {'valid': False, 'disposition': 'report'},
+        },
+        {
+            'id': 'chain_prev_null_first_stale_seq2',
+            'description': 'CAROL seq 2 with a null previous; the receiver has accepted no unit of CAROL (her seq 1 went stale)',
+            'note': 'No accepted_* inputs: receive cose_sign1 alone. It links and is accepted. A writer whose only '
+                    'earlier unit went stale or was abandoned holds no own unit as accepted, so its next unit names '
+                    'none, whatever its sequence.',
+            'inputs': {'signer': 'CAROL', 'dek': 'dek1', 'cose_sign1': hexv(D_C2_NULL['cose'])},
+            'derivation': None,
+            'expected': {'valid': True},
+        },
+        {
+            'id': 'chain_prev_null_after_accepted_seq3',
+            'description': 'CAROL seq 3 with a null previous while the receiver has accepted her seq 1 and seq 2',
+            'note': 'Receive accepted_seq1_cose, then accepted_seq2_cose, then cose_sign1: it is held (reported), '
+                    'not merged.',
+            'inputs': {**chain_inputs, 'cose_sign1': hexv(D_C3_NULL['cose'])},
+            'derivation': {
+                'base_case': 'chain_prev_null_first_stale_seq2',
+                'mutation': {'field': 'receiver state', 'from': 'no accepted unit of CAROL',
+                             'to': 'CAROL seq 1 and seq 2 accepted (the unit at seq 3)'},
+                'rule': {'section': CHAIN_RULE,
+                         'text': 'A unit is reported when [...] its `previous` is `null` while the receiver has '
+                                 'already accepted a unit of that actor.'},
+                'why': 'A null previous links only when the receiver has accepted no unit of the actor.',
             },
             'expected': {'valid': False, 'disposition': 'report'},
         },
@@ -2628,7 +2660,7 @@ def generate_markdown(f: dict):
 
     a('### 17.12 Actor chains across a sequence gap')
     a('')
-    a('`validation` cases of kind `actor_chain` for `LFCP-WIRE-01` §26.2 (SPEC-PATCH-05 / G-DP1-GAP). CAROL publishes epoch-1 units at Control Head C6; her sequence 3 was reserved and abandoned, so her sequence 4 links to sequence 2. A receiver receives `accepted_seq1_cose` (D4), then `accepted_seq2_cose`, then `cose_sign1`, and reaches the expected outcome for `cose_sign1`: the gap-linked unit is accepted (the Have Vector keeps the hole, CAROL 1..2 and 4..4); a unit whose `previous` names an unknown unit is held and reported (`disposition` `report`), not merged.')
+    a('`validation` cases of kind `actor_chain` for `LFCP-WIRE-01` §26.2 (SPEC-PATCH-05 / G-DP1-GAP). CAROL publishes epoch-1 units at Control Head C6; her sequence 3 was reserved and abandoned, so her sequence 4 links to sequence 2. A receiver receives `accepted_seq1_cose` (D4), then `accepted_seq2_cose`, then `cose_sign1`, and reaches the expected outcome for `cose_sign1`: the gap-linked unit is accepted (the Have Vector keeps the hole, CAROL 1..2 and 4..4); a unit whose `previous` names an unknown unit is held and reported (`disposition` `report`), not merged. Two cases have a null `previous` after sequence 1 (§26.2): `chain_prev_null_first_stale_seq2` has no `accepted_*` inputs, since the receiver has accepted no unit of CAROL (her sequence 1 went stale), so her sequence 2 with a null `previous` links and is accepted; `chain_prev_null_after_accepted_seq3` follows her accepted sequences 1 and 2, so it is held and reported.')
     a('')
     for x in f['actor_chain']:
         a(f'#### {x["id"]}: {x["description"]}')
@@ -2636,6 +2668,8 @@ def generate_markdown(f: dict):
         a(x['note'])
         a('')
         for k in ('accepted_seq2_cose', 'cose_sign1'):
+            if k not in x['inputs']:
+                continue
             a(f'{k}:')
             a('')
             a(code_hex(x['inputs'][k]['hex']))

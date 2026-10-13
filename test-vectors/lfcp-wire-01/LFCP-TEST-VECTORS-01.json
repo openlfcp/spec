@@ -3103,6 +3103,60 @@
       }
     },
     {
+      "id": "chain_prev_null_first_stale_seq2",
+      "type": "validation",
+      "kind": "actor_chain",
+      "description": "CAROL seq 2 with a null previous; the receiver has accepted no unit of CAROL (her seq 1 went stale)",
+      "note": "No accepted_* inputs: receive cose_sign1 alone. It links and is accepted. A writer whose only earlier unit went stale or was abandoned holds no own unit as accepted, so its next unit names none, whatever its sequence.",
+      "inputs": {
+        "signer": "CAROL",
+        "dek": "dek1",
+        "cose_sign1": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058b7a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48030204f6055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518065844ffa816bf70cb8b6b20a71f548931cfd4fd3354a40482afcc00619056f4d9336aae232ea2dd9e5f2f1ecc18ad0f9abf8bc24c31df888464bfe9ccb56ae5e6ebe4985a61aa584004c97d4e7412b768fc8bea4e31ee7d041e26ebce09f19223c45ebd50125162e7a77c4d26c0f89ec78353dc2c850403c8ae94fba861cb010a20465c3cba444005"
+        }
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "chain_prev_null_after_accepted_seq3",
+      "type": "validation",
+      "kind": "actor_chain",
+      "description": "CAROL seq 3 with a null previous while the receiver has accepted her seq 1 and seq 2",
+      "note": "Receive accepted_seq1_cose, then accepted_seq2_cose, then cose_sign1: it is held (reported), not merged.",
+      "inputs": {
+        "accepted_seq1_cose": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a0589fa7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48030104f6055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc51806582c4dd85825362439c8e0cc06be7de0a147073dfa0869091441ec2830928ff8e13873145f9f61ad1cd487e7ea815840006bcbc4432511ee53a5fce412083d91764875ce676bfe691a931d1547a8068c4bfba3182be1bddd5d5983f8f55c0859b1004214bcee6ec545f2c034c1d77b04"
+        },
+        "accepted_seq2_cose": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058c7a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da4803020458209b0c864dbee938ab1f0a106d32947004c7bb444d2924211fede31f8bcf411743055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc518065833ffa816bf70cb8b6b20a71f548931cfd4fd3354a40482afcc00619056f4d9336aae232e2896cca615f0c95af65017f9f54b5d415840b3e1ffc12943909458141fd17e7eca388e398d9618423aec26f8d873b7b2bb2cbe1714ff59317d950467ad8dc0320b9bc7e5dc2f34682229b126db35cc44430e"
+        },
+        "signer": "CAROL",
+        "dek": "dek1",
+        "cose_sign1": {
+          "hex": "845826a20127045820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48a058a6a7005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc2410101025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da48030304f6055820e67fb23dc530252680216aecfeadb0951b1d3f8726c49afefd724b182dddc5180658335e7946bc95bd45d8848dba9bdd162f88ee5ce995d8aaa89c1f252dd337525ab36c2e7d80933c489ac9bd3d4dee1659cde152a95840a78a114d6925c018afe4119b9d45c4822fcf5b807f06b42ec2aa36447ec9cc22e59d2693e6e752c4a6a6b585e5a351cec439082e95c87275cc22b8a3bef1cd01"
+        }
+      },
+      "derivation": {
+        "base_case": "chain_prev_null_first_stale_seq2",
+        "mutation": {
+          "field": "receiver state",
+          "from": "no accepted unit of CAROL",
+          "to": "CAROL seq 1 and seq 2 accepted (the unit at seq 3)"
+        },
+        "rule": {
+          "section": "LFCP-WIRE-01 §26.2",
+          "text": "A unit is reported when [...] its `previous` is `null` while the receiver has already accepted a unit of that actor."
+        },
+        "why": "A null previous links only when the receiver has accepted no unit of the actor."
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "report"
+      }
+    },
+    {
       "id": "invite_uri_unknown_parameter",
       "type": "validation",
       "kind": "invite_uri",
