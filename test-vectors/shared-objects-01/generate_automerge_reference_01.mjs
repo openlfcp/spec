@@ -6,7 +6,7 @@
 //   node test-vectors/shared-objects-01/generate_automerge_reference_01.mjs [--out-dir DIR]
 //
 // Writes SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json next to this script (or
-// into DIR). For every behavioral scenario S01-S16 of
+// into DIR). For every behavioral scenario S01-S19 of
 // SHARED-OBJECTS-TEST-VECTORS-01.json it records the exact Automerge changes
 // that build the scenario, in an order in which each change's dependencies
 // precede it, the full-save image of the converged document, its logical
@@ -191,7 +191,32 @@ function mergeAll(docs) {
   return docs.slice(1).reduce((merged, doc) => A.merge(merged, doc), A.clone(docs[0]));
 }
 
-/** Scalar fields of every object with more than one concurrent value. */
+/**
+ * The distinct concurrent values of `object[field]` (§45). Two values are
+ * equal when they have the same Automerge scalar type and the same value;
+ * an object (a map, a list or Text) equals no other value. The types come
+ * from the backend: getConflicts reads a scalar string and Text alike.
+ */
+function distinctValues(doc, object, field) {
+  const conflicts = A.getConflicts(object, field) ?? {};
+  const types = new Map(
+    A.getBackend(doc)
+      .getAll(A.getObjectId(object), field)
+      .map((op) => [op.at(-1), op.length === 3 ? JSON.stringify([op[0], op[1] instanceof Uint8Array ? [...op[1]] : op[1]]) : null]),
+  );
+  const seen = new Set();
+  return Object.entries(conflicts)
+    .filter(([opId]) => {
+      const key = types.get(opId);
+      if (key === null) return true;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .map(([, value]) => value);
+}
+
+/** Scalar fields of every object with two or more distinct concurrent values. */
 function conflictSets(doc) {
   const out = {};
   for (const [id, object] of Object.entries(doc.objects)) {
@@ -201,14 +226,33 @@ function conflictSets(doc) {
       continue;
     }
     for (const field of Object.keys(object)) {
-      const values = A.getConflicts(object, field);
-      if (values && Object.keys(values).length > 1) {
+      // §45: concurrent equal values agree; the conflict set holds the
+      // distinct values, and a field is conflicted only with two or more.
+      const values = distinctValues(doc, object, field);
+      if (values.length > 1) {
         out[id] ??= {};
-        out[id][field] = Object.values(values).map((v) => plain(v)).sort();
+        out[id][field] = values.map((v) => plain(v)).sort();
       }
     }
   }
   return out;
+}
+
+/**
+ * The scenario's expected `<field>_conflict_set` against the corpus (§45):
+ * a reported conflict lists exactly those distinct values; an unreported one
+ * leaves the field out of the conflicts.
+ */
+function checkConflictSets(id, expected, conflicts) {
+  for (const [key, set] of Object.entries(expected)) {
+    const field = /^(.+)_conflict_set$/.exec(key)?.[1];
+    if (field === undefined) continue;
+    const actual = conflicts[field];
+    const ok = expected.must_report_conflict
+      ? JSON.stringify(actual) === JSON.stringify([...set].sort())
+      : actual === undefined;
+    if (!ok) throw new Error(`${id}: ${field} conflicts ${JSON.stringify(actual)} disagree with ${key} ${JSON.stringify(set)}`);
+  }
 }
 
 /** Run one scenario: build its history and its converged document. */
@@ -281,7 +325,7 @@ const corpus = {
     change_time: 0,
     change_message: "the change label",
     conflicts:
-      "conflicts[object-id][field] lists the concurrent values of a scalar field, sorted; " +
+      "conflicts[object-id][field] lists the distinct concurrent values of a scalar field, sorted, when there are two or more (equal values agree, §45); " +
       "conflicts[object-id][''] counts concurrent objects under one Object ID (an OBJECT_ID_COLLISION)",
   },
   scenarios: [],
@@ -305,6 +349,7 @@ for (const id of scenarios.keys()) {
     state: plain(A.toJS(doc)),
     conflicts: conflictSets(doc),
   };
+  checkConflictSets(id, scenario.expected, entry.conflicts[fixtures.objects.task_1] ?? {});
   if (snapshot !== null) {
     entry.snapshot = {
       note: "full-save image taken before the post-snapshot change; load it, then apply the changes it does not contain",

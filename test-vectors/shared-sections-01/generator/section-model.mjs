@@ -170,7 +170,8 @@ export function inspect(doc) {
     if(kind==='task' && (str(o.task_id)!==n || !doc.objects[n]))fail(n,'INVALID_REFERENCE');
     if(kind!=='task' && (!A.getObjectId(o,'text') || A.isImmutableString(o.text)))fail(n,'INVALID_FIELD_TYPE');
     if(!A.isImmutableString(o.placement))fail(n,'INVALID_FIELD_TYPE');
-    if(values(o,'placement').length>1)blocked.set(n,'PLACEMENT_CONFLICT');
+    // §7.2: assignments that differ; equal ones agree (SOP §45).
+    if(new Set(values(o,'placement')).size>1)blocked.set(n,'PLACEMENT_CONFLICT');
     const s=doc.placements?.[str(o.placement)];
     if(!s||str(s.node_id)!==n){if(!blocked.has(n))fail(n,'INVALID_REFERENCE');continue;}
     parents[n]=str(s.parent_id);
@@ -231,7 +232,10 @@ export function inspect(doc) {
   if(!errors.length&&!importing)walk(ids.section,0);
   const scalarConflicts=[];
   for(const [n,obj] of Object.entries(doc.objects||{}))for(const field of ['title','status','lifecycle','due','priority']){
-    const v=values(obj,field);if(v.length>1)scalarConflicts.push({id:n,field,values:v});
+    // SOP §45: the distinct concurrent values; equal values agree. These
+    // fields hold scalar strings only (A5), so comparing the strings compares
+    // type and value.
+    const v=[...new Set(values(obj,field))];if(v.length>1)scalarConflicts.push({id:n,field,values:v});
   }
   return {
     classification:errors.length?'PROFILE_INVALID':importing?'IMPORTING':blocked.size||invalid.size||collisions.size?'STRUCTURAL_ATTENTION':'VALID',
@@ -279,4 +283,6 @@ export function assertExpected(actual, requirements, assert) {
   if(requirements.nodeCount!==undefined)assert.equal(actual.nodeCount,requirements.nodeCount);
   if(requirements.treeCount!==undefined)assert.equal(actual.tree.length,requirements.treeCount);
   if(requirements.scalarConflict)assert(actual.scalarConflicts.some(x=>x.id===requirements.scalarConflict.id&&x.field===requirements.scalarConflict.field));
+  if(requirements.scalarConflictValues)assert(actual.scalarConflicts.some(x=>x.id===requirements.scalarConflictValues.id&&x.field===requirements.scalarConflictValues.field&&JSON.stringify(x.values)===JSON.stringify(requirements.scalarConflictValues.values)),'missing scalar conflict values');
+  if(requirements.noScalarConflicts)assert.deepEqual(actual.scalarConflicts,[],'unexpected scalar conflict');
 }

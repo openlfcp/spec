@@ -1239,13 +1239,17 @@ These merge automatically according to their collection semantics.
 
 ## 45. Scalar conflict detection
 
-A scalar field is semantically conflicted whenever Automerge reports more than one concurrent value for that property.
+A scalar field is semantically conflicted when Automerge reports more than one concurrent value for that property and at least two of those values differ.
+
+Concurrent values that are all equal agree. The field is not conflicted, and its value is that value: for example, two peers that each set `status = done`, or each restore a deleted Task to `lifecycle = active`, produce no conflict. Two values are equal when they have the same Automerge scalar type and the same value; strings compare code point by code point. A value that is an object (a map, a list or Text) equals no other value.
+
+The conflict set of a field is the set of its distinct concurrent values. A conflict is reported only when that set holds two or more values.
 
 A client MAY use one deterministic Automerge-selected visible value for provisional rendering.
 
 However:
 
-> A client MUST NOT describe the field as resolved while multiple concurrent values exist.
+> A client MUST NOT describe the field as resolved while multiple distinct concurrent values exist.
 
 The conflict MUST remain discoverable through the application API.
 
@@ -1418,6 +1422,8 @@ lifecycle = active
 `lifecycle` is conflicted.
 
 User-facing clients MUST surface this conflict.
+
+Two concurrent restores, both writing `lifecycle = active`, agree and are not a conflict (Section 45). Likewise two concurrent deletions.
 
 ---
 

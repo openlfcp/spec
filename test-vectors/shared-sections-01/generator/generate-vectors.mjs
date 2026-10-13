@@ -756,6 +756,35 @@ record('SS91','A change whose dependencies do not read is refused and named',{
   assert.deepEqual(c.expected.state.refused,[{change:name,diagnostic:'INVALID_AUTOMERGE_BYTES'}]);
   assert.equal(c.inputs.branches.A.at(-1).change_hash,name);
 }
+// Equal values (SHARED-OBJECTS-PROFILE-01 §45): concurrent writes of the same
+// value to a scalar register agree and are not a conflict; a conflict is
+// reported only when the concurrent values differ.
+const deletedTask=change(fork(seeds,'A'),'deleted-task',d=>setLife(d,ids.task,'deleted'));
+record('SS92','Concurrent equal restores agree',{
+  base:deletedTask,
+  a:[['restore',d=>setLife(d,ids.task,'active')]],
+  b:[['restore',d=>setLife(d,ids.task,'active')]],
+  requirements:{classification:'VALID',visible,noScalarConflicts:true,tasks:{[ids.task]:{lifecycle:'active'}}},
+  notes:['Both branches write lifecycle = active: Automerge holds two concurrent values, which are equal, so there is no LIFECYCLE_CONFLICT and the Task is visible (SHARED-SECTIONS-PROFILE-01 §14.3, SOP §45, §52).']});
+record('SS93','Concurrent equal status writes agree',{
+  a:[['complete',d=>{d.objects[ids.task].status=S('done');}]],
+  b:[['complete',d=>{d.objects[ids.task].status=S('done');}]],
+  requirements:{classification:'VALID',visible,noScalarConflicts:true,tasks:{[ids.task]:{status:'done'}}},
+  notes:['Both branches write status = done: the concurrent values are equal and agree, so no scalar conflict is reported (SOP §45).']});
+record('SS94','Concurrent different status writes conflict',{
+  a:[['complete',d=>{d.objects[ids.task].status=S('done');}]],
+  b:[['cancel',d=>{d.objects[ids.task].status=S('cancelled');}]],
+  requirements:{classification:'VALID',visible,scalarConflictValues:{id:ids.task,field:'status',values:['cancelled','done']}},
+  notes:['The concurrent values differ, so status is conflicted with the conflict set [cancelled, done] (SOP §45). A Task scalar conflict keeps the section VALID and the Task visible with a conflict indicator (§7.6).']});
+{
+  // The equal writes are two concurrent operations, not one: the agreement
+  // is the profile's (SOP §45), not Automerge's.
+  for(const id of ['SS92','SS93']){
+    const c=cases.find(c=>c.id===id);
+    assert.equal(c.inputs.branches.A.length,1);assert.equal(c.inputs.branches.B.length,1);
+    assert.notEqual(c.inputs.branches.A[0].change_hash,c.inputs.branches.B[0].change_hash);
+  }
+}
 const doc={
   format:'lfcp-vector-format/1',
   suite:{

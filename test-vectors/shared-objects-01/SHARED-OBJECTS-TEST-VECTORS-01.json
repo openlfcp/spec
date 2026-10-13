@@ -926,6 +926,169 @@
       ]
     },
     {
+      "id": "S17",
+      "type": "behavioral",
+      "kind": "shared_object_scenario",
+      "description": "Concurrent equal status writes agree",
+      "inputs": {
+        "base_state": {
+          "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+          "type": "task",
+          "lifecycle": "active",
+          "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
+          "created_at": "2026-10-04T05:30:00Z",
+          "title": "Prepare API contract",
+          "status": "todo",
+          "priority": "normal",
+          "tags": {},
+          "assignees": {},
+          "extensions": {}
+        },
+        "branches": [
+          {
+            "actor": "andrey",
+            "from": "base",
+            "intent": "task.complete",
+            "writes": {
+              "status": "done",
+              "completion_date": "2026-10-08"
+            }
+          },
+          {
+            "actor": "pavel",
+            "from": "base",
+            "intent": "task.complete",
+            "writes": {
+              "status": "done",
+              "completion_date": "2026-10-08"
+            }
+          }
+        ]
+      },
+      "expected": {
+        "status": "done",
+        "completion_date": "2026-10-08",
+        "status_conflict_set": [
+          "done"
+        ],
+        "conflicts": {},
+        "must_report_conflict": false
+      },
+      "assertions": [
+        "Both peers wrote the same value: the concurrent values agree and status is not conflicted (SHARED-OBJECTS-PROFILE-01 §45).",
+        "Automerge still holds two concurrent operations; the conflict set is the set of distinct values."
+      ]
+    },
+    {
+      "id": "S18",
+      "type": "behavioral",
+      "kind": "shared_object_scenario",
+      "description": "Concurrent equal restores agree",
+      "inputs": {
+        "base_state": {
+          "task": {
+            "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+            "type": "task",
+            "lifecycle": "deleted",
+            "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
+            "created_at": "2026-10-04T05:30:00Z",
+            "title": "Prepare API contract",
+            "status": "todo",
+            "priority": "normal",
+            "tags": {},
+            "assignees": {},
+            "extensions": {}
+          }
+        },
+        "branches": [
+          {
+            "actor": "andrey",
+            "from": "base",
+            "intent": "task.restore",
+            "writes": {
+              "lifecycle": "active"
+            }
+          },
+          {
+            "actor": "pavel",
+            "from": "base",
+            "intent": "task.restore",
+            "writes": {
+              "lifecycle": "active"
+            }
+          }
+        ]
+      },
+      "expected": {
+        "lifecycle": "active",
+        "lifecycle_conflict_set": [
+          "active"
+        ],
+        "conflicts": {},
+        "must_report_conflict": false
+      },
+      "assertions": [
+        "Two concurrent restores agree; there is no lifecycle conflict (SHARED-OBJECTS-PROFILE-01 §45, §52)."
+      ]
+    },
+    {
+      "id": "S19",
+      "type": "behavioral",
+      "kind": "shared_object_scenario",
+      "description": "Two equal writes and a different one conflict",
+      "inputs": {
+        "base_state": {
+          "id": "019a2f85-7b31-7c42-b85a-fc843e2f40ad",
+          "type": "task",
+          "lifecycle": "active",
+          "created_by": "p:vQeVKoYhj29Xo2BSDAQDrNPHLydZB-jLOKPWNiq0yfQ",
+          "created_at": "2026-10-04T05:30:00Z",
+          "title": "Prepare API contract",
+          "status": "todo",
+          "priority": "normal",
+          "tags": {},
+          "assignees": {},
+          "extensions": {}
+        },
+        "branches": [
+          {
+            "actor": "andrey",
+            "from": "base",
+            "intent": "task.set_status",
+            "writes": {
+              "status": "done"
+            }
+          },
+          {
+            "actor": "pavel",
+            "from": "base",
+            "intent": "task.set_status",
+            "writes": {
+              "status": "done"
+            }
+          },
+          {
+            "actor": "masha",
+            "from": "base",
+            "intent": "task.cancel",
+            "writes": {
+              "status": "cancelled"
+            }
+          }
+        ]
+      },
+      "expected": {
+        "status_conflict_set": [
+          "cancelled",
+          "done"
+        ],
+        "must_report_conflict": true
+      },
+      "assertions": [
+        "Three concurrent values, two of them equal: the field is conflicted, and its conflict set holds the two distinct values once each (SHARED-OBJECTS-PROFILE-01 §45)."
+      ]
+    },
+    {
       "id": "I01",
       "type": "validation",
       "kind": "profile_validation",

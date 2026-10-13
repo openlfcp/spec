@@ -46,7 +46,7 @@ This profile adopts SHARED-OBJECTS-PROFILE-01 (written `SOP` below) at `mvp-0.1-
 - §14 and §14.1: Snapshot equivalence, the replica state rule, rebuilds, the sequence check, and holding a change whose actor and sequence number another change holds (POST-001).
 - §§15–18: the root rules, as extended by §3 of this profile; reserved keys; extension namespaces.
 
-**Inherited for Tasks: SOP §§19–83.** The Task schema, status/priority/date meanings, tags and assignees, scalar conflicts, tombstones and intents apply to the Task objects of a section. This profile adds the section structure; it does not change a Task.
+**Inherited for Tasks: SOP §§19–83.** The Task schema, status/priority/date meanings, tags and assignees, scalar conflicts (concurrent equal values agree, SOP §45), tombstones and intents apply to the Task objects of a section. This profile adds the section structure; it does not change a Task.
 
 **Diagnostics: the model of SOP §74.1.** Every profile validation failure is `PROFILE_INVALID` with exactly one diagnostic from the registry of §14.2, which extends SOP's.
 
@@ -166,11 +166,11 @@ Concurrent insertions are ordered by the merged Automerge list. Clients MUST use
 Derive structure from the fully available Automerge state, never from arrival order:
 
 1. Validate schema, ID consistency, immutable data and placement/list membership. A missing Automerge dependency is pending, not an empty state.
-2. Read all concurrent assignments for each placement register. More than one assignment yields `PLACEMENT_CONFLICT`; no assignment is silently chosen. This applies even if an API exposes one provisional value.
+2. Read all concurrent assignments for each placement register. Two or more assignments that differ yield `PLACEMENT_CONFLICT`; no assignment is silently chosen. Concurrent assignments of the same PlacementId agree and are not a conflict (SOP §45). This applies even if an API exposes one provisional value.
 3. For an otherwise eligible node, resolve its selected placement and parent. Paragraph parents, wrong-Resource references, missing objects or mismatched node IDs are invalid, not alternate destinations.
 4. Build the selected node-to-parent graph. Compute strongly connected components. Every cycle member is `PARENT_CYCLE`; a self-cycle is included.
 5. Propagate structural blocking to descendants of conflicted/invalid/cyclic parents until a fixed point. These nodes are `BLOCKED_PARENT` unless they already have a more direct error.
-6. Determine effective visibility. A deleted node/Task or a descendant of one is hidden but retained. Lifecycle conflicts block that branch until resolved. A node whose lifecycle is in conflict is blocked, not hidden: no value is chosen, whichever one the engine shows provisionally, and an edit under it is not an edit under a deleted ancestor (§9) until the conflict is resolved. Task scalar title/status conflicts may use a provisional value with a visible conflict indicator, as in the inherited Task contract.
+6. Determine effective visibility. A deleted node/Task or a descendant of one is hidden but retained. Lifecycle conflicts block that branch until resolved. A node whose lifecycle is in conflict is blocked, not hidden: no value is chosen, whichever one the engine shows provisionally, and an edit under it is not an edit under a deleted ancestor (§9) until the conflict is resolved. Task scalar title/status conflicts may use a provisional value with a visible conflict indicator, as in the inherited Task contract. Every scalar register of a section, a node or a Task follows SOP §45: concurrent equal values agree, and a conflict is reported only when the concurrent values differ.
 7. Starting from section.children, scan each merged children list in order. Emit a node only if it is structurally eligible, visible, and selects exactly that entry's PlacementId. Recurse through its children. Historical non-selected slots emit nothing.
 
 The normal output is a forest rooted at the section. There is never an arbitrary cycle-breaking write or duplicate Task emitted to make the tree appear valid.
