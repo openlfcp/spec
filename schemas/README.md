@@ -109,8 +109,10 @@ never required to emit identical changes.
 #### Conflict convention
 
 A behavioral `expected` object states a conflicted field as
-`<field>_conflict_set`: the list of concurrent values that must remain
-discoverable (for example `"status_conflict_set": ["cancelled", "done"]`),
+`<field>_conflict_set`: the list of its distinct concurrent values, which
+must remain discoverable (for example
+`"status_conflict_set": ["cancelled", "done"]`); concurrent equal values
+agree and appear once (SHARED-OBJECTS-PROFILE-01 §45),
 usually together with `must_report_conflict`. `<field>_values_may_include`
 lists values that may appear among them. This is a test convention of the
 vector format, not part of any profile's logical state (decision SO-G4,

@@ -1,8 +1,4 @@
-# Value changes for `mvp-0.2-baseline.12` (draft)
-
-**Draft.** This directory belongs to a proposed baseline that is not tagged.
-The owner decides whether and when `mvp-0.2-baseline.12` is tagged, and
-approves the decisions below.
+# Value changes for `mvp-0.2-baseline.12`
 
 [`value-changes.json`](value-changes.json) lists every vector value that
 differs from the previous baseline, `mvp-0.2-baseline.11`, with the decision
