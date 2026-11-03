@@ -260,7 +260,8 @@
             }
           },
           "if": { "type": "object", "properties": { "valid": { "const": true } } },
-          "then": { "type": "object", "properties": { "error": false } }
+          "then": { "type": "object", "properties": { "error": false } },
+          "else": { "type": "object", "properties": { "post_state": false } }
         }
       },
       "unevaluatedProperties": false
