@@ -133,6 +133,10 @@ def step(action: str, ref: str | None = None, expect: str | None = None, *, bran
     s = {'action': action}
     if ref:
         s['case'] = ref
+        if ref.startswith('wire:'):
+            ch = check_carrier(ref)
+            if ch:
+                s['expect_carries'] = {'change': ch['id'], 'change_hash': ch['inputs']['change_hash'], 'writer_class': ch['inputs']['writer_class']}
         got = outcome_of(ref)
         if expect is not None and expect != got:
             raise SystemExit(f'step {action!r}: expects {expect}, {ref} expects {got}')
@@ -153,6 +157,52 @@ def step(action: str, ref: str | None = None, expect: str | None = None, *, bran
     for k, v in facts.items():
         s[f'expect_{k}' if not k.startswith('in_') else k[3:]] = v
     return s
+
+
+def writer_class_at(label: str, control_ref: str) -> str:
+    """IDENTITY-PROFILE-01 §2.3 from the post-state of the wire case at control_ref."""
+    ps = post(f'wire:{control_ref}')
+    if ps['owner'] == label:
+        return 'root'
+    d = ps['devices'].get(label)
+    return 'other' if d is None else {0: 'personal', 2: 'pairing'}.get(d['kind'], 'other')
+
+
+def check_carrier(ref: str) -> dict | None:
+    """A wire Data Unit that carries a profile change: same bytes, same writer, same writer class at its control_ref."""
+    c = case(ref)
+    carries = c.get('inputs', {}).get('carries')
+    if not carries:
+        return None
+    ch = SUITES['profile'][carries.split()[-1]]
+    if c['inputs']['plaintext_hex']['hex'] != ch['expected']['framed_cbor']['hex']:
+        raise SystemExit(f'{ref}: its plaintext is not the framing of {carries}')
+    if ch['inputs']['writer'] != c['inputs']['actor']:
+        raise SystemExit(f'{ref}: {carries} is written by {ch["inputs"]["writer"]}, the unit by {c["inputs"]["actor"]}')
+    if writer_class_at(c['inputs']['actor'], c['inputs']['control_ref']) != ch['inputs']['writer_class']:
+        raise SystemExit(f'{ref}: the writer class at its control_ref differs from that of {carries}')
+    return ch
+
+
+def check_session(fid: str, steps: list[dict], pairing: str) -> None:
+    """One pairing session through a flow: the link, the binding, the units' signers and the changes' pairing field."""
+    for s in steps:
+        ref = s.get('case')
+        if not ref or s.get('aside'):
+            continue
+        c = case(ref)
+        if c['kind'] == 'pair_uri' and c['type'] == 'bytes':
+            if c['inputs']['device'] != pairing:
+                raise SystemExit(f'{fid}: the link {ref} is of {c["inputs"]["device"]}, not {pairing}')
+            b = post(f"wire:{c['inputs']['binding_head']}")['devices'][pairing]
+            if not (b['kind'] == 2 and b['active'] and b['registered']):
+                raise SystemExit(f'{fid}: {pairing} is not an active registered pairing device where the link is shown')
+        writer = c.get('inputs', {}).get('writer') if ref.startswith('profile:') else c.get('inputs', {}).get('actor')
+        cls = c.get('inputs', {}).get('writer_class')
+        if ref.startswith('wire:') and c['kind'] == 'data_unit':
+            cls = writer_class_at(writer, c['inputs']['control_ref'])
+        if cls == 'pairing' and writer != pairing:
+            raise SystemExit(f'{fid}: step {ref} is written by the pairing device {writer}, not {pairing}')
 
 
 def check_history(fid: str, steps: list[dict], mode: str) -> None:
@@ -176,10 +226,13 @@ def check_history(fid: str, steps: list[dict], mode: str) -> None:
 
 
 def flow(fid: str, description: str, rule: tuple[str, str], steps: list[dict], final: dict, assertions: list[str],
-         inputs: dict | None = None, mode: str = 'sequence') -> None:
+         inputs: dict | None = None, mode: str = 'sequence', pairing: str | None = None) -> None:
     for i, s in enumerate(steps, 1):
         s['n'] = i
     check_history(fid, steps, mode)
+    if pairing:
+        check_session(fid, steps, pairing)
+        inputs = {**(inputs or {}), 'pairing_device': pairing}
     split = lambda s: ({k: v for k, v in s.items() if k != 'outcome' and not k.startswith('expect_')},  # noqa: E731
                        {'n': s['n'], 'outcome': s.get('outcome', 'done'), **{k[7:]: v for k, v in s.items() if k.startswith('expect_')}})
     CASES.append({
@@ -319,16 +372,18 @@ def build() -> None:
     flow('F08_pairing_personal', 'Pairing DEV_B through PAIR_L in an Identity Resource already rotated to epoch 1: keys of both epochs, request, phases 1 and 2, reuse and equivocation',
          ('IDENTITY-PROFILE-01 §5.3, §9', 'A pairing session yields at most one approved payload; nothing is signed for D_B before the consume is committed (N9).'),
          [step('I at P1: DEV_A registered', 'wire:P1_device_grant_dev_a_i', 'accept'),
-          step("The root's Data Unit with actor sequence 1 (the initial change) in epoch 0", 'wire:flow.pl_root_unit_1', 'accept'),
+          step("The root's Data Unit with actor sequence 1 carries the initial change (epoch 0)", 'wire:flow.pl_root_unit_1', 'accept'),
+          step("The root's Data Unit with actor sequence 2 carries the fill change (epoch 0)", 'wire:flow.pl_root_unit_2', 'accept'),
           step('I is rotated to epoch 1', 'wire:flow.pl_key_epoch_1', 'accept'),
           step('DEV_A holds both DEKs and the root\'s unit 1, and creates PAIR_L', 'wire:flow.pl_pairing_device_l', 'accept'),
           step('DEV_A seals the DEK of epoch 0 to PAIR_L', 'wire:flow.pl_kp_epoch0_to_pair_l', 'accept'),
           step('DEV_A seals the DEK of epoch 1 to PAIR_L', 'wire:flow.pl_kp_epoch1_to_pair_l', 'accept'),
-          step('The link is shown', 'profile:pair_uri_roundtrip'),
-          step('B verifies the initial change by replaying the units, and from a Snapshot only after the root\'s unit 1', 'profile:identity_doc_initial_then_fill'),
-          step('A Snapshot whose initial change is not in the root\'s unit 1 is not used', 'profile:identity_doc_initial_without_unit_1'),
-          step('B writes its request as PAIR_L (epoch 1)', 'wire:flow.pl_pair_l_request', 'accept'),
-          step('The document admits the request', 'profile:pairing_writes_own_request', 'accept'),
+          step('The link of PAIR_L is shown', 'profile:pair_uri_pair_l'),
+          step("B opens the root's units 1 and 2 with the DEK of epoch 0 and replays their changes: the document of §5.1 (a Snapshot is used only after unit 1)",
+               'profile:identity_doc_initial_then_fill', in_changes=['change.C0_initial', 'change.C1_fill']),
+          step("A Snapshot whose initial change is not the root's unit 1 is not used", 'profile:identity_doc_initial_without_unit_1', aside=True),
+          step('B writes its request as PAIR_L in epoch 1', 'wire:flow.pl_pair_l_request', 'accept'),
+          step('The document admits the change the unit carries', 'profile:pairing_l_writes_own_request', 'accept'),
           step('A shows the fingerprint', 'profile:fingerprint_dev_b'),
           step('Phase 1: consume with digest(CERT_B)', 'wire:flow.pl_consume_l', 'accept',
                phase_of=('consume', f'wire:{d_jl}', {'root': 'OWNER', 'device': 'PAIR_L', 'digest': d_cert_b}, 'committed-own'), exposing=True),
@@ -341,14 +396,15 @@ def build() -> None:
           step('DEV_A seals the DEK of epoch 0 to DEV_B', 'wire:flow.pl_kp_epoch0_to_dev_b', 'accept'),
           step('DEV_A seals the DEK of epoch 1 to DEV_B', 'wire:flow.pl_kp_epoch1_to_dev_b', 'accept')],
          {'DEV_B_registered_in_I': True, 'approved_payloads': 1, 'DEV_B_epochs': [0, 1]},
-         ['Before the link is shown A holds, verified, the root\'s unit 1 and the DEK of every epoch of I, and seals them all to the pairing device (§5.3 step 1).'])
+         ['Before the link is shown A holds, verified, the root\'s unit 1 and the DEK of every epoch of I, and seals them all to the pairing device (§5.3 step 1).',
+          "One session: the link, the binding, the signer of every pairing unit and the pairing field of every request change name PAIR_L."], pairing='PAIR_L')
     flow('F08.link_reuse_and_equivocation', 'One link, two installations: sequential reuse, and concurrent equivocation',
          ('IDENTITY-PROFILE-01 §5.3 (Concurrency and failure); LFCP-WIRE-01 §26.2', 'Two installations given one link write as PAIR_L: the second writes sequence 2, or both units are excluded as equivocation and A sees no request.'),
          [step('The first installation writes PAIR_L sequence 1', 'wire:flow.pl_pair_l_request', 'accept'),
           step('Sequential reuse: the second installation sees it and writes sequence 2', 'wire:flow.pl_pair_l_reuse_seq2', 'accept', branch='reuse'),
           step('Concurrent: the second installation also writes sequence 1', 'wire:flow.pl_pair_l_request_second_install', 'ACTOR_EQUIVOCATION', branch='equivocation',
                excluded=['flow.pl_pair_l_request', 'flow.pl_pair_l_request_second_install'], request_seen_by_A=False)],
-         {}, ['An equivocating pair is excluded with the changes depending on it (SHARED-OBJECTS-PROFILE-01 §14.1).'], mode='independent')
+         {}, ['An equivocating pair is excluded with the changes depending on it (SHARED-OBJECTS-PROFILE-01 §14.1).'], mode='independent', pairing='PAIR_L')
     flow('F08.binding_limit', 'OWNER at 31 live devices in I: the pairing device takes the 32nd place, the consume frees it, D_B is registered; at 32 no link',
          ('LFCP-WIRE-01 §17.4 rule 8; IDENTITY-PROFILE-01 §5.3 step 1', 'Rule 8 counts live bindings; a revoked pairing device frees its place.'),
          [step('31 live devices of OWNER in I (DEV_A and LIMIT_OWNER_01..30)', 'wire:flow.p31_pairing_device', 'accept', in_record_set='owner_bindings_30_in_i'),
@@ -373,19 +429,26 @@ def build() -> None:
           step('Every candidate is offline: B shows', expect='approved, waiting for registration'),
           step("C0's issuer DEV_A is revoked in I", 'wire:flow.f09_revoke_issuer_in_i', 'accept'),
           step('The root re-certifies BRIDGE_O as C1 (same kind, mask and scope)', 'wire:flow.f09_recertify_c1_in_i', 'accept'),
-          step('Candidate X where C0 was never accepted: reconciliation registers C1', 'wire:flow.f09_x_register_c1', 'accept', branch='X never C0',
-               leaves=leaves_registered_for('BRIDGE_O', 'wire:flow.f09_x_register_c1'), proven=proven('wire:flow.f09_x_register_c1'), status='approval not provable here'),
-          step('Candidate X where C0 was registered first', 'wire:flow.register_bridge_o_in_x', 'accept', branch='X with C0'),
-          step('… and re-certified there as C1: B takes C0 from the history as its result and uses C1', 'wire:flow.f09_x_recertify_c1', 'accept', branch='X with C0',
-               leaves=leaves_registered_for('BRIDGE_O', 'wire:flow.f09_x_recertify_c1'), proven=proven('wire:flow.f09_x_recertify_c1'), uses='CERT_SO_R'),
-          step('BRIDGE_O receives the DEK of X; with the certificate it is ready', 'wire:flow.f09_kp_to_bridge_o_after_recert', 'accept', branch='X with C0', status='ready'),
+          step('Candidate X where C0 was never accepted: reconciliation step 1 propagates the consume of PAIR_J', 'wire:flow.f09a_revoke_pair_j', 'accept', branch='X never C0'),
+          step('… and the revocation of DEV_A', 'wire:flow.f09a_revoke_dev_a', 'accept', branch='X never C0'),
+          step('… then step 2 registers C1', 'wire:flow.f09a_register_c1', 'accept', branch='X never C0',
+               leaves=leaves_registered_for('BRIDGE_O', 'wire:flow.f09a_register_c1'), proven=proven('wire:flow.f09a_register_c1'), status='approval not provable here'),
+          step('Candidate X where C0 was registered first (before I revoked DEV_A)', 'wire:flow.register_bridge_o_in_x', 'accept', branch='X with C0'),
+          step('Reconciliation step 1: the consume of PAIR_J', 'wire:flow.f09b_revoke_pair_j', 'accept', branch='X with C0'),
+          step('… and the revocation of DEV_A, which suspends BRIDGE_O', 'wire:flow.f09b_revoke_dev_a', 'accept', branch='X with C0',
+               BRIDGE_O=dev('wire:flow.f09b_revoke_dev_a', 'BRIDGE_O')),
+          step('Step 2 re-certifies BRIDGE_O as C1: B takes C0 from the history as its result and uses C1', 'wire:flow.f09b_register_c1', 'accept', branch='X with C0',
+               leaves=leaves_registered_for('BRIDGE_O', 'wire:flow.f09b_register_c1'), proven=proven('wire:flow.f09b_register_c1'), uses='CERT_SO_R',
+               BRIDGE_O=dev('wire:flow.f09b_register_c1', 'BRIDGE_O')),
+          step('The root seals the DEK of X to BRIDGE_O; with the certificate and the DEK it is ready', 'wire:flow.f09b_kp_owner_to_bridge_o', 'accept', branch='X with C0', status='ready'),
           step('Candidate X where another issuer registered C* (scope [X, Y], another digest)', 'wire:flow.f09_x_register_cstar', 'accept', branch='X with C*',
                leaves=leaves_registered_for('BRIDGE_O', 'wire:flow.f09_x_register_cstar'), proven=proven('wire:flow.f09_x_register_cstar'), used=False, Y='never shown as granted'),
           step('B restarts: it resumes from its persisted candidates', expect='candidates resumed'),
           step('A crashes after the bind-only DEVICE_GRANT was accepted, before its ACK was persisted',
                phase_of=('register', 'wire:P4s_bind_bridge_o', {'root': 'OWNER', 'device': 'BRIDGE_O', 'certificate': 'CERT_SO', 'own': True}, 'committed-own'), proposes=False)],
          {'registered_in_I': False, 'approved_scope': ['X']},
-         ['The first verified certificate decides: until B holds one, no candidate outcome is known; a candidate absent from the scope is not granted.'])
+         ['The first verified certificate decides: until B holds one, no candidate outcome is known; a candidate absent from the scope is not granted.'],
+         pairing='PAIR_J')
 
     # 10.
     flow('F10_request_feasibility', 'Request validation and the feasibility check before anything is committed',
@@ -430,16 +493,24 @@ def build() -> None:
          ['7 without 6 in a Resource with a foreign reader, or 6 without 7: awaiting rotation, no KEY_EPOCH committed; both, or 7 alone in I where every reader is of the root: rotates.'])
 
     # 13.
+    payload_b = CERTS['CERT_B']['payload_cbor']['hex']
+    assert hashlib.sha256(bytes.fromhex(payload_b)).hexdigest() == d_cert_b
+    assert case('wire:P4_register_dev_b_approved')['inputs']['body']['chain'][0] == 'CERT_B'
+    pkg = lambda ref: case(ref)['inputs']['object_id']['hex']  # noqa: E731
+    journal_approval = {'phase': 'consume', 'resource': 'I', 'pairing_device': 'PAIR_J', 'certificate_payload_cbor': payload_b,
+                        'certificate_payload_digest': d_cert_b, 'next_record': 'P3_consume_for_dev_b'}
     flow('F13_durable_phases', 'Crash and concurrency around every ACK of a pairing approval (I) and of revoke plus rotate (X)',
          ('IDENTITY-PROFILE-01 §9.1 to §9.5', 'Phases are classified against the accepted chain by the table of §9.2; a phase is repeated only with its exact bytes; a KEY_EPOCH is rebuilt, never re-proposed.'),
-         [step('Approval journal: consume PAIR_J with digest(CERT_B), exact bytes of P3; the chain is at P2', 'wire:P2_pairing_device', 'accept',
-               phase_of=('consume', 'wire:P2_pairing_device', {'root': 'OWNER', 'device': 'PAIR_J', 'digest': d_cert_b}, 'pending'),
-               in_journal={'phase': 'consume', 'device': 'PAIR_J', 'payload_digest': d_cert_b, 'next_record': 'P3_consume_for_dev_b'}),
+         [step('Approval journal before phase 1: the complete certificate payload of DEV_B and its digest, and the exact bytes of P3; the chain is at P2',
+               'wire:P2_pairing_device', 'accept', in_journal=journal_approval,
+               phase_of=('consume', 'wire:P2_pairing_device', {'root': 'OWNER', 'device': 'PAIR_J', 'digest': d_cert_b}, 'pending')),
           step('Crash after sending P3; after restart the chain holds P3', 'wire:P3_consume_for_dev_b', 'accept',
                phase_of=('consume', 'wire:P3_consume_for_dev_b', {'root': 'OWNER', 'device': 'PAIR_J', 'digest': d_cert_b}, 'committed-own')),
           step('Its ACK was lost: the exact bytes of P3 are re-sent', expect='same ACK', in_bytes_of='wire:P3_consume_for_dev_b'),
-          step('Phase 2 from the journaled payload: register DEV_B with CERT_B', phase_of=('register', 'wire:P3_consume_for_dev_b',
-               {'root': 'OWNER', 'device': 'DEV_B', 'certificate': 'CERT_B'}, 'pending'), in_journal={'phase': 'register', 'certificate_payload_digest': d_cert_b}),
+          step('Phase 2 after the restart: the certificate is signed from the journaled payload (CERT_B, whose payload digest is the approval)',
+               phase_of=('register', 'wire:P3_consume_for_dev_b', {'root': 'OWNER', 'device': 'DEV_B', 'certificate': 'CERT_B'}, 'pending'),
+               in_journal={'phase': 'register', 'certificate_payload_cbor': payload_b, 'next_record': 'P4_register_dev_b_approved'},
+               signed_certificate='CERT_B', certificate_payload_matches_journal=CERTS['CERT_B']['payload_cbor']['hex'] == payload_b),
           step('Crash after the ACK of P4 and before it was persisted', 'wire:P4_register_dev_b_approved', 'accept',
                phase_of=('register', 'wire:P4_register_dev_b_approved', {'root': 'OWNER', 'device': 'DEV_B', 'certificate': 'CERT_B', 'own': True}, 'committed-own')),
           step('Exact-byte retry of P4', expect='same ACK', in_bytes_of='wire:P4_register_dev_b_approved'),
@@ -448,14 +519,20 @@ def build() -> None:
           step('After the ACK of I9 (or after a crash), the revoke phase', 'wire:I9_device_revoke_dev_a', 'accept',
                phase_of=('revoke', 'wire:I9_device_revoke_dev_a', {'root': 'OWNER', 'device': 'DEV_A'}, 'complete')),
           step('The rotate phase after the revocation at I9', phase_of=('rotate', 'wire:I9_device_revoke_dev_a', {'revoked_at': 'wire:I9_device_revoke_dev_a'}, 'pending')),
-          step('Another writer committed the rotation', 'wire:K1_key_epoch', 'accept',
+          step('A rotation planned at I8 had sealed its DEK to DEV_A, a reader at I8 and not at I9, the head the KEY_EPOCH is committed on: that DEK is not used',
+               expect='fresh DEK (§9.4)', DEV_A_reads={'I8': dev('wire:I8_bridge_grant', 'DEV_A')['reads'], 'I9': dev('wire:I9_device_revoke_dev_a', 'DEV_A')['reads']}),
+          step('The KEY_EPOCH with a fresh DEK is committed on I9', 'wire:K1_key_epoch', 'accept',
                phase_of=('rotate', 'wire:K1_key_epoch', {'revoked_at': 'wire:I9_device_revoke_dev_a'}, 'complete')),
-          step('A reader revoked between planning and sending packages: its DEK was sealed to a Principal outside the new reader set', expect='fresh DEK (§9.4)'),
-          step('Partial package delivery of epoch 1', expect='re-send the missing package only', in_ledger={'DEV_B': 'sent', 'BRIDGE': 'missing'},
-               package_phases={'DEV_B': 'complete', 'BRIDGE': 'pending'}),
-          step('The rotator of K1 crashed before any package: readers hold epoch 1 in KEY_BLOCKED', expect='awaiting key holder'),
-          step('After a bounded wait a second rotator commits epoch 2 with a fresh DEK', 'wire:flow.f13_second_rotator_epoch_2', 'accept')],
-         {}, ['No installation reconstructs a DEK it does not hold; journals hold no secrets (§9.8).'])
+          step('Partial delivery: the package of epoch 1 to BOB is sent and recorded, then the rotator crashes', 'wire:flow.f13_kp_epoch1_to_bob', 'accept',
+               branch='partial delivery', in_ledger=[{'resource': 'X', 'epoch': 1, 'recipient': 'BOB', 'package_id': pkg('wire:flow.f13_kp_epoch1_to_bob')}]),
+          step('After the restart the package phases are classified by the ledger: BOB complete, CAROL pending; the package to CAROL is sent',
+               'wire:flow.f13_kp_epoch1_to_carol', 'accept', branch='partial delivery', package_phases={'BOB': 'complete', 'CAROL': 'pending'},
+               ledger_after=[{'resource': 'X', 'epoch': 1, 'recipient': r, 'package_id': pkg(f'wire:flow.f13_kp_epoch1_to_{r.lower()}')} for r in ('BOB', 'CAROL')]),
+          step('DEV_B, suspended at K1, is not a reader and is skipped', 'wire:flow.f13_kp_epoch1_to_dev_b_suspended', 'AUTHORIZATION_FAILED', branch='partial delivery'),
+          step('Alternative: the rotator of K1 crashed before any package; readers hold epoch 1 in KEY_BLOCKED', expect='awaiting key holder', branch='no package',
+               in_ledger=[]),
+          step('After a bounded wait a second rotator commits epoch 2 with a fresh DEK', 'wire:flow.f13_second_rotator_epoch_2', 'accept', branch='no package')],
+         {}, ['No installation reconstructs a DEK it does not hold; journals hold no secrets (§9.8): the certificate payload is not a secret.'])
 
     # 14.
     fr = case('wire:flow.y_key_epoch_1')['inputs']['body']['frontier']

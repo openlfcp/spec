@@ -109,24 +109,25 @@ Pairing DEV_B through PAIR_L in an Identity Resource already rotated to epoch 1:
 | # | Step | Case | Outcome | Phase |
 |---|---|---|---|---|
 | 1 | I at P1: DEV_A registered | `wire:P1_device_grant_dev_a_i` | accept |  |
-| 2 | The root's Data Unit with actor sequence 1 (the initial change) in epoch 0 | `wire:flow.pl_root_unit_1` | accept |  |
-| 3 | I is rotated to epoch 1 | `wire:flow.pl_key_epoch_1` | accept |  |
-| 4 | DEV_A holds both DEKs and the root's unit 1, and creates PAIR_L | `wire:flow.pl_pairing_device_l` | accept |  |
-| 5 | DEV_A seals the DEK of epoch 0 to PAIR_L | `wire:flow.pl_kp_epoch0_to_pair_l` | accept |  |
-| 6 | DEV_A seals the DEK of epoch 1 to PAIR_L | `wire:flow.pl_kp_epoch1_to_pair_l` | accept |  |
-| 7 | The link is shown | `profile:pair_uri_roundtrip` | exact bytes |  |
-| 8 | B verifies the initial change by replaying the units, and from a Snapshot only after the root's unit 1 | `profile:identity_doc_initial_then_fill` | see case |  |
-| 9 | A Snapshot whose initial change is not in the root's unit 1 is not used | `profile:identity_doc_initial_without_unit_1` | see case |  |
-| 10 | B writes its request as PAIR_L (epoch 1) | `wire:flow.pl_pair_l_request` | accept |  |
-| 11 | The document admits the request | `profile:pairing_writes_own_request` | accept |  |
-| 12 | A shows the fingerprint | `profile:fingerprint_dev_b` | exact bytes |  |
-| 13 | Phase 1: consume with digest(CERT_B) | `wire:flow.pl_consume_l` | accept | committed-own |
-| 14 | A second manager that approved another request of the session proposes its consume | `wire:flow.pl_second_manager_consume` | AUTHORIZATION_FAILED | superseded |
-| 15 | A phase-2 record with another digest is refused | `wire:flow.pl_register_wrong_digest` | AUTHORIZATION_FAILED |  |
-| 16 | Phase 2 | `wire:flow.pl_register_dev_b` | accept | committed-own |
-| 17 | Lost ACK of phase 2: the exact bytes are re-sent | bytes of `wire:flow.pl_register_dev_b` | same ACK |  |
-| 18 | DEV_A seals the DEK of epoch 0 to DEV_B | `wire:flow.pl_kp_epoch0_to_dev_b` | accept |  |
-| 19 | DEV_A seals the DEK of epoch 1 to DEV_B | `wire:flow.pl_kp_epoch1_to_dev_b` | accept |  |
+| 2 | The root's Data Unit with actor sequence 1 carries the initial change (epoch 0) | `wire:flow.pl_root_unit_1` | accept |  |
+| 3 | The root's Data Unit with actor sequence 2 carries the fill change (epoch 0) | `wire:flow.pl_root_unit_2` | accept |  |
+| 4 | I is rotated to epoch 1 | `wire:flow.pl_key_epoch_1` | accept |  |
+| 5 | DEV_A holds both DEKs and the root's unit 1, and creates PAIR_L | `wire:flow.pl_pairing_device_l` | accept |  |
+| 6 | DEV_A seals the DEK of epoch 0 to PAIR_L | `wire:flow.pl_kp_epoch0_to_pair_l` | accept |  |
+| 7 | DEV_A seals the DEK of epoch 1 to PAIR_L | `wire:flow.pl_kp_epoch1_to_pair_l` | accept |  |
+| 8 | The link of PAIR_L is shown | `profile:pair_uri_pair_l` | exact bytes |  |
+| 9 | B opens the root's units 1 and 2 with the DEK of epoch 0 and replays their changes: the document of §5.1 (a Snapshot is used only after unit 1) | `profile:identity_doc_initial_then_fill` | see case |  |
+| 10 | A Snapshot whose initial change is not the root's unit 1 is not used (aside) | `profile:identity_doc_initial_without_unit_1` | see case |  |
+| 11 | B writes its request as PAIR_L in epoch 1 | `wire:flow.pl_pair_l_request` | accept |  |
+| 12 | The document admits the change the unit carries | `profile:pairing_l_writes_own_request` | accept |  |
+| 13 | A shows the fingerprint | `profile:fingerprint_dev_b` | exact bytes |  |
+| 14 | Phase 1: consume with digest(CERT_B) | `wire:flow.pl_consume_l` | accept | committed-own |
+| 15 | A second manager that approved another request of the session proposes its consume | `wire:flow.pl_second_manager_consume` | AUTHORIZATION_FAILED | superseded |
+| 16 | A phase-2 record with another digest is refused | `wire:flow.pl_register_wrong_digest` | AUTHORIZATION_FAILED |  |
+| 17 | Phase 2 | `wire:flow.pl_register_dev_b` | accept | committed-own |
+| 18 | Lost ACK of phase 2: the exact bytes are re-sent | bytes of `wire:flow.pl_register_dev_b` | same ACK |  |
+| 19 | DEV_A seals the DEK of epoch 0 to DEV_B | `wire:flow.pl_kp_epoch0_to_dev_b` | accept |  |
+| 20 | DEV_A seals the DEK of epoch 1 to DEV_B | `wire:flow.pl_kp_epoch1_to_dev_b` | accept |  |
 
 ## F08.link_reuse_and_equivocation
 
@@ -171,13 +172,17 @@ Pairing the service device BRIDGE_O: approved with C0 = CERT_SO (digest d), boun
 | 4 | Every candidate is offline: B shows |  | approved, waiting for registration |  |
 | 5 | C0's issuer DEV_A is revoked in I | `wire:flow.f09_revoke_issuer_in_i` | accept |  |
 | 6 | The root re-certifies BRIDGE_O as C1 (same kind, mask and scope) | `wire:flow.f09_recertify_c1_in_i` | accept |  |
-| 7 | Candidate X where C0 was never accepted: reconciliation registers C1 (X never C0) | `wire:flow.f09_x_register_c1` | accept |  |
-| 8 | Candidate X where C0 was registered first (X with C0) | `wire:flow.register_bridge_o_in_x` | accept |  |
-| 9 | … and re-certified there as C1: B takes C0 from the history as its result and uses C1 (X with C0) | `wire:flow.f09_x_recertify_c1` | accept |  |
-| 10 | BRIDGE_O receives the DEK of X; with the certificate it is ready (X with C0) | `wire:flow.f09_kp_to_bridge_o_after_recert` | accept |  |
-| 11 | Candidate X where another issuer registered C* (scope [X, Y], another digest) (X with C*) | `wire:flow.f09_x_register_cstar` | accept |  |
-| 12 | B restarts: it resumes from its persisted candidates |  | candidates resumed |  |
-| 13 | A crashes after the bind-only DEVICE_GRANT was accepted, before its ACK was persisted |  | done | committed-own |
+| 7 | Candidate X where C0 was never accepted: reconciliation step 1 propagates the consume of PAIR_J (X never C0) | `wire:flow.f09a_revoke_pair_j` | accept |  |
+| 8 | … and the revocation of DEV_A (X never C0) | `wire:flow.f09a_revoke_dev_a` | accept |  |
+| 9 | … then step 2 registers C1 (X never C0) | `wire:flow.f09a_register_c1` | accept |  |
+| 10 | Candidate X where C0 was registered first (before I revoked DEV_A) (X with C0) | `wire:flow.register_bridge_o_in_x` | accept |  |
+| 11 | Reconciliation step 1: the consume of PAIR_J (X with C0) | `wire:flow.f09b_revoke_pair_j` | accept |  |
+| 12 | … and the revocation of DEV_A, which suspends BRIDGE_O (X with C0) | `wire:flow.f09b_revoke_dev_a` | accept |  |
+| 13 | Step 2 re-certifies BRIDGE_O as C1: B takes C0 from the history as its result and uses C1 (X with C0) | `wire:flow.f09b_register_c1` | accept |  |
+| 14 | The root seals the DEK of X to BRIDGE_O; with the certificate and the DEK it is ready (X with C0) | `wire:flow.f09b_kp_owner_to_bridge_o` | accept |  |
+| 15 | Candidate X where another issuer registered C* (scope [X, Y], another digest) (X with C*) | `wire:flow.f09_x_register_cstar` | accept |  |
+| 16 | B restarts: it resumes from its persisted candidates |  | candidates resumed |  |
+| 17 | A crashes after the bind-only DEVICE_GRANT was accepted, before its ACK was persisted |  | done | committed-own |
 
 ## F10_request_feasibility
 
@@ -229,20 +234,22 @@ Crash and concurrency around every ACK of a pairing approval (I) and of revoke p
 
 | # | Step | Case | Outcome | Phase |
 |---|---|---|---|---|
-| 1 | Approval journal: consume PAIR_J with digest(CERT_B), exact bytes of P3; the chain is at P2 | `wire:P2_pairing_device` | accept | pending |
+| 1 | Approval journal before phase 1: the complete certificate payload of DEV_B and its digest, and the exact bytes of P3; the chain is at P2 | `wire:P2_pairing_device` | accept | pending |
 | 2 | Crash after sending P3; after restart the chain holds P3 | `wire:P3_consume_for_dev_b` | accept | committed-own |
 | 3 | Its ACK was lost: the exact bytes of P3 are re-sent | bytes of `wire:P3_consume_for_dev_b` | same ACK |  |
-| 4 | Phase 2 from the journaled payload: register DEV_B with CERT_B |  | done | pending |
+| 4 | Phase 2 after the restart: the certificate is signed from the journaled payload (CERT_B, whose payload digest is the approval) |  | done | pending |
 | 5 | Crash after the ACK of P4 and before it was persisted | `wire:P4_register_dev_b_approved` | accept | committed-own |
 | 6 | Exact-byte retry of P4 | bytes of `wire:P4_register_dev_b_approved` | same ACK |  |
 | 7 | Revoke journal in X: revoke (OWNER, DEV_A) with reason 1; the chain is at I8 | `wire:I8_bridge_grant` | accept | pending |
 | 8 | After the ACK of I9 (or after a crash), the revoke phase | `wire:I9_device_revoke_dev_a` | accept | complete |
 | 9 | The rotate phase after the revocation at I9 |  | done | pending |
-| 10 | Another writer committed the rotation | `wire:K1_key_epoch` | accept | complete |
-| 11 | A reader revoked between planning and sending packages: its DEK was sealed to a Principal outside the new reader set |  | fresh DEK (§9.4) |  |
-| 12 | Partial package delivery of epoch 1 |  | re-send the missing package only |  |
-| 13 | The rotator of K1 crashed before any package: readers hold epoch 1 in KEY_BLOCKED |  | awaiting key holder |  |
-| 14 | After a bounded wait a second rotator commits epoch 2 with a fresh DEK | `wire:flow.f13_second_rotator_epoch_2` | accept |  |
+| 10 | A rotation planned at I8 had sealed its DEK to DEV_A, a reader at I8 and not at I9, the head the KEY_EPOCH is committed on: that DEK is not used |  | fresh DEK (§9.4) |  |
+| 11 | The KEY_EPOCH with a fresh DEK is committed on I9 | `wire:K1_key_epoch` | accept | complete |
+| 12 | Partial delivery: the package of epoch 1 to BOB is sent and recorded, then the rotator crashes (partial delivery) | `wire:flow.f13_kp_epoch1_to_bob` | accept |  |
+| 13 | After the restart the package phases are classified by the ledger: BOB complete, CAROL pending; the package to CAROL is sent (partial delivery) | `wire:flow.f13_kp_epoch1_to_carol` | accept |  |
+| 14 | DEV_B, suspended at K1, is not a reader and is skipped (partial delivery) | `wire:flow.f13_kp_epoch1_to_dev_b_suspended` | AUTHORIZATION_FAILED |  |
+| 15 | Alternative: the rotator of K1 crashed before any package; readers hold epoch 1 in KEY_BLOCKED (no package) |  | awaiting key holder |  |
+| 16 | After a bounded wait a second rotator commits epoch 2 with a fresh DEK (no package) | `wire:flow.f13_second_rotator_epoch_2` | accept |  |
 
 ## F14_frontier_from_verified_set
 

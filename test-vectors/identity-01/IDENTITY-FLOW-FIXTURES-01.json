@@ -939,6 +939,7 @@
       },
       "inputs": {
         "mode": "sequence",
+        "pairing_device": "PAIR_L",
         "steps": [
           {
             "action": "I at P1: DEV_A registered",
@@ -946,59 +947,69 @@
             "n": 1
           },
           {
-            "action": "The root's Data Unit with actor sequence 1 (the initial change) in epoch 0",
+            "action": "The root's Data Unit with actor sequence 1 carries the initial change (epoch 0)",
             "case": "wire:flow.pl_root_unit_1",
             "n": 2
           },
           {
+            "action": "The root's Data Unit with actor sequence 2 carries the fill change (epoch 0)",
+            "case": "wire:flow.pl_root_unit_2",
+            "n": 3
+          },
+          {
             "action": "I is rotated to epoch 1",
             "case": "wire:flow.pl_key_epoch_1",
-            "n": 3
+            "n": 4
           },
           {
             "action": "DEV_A holds both DEKs and the root's unit 1, and creates PAIR_L",
             "case": "wire:flow.pl_pairing_device_l",
-            "n": 4
+            "n": 5
           },
           {
             "action": "DEV_A seals the DEK of epoch 0 to PAIR_L",
             "case": "wire:flow.pl_kp_epoch0_to_pair_l",
-            "n": 5
+            "n": 6
           },
           {
             "action": "DEV_A seals the DEK of epoch 1 to PAIR_L",
             "case": "wire:flow.pl_kp_epoch1_to_pair_l",
-            "n": 6
-          },
-          {
-            "action": "The link is shown",
-            "case": "profile:pair_uri_roundtrip",
             "n": 7
           },
           {
-            "action": "B verifies the initial change by replaying the units, and from a Snapshot only after the root's unit 1",
-            "case": "profile:identity_doc_initial_then_fill",
+            "action": "The link of PAIR_L is shown",
+            "case": "profile:pair_uri_pair_l",
             "n": 8
           },
           {
-            "action": "A Snapshot whose initial change is not in the root's unit 1 is not used",
-            "case": "profile:identity_doc_initial_without_unit_1",
+            "action": "B opens the root's units 1 and 2 with the DEK of epoch 0 and replays their changes: the document of §5.1 (a Snapshot is used only after unit 1)",
+            "case": "profile:identity_doc_initial_then_fill",
+            "changes": [
+              "change.C0_initial",
+              "change.C1_fill"
+            ],
             "n": 9
           },
           {
-            "action": "B writes its request as PAIR_L (epoch 1)",
-            "case": "wire:flow.pl_pair_l_request",
+            "action": "A Snapshot whose initial change is not the root's unit 1 is not used",
+            "case": "profile:identity_doc_initial_without_unit_1",
+            "aside": true,
             "n": 10
           },
           {
-            "action": "The document admits the request",
-            "case": "profile:pairing_writes_own_request",
+            "action": "B writes its request as PAIR_L in epoch 1",
+            "case": "wire:flow.pl_pair_l_request",
             "n": 11
+          },
+          {
+            "action": "The document admits the change the unit carries",
+            "case": "profile:pairing_l_writes_own_request",
+            "n": 12
           },
           {
             "action": "A shows the fingerprint",
             "case": "profile:fingerprint_dev_b",
-            "n": 12
+            "n": 13
           },
           {
             "action": "Phase 1: consume with digest(CERT_B)",
@@ -1010,7 +1021,7 @@
               "device": "PAIR_L",
               "digest": "9de07a946096cfa059af56ebbb39f3d4b427ddd745dc30bfe86bb87b769efa7c"
             },
-            "n": 13
+            "n": 14
           },
           {
             "action": "A second manager that approved another request of the session proposes its consume",
@@ -1022,32 +1033,32 @@
               "device": "PAIR_L",
               "digest": "9185a719dc6b0e95b07beaa6bdb4846c15fca353884adcba99986225016e415e"
             },
-            "n": 14
+            "n": 15
           },
           {
             "action": "A phase-2 record with another digest is refused",
             "case": "wire:flow.pl_register_wrong_digest",
-            "n": 15
+            "n": 16
           },
           {
             "action": "Phase 2",
             "case": "wire:flow.pl_register_dev_b",
-            "n": 16
+            "n": 17
           },
           {
             "action": "Lost ACK of phase 2: the exact bytes are re-sent",
             "bytes_of": "wire:flow.pl_register_dev_b",
-            "n": 17
+            "n": 18
           },
           {
             "action": "DEV_A seals the DEK of epoch 0 to DEV_B",
             "case": "wire:flow.pl_kp_epoch0_to_dev_b",
-            "n": 18
+            "n": 19
           },
           {
             "action": "DEV_A seals the DEK of epoch 1 to DEV_B",
             "case": "wire:flow.pl_kp_epoch1_to_dev_b",
-            "n": 19
+            "n": 20
           }
         ]
       },
@@ -1059,11 +1070,21 @@
           },
           {
             "n": 2,
-            "outcome": "accept"
+            "outcome": "accept",
+            "carries": {
+              "change": "change.C0_initial",
+              "change_hash": "01e90a06fb48d9374cabea78ae072590af66a62f54ebebfea8f5425156717417",
+              "writer_class": "root"
+            }
           },
           {
             "n": 3,
-            "outcome": "accept"
+            "outcome": "accept",
+            "carries": {
+              "change": "change.C1_fill",
+              "change_hash": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1",
+              "writer_class": "root"
+            }
           },
           {
             "n": 4,
@@ -1079,11 +1100,11 @@
           },
           {
             "n": 7,
-            "outcome": "exact bytes"
+            "outcome": "accept"
           },
           {
             "n": 8,
-            "outcome": "see case"
+            "outcome": "exact bytes"
           },
           {
             "n": 9,
@@ -1091,34 +1112,43 @@
           },
           {
             "n": 10,
-            "outcome": "accept"
+            "outcome": "see case"
           },
           {
             "n": 11,
-            "outcome": "accept"
+            "outcome": "accept",
+            "carries": {
+              "change": "change.L1_request",
+              "change_hash": "e46dab72e1b691458d6a1e5bfc0107d92f1d13c938bf87a97ee1f443b3f2d070",
+              "writer_class": "pairing"
+            }
           },
           {
             "n": 12,
-            "outcome": "exact bytes"
+            "outcome": "accept"
           },
           {
             "n": 13,
+            "outcome": "exact bytes"
+          },
+          {
+            "n": 14,
             "outcome": "accept",
             "phase": "committed-own",
             "exposing": true
           },
           {
-            "n": 14,
+            "n": 15,
             "outcome": "AUTHORIZATION_FAILED",
             "phase": "superseded",
             "signs": false
           },
           {
-            "n": 15,
+            "n": 16,
             "outcome": "AUTHORIZATION_FAILED"
           },
           {
-            "n": 16,
+            "n": 17,
             "outcome": "accept",
             "DEV_B": {
               "root": "OWNER",
@@ -1141,15 +1171,15 @@
             "phase": "committed-own"
           },
           {
-            "n": 17,
+            "n": 18,
             "outcome": "same ACK"
           },
           {
-            "n": 18,
+            "n": 19,
             "outcome": "accept"
           },
           {
-            "n": 19,
+            "n": 20,
             "outcome": "accept"
           }
         ],
@@ -1163,7 +1193,8 @@
         }
       },
       "assertions": [
-        "Before the link is shown A holds, verified, the root's unit 1 and the DEK of every epoch of I, and seals them all to the pairing device (§5.3 step 1)."
+        "Before the link is shown A holds, verified, the root's unit 1 and the DEK of every epoch of I, and seals them all to the pairing device (§5.3 step 1).",
+        "One session: the link, the binding, the signer of every pairing unit and the pairing field of every request change name PAIR_L."
       ]
     },
     {
@@ -1177,6 +1208,7 @@
       },
       "inputs": {
         "mode": "independent",
+        "pairing_device": "PAIR_L",
         "steps": [
           {
             "action": "The first installation writes PAIR_L sequence 1",
@@ -1201,15 +1233,30 @@
         "steps": [
           {
             "n": 1,
-            "outcome": "accept"
+            "outcome": "accept",
+            "carries": {
+              "change": "change.L1_request",
+              "change_hash": "e46dab72e1b691458d6a1e5bfc0107d92f1d13c938bf87a97ee1f443b3f2d070",
+              "writer_class": "pairing"
+            }
           },
           {
             "n": 2,
-            "outcome": "accept"
+            "outcome": "accept",
+            "carries": {
+              "change": "change.L2_reuse",
+              "change_hash": "b73051ca3d39d6da46943f50ce0ded3c6fd62375d840d2f9dbcf5d6ed94397ea",
+              "writer_class": "pairing"
+            }
           },
           {
             "n": 3,
             "outcome": "ACTOR_EQUIVOCATION",
+            "carries": {
+              "change": "change.L1_second_installation",
+              "change_hash": "bf97471a390278e19d877ca2878f5df86175cb7aa9151eb4a196e11cb1690f2f",
+              "writer_class": "pairing"
+            },
             "excluded": [
               "flow.pl_pair_l_request",
               "flow.pl_pair_l_request_second_install"
@@ -1346,6 +1393,7 @@
       },
       "inputs": {
         "mode": "sequence",
+        "pairing_device": "PAIR_J",
         "steps": [
           {
             "action": "Phase 1 with digest(CERT_SO)",
@@ -1377,38 +1425,62 @@
             "n": 6
           },
           {
-            "action": "Candidate X where C0 was never accepted: reconciliation registers C1",
-            "case": "wire:flow.f09_x_register_c1",
+            "action": "Candidate X where C0 was never accepted: reconciliation step 1 propagates the consume of PAIR_J",
+            "case": "wire:flow.f09a_revoke_pair_j",
             "branch": "X never C0",
             "n": 7
           },
           {
-            "action": "Candidate X where C0 was registered first",
-            "case": "wire:flow.register_bridge_o_in_x",
-            "branch": "X with C0",
+            "action": "… and the revocation of DEV_A",
+            "case": "wire:flow.f09a_revoke_dev_a",
+            "branch": "X never C0",
             "n": 8
           },
           {
-            "action": "… and re-certified there as C1: B takes C0 from the history as its result and uses C1",
-            "case": "wire:flow.f09_x_recertify_c1",
-            "branch": "X with C0",
+            "action": "… then step 2 registers C1",
+            "case": "wire:flow.f09a_register_c1",
+            "branch": "X never C0",
             "n": 9
           },
           {
-            "action": "BRIDGE_O receives the DEK of X; with the certificate it is ready",
-            "case": "wire:flow.f09_kp_to_bridge_o_after_recert",
+            "action": "Candidate X where C0 was registered first (before I revoked DEV_A)",
+            "case": "wire:flow.register_bridge_o_in_x",
             "branch": "X with C0",
             "n": 10
+          },
+          {
+            "action": "Reconciliation step 1: the consume of PAIR_J",
+            "case": "wire:flow.f09b_revoke_pair_j",
+            "branch": "X with C0",
+            "n": 11
+          },
+          {
+            "action": "… and the revocation of DEV_A, which suspends BRIDGE_O",
+            "case": "wire:flow.f09b_revoke_dev_a",
+            "branch": "X with C0",
+            "n": 12
+          },
+          {
+            "action": "Step 2 re-certifies BRIDGE_O as C1: B takes C0 from the history as its result and uses C1",
+            "case": "wire:flow.f09b_register_c1",
+            "branch": "X with C0",
+            "n": 13
+          },
+          {
+            "action": "The root seals the DEK of X to BRIDGE_O; with the certificate and the DEK it is ready",
+            "case": "wire:flow.f09b_kp_owner_to_bridge_o",
+            "branch": "X with C0",
+            "n": 14
           },
           {
             "action": "Candidate X where another issuer registered C* (scope [X, Y], another digest)",
             "case": "wire:flow.f09_x_register_cstar",
             "branch": "X with C*",
-            "n": 11
+            "n": 15
           },
           {
             "action": "B restarts: it resumes from its persisted candidates",
-            "n": 12
+            "n": 16
           },
           {
             "action": "A crashes after the bind-only DEVICE_GRANT was accepted, before its ACK was persisted",
@@ -1420,7 +1492,7 @@
               "certificate": "CERT_SO",
               "own": true
             },
-            "n": 13
+            "n": 17
           }
         ]
       },
@@ -1472,12 +1544,7 @@
           },
           {
             "n": 7,
-            "outcome": "accept",
-            "leaves": [
-              "CERT_SO_R"
-            ],
-            "proven": false,
-            "status": "approval not provable here"
+            "outcome": "accept"
           },
           {
             "n": 8,
@@ -1487,19 +1554,76 @@
             "n": 9,
             "outcome": "accept",
             "leaves": [
+              "CERT_SO_R"
+            ],
+            "proven": false,
+            "status": "approval not provable here"
+          },
+          {
+            "n": 10,
+            "outcome": "accept"
+          },
+          {
+            "n": 11,
+            "outcome": "accept"
+          },
+          {
+            "n": 12,
+            "outcome": "accept",
+            "BRIDGE_O": {
+              "root": "OWNER",
+              "kind": 1,
+              "mask": [
+                1,
+                2
+              ],
+              "scope": [
+                "X"
+              ],
+              "registered": true,
+              "leaf": "CERT_SO",
+              "issuers": [
+                "DEV_A"
+              ],
+              "active": false,
+              "suspended": true,
+              "reads": false
+            }
+          },
+          {
+            "n": 13,
+            "outcome": "accept",
+            "leaves": [
               "CERT_SO",
               "CERT_SO_R"
             ],
             "proven": true,
-            "uses": "CERT_SO_R"
+            "uses": "CERT_SO_R",
+            "BRIDGE_O": {
+              "root": "OWNER",
+              "kind": 1,
+              "mask": [
+                1,
+                2
+              ],
+              "scope": [
+                "X"
+              ],
+              "registered": true,
+              "leaf": "CERT_SO_R",
+              "issuers": [],
+              "active": true,
+              "suspended": false,
+              "reads": true
+            }
           },
           {
-            "n": 10,
+            "n": 14,
             "outcome": "accept",
             "status": "ready"
           },
           {
-            "n": 11,
+            "n": 15,
             "outcome": "accept",
             "leaves": [
               "CERT_SO_XY"
@@ -1509,11 +1633,11 @@
             "Y": "never shown as granted"
           },
           {
-            "n": 12,
+            "n": 16,
             "outcome": "candidates resumed"
           },
           {
-            "n": 13,
+            "n": 17,
             "outcome": "done",
             "phase": "committed-own",
             "proposes": false
@@ -1873,7 +1997,12 @@
           },
           {
             "n": 9,
-            "outcome": "accept"
+            "outcome": "accept",
+            "carries": {
+              "change": "change.K1_foreign_request",
+              "change_hash": "db61988762bae4b82700c8060b87f3d85b3dfba590c0d597b27e370aa433b7dd",
+              "writer_class": "pairing"
+            }
           },
           {
             "n": 10,
@@ -1983,7 +2112,7 @@
         "mode": "sequence",
         "steps": [
           {
-            "action": "Approval journal: consume PAIR_J with digest(CERT_B), exact bytes of P3; the chain is at P2",
+            "action": "Approval journal before phase 1: the complete certificate payload of DEV_B and its digest, and the exact bytes of P3; the chain is at P2",
             "case": "wire:P2_pairing_device",
             "phase_input": {
               "phase": "consume",
@@ -1994,8 +2123,10 @@
             },
             "journal": {
               "phase": "consume",
-              "device": "PAIR_J",
-              "payload_digest": "9de07a946096cfa059af56ebbb39f3d4b427ddd745dc30bfe86bb87b769efa7c",
+              "resource": "I",
+              "pairing_device": "PAIR_J",
+              "certificate_payload_cbor": "87734c4643502d4445564943452d434552542d76315820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da3005820dcb709537a7c66b9d785c9de9b31d1cf1922d09f225e10479c24b302ceb3f9f2015820652fee2202a009b43a1c3d3073534d17a1011dd6d925a9097a57cb39d6074a900258203819290612a37b44ae506c6d910e51c604cfce168344e2a1d0d737d3dd3d7c7a00830102038050743db8168bce7e78a1f0c81ab52553b0",
+              "certificate_payload_digest": "9de07a946096cfa059af56ebbb39f3d4b427ddd745dc30bfe86bb87b769efa7c",
               "next_record": "P3_consume_for_dev_b"
             },
             "n": 1
@@ -2018,7 +2149,7 @@
             "n": 3
           },
           {
-            "action": "Phase 2 from the journaled payload: register DEV_B with CERT_B",
+            "action": "Phase 2 after the restart: the certificate is signed from the journaled payload (CERT_B, whose payload digest is the approval)",
             "phase_input": {
               "phase": "register",
               "state": "wire:P3_consume_for_dev_b",
@@ -2028,7 +2159,8 @@
             },
             "journal": {
               "phase": "register",
-              "certificate_payload_digest": "9de07a946096cfa059af56ebbb39f3d4b427ddd745dc30bfe86bb87b769efa7c"
+              "certificate_payload_cbor": "87734c4643502d4445564943452d434552542d76315820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da3005820dcb709537a7c66b9d785c9de9b31d1cf1922d09f225e10479c24b302ceb3f9f2015820652fee2202a009b43a1c3d3073534d17a1011dd6d925a9097a57cb39d6074a900258203819290612a37b44ae506c6d910e51c604cfce168344e2a1d0d737d3dd3d7c7a00830102038050743db8168bce7e78a1f0c81ab52553b0",
+              "next_record": "P4_register_dev_b_approved"
             },
             "n": 4
           },
@@ -2082,35 +2214,56 @@
             "n": 9
           },
           {
-            "action": "Another writer committed the rotation",
+            "action": "A rotation planned at I8 had sealed its DEK to DEV_A, a reader at I8 and not at I9, the head the KEY_EPOCH is committed on: that DEK is not used",
+            "n": 10
+          },
+          {
+            "action": "The KEY_EPOCH with a fresh DEK is committed on I9",
             "case": "wire:K1_key_epoch",
             "phase_input": {
               "phase": "rotate",
               "state": "wire:K1_key_epoch",
               "revoked_at": "wire:I9_device_revoke_dev_a"
             },
-            "n": 10
-          },
-          {
-            "action": "A reader revoked between planning and sending packages: its DEK was sealed to a Principal outside the new reader set",
             "n": 11
           },
           {
-            "action": "Partial package delivery of epoch 1",
-            "ledger": {
-              "DEV_B": "sent",
-              "BRIDGE": "missing"
-            },
+            "action": "Partial delivery: the package of epoch 1 to BOB is sent and recorded, then the rotator crashes",
+            "case": "wire:flow.f13_kp_epoch1_to_bob",
+            "branch": "partial delivery",
+            "ledger": [
+              {
+                "resource": "X",
+                "epoch": 1,
+                "recipient": "BOB",
+                "package_id": "f8d7b1738e7f7a139a32fea00103cb0ffc05c36bbab2a40bde4869105e73c8a7"
+              }
+            ],
             "n": 12
           },
           {
-            "action": "The rotator of K1 crashed before any package: readers hold epoch 1 in KEY_BLOCKED",
+            "action": "After the restart the package phases are classified by the ledger: BOB complete, CAROL pending; the package to CAROL is sent",
+            "case": "wire:flow.f13_kp_epoch1_to_carol",
+            "branch": "partial delivery",
             "n": 13
+          },
+          {
+            "action": "DEV_B, suspended at K1, is not a reader and is skipped",
+            "case": "wire:flow.f13_kp_epoch1_to_dev_b_suspended",
+            "branch": "partial delivery",
+            "n": 14
+          },
+          {
+            "action": "Alternative: the rotator of K1 crashed before any package; readers hold epoch 1 in KEY_BLOCKED",
+            "branch": "no package",
+            "ledger": [],
+            "n": 15
           },
           {
             "action": "After a bounded wait a second rotator commits epoch 2 with a fresh DEK",
             "case": "wire:flow.f13_second_rotator_epoch_2",
-            "n": 14
+            "branch": "no package",
+            "n": 16
           }
         ]
       },
@@ -2133,7 +2286,9 @@
           {
             "n": 4,
             "outcome": "done",
-            "phase": "pending"
+            "phase": "pending",
+            "signed_certificate": "CERT_B",
+            "certificate_payload_matches_journal": true
           },
           {
             "n": 5,
@@ -2161,34 +2316,60 @@
           },
           {
             "n": 10,
+            "outcome": "fresh DEK (§9.4)",
+            "DEV_A_reads": {
+              "I8": true,
+              "I9": false
+            }
+          },
+          {
+            "n": 11,
             "outcome": "accept",
             "phase": "complete"
           },
           {
-            "n": 11,
-            "outcome": "fresh DEK (§9.4)"
-          },
-          {
             "n": 12,
-            "outcome": "re-send the missing package only",
-            "package_phases": {
-              "DEV_B": "complete",
-              "BRIDGE": "pending"
-            }
+            "outcome": "accept"
           },
           {
             "n": 13,
-            "outcome": "awaiting key holder"
+            "outcome": "accept",
+            "package_phases": {
+              "BOB": "complete",
+              "CAROL": "pending"
+            },
+            "ledger_after": [
+              {
+                "resource": "X",
+                "epoch": 1,
+                "recipient": "BOB",
+                "package_id": "f8d7b1738e7f7a139a32fea00103cb0ffc05c36bbab2a40bde4869105e73c8a7"
+              },
+              {
+                "resource": "X",
+                "epoch": 1,
+                "recipient": "CAROL",
+                "package_id": "e53aab95313a043827185c6eab722ece86e0858c82f016b2f31a4ce182486a10"
+              }
+            ]
           },
           {
             "n": 14,
+            "outcome": "AUTHORIZATION_FAILED"
+          },
+          {
+            "n": 15,
+            "outcome": "awaiting key holder"
+          },
+          {
+            "n": 16,
             "outcome": "accept"
           }
         ],
         "final": {}
       },
       "assertions": [
-        "No installation reconstructs a DEK it does not hold; journals hold no secrets (§9.8)."
+        "No installation reconstructs a DEK it does not hold; journals hold no secrets (§9.8): the certificate payload is not a secret."
       ]
     },
     {
