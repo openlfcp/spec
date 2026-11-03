@@ -12,7 +12,7 @@ directory make its structural grammar machine-checkable.
 | `LFCP-WIRE-01.summary.cddl` | **Generated.** The Part XXVIII "Full CDDL Summary" block. It restates body rules, so it is kept out of the main schema and checked for agreement instead. |
 | `LFCP-WIRE-01.supplement.cddl` | Hand-maintained complements, each citing the WIRE-01 sentence it encodes (see below). |
 | `fixtures/manifest.json` | Table of fixtures: rule → published vector value or hand-built file → expected pass/fail. |
-| `fixtures/*.diag` | Hand-built, **non-normative** CBOR diagnostic-notation fixtures for structural mismatches that must fail. Snapshots are checked with the real SNAPSHOT-01 and SNAPSHOT-02 bytes. |
+| `fixtures/*.diag` | Hand-built, **non-normative** CBOR diagnostic-notation fixtures for structural mismatches that must fail. Snapshots are checked with the real SNAPSHOT-01 and SNAPSHOT-02 bytes; the `invalid-device-*` files cover the boundaries of §7.3, §17.4 and §17.5 until LFCP-IDENTITY-TEST-VECTORS-01 publishes byte-exact cases (LFCP-04-403). |
 
 Never edit the generated files. Change the prose and run:
 
@@ -34,8 +34,13 @@ checkable wholes:
   the payload (§10.3) instead of treating them as opaque bytes;
 - `typed-control-record-payload`, which binds each §14 Control Record type to
   its body rule, with Genesis fixed to `control_seq = 0` and
-  `prev_control_id = null` (§13.1), and admits extension types 32 and above
-  with an untyped body (§14); reserved core codes 9–31 match no alternative;
+  `prev_control_id = null` (§13.1), binds `DEVICE_GRANT` (9) and
+  `DEVICE_REVOKE` (10) to their §17.4 and §17.5 bodies, and admits extension
+  types 32 and above with an untyped body (§14); reserved core codes 11–31
+  match no alternative;
+- `device-certificate`, the signed Device Certificate of §7.3 with its payload
+  decoded (its exact bytes travel as plain `bstr` elements of
+  `certificate-chain`);
 - `typed-lfcp-message`, which binds each §33 message type to its body rule.
 
 ## What the CDDL proves
@@ -67,8 +72,9 @@ and the Wire decoder (LFCP-016), not to CDDL:
   commitments as SHA-256 of exact bytes.
 - **Control Chain validity** (§13): sequence continuity, `prev_control_id`
   linkage, forks, signer authority.
-- **Authorization** (§17, §25.2, §26.3, §29.2): abilities at the referenced
-  Control Head.
+- **Authorization** (§17, §25.2, §26.3, §29.2, §80.1): abilities at the referenced
+  Control Head, device roles, bindings, standing and revocations (§17.4, §17.5)
+  and the certificate chain rules c2 to c7 (§7.3).
 - **AEAD and HPKE** (§12, §25, §29.1): decryption, AAD reconstruction, key
   derivation, nonce construction.
 - **Monotonicity and uniqueness** (§8, §29): actor and Snapshot sequences,
@@ -90,7 +96,8 @@ keys and signatures, AEAD failure, non-canonical frontiers, stale epochs,
 Control forks and authority failures. The exceptions are listed as
 must-fail: the tag-18 object, the descriptor with an extra field, the Key
 Package with a wrong-size `enc`, the reserved core Control Record type, the
-unassigned message type and the null expected Control Head. Non-canonical CBOR encoding is likewise invisible, because
+unassigned message type, the null expected Control Head and the
+`invalid-device-*` boundaries of the Device Certificate and device records. Non-canonical CBOR encoding is likewise invisible, because
 the tool validates decoded data.
 
 ## Checks

@@ -260,7 +260,7 @@ section.ready   true; absent while the section is being imported
 
 The creator records an import in a local, durable import journal before its first change (MVP 0.2 compatibility draft, §8) and continues an interrupted import from it, with the same Principal and its actor state (SHARED-OBJECTS-PROFILE-01 §9).
 
-One Principal has one Automerge actor in a Resource (§2). An import is therefore continued only on the device that holds that actor state, or from a restored copy of it. Two devices that write concurrently as one Principal equivocate (LFCP-WIRE-01 §26.2): receivers exclude both units, and the Principal's re-issued work is held until the rebuild (SHARED-OBJECTS-PROFILE-01 §14.1).
+One Principal has one Automerge actor in a Resource (§2) and exactly one writing installation (LFCP-WIRE-01 §7.1). An import is therefore continued only on the installation that holds that actor state, or from a restored copy of it. Key material copied to a second installation is a misconfiguration: two installations that write concurrently as one Principal equivocate (LFCP-WIRE-01 §26.2), receivers exclude both units, and the Principal's re-issued work is held until the rebuild (SHARED-OBJECTS-PROFILE-01 §14.1). A human's other installations are other Principals, tied to the human as devices of one root (LFCP-WIRE-01 §7.2, IDENTITY-PROFILE-01); a device of the creator's root does not continue the creator's import, it is another writer.
 
 A section that stays without `ready` is never offered for invitation. Its creator continues the import or deletes the section locally; no shared operation abandons it.
 
