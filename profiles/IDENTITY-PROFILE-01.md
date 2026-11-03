@@ -36,7 +36,7 @@ Terms (root, device, kind, mask, scope, managing device, owner-acting device, bo
 
 ## 2. Document
 
-The Data Plane of the Identity Resource follows SOP §§7–14 (Automerge 3.5.0 / automerge 0.12, one change per transaction, framing, expansion and depth limits, canonical change encoding, operation references, Snapshot equivalence and rebuilds) and SOP §18 for `extensions`. SOP §§15–17 do **not** apply: this profile has its own root keys and no `objects`.
+The Data Plane of the Identity Resource follows SOP §§7–14 (Automerge 3.5.0 / automerge 0.12, one change per transaction, framing, expansion and depth limits, canonical change encoding, operation references, Snapshot equivalence and rebuilds) and SOP §18 for `extensions`. SOP §§15–17 do **not** apply: this profile has its own root keys and no `objects`. The Automerge actor of a writer is the one of SOP §8 unchanged, with its label `OPENLFCP-SHARED-OBJECTS-ACTOR-v1` and the Identity Resource's ID: this profile declares no actor domain of its own.
 
 ### 2.1 Structure
 
