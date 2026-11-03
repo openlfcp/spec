@@ -5,262 +5,320 @@ and whose outcome it expects (`wire:` LFCP-IDENTITY-TEST-VECTORS-01, `profile:` 
 
 ## F01_register_write_revoke_cutoff
 
-Register DEV_A, write, revoke it, accept an old-head unit, close the epoch, quarantine the unit beyond the frontier and rebuild (LFCP-WIRE-01 §17.5, §19.1, §26.3, §81)
+Register DEV_A, write, revoke it, accept an old-head unit, close the epoch, quarantine the unit beyond the frontier and rebuild (LFCP-WIRE-01 §17.5, §19.1, §26.3, §81; mode sequence)
 
-| # | Step | Case | Outcome |
-|---|---|---|---|
-| 1 | replicas R1 and R2 accept the registration | `wire:I1_device_grant_dev_a` | accept |
-| 2 | DEV_A writes sequence 1 at I1 | `wire:D_dev_a_seq1` | accept |
-| 3 | DEV_B self-registers and writes; BRIDGE writes at I8 | `wire:D_dev_b_seq1` | accept |
-| 4 | BRIDGE writes at I8 | `wire:D_bridge_writes_x` | accept |
-| 5 | OWNER revokes DEV_A | `wire:I9_device_revoke_dev_a` | accept |
-| 6 | R1 receives DEV_A sequence 2 at the old head I1, latest I9, and merges it | `wire:D_dev_a_old_head_after_revoke` | accept |
-| 7 | OWNER closes epoch 0 | `wire:K1_key_epoch` | accept |
-| 8 | R2 receives the same unit after K1 | `wire:D_dev_a_beyond_epoch_cutoff` | STALE_DATA_EPOCH |
-| 9 | R1 learns K1 and rebuilds without DEV_A sequence 2 |  | rebuilt |
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | replicas R1 and R2 accept the registration | `wire:I1_device_grant_dev_a` | accept |  |
+| 2 | DEV_A writes sequence 1 at I1 | `wire:D_dev_a_seq1` | accept |  |
+| 3 | DEV_B self-registers and writes at I2 | `wire:D_dev_b_seq1` | accept |  |
+| 4 | BRIDGE writes at I8 | `wire:D_bridge_writes_x` | accept |  |
+| 5 | OWNER revokes DEV_A | `wire:I9_device_revoke_dev_a` | accept |  |
+| 6 | R1 receives DEV_A sequence 2 at the old head I1, latest I9, and merges it | `wire:D_dev_a_old_head_after_revoke` | accept |  |
+| 7 | OWNER closes epoch 0 | `wire:K1_key_epoch` | accept |  |
+| 8 | R2 receives the same unit after K1 | `wire:D_dev_a_beyond_epoch_cutoff` | STALE_DATA_EPOCH |  |
+| 9 | R1 learns K1 and rebuilds without DEV_A sequence 2 |  | rebuilt |  |
 
 ## F02_cascade_recertify
 
-Revoking DEV_A suspends DEV_B by the cascade; re-certification by the root makes it active again; DEV_B units at each head (LFCP-WIRE-01 §17.5 (cascade), §17.4 rule 5)
+Revoking DEV_A suspends DEV_B by the cascade; re-certification by the root makes it active again; DEV_B units at each head (LFCP-WIRE-01 §17.5 (cascade), §17.4 rule 5; mode sequence)
 
-| # | Step | Case | Outcome |
-|---|---|---|---|
-| 1 | DEV_B self-registers with [CERT_B, CERT_A] | `wire:I2_device_grant_self_dev_b` | accept |
-| 2 | DEV_B writes at I2 | `wire:D_dev_b_seq1` | accept |
-| 3 | OWNER revokes DEV_A | `wire:I9_device_revoke_dev_a` | accept |
-| 4 | DEV_B writes at I9 | `wire:D_dev_b_suspended` | AUTHORIZATION_FAILED |
-| 5 | DEV_B cannot re-certify itself | `wire:device_grant_self_recertify_suspended` | AUTHORIZATION_FAILED |
-| 6 | OWNER re-certifies DEV_B with [CERT_B2] | `wire:I10_recertify_dev_b` | accept |
-| 7 | DEV_B writes at I10 | `wire:D_dev_b_recertified` | accept |
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | DEV_B self-registers with [CERT_B, CERT_A] | `wire:I2_device_grant_self_dev_b` | accept |  |
+| 2 | DEV_B writes at I2 | `wire:D_dev_b_seq1` | accept |  |
+| 3 | OWNER revokes DEV_A | `wire:I9_device_revoke_dev_a` | accept |  |
+| 4 | DEV_B writes at I9 | `wire:D_dev_b_suspended` | AUTHORIZATION_FAILED |  |
+| 5 | DEV_B cannot re-certify itself | `wire:device_grant_self_recertify_suspended` | AUTHORIZATION_FAILED |  |
+| 6 | OWNER re-certifies DEV_B with [CERT_B2] | `wire:I10_recertify_dev_b` | accept |  |
+| 7 | DEV_B writes at I10 | `wire:D_dev_b_recertified` | accept |  |
 
 ## F03_stale_head_reevaluation
 
-Self-registration proposed on a stale head, re-evaluated on the new head; the same DEVICE_GRANT proposed twice (LFCP-WIRE-01 §47; IDENTITY-PROFILE-01 §9.2, §9.3)
+Self-registration proposed on a stale head, re-evaluated on the new head; the same DEVICE_GRANT proposed twice (LFCP-WIRE-01 §47; IDENTITY-PROFILE-01 §9.2, §9.3; mode sequence)
 
-| # | Step | Case | Outcome |
-|---|---|---|---|
-| 1 | DEV_B proposes its self-registration on J2 while the coordinator head is I1 |  | CONTROL_HEAD_MISMATCH |
-| 2 | DEV_B synchronises, classifies the register phase as pending and proposes a fresh record on I1 | `wire:I2_device_grant_self_dev_b` | accept |
-| 3 | A second installation of the same intent finds devices[DEV_B].leaf_id = id(CERT_B) |  | complete |
-| 4 | Had it proposed a fresh DEVICE_GRANT with the same leaf, rule 5 refuses it (shown for DEV_A) | `wire:device_grant_repeat_same_leaf_fresh` | AUTHORIZATION_FAILED |
-| 5 | The exact bytes of a committed record sent again | `wire:device_grant_replay_exact_bytes` | accept |
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | The coordinator holds I1 | `wire:I1_device_grant_dev_a` | accept |  |
+| 2 | DEV_B proposes its self-registration on J2 (a stale head) | bytes of `wire:flow.self_register_dev_b_on_j2` | CONTROL_HEAD_MISMATCH |  |
+| 3 | DEV_B synchronises: its register phase is pending on I1 |  | done | pending |
+| 4 | DEV_B proposes a fresh record on I1 | `wire:I2_device_grant_self_dev_b` | accept |  |
+| 5 | A second installation with the same intent classifies it on I2 |  | done | complete |
+| 6 | Had it proposed a fresh DEVICE_GRANT with the same leaf, rule 5 refuses it (shown for DEV_A on I1) (aside) | `wire:device_grant_repeat_same_leaf_fresh` | AUTHORIZATION_FAILED |  |
+| 7 | The exact bytes of a committed record sent again (aside) | `wire:device_grant_replay_exact_bytes` | accept |  |
 
 ## F04_root_standing_lost_regained
 
-The owner revokes BOB's grant: every device of BOB is inactive; a re-grant restores them without new device records (LFCP-WIRE-01 §7.2 N4, §17.5)
+The owner revokes BOB's grant: every device of BOB is inactive; a re-grant restores them without new device records (LFCP-WIRE-01 §7.2 N4, §17.5; mode sequence)
 
-| # | Step | Case | Outcome |
-|---|---|---|---|
-| 1 | OWNER revokes J1 | `wire:I11_revoke_root_grant_bob` | accept |
-| 2 | DEV_C writes at I11 | `wire:D_dev_c_without_standing` | AUTHORIZATION_FAILED |
-| 3 | DEV_C opens X at I11 | `wire:CONTROL_GET_by_root_without_standing` | AUTHORIZATION_FAILED |
-| 4 | OWNER grants BOB again | `wire:I12_regrant_bob` | accept |
-| 5 | DEV_C writes at I12 | `wire:D_dev_c_regranted` | accept |
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | OWNER revokes J1 | `wire:I11_revoke_root_grant_bob` | accept |  |
+| 2 | DEV_C writes at I11 | `wire:D_dev_c_without_standing` | AUTHORIZATION_FAILED |  |
+| 3 | DEV_C opens X at I11 | `wire:CONTROL_GET_by_root_without_standing` | AUTHORIZATION_FAILED |  |
+| 4 | OWNER grants BOB again | `wire:I12_regrant_bob` | accept |  |
+| 5 | DEV_C writes at I12 | `wire:D_dev_c_regranted` | accept |  |
 
 ## F05_reconciliation
 
-Reconciliation of X against I's Control state: revocations first, then registrations, then keys; idempotent (IDENTITY-PROFILE-01 §7.1)
+Reconciliation of X against I's Control state: revocations first, then registrations, then keys; idempotent; two reconcilers race (IDENTITY-PROFILE-01 §7.1; mode sequence)
 
-| # | Step | Case | Outcome |
-|---|---|---|---|
-| 1 | I's state at P4: DEV_A and DEV_B registered, (OWNER, PAIR_J) consumed | `wire:P4_register_dev_b_approved` | accept |
-| 2 | X's state: DEV_B self-registered with [CERT_B, CERT_A], DEV_A bound only as an intermediate | `wire:flow.self_register_dev_b_on_j2` | accept |
-| 3 | Step 1: I's revocation of (OWNER, PAIR_J) is proposed on X with reason 0 | `wire:flow.reconcile_revoke_pairing_in_x` | accept |
-| 4 | Step 2: DEV_A (intermediate-only in X) is registered with I's chain; DEV_B has the same leaf certificate ID and needs nothing | `wire:flow.reconcile_register_dev_a` | accept |
-| 5 | Step 3: every epoch of X the reconciler holds is sealed to DEV_A and DEV_B unless the ledger records it |  | packages sent |
-| 6 | A service device whose issuer I has revoked is never registered in X: the revocation reaches X first and X refuses the chain (as chain_through_revoked_issuer) | `wire:chain_through_revoked_issuer` | AUTHORIZATION_FAILED |
-| 7 | The Identity Resource as its own target: steps 1 and 2 are vacuous, step 3 seals I's epochs to DEV_B | `wire:flow.kp_dev_a_to_dev_b_in_i` | accept |
-| 8 | A second run |  | nothing to propose |
-| 9 | Two reconcilers race: the loser meets CONTROL_HEAD_MISMATCH, synchronises and classifies its phases as complete |  | complete |
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | I's state at P4: DEV_A and DEV_B registered, (OWNER, PAIR_J) consumed | `wire:P4_register_dev_b_approved` | accept |  |
+| 2 | X's state: DEV_B self-registered with [CERT_B, CERT_A], DEV_A bound only as an intermediate | `wire:flow.self_register_dev_b_on_j2` | accept |  |
+| 3 | Step 1: I's revocation of (OWNER, PAIR_J), reason 3 propagated as 0 | `wire:flow.reconcile_revoke_pairing_in_x` | accept |  |
+| 4 | Step 2: DEV_A, bound only as an intermediate in X, is registered with I's chain; DEV_B has the same leaf certificate ID and needs nothing | `wire:flow.reconcile_register_dev_a` | accept | committed-own |
+| 5 | Step 3: the reconciler seals every epoch of X it holds to DEV_A and DEV_B unless its ledger records the package |  | packages sent |  |
+| 6 | A second reconciler had proposed the same registration on the previous head: CONTROL_HEAD_MISMATCH; after synchronising its phase is |  | done | complete |
+| 7 | A second run of the reconciler |  | nothing to propose |  |
+| 8 | The Identity Resource as its own target: steps 1 and 2 are vacuous, step 3 seals I's epochs to DEV_B | `wire:flow.kp_dev_a_to_dev_b_in_i` | accept |  |
+| 9 | A service device whose issuer I has revoked is never registered in X: the revocation reaches X first and X refuses the chain (shown at I9) (aside) | `wire:chain_through_revoked_issuer` | AUTHORIZATION_FAILED |  |
 
 ## F06_concurrent_revokes
 
-Two managing devices revoke DEV_A concurrently with different reasons: one record; the other phase is complete (IDENTITY-PROFILE-01 §9.2 (Revoke))
+OWNER and DEV_A revoke DEV_B on one head with different reasons: one record; the other phase is complete (IDENTITY-PROFILE-01 §9.2 (Revoke); mode sequence)
 
-| # | Step | Case | Outcome |
-|---|---|---|---|
-| 1 | OWNER revokes DEV_A with reason 1 | `wire:I9_device_revoke_dev_a` | accept |
-| 2 | DEV_A2 (also managing) had proposed DEVICE_REVOKE {OWNER, DEV_A, 2} on I8: CONTROL_HEAD_MISMATCH |  | CONTROL_HEAD_MISMATCH |
-| 3 | After synchronising, a fresh revocation would be refused | `wire:device_revoke_twice` | AUTHORIZATION_FAILED |
-| 4 | DEV_A2 classifies its revoke phase |  | complete |
-| 5 | DEV_A2 continues with the rotation test of §8.1 |  | rotation test |
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | X at I2 | `wire:I2_device_grant_self_dev_b` | accept |  |
+| 2 | DEV_A proposes DEVICE_REVOKE {OWNER, DEV_B, 2} on I2 | bytes of `wire:flow.f06_dev_a_stale_proposal` | CONTROL_HEAD_MISMATCH |  |
+| 3 | OWNER's DEVICE_REVOKE {OWNER, DEV_B, 1} on I2 was committed first | `wire:flow.f06_owner_revokes_dev_b` | accept |  |
+| 4 | DEV_A synchronises and classifies its revoke phase |  | done | complete |
+| 5 | A fresh proposal of the same intent would be refused | `wire:flow.f06_dev_a_fresh_revoke` | AUTHORIZATION_FAILED |  |
+| 6 | DEV_A continues with the rotation test of §8.1 |  | rotation test |  |
 
 ## F07_invitation_accepted_by_device
 
-An invitation accepted by a device of DAVE: the claim names the root, the device registers itself and keys its root (IDENTITY-PROFILE-01 §7.2; LFCP-WIRE-01 §18.1)
+An invitation accepted by a device of DAVE: the claim names the root, the device registers itself and keys its root (IDENTITY-PROFILE-01 §7.2; LFCP-WIRE-01 §18.1; mode sequence)
 
-| # | Step | Case | Outcome |
-|---|---|---|---|
-| 1 | OWNER invites INVITE | `wire:N1_invite_grant` | accept |
-| 2 | DEV_D, a device of DAVE, claims with claimant DAVE, signed by INVITE | `wire:flow.claim_for_root_dave` | accept |
-| 3 | DEV_D registers itself | `wire:flow.self_register_dev_d` | accept |
-| 4 | DEV_D seals epoch 0 to DAVE | `wire:flow.kp_dev_d_to_dave` | accept |
-| 5 | DAVE opens X and reads | `wire:flow.open_as_dave` | accept |
-| 6 | DEV_D adds X to the roster of I |  | roster entry written |
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | OWNER invites INVITE | `wire:N1_invite_grant` | accept |  |
+| 2 | DEV_D, a device of DAVE, claims with claimant DAVE, signed by INVITE | `wire:flow.claim_for_root_dave` | accept |  |
+| 3 | DEV_D registers itself | `wire:flow.self_register_dev_d` | accept |  |
+| 4 | DEV_D seals epoch 0 to DAVE | `wire:flow.kp_dev_d_to_dave` | accept |  |
+| 5 | DAVE opens X and reads | `wire:flow.open_as_dave` | accept |  |
+| 6 | DEV_D adds X to the roster of I |  | roster entry written |  |
+| 7 | A device named as claimant would be refused (shown on I2) (aside) | `wire:claim_by_bound_claimant` | AUTHORIZATION_FAILED |  |
 
 ## F08_pairing_personal
 
-Pairing a personal device DEV_B through PAIR_J in I: phases 1 and 2, keys, request, limits, reuse and retries (IDENTITY-PROFILE-01 §5.3, §9)
+Pairing DEV_B through PAIR_L in an Identity Resource already rotated to epoch 1: keys of both epochs, request, phases 1 and 2, reuse and equivocation (IDENTITY-PROFILE-01 §5.3, §9; mode sequence)
 
-| # | Step | Case | Outcome |
-|---|---|---|---|
-| 1 | DEV_A creates the pairing device | `wire:P2_pairing_device` | accept |
-| 2 | DEV_A seals every epoch of I to PAIR_J (same root) and makes the root's unit 1 retrievable before showing the link | `wire:flow.kp_dev_a_to_pair_j_in_i` | accept |
-| 3 | The link | `profile:pair_uri_roundtrip` | exact bytes |
-| 4 | B verifies the initial change (from a Snapshot only after the root's unit 1) | `profile:identity_doc_initial_without_unit_1` | see case |
-| 5 | B writes its request as PAIR_J | `profile:pairing_writes_own_request` | accept |
-| 6 | A shows the fingerprint | `profile:fingerprint_dev_b` | exact bytes |
-| 7 | Phase 1: consume with digest(CERT_B) | `wire:P3_consume_for_dev_b` | accept |
-| 8 | Phase 2: DEVICE_GRANT with field 2 | `wire:P4_register_dev_b_approved` | accept |
-| 9 | Keys of I to DEV_B | `wire:flow.kp_dev_a_to_dev_b_in_i` | accept |
-| 10 | A consumed PAIR_J receives nothing | `wire:flow.kp_dev_a_to_pair_j_after_consume` | AUTHORIZATION_FAILED |
-| 11 | B learns the consume through the revoked-reader prefix | `wire:CONTROL_GET_by_consumed_pairing` | accept |
-| 12 | A manager that lacks a DEK of I or the root's unit 1 offers no link |  | no link |
-| 13 | 40 sessions created and cancelled one after another, then a session completes: cancelled pairing devices free their places | `wire:device_grant_binding_limit.after_revoke` | accept |
-| 14 | R at 32 live devices: no link until one is revoked | `wire:device_grant_binding_limit` | AUTHORIZATION_FAILED |
-| 15 | Two managers approve different requests of one session: the loser classifies phase 1 as superseded and signs nothing | `wire:device_revoke_consume_twice` | AUTHORIZATION_FAILED |
-| 16 | A phase-2 record for another digest is refused | `wire:device_grant_approval_mismatch` | AUTHORIZATION_FAILED |
-| 17 | Lost ACK of phase 2: the exact bytes are re-sent and answered with the same ACK |  | same ACK |
-| 18 | Crash between phase 1 and phase 2: resume from the journaled payload; the signed certificate equals the journaled one |  | committed-own then pending phase 2 |
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | I at P1: DEV_A registered | `wire:P1_device_grant_dev_a_i` | accept |  |
+| 2 | The root's Data Unit with actor sequence 1 (the initial change) in epoch 0 | `wire:flow.pl_root_unit_1` | accept |  |
+| 3 | I is rotated to epoch 1 | `wire:flow.pl_key_epoch_1` | accept |  |
+| 4 | DEV_A holds both DEKs and the root's unit 1, and creates PAIR_L | `wire:flow.pl_pairing_device_l` | accept |  |
+| 5 | DEV_A seals the DEK of epoch 0 to PAIR_L | `wire:flow.pl_kp_epoch0_to_pair_l` | accept |  |
+| 6 | DEV_A seals the DEK of epoch 1 to PAIR_L | `wire:flow.pl_kp_epoch1_to_pair_l` | accept |  |
+| 7 | The link is shown | `profile:pair_uri_roundtrip` | exact bytes |  |
+| 8 | B verifies the initial change by replaying the units, and from a Snapshot only after the root's unit 1 | `profile:identity_doc_initial_then_fill` | see case |  |
+| 9 | A Snapshot whose initial change is not in the root's unit 1 is not used | `profile:identity_doc_initial_without_unit_1` | see case |  |
+| 10 | B writes its request as PAIR_L (epoch 1) | `wire:flow.pl_pair_l_request` | accept |  |
+| 11 | The document admits the request | `profile:pairing_writes_own_request` | accept |  |
+| 12 | A shows the fingerprint | `profile:fingerprint_dev_b` | exact bytes |  |
+| 13 | Phase 1: consume with digest(CERT_B) | `wire:flow.pl_consume_l` | accept | committed-own |
+| 14 | A second manager that approved another request of the session proposes its consume | `wire:flow.pl_second_manager_consume` | AUTHORIZATION_FAILED | superseded |
+| 15 | A phase-2 record with another digest is refused | `wire:flow.pl_register_wrong_digest` | AUTHORIZATION_FAILED |  |
+| 16 | Phase 2 | `wire:flow.pl_register_dev_b` | accept | committed-own |
+| 17 | Lost ACK of phase 2: the exact bytes are re-sent | bytes of `wire:flow.pl_register_dev_b` | same ACK |  |
+| 18 | DEV_A seals the DEK of epoch 0 to DEV_B | `wire:flow.pl_kp_epoch0_to_dev_b` | accept |  |
+| 19 | DEV_A seals the DEK of epoch 1 to DEV_B | `wire:flow.pl_kp_epoch1_to_dev_b` | accept |  |
+
+## F08.link_reuse_and_equivocation
+
+One link, two installations: sequential reuse, and concurrent equivocation (IDENTITY-PROFILE-01 §5.3 (Concurrency and failure); LFCP-WIRE-01 §26.2; mode independent)
+
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | The first installation writes PAIR_L sequence 1 | `wire:flow.pl_pair_l_request` | accept |  |
+| 2 | Sequential reuse: the second installation sees it and writes sequence 2 (reuse) | `wire:flow.pl_pair_l_reuse_seq2` | accept |  |
+| 3 | Concurrent: the second installation also writes sequence 1 (equivocation) | `wire:flow.pl_pair_l_request_second_install` | ACTOR_EQUIVOCATION |  |
+
+## F08.binding_limit
+
+OWNER at 31 live devices in I: the pairing device takes the 32nd place, the consume frees it, D_B is registered; at 32 no link (LFCP-WIRE-01 §17.4 rule 8; IDENTITY-PROFILE-01 §5.3 step 1; mode sequence)
+
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | 31 live devices of OWNER in I (DEV_A and LIMIT_OWNER_01..30) | `wire:flow.p31_pairing_device` | accept |  |
+| 2 | At 32 live devices a further pairing device is refused: no link until a device is revoked | `wire:flow.p31_second_pairing_refused` | AUTHORIZATION_FAILED |  |
+| 3 | The consume of PAIR_M frees its place | `wire:flow.p31_consume` | accept |  |
+| 4 | DEV_B takes the 32nd place | `wire:flow.p31_register_dev_b` | accept |  |
+
+## F08.forty_sessions
+
+40 sessions created and cancelled one after the other, then a session completes (LFCP-WIRE-01 §17.4 rule 8; mode sequence)
+
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | 40 pairing devices created and cancelled in I | `wire:flow.p40_pairing_device` | accept |  |
+| 2 | Phase 1 of the 41st session | `wire:flow.p40_consume` | accept |  |
+| 3 | Phase 2 completes | `wire:flow.p40_register_dev_b` | accept |  |
 
 ## F09_pairing_service
 
-Pairing a service device BRIDGE_O: bind-only in I, results learnt from the scoped Resources (IDENTITY-PROFILE-01 §5.3 steps 6 and 8, §6)
+Pairing the service device BRIDGE_O: approved with C0 = CERT_SO (digest d), bound in I, C0's issuer revoked, re-certified as C1 = CERT_SO_R; the candidates (IDENTITY-PROFILE-01 §5.3 steps 6 and 8, §6; mode sequence)
 
-| # | Step | Case | Outcome |
-|---|---|---|---|
-| 1 | Phase 1: consume with digest(CERT_SO) | `wire:P3s_consume_for_bridge_o` | accept |
-| 2 | Phase 2: bind-only DEVICE_GRANT in I | `wire:P4s_bind_bridge_o` | accept |
-| 3 | BRIDGE_O cannot write in I | `wire:D_bridge_o_in_i` | AUTHORIZATION_FAILED |
-| 4 | Registration in X, a candidate of the approved scope | `wire:flow.register_bridge_o_in_x` | accept |
-| 5 | Every candidate unreachable after approval |  | approved, waiting for registration |
-| 6 | The first verified certificate with digest d arrives from X |  | ready in X |
-| 7 | A certificate for BRIDGE_O with another digest |  | reported, not used |
-| 8 | A candidate where BRIDGE_O is registered but no leaf with digest d was ever accepted |  | unproven |
-| 9 | A crashes after the bind-only DEVICE_GRANT was accepted, before its ACK was persisted; on restart the register phase is |  | committed-own |
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | Phase 1 with digest(CERT_SO) | `wire:P3s_consume_for_bridge_o` | accept |  |
+| 2 | Phase 2: bind-only DEVICE_GRANT in I | `wire:P4s_bind_bridge_o` | accept |  |
+| 3 | BRIDGE_O cannot write in I | `wire:D_bridge_o_in_i` | AUTHORIZATION_FAILED |  |
+| 4 | Every candidate is offline: B shows |  | approved, waiting for registration |  |
+| 5 | C0's issuer DEV_A is revoked in I | `wire:flow.f09_revoke_issuer_in_i` | accept |  |
+| 6 | The root re-certifies BRIDGE_O as C1 (same kind, mask and scope) | `wire:flow.f09_recertify_c1_in_i` | accept |  |
+| 7 | Candidate X where C0 was never accepted: reconciliation registers C1 (X never C0) | `wire:flow.f09_x_register_c1` | accept |  |
+| 8 | Candidate X where C0 was registered first (X with C0) | `wire:flow.register_bridge_o_in_x` | accept |  |
+| 9 | … and re-certified there as C1: B takes C0 from the history as its result and uses C1 (X with C0) | `wire:flow.f09_x_recertify_c1` | accept |  |
+| 10 | BRIDGE_O receives the DEK of X; with the certificate it is ready (X with C0) | `wire:flow.f09_kp_to_bridge_o_after_recert` | accept |  |
+| 11 | Candidate X where another issuer registered C* (scope [X, Y], another digest) (X with C*) | `wire:flow.f09_x_register_cstar` | accept |  |
+| 12 | B restarts: it resumes from its persisted candidates |  | candidates resumed |  |
+| 13 | A crashes after the bind-only DEVICE_GRANT was accepted, before its ACK was persisted |  | done | committed-own |
 
 ## F10_request_feasibility
 
-Request validation and the feasibility check before anything is committed (IDENTITY-PROFILE-01 §5.3 step 4, §4)
+Request validation and the feasibility check before anything is committed (IDENTITY-PROFILE-01 §5.3 step 4, §4; mode independent)
 
-| # | Step | Case | Outcome |
-|---|---|---|---|
-| 1 | A valid request | `profile:request_valid` | accept |
-| 2 | A request written by another pairing device into this one | `profile:pairing_edits_foreign_request_label` | UNAUTHORIZED_WRITER |
-| 3 | The descriptor changes between display and confirmation |  | re-confirmation |
-| 4 | A manager with a chain of three certificates: Full is not offered | `wire:device_grant_feasibility_full_depth_4` | MALFORMED_MESSAGE |
-| 5 | A manager whose mask lacks 3 cannot issue Edit | `wire:device_grant_feasibility_mask_exceeds_issuer` | AUTHORIZATION_FAILED |
-| 6 | An Edit device cannot issue at all | `wire:device_grant_feasibility_edit_issuer` | AUTHORIZATION_FAILED |
-| 7 | A service scope trimmed to nothing |  | no consume; session cancelled |
-| 8 | The manager's own authority is re-checked after a head change |  | re-checked |
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | A valid request | `profile:request_valid` | accept |  |
+| 2 | A request written by another pairing device into this one | `profile:pairing_edits_foreign_request_label` | UNAUTHORIZED_WRITER |  |
+| 3 | The descriptor changes between display and confirmation |  | re-confirmation |  |
+| 4 | A manager with a chain of three certificates: Full is not offered | `wire:device_grant_feasibility_full_depth_4` | MALFORMED_MESSAGE |  |
+| 5 | A manager whose mask lacks 3 cannot issue Edit | `wire:device_grant_feasibility_mask_exceeds_issuer` | AUTHORIZATION_FAILED |  |
+| 6 | An Edit device cannot issue at all | `wire:device_grant_feasibility_edit_issuer` | AUTHORIZATION_FAILED |  |
+| 7 | A service scope trimmed to nothing |  | no consume; session cancelled |  |
+| 8 | The manager's own authority is re-checked after a head change |  | re-checked |  |
 
 ## F11_revoker_chain_through_target
 
-A revoker whose chain passes through the target re-certifies first (IDENTITY-PROFILE-01 §8.1)
+DEV_E, issued by DEV_C, revokes DEV_C: it re-certifies first, then revokes, then retires (IDENTITY-PROFILE-01 §8.1; mode sequence)
 
-| # | Step | Case | Outcome |
-|---|---|---|---|
-| 1 | DEV_B (chain [CERT_B, CERT_A]) wants to revoke DEV_A: the pre-check refuses |  | refused locally |
-| 2 | OWNER re-certifies DEV_B with [CERT_B2] | `wire:I10_recertify_dev_b` | accept |
-| 3 | The revocation then proceeds (shown by the root) | `wire:I9_device_revoke_dev_a` | accept |
-| 4 | Self-retirement leaves rotation to another installation | `wire:device_revoke_self` | accept |
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | X at I8: DEV_E active with chain [CERT_E, CERT_C] | `wire:I8_bridge_grant` | accept |  |
+| 2 | Without re-certification the revocation would suspend DEV_E itself: the pre-check refuses it (prevented) | `wire:flow.f11_dev_e_revokes_dev_c_unrecertified` | accept |  |
+| 3 | BOB re-certifies DEV_E with [CERT_E2] | `wire:flow.f11_recertify_dev_e` | accept |  |
+| 4 | DEV_E revokes DEV_C and stays active | `wire:flow.f11_dev_e_revokes_dev_c` | accept |  |
+| 5 | DEV_E retires itself; rotation is left to another installation | `wire:flow.f11_dev_e_retires` | accept |  |
 
 ## F12_rotation_with_open_session
 
-Rotating I while pairing sessions are open (IDENTITY-PROFILE-01 §8.2, §8.1)
+Rotating I while PAIR_J and PAIR_K are open, then closing J; the rotator test on concrete states (IDENTITY-PROFILE-01 §8.2, §8.1; mode sequence)
 
-| # | Step | Case | Outcome |
-|---|---|---|---|
-| 1 | Two open sessions PAIR_J and PAIR_K | `wire:P2k_pairing_device_k` | accept |
-| 2 | A rotation of I seals the new DEK to OWNER, DEV_A, PAIR_J and PAIR_K |  | packages to every reader |
-| 3 | One session closed (PAIR_J cancelled): the other continues | `wire:P3c_cancel_pairing` | accept |
-| 4 | A consumed or cancelled pairing device receives nothing | `wire:flow.kp_dev_a_to_pair_j_after_consume` | AUTHORIZATION_FAILED |
-| 5 | A foreign reader in I and a rotator without 6 |  | awaiting rotation |
-| 6 | A revoker with 7 but not 6 in a Resource with a foreign reader |  | awaiting rotation |
-| 7 | With both 6 and 7 |  | rotates and seals to every reader |
-| 8 | In I, where every reader is of the root, 7 alone suffices |  | rotates |
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | I at P2: PAIR_J open | `wire:P2_pairing_device` | accept |  |
+| 2 | PAIR_K open | `wire:P2k_pairing_device_k` | accept |  |
+| 3 | DEV_A rotates I to epoch 1 | `wire:flow.f12_i_key_epoch_1` | accept |  |
+| 4 | The new DEK to OWNER | `wire:flow.f12_kp_epoch1_to_owner` | accept |  |
+| 5 | The new DEK to PAIR_J | `wire:flow.f12_kp_epoch1_to_pair_j` | accept |  |
+| 6 | The new DEK to PAIR_K | `wire:flow.f12_kp_epoch1_to_pair_k` | accept |  |
+| 7 | J's session is cancelled | `wire:flow.f12_cancel_j` | accept |  |
+| 8 | A cancelled pairing device receives nothing | `wire:flow.f12_kp_epoch1_to_pair_j_after_cancel` | AUTHORIZATION_FAILED |  |
+| 9 | K's request continues in epoch 1 | `wire:flow.f12_pair_k_writes_request` | accept |  |
+| 10 | The rotator test of §8.1 in X (CAROL is a foreign reader) and in I | `wire:flow.rotator_test` | see case |  |
 
 ## F13_durable_phases
 
-Crash and concurrency at every ACK of pairing approval and of revoke plus rotate (IDENTITY-PROFILE-01 §9.1 to §9.5)
+Crash and concurrency around every ACK of a pairing approval (I) and of revoke plus rotate (X) (IDENTITY-PROFILE-01 §9.1 to §9.5; mode sequence)
 
-| # | Step | Case | Outcome |
-|---|---|---|---|
-| 1 | Crash before the consume ACK; the chain lacks the record |  | pending |
-| 2 | Crash after the consume ACK; the chain holds it with this digest | `wire:P3_consume_for_dev_b` | accept |
-| 3 | Crash after the revoke ACK | `wire:I9_device_revoke_dev_a` | accept |
-| 4 | A concurrent rotation by another writer after the revocation | `wire:K1_key_epoch` | accept |
-| 5 | A reader revoked between planning and sending packages |  | fresh DEK (§9.4) |
-| 6 | Partial package delivery |  | repaired by the ledger rule (§9.5) |
-| 7 | A rotator crashes after the KEY_EPOCH ACK and before any package |  | awaiting key holder |
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | Approval journal: consume PAIR_J with digest(CERT_B), exact bytes of P3; the chain is at P2 | `wire:P2_pairing_device` | accept | pending |
+| 2 | Crash after sending P3; after restart the chain holds P3 | `wire:P3_consume_for_dev_b` | accept | committed-own |
+| 3 | Its ACK was lost: the exact bytes of P3 are re-sent | bytes of `wire:P3_consume_for_dev_b` | same ACK |  |
+| 4 | Phase 2 from the journaled payload: register DEV_B with CERT_B |  | done | pending |
+| 5 | Crash after the ACK of P4 and before it was persisted | `wire:P4_register_dev_b_approved` | accept | committed-own |
+| 6 | Exact-byte retry of P4 | bytes of `wire:P4_register_dev_b_approved` | same ACK |  |
+| 7 | Revoke journal in X: revoke (OWNER, DEV_A) with reason 1; the chain is at I8 | `wire:I8_bridge_grant` | accept | pending |
+| 8 | After the ACK of I9 (or after a crash), the revoke phase | `wire:I9_device_revoke_dev_a` | accept | complete |
+| 9 | The rotate phase after the revocation at I9 |  | done | pending |
+| 10 | Another writer committed the rotation | `wire:K1_key_epoch` | accept | complete |
+| 11 | A reader revoked between planning and sending packages: its DEK was sealed to a Principal outside the new reader set |  | fresh DEK (§9.4) |  |
+| 12 | Partial package delivery of epoch 1 |  | re-send the missing package only |  |
+| 13 | The rotator of K1 crashed before any package: readers hold epoch 1 in KEY_BLOCKED |  | awaiting key holder |  |
+| 14 | After a bounded wait a second rotator commits epoch 2 with a fresh DEK | `wire:flow.f13_second_rotator_epoch_2` | accept |  |
 
 ## F14_frontier_from_verified_set
 
-The final frontier comes from the rotator's verified accepted set (LFCP-WIRE-01 §19; IDENTITY-PROFILE-01 §8.3)
+The final frontier comes from the rotator's verified accepted set, extra ranges included (LFCP-WIRE-01 §19, §19.1, §28.1; IDENTITY-PROFILE-01 §8.3; mode sequence)
 
-| # | Step | Case | Outcome |
-|---|---|---|---|
-| 1 | The server advertises DEV_A 1..100; only 1..2 are fetchable and verify |  | frontier DEV_A <= 2 |
-| 2 | A hole: 1, 2 and 4 verified |  | frontier DEV_A <= 2 |
-| 3 | An advertised unit that fails authorization (DEV_B at I9) | `wire:D_dev_b_suspended` | AUTHORIZATION_FAILED |
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | DEV_A sequence 1 in Y | `wire:flow.y_dev_a_seq1` | accept |  |
+| 2 | DEV_A sequence 2 | `wire:flow.y_dev_a_seq2` | accept |  |
+| 3 | DEV_A sequence 4, previous = sequence 2 (sequence 3 never written) | `wire:flow.y_dev_a_seq4` | accept |  |
+| 4 | An advertised unit that fails authorization (BRIDGE in Y) is not counted | `wire:D_bridge_in_y` | AUTHORIZATION_FAILED |  |
+| 5 | The server advertises DEV_A 1..100; only 1, 2 and 4 are fetchable and verify |  | verified accepted set DEV_A {1, 2, 4} |  |
+| 6 | A frontier that writes the range after the hole as [3, 4] is not canonical | `wire:flow.y_key_epoch_noncanonical_range` | MALFORMED_MESSAGE |  |
+| 7 | DEV_A closes epoch 0 with the frontier {0: DEV_A, 1: 2, 2: [[4, 4]]} | `wire:flow.y_key_epoch_1` | accept |  |
+| 8 | Sequence 4 received after the KEY_EPOCH: inside the extra range | `wire:flow.y_dev_a_seq4_after_epoch` | accept |  |
+| 9 | A sequence 3 arriving after the KEY_EPOCH: in the hole | `wire:flow.y_dev_a_seq3_after_epoch` | STALE_DATA_EPOCH |  |
+| 10 | Sequence 5 after the KEY_EPOCH: beyond the frontier | `wire:flow.y_dev_a_seq5_after_epoch` | STALE_DATA_EPOCH |  |
 
 ## F15_rotation_policy_by_exposure
 
-Rotation follows exposing revocations only (LFCP-WIRE-01 §17.5 (exposure); IDENTITY-PROFILE-01 §8.4)
+Rotation follows exposing revocations only (independent cases, one per kind of revocation) (LFCP-WIRE-01 §17.5 (exposure); IDENTITY-PROFILE-01 §8.4; mode independent)
 
-| # | Step | Case | Outcome |
-|---|---|---|---|
-| 1 | An exposing revocation | `wire:I9_device_revoke_dev_a` | accept |
-| 2 | An unbound tombstone without descendants | `wire:Vu1_revoke_unbound` | accept |
-| 3 | An out-of-scope binding revoked | `wire:flow.revoke_out_of_scope_bridge_in_y` | accept |
-| 4 | An already suspended device revoked | `wire:flow.revoke_suspended_dev_b` | accept |
-| 5 | A never-reading device revoked | `wire:W2` | accept |
-| 6 | An intermediate-only device with a reading descendant revoked | `wire:V2_revoke_dev_c` | accept |
-| 7 | Three exposing revocations in one epoch |  | one rotation |
-| 8 | A former member cannot issue the tombstone at all | `wire:device_revoke_by_former_member` | AUTHORIZATION_FAILED |
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | An exposing revocation | `wire:I9_device_revoke_dev_a` | accept |  |
+| 2 | An unbound tombstone without descendants | `wire:Vu1_revoke_unbound` | accept |  |
+| 3 | An out-of-scope binding revoked | `wire:flow.revoke_out_of_scope_bridge_in_y` | accept |  |
+| 4 | An already suspended device revoked | `wire:flow.revoke_suspended_dev_b` | accept |  |
+| 5 | A never-reading device revoked | `wire:W2` | accept |  |
+| 6 | An intermediate-only device with a reading descendant revoked | `wire:V2_revoke_dev_c` | accept |  |
+| 7 | Three exposing revocations in one epoch |  | one rotation |  |
+| 8 | A former member cannot issue the tombstone at all | `wire:device_revoke_by_former_member` | AUTHORIZATION_FAILED |  |
 
 ## F16_device_grant_fork
 
-Two valid competing DEVICE_GRANTs on one prev (LFCP-WIRE-01 §13.2; IDENTITY-PROFILE-01 §9.7)
+Two valid competing DEVICE_GRANTs on one prev (LFCP-WIRE-01 §13.2; IDENTITY-PROFILE-01 §9.7; mode sequence)
 
-| # | Step | Case | Outcome |
-|---|---|---|---|
-| 1 | Rd1 on I1 | `wire:Rd1` | accept |
-| 2 | W1 on I1, delivered to another manager | `wire:W1` | accept |
-| 3 | Both branches known |  | CONTROL_CONFLICT |
-| 4 | Approval, reconciliation and automatic rotation taking I or X as input |  | suspended |
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | X at I1 | `wire:I1_device_grant_dev_a` | accept |  |
+| 2 | Rd1 on I1, delivered to one manager (Rd1) | `wire:Rd1` | accept |  |
+| 3 | W1 on I1, delivered to another manager (W1) | `wire:W1` | accept |  |
+| 4 | Both branches known |  | CONTROL_CONFLICT |  |
+| 5 | Approval, reconciliation and automatic rotation taking I or X as input |  | suspended |  |
 
 ## F17_revoked_device
 
-A revoked device reconnects (IDENTITY-PROFILE-01 §8.6; LFCP-WIRE-01 §41)
+A revoked device reconnects (IDENTITY-PROFILE-01 §8.6; LFCP-WIRE-01 §41; mode sequence)
 
-| # | Step | Case | Outcome |
-|---|---|---|---|
-| 1 | DEV_A was offline during I9 and reconnects: RESOURCE_OPEN | `wire:CONTROL_GET_by_revoked_reader` | accept |
-| 2 | DEV_A requests data | `wire:DATA_GET_by_revoked_session` | AUTHORIZATION_FAILED |
-| 3 | A never-reader | `wire:CONTROL_GET_by_never_reader` | AUTHORIZATION_FAILED |
-| 4 | DEV_A re-supplies a valid foreign Key Package the server lost | `wire:KEY_PACKAGE_PUT_by_revoked_session_foreign_package` | accept |
-| 5 | Online: pushes stop before the revoking record is pushed (W §69) |  | unsubscribed before push |
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | DEV_A was offline during I9 and reconnects at I10 | `wire:CONTROL_GET_by_revoked_reader` | accept |  |
+| 2 | DEV_A requests data | `wire:DATA_GET_by_revoked_session` | AUTHORIZATION_FAILED |  |
+| 3 | DEV_A re-supplies a valid foreign Key Package the server lost | `wire:KEY_PACKAGE_PUT_by_revoked_session_foreign_package` | accept |  |
+| 4 | A device that never read (DEV_W at W2) (never reader) | `wire:CONTROL_GET_by_never_reader` | AUTHORIZATION_FAILED |  |
+| 5 | Online: pushes stop before the revoking record is pushed (W §69) |  | unsubscribed before push |  |
 
 ## F18_barrier
 
-The four barrier entries against a pre-identity validator, a herald and an identity-aware one (LFCP-WIRE-01 §100.1, §37)
+The four barrier entries against a pre-identity validator, a herald and an identity-aware one (independent cases) (LFCP-WIRE-01 §100.1, §37; mode independent)
 
-| # | Step | Case | Outcome |
-|---|---|---|---|
-| 1 | type 9: pre-identity validator | `wire:I1_device_grant_dev_a` | accept |
-| 2 | type 10: pre-identity validator | `wire:I9_device_revoke_dev_a` | accept |
-| 3 | Genesis field 5: pre-identity validator | `wire:G1_genesis_by_dev_a` | accept |
-| 4 | commit field 2: pre-identity validator | `wire:T1_commit` | accept |
-| 5 | A blocked client writes on its last validated head |  | accepted until the epoch closes |
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | type 9 | `wire:I1_device_grant_dev_a` | accept |  |
+| 2 | type 10 | `wire:I9_device_revoke_dev_a` | accept |  |
+| 3 | Genesis field 5 | `wire:G1_genesis_by_dev_a` | accept |  |
+| 4 | commit field 2 | `wire:T1_commit` | accept |  |
+| 5 | A blocked client writes on its last validated head |  | accepted until the epoch closes |  |
 
 ## F19_key_bootstrap
 
-Devices that never received their first packages get every epoch from the next reconciling manager (IDENTITY-PROFILE-01 §7.1 step 3)
+Devices that never received their first packages get every epoch from the next reconciling manager (independent cases) (IDENTITY-PROFILE-01 §7.1 step 3; mode independent)
 
-| # | Step | Case | Outcome |
-|---|---|---|---|
-| 1 | A Read device in X | `wire:flow.kp_owner_to_dev_r` | accept |
-| 2 | A device registered in I whose approver crashed before its first package | `wire:flow.kp_dev_a_to_dev_b_in_i` | accept |
-| 3 | A service device bound in I and registered in X | `wire:flow.kp_dev_a_to_bridge_o_in_x` | accept |
-| 4 | None of them wrote missing_keys |  | served anyway |
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | A Read device in X | `wire:flow.kp_owner_to_dev_r` | accept |  |
+| 2 | A device registered in I whose approver crashed before its first package | `wire:flow.kp_dev_a_to_dev_b_in_i` | accept |  |
+| 3 | A service device bound in I and registered in X | `wire:flow.kp_dev_a_to_bridge_o_in_x` | accept |  |
+| 4 | None of them wrote missing_keys |  | served anyway |  |
