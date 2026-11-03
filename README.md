@@ -27,6 +27,11 @@ For MVP 0.2, [MVP-0.2-BASELINE.md](MVP-0.2-BASELINE.md) does the same at the
 tag `mvp-0.2-baseline.1`: the MVP 0.1 baseline unchanged, plus shared
 sections.
 
+MVP 0.4 (one human, several devices: [ADR 0011](adr/0011-human-root-identity.md))
+is being written into LFCP-WIRE-01 and IDENTITY-PROFILE-01 as Working
+Drafts; its baseline `mvp-0.4-baseline.1` is tagged once the identity
+corpora exist (`migrations/mvp-0.4-baseline.1/` records the value changes).
+
 Higher entries win. A lower artifact never overrides a higher one; a
 conflict between them is a specification gap to report, not something to
 resolve in code.
@@ -39,6 +44,7 @@ resolve in code.
 | 4 | Shared Objects Profile | [profiles/SHARED-OBJECTS-PROFILE-01.md](profiles/SHARED-OBJECTS-PROFILE-01.md); structural contract in [profiles/shared-objects-01/schema/](profiles/shared-objects-01/schema/README.md) | Normative, Working Draft |
 | 5 | Shared Objects test vectors | [test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.md](test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.md), [.json](test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.json) | Test vectors |
 | 6 | Markdown projection refs | [integration/MARKDOWN-REFS-01.md](integration/MARKDOWN-REFS-01.md) | Normative, Working Draft |
+| 6 | Identity Resource profile and device flows (MVP 0.4) | [profiles/IDENTITY-PROFILE-01.md](profiles/IDENTITY-PROFILE-01.md); the wire side in LFCP-WIRE-01 §7.2, §7.3, §17.4, §17.5, §80.1 and §100.1 ([ADR 0011](adr/0011-human-root-identity.md)) | Normative, Working Draft; not in a baseline yet |
 | 6 | Obsidian architecture | `obsidian: docs/OBSIDIAN-ARCHITECTURE-01.md` | Architecture |
 | 7 | Implementation code | `sdk-ts`, `sdk-rs`, `server`, `obsidian` | |
 | 8 | UI behavior | `obsidian` | |
