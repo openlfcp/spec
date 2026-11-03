@@ -1101,9 +1101,9 @@ def generate():
         {'cose_sign1': hexv(genesis_http['cose'])},
         {'valid': False, 'disposition': 'reject', 'error': {'code': 'MALFORMED_MESSAGE'}},
         cddl=('control-record', 'pass'))
-    unknown_type = control_record(1, C0['id'], 9, OWNER, grant_bob_body)
-    neg('unknown_core_type_C1', 'control_record', 'C1 with the reserved core Control Record type 9',
-        'C1_grant_bob', 'payload field 3: Control Record type', 1, 9,
+    unknown_type = control_record(1, C0['id'], 31, OWNER, grant_bob_body)
+    neg('unknown_core_type_C1', 'control_record', 'C1 with the reserved core Control Record type 31',
+        'C1_grant_bob', 'payload field 3: Control Record type', 1, 31,
         'LFCP-WIRE-01 §14',
         'Unknown core Control Record types MUST cause validation failure, with `INVALID_CONTROL_CHAIN`.',
         'A core type the receiver does not know may carry authority it cannot evaluate; accepting it would let replicas disagree on the chain.',

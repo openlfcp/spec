@@ -2122,10 +2122,10 @@ cose_sign1:
 cc7ca9ec319266192821f84aff68170fd3dd50e8fd9984df42c90eea3cf2e83611eee5c01184908ffbb113bda76408
 ```
 
-#### 17.10.22 unknown_core_type_C1: C1 with the reserved core Control Record type 9
+#### 17.10.22 unknown_core_type_C1: C1 with the reserved core Control Record type 31
 
 - Base case: `C1_grant_bob`
-- Mutation: payload field 3: Control Record type: `1` → `9`
+- Mutation: payload field 3: Control Record type: `1` → `31`
 - Rule (LFCP-WIRE-01 §14): Unknown core Control Record types MUST cause validation failure, with `INVALID_CONTROL_CHAIN`.
 - Expected: invalid, reject, error code `INVALID_CONTROL_CHAIN`
 - Why: A core type the receiver does not know may carry authority it cannot evaluate; accepting it would let replicas disagree on the chain.
@@ -2133,13 +2133,14 @@ cc7ca9ec319266192821f84aff68170fd3dd50e8fd9984df42c90eea3cf2e83611eee5c01184908f
 cose_sign1:
 
 ```text
-845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e2a6005820
+845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e3a6005820
 c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203b141a9d660b274f73a042
-dbe47dcb1fe5b9f1d8d96f782cc8e4728695704adc0309045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125
-093976f6e906cd80121d05a300a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9
-c50158201953f4ada1cb4e0f8662108152c82e7e074cbf4859c487461cbe41e5d623e3c2025820b5a22f5f5cbdc3a6f8
-742ec8b2bc9665d0170478bf5aca7528fdd5eefb94f26c018301020302805840c60d9ef8130cf2e28de9c154548df17c
-e890cf63410725d9a73caa326b39224ec2d926fbb9ea7ec8496c67d215aaa3cacb0eeb91c7d3ffef3d73607f16409c0e
+dbe47dcb1fe5b9f1d8d96f782cc8e4728695704adc03181f045820172d2fc24d2192ed5703279a49d5db9f7fe8935b01
+25093976f6e906cd80121d05a300a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0
+a9c50158201953f4ada1cb4e0f8662108152c82e7e074cbf4859c487461cbe41e5d623e3c2025820b5a22f5f5cbdc3a6
+f8742ec8b2bc9665d0170478bf5aca7528fdd5eefb94f26c01830102030280584052350aa95f23e91a5691348b22d329
+9cd8414c4ed01468d1dfe5f56692238f09887fc147618174273d0607c91c032cf0cb28f833fa1f49bd2b4e8b70368a9b
+05
 ```
 
 #### 17.10.23 extension_type_non_owner_C1: C1 replaced by an extension-type (32) record issued by BOB
