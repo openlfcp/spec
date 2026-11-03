@@ -30,6 +30,7 @@ LFCP-WIRE-01 defines:
 - snapshots;
 - resource routing and a per-resource Control Coordinator;
 - ownership transfer;
+- root identity and device delegation: Device Certificates, and the Control Records that bind and revoke a human's devices inside a Resource (Sections 7.2, 7.3, 17.4, 17.5 and 80.1);
 - normal migration between independent LFCP servers;
 - connection and resource state machines;
 - error handling;
@@ -45,6 +46,7 @@ LFCP-WIRE-01 does **not** define:
 - attachments or arbitrary large blob transport;
 - human-readable contact discovery;
 - account recovery;
+- recovery of a root identity after the loss of its devices, a root key kept off every device, and root rotation (Section 108.1);
 - multi-owner or quorum governance;
 - a global LFCP account service.
 
@@ -255,9 +257,118 @@ A Principal may represent:
 
 A single human MAY possess multiple Principals.
 
-Applications SHOULD normally use a distinct operational Principal per independently editing device, because Data Plane sequence numbers are scoped to a Principal.
+An **installation** (also "device" in this section) is one independently writing instance of an application: one vault in one editor install on one machine, one headless process with its own store, one browser profile. It is not a physical machine. A Principal has exactly one writing installation: its private keys and its actor sequence state live there. Key material copied to a second installation is a misconfiguration, because two installations writing as one Principal equivocate (Section 26.2). Applications MUST use a distinct operational Principal per installation; Data Plane sequence numbers are scoped to a Principal.
 
-A future LFCP extension may define explicit root-identity-to-device delegation. It is not required by WIRE-01.
+A human's other installations are therefore other Principals. Sections 7.2 and 7.3 tie them to the human: a Root Identity, and the Device Principals that act for it under Device Certificates.
+
+### 7.2 Root Identity and Device Principals
+
+This section, Section 7.3, Sections 17.4 and 17.5, Section 80.1 and Section 100.1 define how one human operates several installations under one identity: a **Root Identity** that owns and is a member of Resources; **Device Principals** tied to it by signed **Device Certificates**; two core Control Record types that bind and revoke devices inside a Resource's Control Chain; the rule by which a device's authority in a Resource is evaluated; and the Key Package rule that lets a human's devices share Resource keys. The human's device list and Resource roster, pairing, reconciliation, revocation with rotation and the crash-safe multi-record flows that use these records are defined by the Identity Resource profile, IDENTITY-PROFILE-01 (Data Profile `org.openlfcp.identity.v1`). The decision record is ADR 0011. This resolves the deferred item of Section 108.1 inside the wire profile `LFCP-WIRE-01`: the additions use reserved core space (Section 14 codes `9` to `11`, Section 17.1 codes `12` and `13`, Section 37 extension list), and a client that predates them fails closed (Section 100.1).
+
+**Terms.**
+
+- **Root Identity** (`R`, "root"): a Principal that represents a human. It is an ordinary Principal: it owns Resources (Genesis owner, Section 15) and holds grants (Section 17) exactly as any Principal does. Every Principal that no device record names is a root without devices.
+- **Device Principal** (`D`, "device"): a Principal that acts for a root under a Device Certificate. A device is a distinct Principal with its own sequence numbers (Section 8), actor keys (Section 12) and Data Profile actor (SHARED-OBJECTS-PROFILE-01 §8).
+- **Device Certificate**: a standalone signed object (Section 10) by which the root, or a managing device of the root, names a device, its kind, its ability mask and its Resource scope (Section 7.3).
+- **Certificate chain**: the leaf certificate of a device followed by the certificates of the devices that issued it, up to one issued by the root (Section 7.3).
+- **Kinds of device**: `0` **personal** (an installation of the human; may manage devices and act as owner when its mask says so); `1` **service** (a bridge, bot or exporter; scoped to listed Resources; never manages devices, never acts as owner); `2` **pairing** (a throwaway Principal created for one pairing session; scoped to the Identity Resource; consumed by the approval it leads to, Section 17.5, IDENTITY-PROFILE-01 §5).
+- **Managing device**: a personal device whose mask contains `device/manage` (ability `12`, Section 17.1). **Owner-acting device**: a personal device whose mask contains `owner/act` (ability `13`).
+- **Role** of a Principal in a Resource (Section 79): `device` (any device in an accepted chain, leaf or intermediate) or `non-device` (owner, grant subject, claimant, transferee). A Principal never has both; whether a `non-device` Principal is an Invitation Principal is a property of its grants (Section 18), not a role.
+- **Bound** (in a Resource `X`): a Principal that appeared as a device, at any level, in a chain accepted into `X`'s Control Chain. Binding fixes its root, kind, mask and scope.
+- **Registered** (in `X`): bound as the leaf of a `DEVICE_GRANT` whose scope admits `X` (Section 17.4), of a Genesis with field `5` (Section 15) or of a transfer commit with field `2` (Section 23.3) accepted into `X`.
+- **Active** (in `X` at head `H`): registered, not revoked, with no revoked issuer in its current chain, and with its root in good standing (Section 17.5). Only active devices confer authority.
+- **Suspended**: registered and not revoked, but inactive because an issuer in its current chain is revoked. Re-certification restores it (Section 17.4).
+- **Identity Resource** (`I`): the Resource of Data Profile `org.openlfcp.identity.v1` owned by a root (IDENTITY-PROFILE-01). One per root. Servers do not recognise it.
+- **Roster**: the list of Resources the human takes part in, kept in the Identity Resource.
+- `rootOf(P, X)`: the root a bound Principal `P` acts for in `X`, or `P` itself (Section 80.1).
+
+**Invariants.**
+
+- **N1. The root is a Principal.** Membership, ownership, claims and transfers name roots, as they name Principals today. A Resource whose chain contains no device record behaves exactly as this document defined it before Sections 7.2 to 7.3 existed.
+- **N2. Each device is its own actor.** A device signs Data Units, Snapshots and Key Packages with its own key as its own actor; it never writes under the root's actor or another device's. Two devices of one human therefore never equivocate by construction (Section 26.2).
+- **N3. Everything a Resource needs is in its own Control Chain.** Certificates travel inside the records that bind devices. Validation never fetches another Resource, never consults a server registry and never reads a clock (Sections 3.3 and 96). Consequence (Section 98.1): a revocation is per Resource; a certificate stays verifiable in a Resource that has not seen the revocation.
+- **N4. A device's authority is its root's authority at that head, restricted by its mask; nothing else.** A bound Principal holds no authority of its own: grants and claims never name a device, and a device never holds anything its root does not hold at that head. Revoking the root's standing silences all its devices; restoring it restores them without re-registration.
+- **N5. Revocation of a device is permanent in a Resource.** A revoked `(root, device)` pair is never registered again there; a replacement is a new Principal.
+- **N6. The first installation is the root.** The root's private keys live in the first installation's secret store, and the root writes as itself there. A root key kept off every device is deferred (Section 108.1).
+- **N7. The Identity Resource is data, not authority.** Labels, roster and pairing requests live there, encrypted. The device records in its Control Chain are the list that managing devices propagate to other Resources; each Resource's own chain decides.
+- **N8. A device's kind, mask and scope never change.** Every certificate ever accepted for `(root, device)` carries the same kind, mask and scope; re-certification changes only the issuing path. Changing a device's access means revoking it and pairing a new Principal.
+- **N9. A certificate exists only for an approved device.** A managing installation signs a Device Certificate only after the approval that led to it has been committed to the Identity Resource's chain (Section 17.5 reason `3`; IDENTITY-PROFILE-01 §5) or for a device it registers itself; a certificate never travels in a proposal that may lose a compare-and-swap.
+
+### 7.3 Device Certificate and certificate chain
+
+A Device Certificate is a standalone signed object (Section 10): untagged `COSE_Sign1`, protected header `{1: -8, 4: kid}` where `kid` is the signing Principal, empty unprotected header, deterministic CBOR payload (Section 5.2), empty external AAD, strict Ed25519 (Section 10.5.1). Its ID is the Section 10.6 object ID of its exact COSE bytes. Its exact bytes are carried inside Control Records as `bstr` and are never re-encoded; a receiver applies the Section 5.2 canonical-bytes check to the protected header and the payload of every nested certificate.
+
+```cddl
+device-kind    = 0 / 1 / 2                ; personal / service / pairing
+device-mask    = [1*32 uint]              ; ability codes (Section 17.1), 12 and 13 included; no repeats
+resource-scope = [*64 resource-id]        ; no repeats; see the kind rules
+
+device-certificate-payload = [
+  "LFCP-DEVICE-CERT-v1",      ; 0: domain and version label
+  principal-id,               ; 1: root the device acts for
+  principal-descriptor,       ; 2: the device (self-certifying, Section 7)
+  device-kind,                ; 3
+  device-mask,                ; 4
+  resource-scope,             ; 5: empty for kind 0; the Resources a kind 1 or 2 device may be registered in
+  bstr .size 16               ; 6: serial, random (Section 5.4)
+]
+```
+
+Structural rules (each failure is `MALFORMED_MESSAGE`; the CDDL states only what CDDL can):
+
+1. The payload is a seven-element array whose first element is exactly the label `LFCP-DEVICE-CERT-v1`. It is an array, not a map, so that no certificate can be read as a `control-record-payload` (Section 13), a transfer object (Section 23) or any other LFCP map payload. A different label is a different, future, certificate version and is rejected by a receiver that does not implement it.
+2. Field `2` is validated as Section 7 requires (closed map, recomputed ID, canonical Ed25519 key). The device ID MUST differ from the root ID (field `1`).
+3. Field `3` is `0`, `1` or `2`; other values are reserved.
+4. Field `4` MUST NOT repeat a code and holds `1` to `32` entries. A mask that lists `12` MUST also list `1` and `2` (a managing device must be able to read and write the Identity Resource). Codes `9` and `11` and codes outside the Section 17.1 table are kept as received and confer nothing; a writer SHOULD list only codes that confer something.
+5. Field `5` MUST NOT repeat a Resource ID. Kind `0`: field `5` MUST be empty. Kind `1`: field `5` holds `1` to `64` Resource IDs, and field `4` MUST NOT list `12` or `13`. Kind `2`: field `5` holds exactly one Resource ID (the Identity Resource), and field `4` MUST be a subset of `{1, 2}`.
+6. The **certificate ID** is the Section 10.6 object ID of the exact COSE bytes. The **certificate payload digest** is `SHA-256` of the content of the exact COSE payload byte string (the deterministic CBOR of the array); it is what a pairing approval commits to (Section 17.5 reason `3`, Section 17.4 rule 7). The serial makes two issuances to the same device distinct even when their other fields are equal (Ed25519 signatures are deterministic); it carries no order.
+7. Nothing in the certificate names the device for humans, the Identity Resource or a time. Labels live in the Identity Resource; there are no validity periods (Section 96).
+
+The signer (`kid`) is either the root (field `1`) or a managing personal device of the same root; which one is decided by chain position, never by the certificate alone.
+
+**Certificate chain.**
+
+```cddl
+certificate-chain = [1*4 bstr]            ; exact COSE bytes of Device Certificates, leaf first
+```
+
+A chain `[c_0, c_1, ..., c_{n-1}]` (`1 <= n <= 4`) is **well-formed for root `R`** when all of the following hold. The failure code of each rule is the one its class gives in the ordering of Section 62.
+
+- (c1) *structure*: every `c_i` satisfies the rules above and its field `1` is `R`; a chain longer than four certificates is malformed.
+- (c5) *structure*: no device ID appears twice in the chain, and no certificate in the chain names `R` as its device.
+- (c7) *structure*: a chain whose leaf lists `12` in its mask has at most three certificates, so that every managing device can issue one more level without exceeding four.
+- (c2) *signature*: for `i < n-1`, the `kid` of `c_i` equals the device ID of `c_{i+1}` and the signature of `c_i` verifies under the Ed25519 key of that descriptor; the `kid` of `c_{n-1}` equals `R`, and its signature verifies under `R`'s descriptor, which the verifier obtains from the Resource's Control state (owner, grant subject, claimant, transferee) or, for Genesis, from Genesis field `1`. A `kid` that names any other Principal is `INVALID_SIGNATURE` (Section 10.5).
+- (c3) *authority*: for `i < n-1`, the issuer certificate `c_{i+1}` has kind `0` and lists `12` in its mask.
+- (c4) *authority*: for `i < n-1`, the mask of `c_i` is a subset of the mask of `c_{i+1}`; the root may issue any mask.
+- (c6) *authority*: in Resource `X`, a leaf of kind `2` MUST list `X` in its scope; a leaf of kind `1` that does not list `X` is **out of scope** in `X` (bound, never registered, Section 17.4).
+
+Intermediate certificates are always of kind `0` by (c3). Informative: (c7) means the human's managing devices form at most three levels under the root; a device at the third level can still add non-managing devices.
+
+**Chain verification.** `verifyChain(chain, R, R_descriptor, S)`, where `S` is the Control state the record is checked against (the state at the previous head; empty for Genesis), is evaluated as one pass of the classes of Section 62, in order:
+
+1. **Structure** (`MALFORMED_MESSAGE`): the structural rules above for every certificate (including the Section 5.2 canonical-bytes check of each nested protected header and payload), (c1), (c5), (c7).
+2. **Dependencies** (`MISSING_DEPENDENCY`): `R_descriptor` is available (from `S`, or from the Genesis or offer field that names the root).
+3. **Signatures** (`INVALID_SIGNATURE`): (c2) for every certificate, leaf first.
+4. **Authority and state** (`AUTHORIZATION_FAILED`), in this order:
+   1. (c3), (c4), (c6) for a kind-2 leaf;
+   2. `roles[R]`, if present, is `non-device`;
+   3. for every device `E` in the chain: `roles[E]` is absent or `device`; if `devices[E]` exists, its `root` is `R` and its `kind`, `mask` and `scope` equal those of `E`'s certificate in this chain (invariant N8);
+   4. for every device `E` in the chain: `(R, E)` is not in `revoked`.
+
+The result is `{leaf: descriptor, leaf_id, kind, mask, scope, issuers, in_scope}`, where `in_scope` is false only for a kind-1 leaf whose scope excludes the Resource, together with the set of bindings to record (Section 79).
+
+**Reserved values.**
+
+| Place | Reserved | For |
+|---|---|---|
+| Certificate label | any label other than `LFCP-DEVICE-CERT-v1` | later certificate versions (for example an issuer policy for a cold root, or mask revisions) |
+| Certificate `kind` | `3` and above | later device classes |
+| `DEVICE_REVOKE` field `3` | `actor-have` (canonical, Section 28.1) | a per-actor cutoff frontier without rotation (Section 108.1) |
+| `DEVICE_REVOKE` reason | `4` and above | later reasons |
+| Control Record type | `11` | `IDENTITY_SUCCESSION` (Section 108.1) |
+| Error code | `24` | `ACTOR_CUTOFF` (Section 108.1) |
+| Identity Resource root keys | `recovery`, `succession` | recovery material pointers and root rotation state (IDENTITY-PROFILE-01 §2) |
+| HKDF info labels | `LFCP-ROOT-ED25519-v1`, `LFCP-ROOT-X25519-v1` | deriving a root key pair from one seed; not used by this version |
 
 ---
 
@@ -392,7 +503,7 @@ The signature is the 64-byte Ed25519 signature over the encoded `Sig_structure`.
 
 A receiver MUST reject a signed object whose signature does not verify under the public key of the Principal named by `kid`, or whose `kid` does not identify the Principal the object requires as signer (for example, the actor of a Data Unit). It reports `INVALID_SIGNATURE`.
 
-The receiver resolves the required signer to a Principal Descriptor from the Control Chain (a descriptor carried by a Genesis, grant, claim or transfer). An object whose required signer it cannot resolve, such as a Data Unit, Key Package or Snapshot by an actor no Control Record describes, is rejected with `MISSING_DEPENDENCY`, as Section 13.1 states for Control Record issuers.
+The receiver resolves the required signer to a Principal Descriptor from the Control Chain (a descriptor carried by a Genesis, grant, claim or transfer, or by a Device Certificate of a chain accepted into the Control Chain, Section 17.4). An object whose required signer it cannot resolve, such as a Data Unit, Key Package or Snapshot by an actor no Control Record describes, is rejected with `MISSING_DEPENDENCY`, as Section 13.1 states for Control Record issuers.
 
 #### 10.5.1 Strict Ed25519 verification
 
@@ -600,10 +711,13 @@ Normal operation uses a Control Coordinator to prevent accidental forks.
 | 6 | `OWNER_TRANSFER_COMMIT` |
 | 7 | `COORDINATOR_RECOVERY` |
 | 8 | `RESOURCE_TOMBSTONE` |
-| 9-31 | Reserved for LFCP core |
+| 9 | `DEVICE_GRANT` (Section 17.4) |
+| 10 | `DEVICE_REVOKE` (Section 17.5) |
+| 11 | Reserved for LFCP core: `IDENTITY_SUCCESSION` (Section 108.1) |
+| 12-31 | Reserved for LFCP core |
 | 32+ | Extension space |
 
-Unknown core Control Record types MUST cause validation failure, with `INVALID_CONTROL_CHAIN`.
+Unknown core Control Record types MUST cause validation failure, with `INVALID_CONTROL_CHAIN`. Types `9` and `10` are core types: a receiver that does not implement them rejects the chain as a whole, which is the intended fail-closed behaviour for clients that predate them (Section 100.1).
 
 Unknown extension types MAY be retained but MUST NOT be interpreted unless the implementation declares support for the extension.
 
@@ -629,11 +743,14 @@ genesis-body = {
   1 => principal-descriptor,  ; owner
   2 => hash32,                ; epoch-0 DEK commitment
   3 => [1* endpoint],         ; initial sync endpoints
-  4 => tstr                   ; initial Control Coordinator URL
+  4 => tstr,                  ; initial Control Coordinator URL
+  ? 5 => certificate-chain    ; present when a device of the owner signs the Genesis (Section 7.3)
 }
 ```
 
-The Genesis Record MUST be signed by the owner Principal contained in the body. A Genesis Record whose issuer or `kid` is not that owner is rejected with `INVALID_SIGNATURE`.
+The Genesis Record MUST be signed by the owner Principal contained in the body. A Genesis Record whose issuer or `kid` is not that owner is rejected with `INVALID_SIGNATURE`, unless field `5` is present.
+
+**Genesis by a device of the owner.** When field `5` is present, the owner of field `1` is a root and the Genesis is signed by one of its devices: the chain is verified by `verifyChain(chain, owner, descriptor of field 1, S = empty)` (Section 7.3), the leaf MUST be of kind `0` with `13` in its mask, and the issuer and `kid` MUST be the leaf device. The record is otherwise rejected with the code the ordering of Section 62 gives: `INVALID_SIGNATURE` when the `kid` is neither the owner nor the leaf, or the signature does not verify under the leaf's key; `AUTHORIZATION_FAILED` for a leaf without `13` or of another kind. Effect: every device in the chain is bound to the owner, the leaf is registered, and their descriptors are learned (Section 10.5). Because `S` is empty, nothing can be revoked at Genesis: a device revoked elsewhere stays able to create new Resources with a certificate it still holds (Section 98.1). A server that advertises `identity-01` (Section 37) keys its hosting policy for such a Resource by the owner of field `1`, not by the session that hosts it (Section 39).
 
 The owner Principal has implicit authority over the Resource and does not require an explicit Capability Grant.
 
@@ -691,8 +808,12 @@ Capabilities are established by Control Records.
 | 9 | `owner/transfer-offer` (reserved; confers nothing in WIRE-01, see Section 23.1) |
 | 10 | `resource/tombstone` |
 | 11 | `invite/claim` |
+| 12 | `device/manage` (certificate masks only, see below) |
+| 13 | `owner/act` (certificate masks only, see below) |
 
 The owner implicitly has all standard abilities.
+
+Codes `12` and `13` have meaning only inside the mask of a Device Certificate (Section 7.3). `12`, `device/manage`: the personal device may sign Device Certificates for its root (Section 7.3, c3) and may issue `DEVICE_GRANT` and `DEVICE_REVOKE` for devices of its root in any Resource where it is active (Sections 17.4 and 17.5). `13`, `owner/act`: in a Resource whose owner is the device's root, the personal device holds every standard ability and may perform every owner-only action (Section 80.1). A mask that lists `12` MUST also list `1` and `2`. In a Capability Grant or Claim ability list, `12` and `13` are kept as received and confer nothing, like unknown codes.
 
 An ability list (the abilities and the delegable abilities of a grant, and the abilities of a claim) MUST NOT repeat a code; a record whose list repeats a code is rejected with `MALFORMED_MESSAGE`. A code that is not in the table above is kept as received and confers nothing.
 
@@ -721,6 +842,14 @@ If `parent grant id` is present:
 
 A grant that fails any of these rules is rejected with `AUTHORIZATION_FAILED`.
 
+In a Resource whose chain carries device records (Section 7.2), the rules above read as follows (Section 80.1):
+
+- the subject MUST NOT be bound as a device: a grant whose subject is bound is rejected with `AUTHORIZATION_FAILED` (role exclusivity);
+- "the owner" is `ownerAction(kid)`, and "holds `capability/grant`" is `holds(kid, 4)`;
+- "the issuer MUST be the subject of the parent grant" compares `actsFor(kid)` at the record's previous head with the parent's subject;
+- **delegation bound**: when the issuer is a bound Principal and `ownerAction(kid)` does not hold, every code in `1` to `10` listed in the new grant's abilities or delegable abilities MUST also be in the issuer's certificate mask; the parent's delegable list bounds them as before. Codes `11`, `12`, `13` and codes outside the registry pass through as received: `11` marks an invitation and confers reading only through Sections 18 and 25.2, the others confer nothing;
+- the grant's derived `issuer_root` (Section 79) is `actsFor(kid)` at that head.
+
 A capability grant is identified by the Control Record ID that created it.
 
 A grant is **active** while it has not been revoked and, when it has a parent grant, while that parent is active. Revoking a grant therefore also deactivates every grant delegated from it, directly or through further delegations.
@@ -740,6 +869,8 @@ The issuer MUST either:
 
 The owner may revoke any grant. Otherwise, revoke authority **covers** a grant when the revoker issued it, or when it was delegated, directly or through further delegations, from a grant the revoker issued. A grant the revoker received is not covered unless the revoker also issued one of its ancestors.
 
+In a Resource whose chain carries device records, "the owner" is `ownerAction(kid)`, "possesses `capability/revoke`" is `holds(kid, 5)`, and a grant counts as issued by its `issuer_root` (Section 79): the revoker covers a grant when `actsFor(kid)` at the record's previous head equals the `issuer_root` of the grant or of one of its ancestors (Section 80.1). A second device of a human therefore covers the grants the first device issued.
+
 A revocation is checked in this order, and each failure is rejected with `AUTHORIZATION_FAILED`:
 
 1. the target grant ID MUST name a grant of this Control Chain; revoking a grant that does not exist fails;
@@ -749,6 +880,85 @@ A revocation is checked in this order, and each failure is rejected with `AUTHOR
 Revocation does not make recipients forget data they already decrypted.
 
 For security-sensitive removal, the owner SHOULD also rotate the Data Epoch.
+
+### 17.4 Device Grant
+
+A `DEVICE_GRANT` (type `9`) binds every device of a certificate chain to its root in the Resource that carries the record; registers the leaf when its scope admits the Resource, or re-certifies an already registered leaf with a new issuing path; and optionally proves that the leaf is the device a pairing session approved.
+
+```cddl
+device-grant-body = {
+  0 => principal-id,          ; root R
+  1 => certificate-chain,     ; leaf = the device being bound or registered
+  ? 2 => principal-id         ; the pairing device whose consumed approval names this leaf (rule 7)
+}
+```
+
+Closed map. The issuer (`kid`, payload field `4`) is one of the Principals rule 6 lists. The issuer's descriptor MAY be resolved from the chain in the body (it is self-certifying), as the Genesis issuer is resolved from Genesis field `1`. A record whose leaf is of kind `2` MUST NOT carry field `2`.
+
+For a record with body `{0: R, 1: chain, ?2: J}` at previous state `S` (chain placement already checked by Section 13.1), the checks run in the classes of Section 62, in order; within a class, in the order listed.
+
+1. **Structure.** Closed map with keys `0` and `1` and optionally `2`; chain of one to four byte strings; Section 7.3 verification step 1; if the leaf is of kind `2`, field `2` is absent. Else `MALFORMED_MESSAGE`.
+2. **Dependencies.** `R`'s descriptor is known to `S`; the issuer's descriptor is known to `S` or is in the chain. Else `MISSING_DEPENDENCY`.
+3. **Signatures.** The record's signature verifies under the issuer's descriptor (Section 13); Section 7.3 verification step 3. Else `INVALID_SIGNATURE`.
+4. **Root standing.** `rootStanding(R)` at `S` (Section 17.5). Else `AUTHORIZATION_FAILED`.
+5. **Chain state.** Section 7.3 verification step 4. Let `D` be the leaf. If `devices[D]` exists and has a `chain`, the new leaf certificate ID MUST differ from `devices[D].leaf_id`: a repeated record is not a transition; a writer that re-proposes it after `CONTROL_HEAD_MISMATCH` treats its intent as complete (IDENTITY-PROFILE-01 §9). Else `AUTHORIZATION_FAILED`.
+6. **Issuer.** The issuer MUST be one of:
+   - `R`;
+   - `D`, when `D` is of kind `0` (self-registration);
+   - a device that issued inside `chain` (any `chain[i]`, `i >= 1`), when `D` is of kind `0`;
+   - a device `M` with `devices[M]` active at `S` (Section 17.5), `root = R` and `12` in its mask;
+   - when `R` is the owner at `S`: an active device of `R` with `13` in its mask.
+   A leaf of kind `1` or `2` is therefore bound or registered only by the root, by an active managing device, or by an owner-acting device of the owning root. Else `AUTHORIZATION_FAILED`.
+7. **Approval.** When field `2` is present: `revoked[(R, J)]` exists with `reason = 3`, `devices[J]` exists with `kind = 2` and `root = R`, and `revoked[(R, J)].approval` equals the certificate payload digest of the leaf (Section 7.3 rule 6). Else `AUTHORIZATION_FAILED`.
+8. **Effect.** For every device `E` in the chain without a binding: `devices[E] = {root: R, kind, mask, scope, registered: false}` and `roles[E] = device`. For the leaf: `chain`, `leaf_id` and `issuers` are set; `registered = true` when `in_scope`, unchanged otherwise (an out-of-scope kind-1 leaf is bound in this Resource and holds nothing in it). The descriptors of all chain devices become known (Section 10.5).
+
+### 17.5 Device Revocation
+
+A `DEVICE_REVOKE` (type `10`) revokes the pair `(root, device)` in the Resource that carries the record. The device need not be bound there: revoking an unbound Principal records that it never may be registered for that root in this Resource, and makes the cascade below reach devices whose chains pass through it. It binds nothing (Section 79). With reason `3` and field `4` it **consumes a pairing session**: it commits to the certificate that the session's approval will produce before that certificate exists (invariant N9; IDENTITY-PROFILE-01 §5).
+
+```cddl
+device-revoke-body = {
+  0 => principal-id,          ; root R
+  1 => principal-id,          ; device D
+  2 => uint,                  ; reason
+  ? 4 => hash32               ; approval: certificate payload digest (Section 7.3 rule 6); only with reason 3, for a kind-2 device
+}
+```
+
+| Reason | Meaning |
+|---:|---|
+| 0 | Retired by its human (voluntary), or a pairing session cancelled |
+| 1 | Lost |
+| 2 | Compromised |
+| 3 | Consumed: a pairing session approved the device whose certificate payload digest field `4` holds |
+
+Reason codes `4` and above are reserved; a receiver keeps an unknown reason as received and treats it as `2` for the rotation policy of IDENTITY-PROFILE-01. Closed map: field `3` is reserved for the per-actor cutoff frontier of Section 108.1, MUST NOT be emitted by a writer of this version, and a record carrying it is rejected with `MALFORMED_MESSAGE`. Field `4` MUST be present when the reason is `3` and absent otherwise (`MALFORMED_MESSAGE`).
+
+For a record with body `{0: R, 1: D, 2: reason, ?4: approval}` at previous state `S`:
+
+1. **Structure.** Closed map with keys `0`, `1`, `2` and optionally `4`; `D` differs from `R`; field `4` present if and only if `reason = 3`. Else `MALFORMED_MESSAGE`.
+2. **Dependencies, signature.** The issuer's descriptor is known to `S` (`MISSING_DEPENDENCY`); the signature verifies (`INVALID_SIGNATURE`).
+3. **Consistency.** If `devices[D]` exists, its `root` MUST be `R`. `roles[D]`, if present, MUST be `device`. `roles[R]`, if present, MUST be `non-device`. When `reason = 3`, `devices[D]` MUST exist with `kind = 2`. Else `AUTHORIZATION_FAILED`.
+4. **Issuer.** One of: `R`, when `rootStanding(R)` at `S`; a device `M` active at `S` with `root = R` and `12` in its mask; the owner at `S`, or an active device of the owner with `13` in its mask (the owner may expel any device of any root from its Resource); `D` itself when `devices[D]` is registered and `(R, D)` is not in `revoked` (self-retirement, reason `0` only). Else `AUTHORIZATION_FAILED`.
+5. **Not already revoked.** `(R, D)` is not in `revoked`. Else `AUTHORIZATION_FAILED`.
+6. **Effect.** `revoked[(R, D)] = {reason, approval}`. Bindings and chains are kept: `rootOf` (Section 80.1) still attributes `D`'s history to `R`.
+
+**Root standing.** `rootStanding(R)` at `S`: `R` is the owner, or `R` is the subject of at least one grant that is active at `S` and does not list `invite/claim`. A Principal that holds only invitation grants has no standing.
+
+**Activity.** A device `D` is **active** at head `H` if and only if, in the state at `H`:
+
+```text
+devices[D].registered
+AND (devices[D].root, D) not in revoked
+AND for every E in devices[D].issuers: (devices[D].root, E) not in revoked
+AND rootStanding(devices[D].root)
+```
+
+The third conjunct is the **cascade**: revoking a managing device suspends every device whose current chain it signed, directly or transitively (every issuer in the chain is checked). A suspended device is not revoked: the root or a managing device MAY re-certify it with a chain that avoids the revoked issuer (Section 17.4 rule 5), and it becomes active again. A revoked pair is never active again (invariant N5). A revocation recorded for another root, `(T, E)` with `T` different from `devices[D].root`, has no effect on `D`.
+
+**Exposure.** Let `S` be the state a `DEVICE_REVOKE` is accepted on and `S'` the state after it. The record is **exposing** in its Resource if and only if there is a Principal `P`, registered in `S`, such that `holds(P, 1)` (Section 80.1) is true at `S` and false at `S'`: the record removes a reader. `P` may be the revoked device itself or any device its revocation suspends through the cascade. The test is computed from the Resource's own chain alone, never from the Identity Resource or a clock. Revoking an unbound, out-of-scope, already suspended or never-reading device is therefore exposing exactly when it suspends a registered reader below it, and not otherwise. Exposure is what the rotation policy of IDENTITY-PROFILE-01 §8 reacts to; a revocation that is not exposing never triggers a rotation, and an issuer without standing cannot issue one (rule 4).
+
+Activity is evaluated at the head a record or object references, like every other authority question (Sections 80 and 26.3), so the decision for a Data Unit does not change when later records arrive, except through the epoch cutoff of Section 19.1.
 
 ---
 
@@ -808,6 +1018,8 @@ The grant a claim creates is identified by the claim record's Control Record ID 
 Claims are counted in Control Chain order. An Invitation Grant whose claims are used up confers no `invite/claim`; its other abilities stay active until it is revoked.
 
 For `claim_limit = 1`, only one claimant can win at the Control Coordinator.
+
+The claimant is a root (Section 7.2): a claim whose claimant is bound as a device in this Resource is rejected with `AUTHORIZATION_FAILED` (Section 80.1, role exclusivity). An installation that is a device of a root claims for its root: it names the root's descriptor as claimant and signs with the Invitation Principal as rule 5 requires; it then registers itself with a `DEVICE_GRANT` and seals the keys it holds to its root (IDENTITY-PROFILE-01 §7).
 
 The claimant obtains the current epoch's DEK through the Invitation Principal's Key Package (Section 73), so joining needs no package addressed to the claimant. So that a claimant that later loses its local key store can recover, the inviter, or any holder of `key/distribute`, SHOULD seal a Key Package of the current epoch to the claimant once it observes the claim.
 
@@ -882,13 +1094,17 @@ Reason codes:
 |---:|---|
 | 0 | Routine rotation |
 | 1 | Member revoked |
-| 2 | Principal/device compromise |
+| 2 | Principal or device compromise; also a device revocation (Section 17.5) |
 | 3 | Ownership transfer |
 | 4 | Manual security rotation |
 
 The new epoch number MUST be exactly the previous Data Epoch plus one. A Key Epoch Record whose new epoch number is anything else breaks the chain and is rejected with `INVALID_CONTROL_CHAIN`.
 
-The issuer MUST possess `key/rotate`.
+The issuer MUST possess `key/rotate` (`holds(kid, 7)`, Section 80.1).
+
+**Reader set at rotation.** When a `KEY_EPOCH` is committed, the rotating client seals the new DEK to every Principal that holds `data/read` at the new head (Section 75): every root with `data/read` and every active device of such a root (Section 17.5). Revoked and suspended devices, and Principals bound as devices of a root without standing, receive no package. A client that cannot seal the new DEK to every such reader, because it lacks `key/distribute` and some reader is not of its own root (Section 25.2), MUST NOT commit the `KEY_EPOCH`; the rotation is left to a Principal that can (IDENTITY-PROFILE-01 §8).
+
+**Frontier from the verified accepted set.** The final frontier of field `2` is computed from the rotating client's locally verified accepted set, after a Control and Data synchronisation of the Resource. A Have Vector a server advertises is a fetch hint: the client fetches and verifies the units it advertises, and a sequence it could not fetch and verify stays outside the frontier. Units covered by a verified Snapshot the client loaded count as accepted (Section 29.3). A unit the server advertises that fails authorization is not counted.
 
 ### 19.1 Previous-epoch cutoff
 
@@ -1019,9 +1235,9 @@ owner-transfer-offer-payload = {
 }
 ```
 
-The offer is signed by the current owner using COSE_Sign1.
+The offer is signed by the current owner using COSE_Sign1, or by an owner-acting device of the current owner that is active at the offer's Control Head (`ownerAction(kid)`, Section 80.1).
 
-Only the current owner creates offers. Ability `9` (`owner/transfer-offer`, Section 17.1) is reserved and confers nothing in WIRE-01.
+Only the current owner, or such a device, creates offers. Ability `9` (`owner/transfer-offer`, Section 17.1) is reserved and confers nothing in WIRE-01. The proposed new owner of field `3` is a root (Section 7.2).
 
 ### 23.2 Transfer Accept
 
@@ -1044,7 +1260,8 @@ The new owner submits a Control Record of type `OWNER_TRANSFER_COMMIT` signed by
 ```cddl
 owner-transfer-commit-body = {
   0 => bstr,                  ; exact COSE bytes of transfer offer
-  1 => bstr                   ; exact COSE bytes of transfer accept
+  1 => bstr,                  ; exact COSE bytes of transfer accept
+  ? 2 => certificate-chain    ; present when a device of the new owner signs accept and commit (Section 7.3)
 }
 ```
 
@@ -1060,6 +1277,8 @@ A verifier MUST confirm:
 A commit that fails any of these checks is rejected with `AUTHORIZATION_FAILED`, except that an offer or acceptance whose signature does not verify is rejected with `INVALID_SIGNATURE`.
 
 After commit, the accepting Principal becomes the Resource owner. The former owner keeps no implicit authority; the Capability Grants it issued stay active.
+
+**Transfer to a root through its device.** When commit field `2` is present, the new owner root `R'` named by offer field `3` accepts through one of its devices: the accept's field `2` stays `R'`, and the accept and the commit are signed by the leaf device of the chain. The checks run in the classes of Section 62, the embedded offer and accept included: structure of all three objects; dependencies (the offer's root descriptor); signatures of the offer (item 1, with `ownerAction` for a device of the current owner), of the accept and of the commit (both MUST be signed by the leaf device, else `INVALID_SIGNATURE`); then authority: `verifyChain(chain, R', descriptor of offer field 3, S)` step 4 at the previous state `S`, the leaf of kind `0` with `13` in its mask, `R'` not bound in this Resource (Section 80.1), and items 2, 3 and 6 above. Effect, in this order: the owner becomes `R'`; every device in the chain is bound to `R'`; the leaf is registered if it was not, left unchanged if it was already registered with a leaf certificate of the same ID, and re-certified as Section 17.4 rule 5 describes when it was registered with a different one. A revoked leaf or issuer is `AUTHORIZATION_FAILED` (invariant N5); nothing a commit does clears a revocation. A commit without field `2` whose new owner is bound as a device is rejected with `AUTHORIZATION_FAILED`.
 
 A key rotation is RECOMMENDED immediately after ownership transfer and REQUIRED if the previous owner is being removed from future access.
 
@@ -1137,9 +1356,9 @@ key-package-hpke-aad = [
 
 After decryption, the recipient MUST verify the DEK against the `dek_commitment` for that epoch. A decrypted plaintext that is not exactly 32 bytes long is a DEK that does not match the commitment.
 
-The package signer MUST have had `key/distribute` authority at the referenced Control Head.
+The package signer MUST have had `key/distribute` authority at the referenced Control Head (`holds(sender, 6)`, Section 80.1), **or** the sender and the recipient are of the same root at that head: `sameRoot(sender, recipient)` holds when `actsFor(sender) == actsFor(recipient)` (Section 80.1) and at least one of them is an active device (Section 17.5). Two roots are never of the same root, and a suspended or revoked device is not active and qualifies for nothing. The same-root rule lets a device deliver every epoch's DEK it holds to its root and to its active sibling devices without `key/distribute`, through the ordinary `KEY_PACKAGE_PUT` and anti-entropy (Section 68.1); it grants nothing else: no DEK change, no package to another human, no membership.
 
-The recipient MUST have had `data/read` authority at that Control Head, except for an Invitation Principal explicitly authorized by an active invite grant: a recipient that is the subject of an active grant that includes and still confers `invite/claim` (Section 18) may receive the package without `data/read`.
+The recipient MUST have had `data/read` authority at that Control Head (`holds(recipient, 1)`), except for an Invitation Principal explicitly authorized by an active invite grant: a recipient that is the subject of an active grant that includes and still confers `invite/claim` (Section 18) may receive the package without `data/read`.
 
 A Key Package's Data Epoch MUST be known at its referenced Control Head; a package whose epoch is not is rejected with `MISSING_DEPENDENCY`. Key Packages of an epoch that has since been closed stay valid: the epoch's accepted Data Units still need its DEK.
 
@@ -1236,6 +1455,8 @@ A Data Unit is eligible for merge only if:
 7. the Data Profile accepts the plaintext.
 
 A Data Unit whose referenced Control Head the receiver does not have, or whose Data Epoch is not known at that head (including an epoch from the head's future), is rejected with `MISSING_DEPENDENCY`; the receiver may fetch the missing Control Records and try again. Rule 5 is evaluated against the latest Control state the receiver knows (Section 19.1).
+
+Rule 2 is `holds(actor, 2)` at the referenced Control Head (Section 80.1). The actor descriptor of a device comes from the certificate that bound it (Section 10.5): a unit whose actor is bound but not active at that head is `AUTHORIZATION_FAILED`; one whose actor the chain through that head does not describe is `MISSING_DEPENDENCY`. A unit by a revoked device that references a head before the revocation is evaluated at that head and is acceptable (Section 81) until the epoch it belongs to is closed and the frontier of Section 19.1 excludes it; this is the deliberate limit of a revocation without rotation (Section 98.1).
 
 Decryption failure is detected only by clients that hold the DEK; the server cannot decrypt. A client MUST NOT merge a Data Unit that fails AEAD authentication and SHOULD surface it to the application. This rejection is client-local and has no wire error code.
 
@@ -1792,6 +2013,14 @@ An ACK MUST NOT claim durability stronger than the server advertised.
 
 A durability level describes the store that gave the ACK. A server whose store is later replaced by an older copy, for example restored from a backup, may have lost objects it acknowledged; the replicas that hold them re-supply them (Sections 41.1 and 68.1).
 
+**Server extensions.** Field `5` lists the server extensions the session may use. This document defines one:
+
+| Extension | Meaning |
+|---|---|
+| `identity-01` | The server validates Control Records of types `9` and `10`, Genesis field `5` and transfer commit field `2`, applies the Key Package rule of Section 25.2 with its same-root sender, keys its hosting policy by the Genesis owner (Section 39), and implements the Control read for revoked readers of Section 41 |
+
+A client MUST NOT propose a record of type `9` or `10`, a Genesis with field `5` or a commit with field `2`, nor upload a Key Package that is authorized only by the same-root rule, to a server whose `READY` does not list `identity-01`; it reports the Resource as hosted on a server without identity support (IDENTITY-PROFILE-01 §6). There is no client-side flag: a server needs none.
+
 ---
 
 ## 38. PING and PONG
@@ -1839,6 +2068,8 @@ If successful, the server returns `RESOURCE_HOSTED`.
 
 A `RESOURCE_HOST` of the Genesis a server already hosts changes nothing; the server answers it with `RESOURCE_HOSTED` again, subject to its hosting policy.
 
+A server that advertises `identity-01` (Section 37) keys its hosting policy and quotas by the Genesis owner (field `1`): for a Genesis with field `5` the owner, not the session Principal, is the host. Hosting rows recorded before that keep their recorded host; a quota lookup counts a Principal's Resources under either key.
+
 ---
 
 ## 40. RESOURCE_HOSTED
@@ -1881,7 +2112,11 @@ Resource-open flags:
 
 If the server stores the resource but transport policy denies the session, it returns `NACK(AUTHORIZATION_FAILED)`.
 
-A server answers `RESOURCE_OPEN` for a Resource it does not host with `NACK(RESOURCE_NOT_HOSTED)`. Opening a Resource, and reading its Control and Data Plane objects, requires the session Principal to hold `data/read`, or to be the subject of an active invitation grant (Section 18), at the Resource's accepted Control Head; otherwise the server answers `NACK(AUTHORIZATION_FAILED)` (Section 84). An active invitation grant has the meaning of Section 25.2: a grant that includes and still confers `invite/claim`. An invitation grant whose claims are used up no longer qualifies its subject under this rule; its subject reads only through abilities it holds, such as a `data/read` the grant lists (Section 18.1).
+A server answers `RESOURCE_OPEN` for a Resource it does not host with `NACK(RESOURCE_NOT_HOSTED)`. Opening a Resource, and reading its Control and Data Plane objects, requires the session Principal to hold `data/read` (`holds(session, 1)`, Section 80.1), or to be the subject of an active invitation grant (Section 18), at the Resource's accepted Control Head; otherwise the server answers `NACK(AUTHORIZATION_FAILED)` (Section 84). An active invitation grant has the meaning of Section 25.2: a grant that includes and still confers `invite/claim`. An invitation grant whose claims are used up no longer qualifies its subject under this rule; its subject reads only through abilities it holds, such as a `data/read` the grant lists (Section 18.1).
+
+**Control read for a revoked reader.** A server that advertises `identity-01` (Section 37) lets a session Principal `P` that no longer holds `data/read` at the accepted head read the Control Chain prefix through the first record that revoked it, when all of the following hold in the accepted chain: `P` is registered (Section 7.2); a record `DEVICE_REVOKE {root, P, ...}` with `root = devices[P].root` exists; and `holds(P, 1)` was true at the head immediately preceding that record. The server answers such a session's `RESOURCE_OPEN` with `RESOURCE_OPENED` naming that record as the only Control Head, with an empty Have Vector, no Snapshot summary and no live subscription; it answers `CONTROL_HAVE` with that record as the head and `CONTROL_GET` with the records up to and including it; and it refuses every other read with `NACK(AUTHORIZATION_FAILED)`: later Control Records, `DATA_HAVE`, `DATA_GET`, `KEY_PACKAGE_GET`, `SNAPSHOT_GET` and presence. An unbound Principal, an intermediate-only or out-of-scope device, a device whose mask never conferred `data/read`, and a device whose root lost standing without a `DEVICE_REVOKE` get nothing. The prefix is what the Principal already could read while it was a reader; a pairing device consumed with reason `3` is covered like any revoked reader. This read lets a revoked device prove its revocation to its human (IDENTITY-PROFILE-01 §8).
+
+Uploads are not reads. `CONTROL_PUT`, `DATA_PUT`, `KEY_PACKAGE_PUT` and `SNAPSHOT_PUT` from any authenticated session, a revoked reader's included, are checked by object as Section 84 states, independently of the session's read authority; hosting policy, quotas and rate limits still apply. A Data Unit by a revoked device that references a head before its revocation is therefore accepted within the cutoff of Section 19.1 (Section 81) and refused beyond it with `STALE_DATA_EPOCH`, whichever session uploads it, and a valid Key Package another Principal signed is accepted from a revoked session as from any other (Section 68.1).
 
 ### 41.1 Re-hosting a Resource a server lost
 
@@ -2314,6 +2549,16 @@ Where a rule rejects a record or message without naming a code, the code follows
 - an authority failure (the issuer or sender lacks the ownership, ability, delegation or coverage the rule requires, or the state it acts on does not allow the change) is `AUTHORIZATION_FAILED`;
 - a structural failure (a value outside its type, size, range or required form, decidable from the object alone) is `MALFORMED_MESSAGE`.
 
+**Ordering of the checks.** Sections 13, 13.1 and 10.5 imply an order for Control Records; it is normative for every record, and in particular for every record that embeds signed objects (`DEVICE_GRANT`, `DEVICE_REVOKE`, a Genesis with field `5`, a transfer commit with or without field `2`) and for the objects they embed (certificates, offer, accept). A verifier runs the classes below in this order and reports the first failure; a record that fails several rules of one class reports the first rule in that class's listed order.
+
+1. **Structure**, outer record then every embedded object, in full: closed maps, field types and sizes, array shapes and labels, repeats, kind, mask and scope consistency, reason and approval consistency, canonical bytes of every nested protected header and payload (Section 5.2): `MALFORMED_MESSAGE`.
+2. **Chain placement** (Section 13.1): sequence, `prev_control_id`, Resource ID: `INVALID_CONTROL_CHAIN`. An unknown core Control Record type (Section 14) is in this class.
+3. **Dependencies**: the referenced head is known; the root descriptor and the issuer descriptor are available from the state or from the embedded chain; an offer's new owner descriptor is in the offer: `MISSING_DEPENDENCY`.
+4. **Signatures**: the outer object's `kid` is the issuer the rule requires and verifies; each embedded certificate's `kid` is the Principal Section 7.3 (c2) requires and verifies; an embedded offer and accept verify under their required signers: `INVALID_SIGNATURE`.
+5. **Authority and state**: standing, roles, bindings, (c3), (c4), (c6), revocations, issuer rights, approval, re-registration rules, Section 23.3 state checks: `AUTHORIZATION_FAILED`.
+
+A client that predates Sections 7.2 to 7.3 (Section 100.1) never reaches class 5 on an identity-aware chain: an unknown core type is class 2 and an unknown closed-map field is class 1. Client-local outcomes that have no wire code stay client-local: a Key Package that does not open, a fingerprint mismatch during pairing, a roster entry whose server lacks `identity-01`, an invalid profile entry.
+
 | Code | Name |
 |---:|---|
 | 1 | `PROTOCOL_UNSUPPORTED` |
@@ -2340,7 +2585,7 @@ Where a rule rejects a record or message without naming a code, the code follows
 | 22 | `INTERNAL_ERROR` |
 | 23 | `UNKNOWN_PREVIOUS` |
 
-Error codes `24..127` are reserved for LFCP core.
+Error codes `24..127` are reserved for LFCP core. Sections 7.2 to 7.3, 17.4, 17.5 and 80.1 add no code: every failure they define is one of `MALFORMED_MESSAGE`, `INVALID_SIGNATURE`, `MISSING_DEPENDENCY`, `AUTHORIZATION_FAILED` and `INVALID_CONTROL_CHAIN`, assigned by the ordering above. Code `24` is kept free for `ACTOR_CUTOFF` (Section 108.1).
 
 Servers do not use `RESOURCE_NOT_FOUND` in this version: a Resource a server does not host is `RESOURCE_NOT_HOSTED` (Section 41).
 
@@ -2518,7 +2763,7 @@ A client MUST still periodically exchange `DATA_HAVE` because push delivery is n
 
 LFCP uses anti-entropy, not push delivery, as the convergence mechanism.
 
-After each Control Record it commits, a server re-checks the read authority (Section 41) of the sessions subscribed to the Resource and stops pushing to sessions that no longer hold it.
+After each Control Record it commits, a server re-checks the read authority (Section 41) of the sessions subscribed to the Resource and stops pushing to sessions that no longer hold it. A `DEVICE_REVOKE` (Section 17.5) ends the revoked device's live pushes before the record itself is pushed.
 
 ---
 
@@ -2824,6 +3069,30 @@ tombstone state
 
 This derived state is local and reproducible from Genesis plus the valid Control Chain.
 
+A validator of a chain that may carry device records (Sections 7.2, 17.4 and 17.5) derives, in addition:
+
+```text
+roles    : map<PrincipalId, device | non-device>
+devices  : map<PrincipalId, Binding>          ; every Principal that appeared as a device in an accepted chain
+revoked  : map<(PrincipalId root, PrincipalId device), Revocation>
+
+Binding = {
+  root:        PrincipalId,
+  kind:        0 | 1 | 2,
+  mask:        set<uint>,            ; codes of its certificate; immutable (N8)
+  scope:       set<ResourceId>,      ; immutable (N8)
+  registered:  bool,                 ; leaf of an accepted DEVICE_GRANT whose scope admits this Resource, of Genesis field 5 or of commit field 2
+  chain:       certificate-chain?,   ; the chain of the latest accepted record whose leaf this device is (registered or out of scope)
+  leaf_id:     hash32?,              ; certificate ID of that chain's leaf
+  issuers:     list<PrincipalId>     ; device IDs of chain[1..], in order; empty when the root issued the leaf
+}
+Revocation = { reason: uint, approval: hash32? }   ; approval present iff reason = 3
+```
+
+and, for every grant, `issuer_root`: the value of `actsFor(issuer)` (Section 80.1) at the head the grant was committed on. The descriptors of every device in an accepted chain are added to the chain's known descriptors (Sections 10.5 and 13.1), as grant subjects and claimants are today.
+
+Roles are assigned on acceptance: `non-device` to the Genesis owner, to the subject of every Capability Grant (invitation grants included), to every claimant and to every transferee; `device` to every device of an accepted chain. A role, once assigned, never changes. A `DEVICE_REVOKE` assigns no role and creates no binding: `revoked[(R, D)]` is recorded, and nothing else changes for `D`. The state is a pure function of Genesis plus the accepted Control Chain. A chain without device records assigns only `non-device` roles and is never affected by these rules: two grants to one Principal with and without `invite/claim`, a claim that transfers an explicitly delegated `invite/claim`, or a transfer to a former Invitation Principal are as valid as before, in either order. The only new refusal on such a chain is a chain that would make a `non-device` Principal a device (Section 7.3), which no pre-identity record can produce.
+
 ---
 
 ## 80. Capability evaluation
@@ -2839,6 +3108,65 @@ To decide whether Principal `P` has ability `X` at Control Head `H`:
 7. return true if at least one valid chain exists.
 
 A client MUST evaluate authorization at the Data Unit's referenced `control_ref`, then apply any later epoch cutoff rules.
+
+### 80.1 Capability evaluation with devices
+
+In a Resource whose chain carries device records (Section 7.2), the questions "does `P` hold ability `X`" and "is `P` the owner" are answered by the definitions below; a chain without device records gives the same answers as Section 80 alone, because `bound(P)` is false for every Principal. Definitions at head `H` with derived state `S` (Section 79):
+
+```text
+bound(P)         = devices[P] exists                                   ; P has the device role
+activeDevice(P)  = devices[P] if P is active at H (Section 17.5), else none
+actsFor(P)       = activeDevice(P).root if activeDevice(P) exists, else P
+rootOf(P)        = devices[P].root if bound(P) (registered, suspended, revoked or intermediate), else P
+direct(P, A)     = Section 80 steps 2 to 7 for Principal P and ability A    ; owner => true
+```
+
+**Ability.** For a standard ability `A` (codes `1` to `11`; codes `12` and `13` are tested on the mask directly in Sections 17.4 and 17.5, never through `holds`), Principal `P` holds `A` at `H`:
+
+```text
+holds(P, A):
+  if bound(P):
+    d = activeDevice(P); if none: return false                 ; a bound Principal has no authority of its own (N4)
+    if S.owner == d.root and 13 in d.mask: return true
+    return A in d.mask and direct(d.root, A)
+  return direct(P, A)
+```
+
+**Owner-only actions.** Where this document requires "the owner" (not an ability): Genesis signing (Section 15), a Capability Grant without a parent (Section 17.2), revoking any grant (Section 17.3), `COORDINATOR_RECOVERY` (Section 22), a transfer offer (Section 23.1), an extension-type record (Section 14):
+
+```text
+ownerAction(P):
+  if bound(P): d = activeDevice(P); return d exists and d.root == S.owner and 13 in d.mask
+  return S.owner == P
+```
+
+**Grant rules with a device issuer.** Where this document compares the issuer with a grant subject or issuer, the comparison uses `actsFor(kid)` at the record's previous head: the parent-subject rule and the delegation bound of Section 17.2, and the coverage rule of Section 17.3 through `issuer_root`. The claimant of a claim is a root, and the claim is signed by the Invitation Principal (Section 18.1).
+
+**Role exclusivity (every transition).** A Capability Grant whose subject is bound, a claim whose claimant is bound, or a transfer whose new owner is bound, is `AUTHORIZATION_FAILED`; a chain that names a `non-device` Principal as a device at any level is `AUTHORIZATION_FAILED` (Section 7.3, step 4). A Principal therefore never has two roles in a Resource, and a device never acquires direct authority (N4). An installation that was invited as a separate participant and later wants to be a device of the same human first has its grants revoked by the owner, and is then paired as a new Principal.
+
+**What is never substituted.** The `kid` of a signed object is always the real signer (Section 10.1). The actor of a Data Unit is the device (N2). The recipient of a Key Package is the concrete Principal. The owner recorded in derived state is the root.
+
+**Where the rule applies.**
+
+| Rule of this document | Evaluation with devices |
+|---|---|
+| Section 14, extension record (owner) | `ownerAction(kid)` |
+| Section 15, Genesis signer | field `5` (chain; kind `0`; `13` in the mask) |
+| Section 17.2, grant: owner without parent, or non-owner with `capability/grant` and parent | `ownerAction(kid)`; else `holds(kid, 4)`, `actsFor(kid) == parent.subject`, the delegation bound; subject not bound |
+| Section 17.3, revoke: owner any, or covering `capability/revoke` | `ownerAction(kid)`; else `holds(kid, 5)` and coverage by `issuer_root` |
+| Section 18.1, claim | unchanged (signed by the Invitation Principal); the claimant is a root and not bound |
+| Section 19, Key Epoch (`key/rotate`) | `holds(kid, 7)`; reader set and frontier of Section 19 |
+| Section 20, Route Update (`route/update`) | `holds(kid, 8)` |
+| Section 22, Coordinator Recovery (owner) | `ownerAction(kid)` |
+| Section 23.1, offer (owner); Section 23.3, accept and commit (new owner) | `ownerAction(offer.kid)` at the offer's head; commit field `2` for an accepting device; new owner not bound |
+| Section 24, Tombstone (`resource/tombstone`) | `holds(kid, 10)` |
+| Section 25.2, Key Package sender and recipient | `holds(sender, 6)` or same root; `holds(recipient, 1)` or the invitation exception |
+| Section 26.3 rule 2, Data Unit actor `data/write` at the referenced head | `holds(actor, 2)` at that head |
+| Section 29.2, Snapshot publisher `snapshot/publish` | `holds(publisher, 3)` at the Snapshot's head |
+| Sections 41, 69 and 84, `RESOURCE_OPEN`, `CONTROL_HAVE`, `CONTROL_GET`, reads and live pushes | `holds(session, 1)` at the accepted head, or the invitation-subject exception; plus the Control read for revoked readers (Section 41) |
+| Sections 17.4 and 17.5, `DEVICE_GRANT` and `DEVICE_REVOKE` issuers | Section 17.4 rule 6 and Section 17.5 rule 4 (not through `holds`) |
+
+**Determinism.** The input of every decision above is the Resource's Control Chain through the referenced head plus the object itself (N3). Two replicas that hold the same accepted Control Records derive the same `roles`, `devices` and `revoked`, the same `holds` answers and therefore the same accepted set of Data Units (Section 19.1). No decision reads wall-clock time, server tables, the Identity Resource or another Resource. Cross-Resource propagation of a revocation is a client action (IDENTITY-PROFILE-01 §7), never an input to validation. A fork of the chain (Section 13.2) is handled as today: no branch is chosen.
 
 ---
 
@@ -2934,7 +3262,9 @@ A server MAY allow read access to encrypted Data Plane objects more broadly than
 
 The MVP read authorization is the rule of Section 41: `data/read`, or being the subject of an active invitation grant, at the Resource's accepted Control Head.
 
-A server authorizes an uploaded object, not the session that uploads it. Any authenticated session MAY upload a validly signed Control Record, Data Unit, Key Package or Snapshot of a Resource the server hosts, including one another Principal signed; the server checks the object as it would check it from its author: the issuer's or actor's signature and authority, the Control Head, the epoch and cutoff, and the `previous` link (Section 51.1). The session's own abilities do not enter that check. Hosting policy, quotas and rate limits still apply to the session. This lets any replica that holds an object re-supply a server that lost it (Section 68.1).
+A server authorizes an uploaded object, not the session that uploads it. Any authenticated session MAY upload a validly signed Control Record, Data Unit, Key Package or Snapshot of a Resource the server hosts, including one another Principal signed; the server checks the object as it would check it from its author: the issuer's or actor's signature and authority, the Control Head, the epoch and cutoff, and the `previous` link (Section 51.1). The session's own abilities do not enter that check, and neither does its read authority: a session whose reads are refused, such as a revoked device (Section 41), uploads under the same rule. Hosting policy, quotas and rate limits still apply to the session. This lets any replica that holds an object re-supply a server that lost it (Section 68.1).
+
+With device records (Section 7.2), the authority of an author is evaluated through Section 80.1 and the issuer rules of Sections 17.4 and 17.5; a server that advertises `identity-01` (Section 37) checks the structure, signatures, chain, roles, bindings, standing and approval of `DEVICE_GRANT` and `DEVICE_REVOKE`, Genesis field `5` and commit field `2` exactly as a client does, and keeps the derived state of Section 79 as part of its per-Resource chain state. The server never sees labels or the roster (encrypted) but does see the device-to-root graph in Control Records, as it sees grants today.
 
 ---
 
@@ -2975,7 +3305,8 @@ A conforming local-first client MUST persist at least:
 - received Data Units required to reconstruct local state or a safe compacted equivalent;
 - Key Packages it sent or received, while it keeps the Resource;
 - actor sequence counters;
-- CRDT/profile state or enough data to reconstruct it.
+- CRDT/profile state or enough data to reconstruct it;
+- for an installation with an identity (Section 7.2): its Identity Resource ID, and, for a device, its certificate chain; the journals of its multi-record operations and the ledger of the Key Packages it sent (IDENTITY-PROFILE-01 §9).
 
 A client MUST persist its next actor sequence safely before exposing a newly created Data Unit as committed local work.
 
@@ -3206,6 +3537,28 @@ Owner recovery is intentionally deferred to a future threshold/recovery extensio
 
 Implementations SHOULD encourage backup or hardware protection for owner keys.
 
+### 98.1 Devices, roots and revocation
+
+What Sections 7.2 to 7.3, 17.4, 17.5 and 80.1 rely on: every device key is used only on its installation (Section 7.1); the root key, kept in the first installation (invariant N6), is as protected as any owner key today; Control Chains are verified by every client (Section 3.3); bearer links are handled as Section 18.2 requires.
+
+| Threat | Outcome with this design | Not protected (honest limits) |
+|---|---|---|
+| **Lost device** (no attacker) | revoked from any managing device; rotation in owned Resources at once when the revoker can rotate and distribute, in others when the owner rotates; identity, ownership and membership unaffected | none |
+| **Stolen device with keys and DEKs**, not managing | revocation ends its authority at the revocation head; it cannot add devices, invite, rotate or transfer; after rotation it reads nothing new; a direct grant to it is impossible (Section 80.1) | the window until rotation: on old heads and the open epoch it writes as a member (Section 81), accepted by every replica until the owner rotates; in Resources the human does not own that is the owner's reaction time. Plaintext it already holds stays known (Section 95) |
+| **Stolen managing device** (`12`) | it can add devices until revoked; the cascade suspends everything it certified (Section 17.5); re-certification needs another managing device or the root | the same window; grants and invitations it issued to third parties stay in the chain and must be revoked by hand |
+| **Stolen owner-acting device after its revocation** | revoked in the Identity Resource and in every Resource reconciliation reaches | revocation is per Resource (N3): its certificate is still verifiable in a Resource that never saw the revocation, including a new Resource it creates itself with a device-signed Genesis (Section 15, `S` is empty), attributed to the human and counted against the human's hosting quota; it can bind further devices there. Such a Resource never enters the honest roster. A hosting policy MAY limit how many Resources a Principal hosts; a global certificate revocation is deferred (Section 108.1) |
+| **Stolen first installation** (holds the root key) | none | root compromise is identity compromise: the attacker is the human for every Resource; no revocation path exists, as for owner compromise today (Section 98). The remedy is a new identity and re-invitation or ownership transfer where still possible |
+| **Historical equivocation by a revoked device** | none | a revoked device's key can still sign alternative units for its old `(actor, seq)` tuples; Section 26.2 excludes both and damages that history. A terminal cut of a revoked device's exact units is deferred (Section 108.1) |
+| **Cloned installation** (a profile backup restored on a second machine) | none | two writers under one device key equivocate (Section 26.2). A copied installation is paired as a new device; keys are never copied |
+| **Loss of every installation** | none | identity lost: no recovery material in this version (Section 108.1); Resources owned by the root are stranded as an owner loss is today (Section 98) |
+| **Malicious coordinator or server** | cannot forge certificates, grants or revocations; cannot bind or register a device; cannot make a Principal a member; cannot turn a losing pairing proposal into a device (the proposal holds a digest, not a certificate, N9) | can delay or hide a `DEVICE_REVOKE` from some replicas (as any revocation today, Section 94), deny hosting, observe the device-to-root graph and timing; can equivocate on the chain: an honest coordinator prevents accidental forks with compare-and-swap, a malicious one can `ACK` two valid competing proposals to two managing devices, each seeing only its branch, until both branches are exchanged and Section 13.2 puts the Resource in `CONTROL_CONFLICT` |
+| **Leaked pairing link** | the holder writes a request; the human sees an unknown fingerprint and rejects; the pairing device is revoked; no claim or grant exists for the holder to keep; the profile's admission confines its writes to one request entry (IDENTITY-PROFILE-01 §3) | a human who approves a foreign fingerprint pairs the attacker; a managing device that is itself malware approves anything; until the session is closed and the Identity Resource rotated, a dishonest server can leak its new units to the holder |
+| **Junk revocations** (a former member or an outsider tombstoning Principals to provoke rotations) | an issuer without standing cannot issue a `DEVICE_REVOKE` for its root (Section 17.5 rule 4); a non-exposing revocation never triggers a rotation | a member in good standing can revoke its own unbound Principals at will; each costs one Control Record and nothing else |
+| **Removed human** (the owner revokes the root's grants) | all devices lose standing at once (N4, Section 17.5); rotation closes the epoch | plaintext already received (Section 95) |
+| **Service device compromised** | read and write of its scoped Resources until revoked; never device or owner authority; it cannot widen its scope (Section 17.4 rule 6, Section 7.3 c6) and never reads the roster | field-level restriction inside a Resource does not exist |
+
+Metadata: Control Records, certificates and scopes included, are plaintext to the server and to every member of the Resource: who has how many devices, which device signed and which Resources a service device is scoped to are visible; labels and the roster are not.
+
 ---
 
 # Part XXV. Conformance
@@ -3265,6 +3618,16 @@ A conforming client MUST implement:
 - offline local writes;
 - reconnect synchronization;
 - stale epoch quarantine.
+
+### 100.1 Identity-aware chains and pre-identity clients
+
+A Resource's chain becomes **identity-aware** at its first of: a `DEVICE_GRANT` (type `9`), a `DEVICE_REVOKE` (type `10`), a Genesis with field `5`, an `OWNER_TRANSFER_COMMIT` with field `2`. That record is the Resource's **barrier**. Until then the Resource is byte-for-byte unaffected by Sections 7.2 to 7.3, 17.4, 17.5 and 80.1: no record type, field or rule of theirs is emitted, and every published vector keeps its value.
+
+A client that predates those sections rejects the barrier: `INVALID_CONTROL_CHAIN` for types `9` and `10` (Section 14), `MALFORMED_MESSAGE` for Genesis field `5` and commit field `2` (closed maps). The Resource is blocked as a whole with a generic chain error. A client that recognises the four barrier entries and the `lfcp://pair/` URI of IDENTITY-PROFILE-01 without implementing them (a **herald** release) tells the human that the Resource uses a newer version, and MUST persist the blocked state ("blocked at head `H` by an unsupported record") so that the message survives restarts. A blocked client keeps the chain prefix it validated and its local replica readable, and does not apply Data Units that reference a head it cannot validate (they are `MISSING_DEPENDENCY` to it, Section 26.3). It MAY still create Data Units on its last validated head (Section 81); identity-aware replicas accept them until that epoch closes, as any stale-head write. It cannot learn new Control state until updated. No separate barrier record and no wire profile rename are needed: Section 14 already makes unknown core types fatal.
+
+Other interactions with a pre-identity peer: a Key Package authorized only by the same-root rule (Section 25.2) is `AUTHORIZATION_FAILED` at a server without `identity-01`, which is why a client checks `READY` first (Section 37); a Key Package not addressed to the peer is ignored; a Principal reference to a root in profile data is an ordinary reference; a `lfcp://pair/` link is refused by a pre-identity client as not an invitation URI (Section 18.2).
+
+Server capability is announced in `READY` (Section 37). The reference public server is updated before any client that can pair is released; a herald release precedes the first release that pairs, at least one release and at least two weeks apart, and warns, before a human's first pairing, that collaborators on older versions stop syncing the affected Resources until they update (IDENTITY-PROFILE-01 §11).
 
 ---
 
@@ -3457,7 +3820,8 @@ genesis-body = {
   1 => principal-descriptor,
   2 => hash32,
   3 => [1* endpoint],
-  4 => tstr
+  4 => tstr,
+  ? 5 => certificate-chain
 }
 
 capability-grant-body = {
@@ -3514,12 +3878,42 @@ owner-transfer-accept-payload = {
 
 owner-transfer-commit-body = {
   0 => bstr,
-  1 => bstr
+  1 => bstr,
+  ? 2 => certificate-chain
 }
 
 resource-tombstone-body = {
   0 => uint,
   ? 1 => tstr
+}
+
+device-kind = 0 / 1 / 2
+device-mask = [1*32 uint]
+resource-scope = [*64 resource-id]
+
+device-certificate-payload = [
+  "LFCP-DEVICE-CERT-v1",
+  principal-id,
+  principal-descriptor,
+  device-kind,
+  device-mask,
+  resource-scope,
+  bstr .size 16
+]
+
+certificate-chain = [1*4 bstr]
+
+device-grant-body = {
+  0 => principal-id,
+  1 => certificate-chain,
+  ? 2 => principal-id
+}
+
+device-revoke-body = {
+  0 => principal-id,
+  1 => principal-id,
+  2 => uint,
+  ? 4 => hash32
 }
 
 key-package-payload = {
@@ -3580,7 +3974,12 @@ Two independent LFCP-WIRE-01 implementations are interoperable only if they agre
 17. Key Epoch cutoff semantics;
 18. ownership transfer validation;
 19. Route Update semantics;
-20. Have Vector normalization.
+20. Have Vector normalization;
+21. Device Certificate structure, chain rules and certificate payload digest (Section 7.3);
+22. `DEVICE_GRANT` and `DEVICE_REVOKE` validation, roles, bindings, standing, activity, cascade and exposure (Sections 17.4 and 17.5);
+23. capability evaluation with devices: `holds`, `ownerAction`, `actsFor`, `rootOf`, the delegation bound and role exclusivity (Section 80.1);
+24. the same-root Key Package rule (Section 25.2);
+25. the ordering of the validation classes (Section 62).
 
 These items MUST have machine-readable test vectors before LFCP-WIRE-01 is promoted from Working Draft to Release Candidate.
 
@@ -3604,7 +4003,8 @@ The reference repository MUST publish deterministic vectors for:
 - DEK commitment verification;
 - Snapshot encryption/signing;
 - ownership transfer offer/accept/commit;
-- strict Ed25519 verification (Section 10.5.1): a valid signature and the edge cases each rule rejects, including signatures a cofactored verifier accepts.
+- strict Ed25519 verification (Section 10.5.1): a valid signature and the edge cases each rule rejects, including signatures a cofactored verifier accepts;
+- Device Certificates, certificate payload digests, certificate chains, `DEVICE_GRANT` and `DEVICE_REVOKE` records, a Genesis with field `5`, a transfer commit with field `2`, Data Units, Key Packages and Snapshots by devices, and the `READY` that lists `identity-01`: the suite `LFCP-IDENTITY-TEST-VECTORS-01` in `test-vectors/lfcp-wire-01/`, whose cases are listed in IDENTITY-PROFILE-01 §12.
 
 Each vector SHOULD include:
 
@@ -3635,7 +4035,8 @@ The repository MUST also include non-cryptographic interoperability fixtures for
 - actor equivocation;
 - normal ownership transfer;
 - server migration;
-- coordinator recovery fork detection.
+- coordinator recovery fork detection;
+- for devices (IDENTITY-PROFILE-01 §12): registration, revocation and the cascade; an old-head unit of a revoked device accepted and one beyond the cutoff quarantined; a root losing and regaining standing; the two phases of a pairing approval, a losing proposal and an exact-byte retry; reconciliation of two Resources' chains; the Control read for a revoked reader; the barrier against a pre-identity validator. An exact-byte replay of a committed record is answered with the same `ACK` (Section 47) and is distinguished from a fresh record with the same intent, which is validated on the head it names.
 
 ---
 
@@ -3645,19 +4046,17 @@ The repository MUST also include non-cryptographic interoperability fixtures for
 
 The following features are intentionally deferred rather than underspecified:
 
-### 108.1 Multi-device root identity
+### 108.1 Multi-device root identity: what stays deferred
 
-A future extension may define:
+Multi-device root identity is specified in Sections 7.2 to 7.3, 17.4, 17.5, 80.1 and 100.1 and in IDENTITY-PROFILE-01 (ADR 0011). The following parts of it are deliberately deferred, with the reservations that keep the formats open (Section 7.3, reserved values):
 
-```text
-Human Root Identity
-    |
-    +-- Device Principal A
-    +-- Device Principal B
-    +-- Device Principal C
-```
-
-including device revocation and recovery.
+- **a cold root**: a root key kept off every installation, the first installation becoming a device with `12` and `13`; a certificate issuer that is a root that signs rarely already works, and the Identity Resource key `succession` is reserved;
+- **global certificate revocation and a per-actor cutoff without rotation**: `DEVICE_REVOKE` field `3` is reserved for a canonical `actor-have` frontier and rejected by this version, error code `24` is kept free for `ACTOR_CUTOFF`, and a hosting-time check of revocations for a device-signed Genesis is not defined;
+- **root rotation or succession**: Control Record type `11` `IDENTITY_SUCCESSION` and the Identity Resource key `succession` are reserved;
+- **recovery material** (seed-derived root keys, recovery kits, codes): the HKDF info labels `LFCP-ROOT-ED25519-v1` and `LFCP-ROOT-X25519-v1` and the Identity Resource key `recovery` are reserved; the same-root Key Package rule already allows packages to the root, so epoch keys can be made recoverable later without a wire change;
+- **a terminal cut of a revoked device's exact units**, which would change Section 26.2: if ever adopted it is a new Control Record type in `12` to `31`;
+- **mutable device masks and scopes** (signed revisions with staleness rules): certificate label versioning and kinds `3` and above are reserved;
+- **passkeys or WebAuthn as a root**; **a server lookup of a human's Resources** (the roster answers it); **device-bound grants** (a future optional `capability-grant-body` key `5`, fail-closed for old clients by the closed-map rule).
 
 ### 108.2 Multi-owner governance
 

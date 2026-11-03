@@ -41,6 +41,12 @@ data-unit = lfcp-signed<data-unit-payload>
 ; COSE_Sign1 representation defined by Section 10."
 snapshot = lfcp-signed<snapshot-payload>
 
+; §7.3: "A Device Certificate is a standalone signed object (Section 10)"
+; whose payload is device-certificate-payload. Inside Control Records its
+; exact bytes travel as the plain bstr elements of certificate-chain
+; (§7.3, §10.6); this rule types one such element.
+device-certificate = lfcp-signed<device-certificate-payload>
+
 ; §36: "The signed transcript payload is deterministic CBOR encoding of"
 ; auth-transcript.
 auth-proof = lfcp-signed<auth-transcript>
@@ -80,12 +86,14 @@ typed-control-record-payload =
   / typed-control-record<6, owner-transfer-commit-body>  ; OWNER_TRANSFER_COMMIT, §23.3
   / typed-control-record<7, coordinator-recovery-body>   ; COORDINATOR_RECOVERY, §22
   / typed-control-record<8, resource-tombstone-body>     ; RESOURCE_TOMBSTONE, §24
+  / typed-control-record<9, device-grant-body>           ; DEVICE_GRANT, §17.4
+  / typed-control-record<10, device-revoke-body>         ; DEVICE_REVOKE, §17.5
   / typed-control-record<(uint .ge 32), any>             ; extension space, §14
 
 ; §14: "Unknown extension types MAY be retained but MUST NOT be interpreted
 ; unless the implementation declares support for the extension." Their body
-; is not typed here; codes 9-31 stay unmatched ("Unknown core Control Record
-; types MUST cause validation failure").
+; is not typed here; codes 11-31 stay unmatched ("Unknown core Control Record
+; types MUST cause validation failure"; 11 is reserved for IDENTITY_SUCCESSION).
 
 ; ---------------------------------------------------------------------------
 ; Messages by type (§32 envelope, §33 registry)
