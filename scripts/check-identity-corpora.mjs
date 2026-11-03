@@ -14,6 +14,11 @@
 //   needs it; set LFCP_PYTHON to a Python that has it, for example .venv/bin/python).
 //   Without it the check says so and is skipped, not failed, unless
 //   LFCP_REQUIRE_ALL_CORPORA is set (CI sets it): then it fails.
+//
+// The wire identity suite carries some profile changes in its Data Units and
+// reads them from the committed profile corpus; the profile corpus reads the
+// wire suite's Principals and Control states, never those units. Each
+// generator therefore reproduces its committed files from the other's.
 
 import { execFileSync, spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";

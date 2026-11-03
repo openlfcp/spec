@@ -1213,9 +1213,27 @@ def build_records() -> None:
 UNITS: dict[str, dict] = {}
 
 
-def unit_bytes(res: str, actor: str, epoch: int, seq: int, prev: bytes | None, ref: bytes, text: str) -> dict:
+PROFILE_JSON = HERE.parent / 'identity-01' / 'IDENTITY-PROFILE-TEST-VECTORS-01.json'
+_PROFILE: dict = {}
+
+
+def profile_change(name: str) -> tuple[bytes, dict]:
+    """The framed plaintext (SHARED-OBJECTS-PROFILE-01 §11) and inputs of `change.<name>` in the identity profile corpus.
+
+    The profile corpus reads this suite's Principals and Control states, never the units that carry its changes,
+    so generating this suite from the published profile corpus is a fixed point (scripts/check-identity-corpora.mjs).
+    """
+    if not _PROFILE:
+        if not PROFILE_JSON.exists():
+            raise SystemExit(f'{PROFILE_JSON} is missing: generate the identity profile corpus first')
+        _PROFILE.update({c['id']: c for c in json.loads(PROFILE_JSON.read_text(encoding='utf-8'))['cases']})
+    c = _PROFILE[f'change.{name}']
+    return bytes.fromhex(c['expected']['framed_cbor']['hex']), c['inputs']
+
+
+def unit_bytes(res: str, actor: str, epoch: int, seq: int, prev: bytes | None, ref: bytes, text) -> dict:
     rid_ = RES[res]
-    pt = text.encode('utf-8')
+    pt = text if isinstance(text, bytes) else text.encode('utf-8')
     aad = cbor(['LFCP-DATA-v1', rid_, epoch, P[actor].pid, seq, prev, ref])
     key = actor_key(rid_, epoch, dek(res, epoch), P[actor].pid)
     ct = ChaCha20Poly1305(key).encrypt(lfcp_nonce(seq), pt, aad)
@@ -1256,7 +1274,11 @@ def obj_case(cid: str, kind: str, latest: str, s: dict, expect, description: str
 
 def unit_case(cid: str, latest: str, actor: str, seq: int, prev: str | None, ref_case: str, expect, description: str,
               rule=None, epoch: int = 0, res: str | None = None, ref_bytes: bytes | None = None, text: str | None = None,
-              equivocates_with: str | None = None) -> dict:
+              equivocates_with: str | None = None, carries: str | None = None) -> dict:
+    if carries:
+        text, change_inputs = profile_change(carries)
+        if change_inputs['writer'] != actor:
+            raise SystemExit(f'{cid}: change.{carries} is written by {change_inputs["writer"]}, not {actor}')
     res = res or NODES[latest].resource
     ref = ref_bytes if ref_bytes is not None else rid(ref_case)
     prev_id = UNITS[prev]['id'] if prev else None
@@ -1274,9 +1296,11 @@ def unit_case(cid: str, latest: str, actor: str, seq: int, prev: str | None, ref
             if other['key'][1:4] == key[1:4] and other['id'] != s['id']:
                 raise Reject('ACTOR_EQUIVOCATION', 'W §26.2: two different Data Units with the same (resource, actor, seq)')
 
+    shown = ({'carries': f'IDENTITY-PROFILE-TEST-VECTORS-01 change.{carries}', 'plaintext_hex': hx(s['plaintext'])} if carries
+             else {'plaintext_utf8': s['plaintext'].decode()})
     case = obj_case(cid, 'data_unit', latest, s, expect, description,
                     {'resource': res, 'signer': actor, 'actor': actor, 'epoch': epoch, 'actor_seq': seq,
-                     'previous': prev, 'control_ref': ref_case, 'plaintext_utf8': s['plaintext'].decode(),
+                     'previous': prev, 'control_ref': ref_case, **shown,
                      'data_key': f'{res} epoch {epoch}'}, check, rule, head_case=ref_case if ref_bytes is None else None)
     if equivocates_with:
         case['context']['accepted_unit'] = {'case': equivocates_with, 'field': 'cose_sign1', 'in': 'inputs'}
@@ -1467,7 +1491,7 @@ def build_review_flows() -> None:
     package_case('flow.f12_kp_epoch1_to_pair_j_after_cancel', 'flow.f12_cancel_j', 'DEV_A', 'PAIR_J', 'flow.f12_cancel_j', (M.DENIED, '§25.2'),
                  'A cancelled pairing device receives nothing', epoch=1)
     unit_case('flow.f12_pair_k_writes_request', 'flow.f12_cancel_j', 'PAIR_K', 1, None, 'flow.f12_cancel_j', 'accept',
-              'PAIR_K writes its request in epoch 1 after J\'s cancellation', W2, epoch=1)
+              "PAIR_K writes its request in epoch 1 after J's cancellation: change.K1_foreign_request", W2, epoch=1, carries='K1_foreign_request')
     # Rotator test of §8.1 on concrete states.
     control('flow.f12_register_r7', 'I8_bridge_grant', 9, 'BOB', dg('BOB', C('CERT_R7')), 'accept',
             'DEVICE_GRANT {BOB, [CERT_R7]} by BOB: a device of BOB with 7 and without 6', readable=dg_readable('BOB', ['CERT_R7']), rule=ACC_DG)
@@ -1489,11 +1513,20 @@ def build_review_flows() -> None:
     control('flow.f13_second_rotator_epoch_2', 'K1_key_epoch', 4, 'BOB', key_epoch_body('X', 2, {}, 2), 'accept',
             'After the first rotator crashed before any package of epoch 1, BOB commits epoch 2 with a fresh DEK', readable={'epoch': 2, 'frontier': {}, 'reason': 2},
             rule=('IDENTITY-PROFILE-01 §9.2 (awaiting key holder); LFCP-WIRE-01 §19', 'Another rotator MAY commit the next KEY_EPOCH after a bounded wait; holds(BOB, 7).'))
+    # F13: packages of epoch 1 after K1 for the partial-delivery branch (readers at K1 only).
+    package_case('flow.f13_kp_epoch1_to_bob', 'K1_key_epoch', 'OWNER', 'BOB', 'K1_key_epoch', 'accept',
+                 'The rotator of K1 seals epoch 1 to BOB and records it in its ledger', KP, epoch=1)
+    package_case('flow.f13_kp_epoch1_to_carol', 'K1_key_epoch', 'OWNER', 'CAROL', 'K1_key_epoch', 'accept',
+                 'After the crash, the package to CAROL the ledger does not record is sent', KP, epoch=1)
+    package_case('flow.f13_kp_epoch1_to_dev_b_suspended', 'K1_key_epoch', 'OWNER', 'DEV_B', 'K1_key_epoch', (M.DENIED, '§25.2'),
+                 'DEV_B, suspended at K1, is not a reader: no package of epoch 1', epoch=1)
     # F08: pairing in an Identity Resource already rotated to epoch 1 (I, from P1).
-    unit_case('flow.pl_root_unit_1', 'P1_device_grant_dev_a_i', 'OWNER', 1, None, 'P1_device_grant_dev_a_i', 'accept',
-              "The root's Data Unit with actor sequence 1 in I (it carries the initial change, profile case change.C0_initial)", W2)
-    control('flow.pl_key_epoch_1', 'P1_device_grant_dev_a_i', 4, 'DEV_A', key_epoch_body('I', 1, {'OWNER': 1}, 0), 'accept',
-            'I rotated from epoch 0 to epoch 1 before the session', readable={'epoch': 1, 'frontier': {'OWNER': 1}, 'reason': 0},
+    unit_case('flow.pl_root_unit_1', 'P1_device_grant_dev_a_i', 'OWNER', 1, None, 'P0_genesis_i', 'accept',
+              "The root's Data Unit with actor sequence 1 in I: the initial change change.C0_initial", W2, carries='C0_initial')
+    unit_case('flow.pl_root_unit_2', 'P1_device_grant_dev_a_i', 'OWNER', 2, 'flow.pl_root_unit_1', 'P0_genesis_i', 'accept',
+              "The root's Data Unit with actor sequence 2: the fill change change.C1_fill (roster X and Y, devices[p:<OWNER>])", W2, carries='C1_fill')
+    control('flow.pl_key_epoch_1', 'P1_device_grant_dev_a_i', 4, 'DEV_A', key_epoch_body('I', 1, {'OWNER': 2}, 0), 'accept',
+            'I rotated from epoch 0 to epoch 1 before the session', readable={'epoch': 1, 'frontier': {'OWNER': 2}, 'reason': 0},
             rule=('LFCP-WIRE-01 §19', 'holds(DEV_A, 7) through owner/act in I.'))
     control('flow.pl_pairing_device_l', 'flow.pl_key_epoch_1', 9, 'DEV_A', dg('OWNER', C('CERT_JL', 'CERT_A')), 'accept',
             'DEV_A creates the pairing device PAIR_L', readable=dg_readable('OWNER', ['CERT_JL', 'CERT_A']), rule=ACC_DG)
@@ -1501,12 +1534,12 @@ def build_review_flows() -> None:
         package_case(f'flow.pl_kp_epoch{e}_to_pair_l', 'flow.pl_pairing_device_l', 'DEV_A', 'PAIR_L', 'flow.pl_pairing_device_l', 'accept',
                      f'DEV_A seals the DEK of epoch {e} of I to PAIR_L', KP, epoch=e)
     unit_case('flow.pl_pair_l_request', 'flow.pl_pairing_device_l', 'PAIR_L', 1, None, 'flow.pl_pairing_device_l', 'accept',
-              'B writes its request as PAIR_L in epoch 1', W2, epoch=1, text='request of DEV_B, first installation')
+              'B writes its request as PAIR_L in epoch 1: change.L1_request', W2, epoch=1, carries='L1_request')
     unit_case('flow.pl_pair_l_request_second_install', 'flow.pl_pairing_device_l', 'PAIR_L', 1, None, 'flow.pl_pairing_device_l',
-              ('ACTOR_EQUIVOCATION', '§26.2'), 'A second installation given the same link also writes PAIR_L sequence 1: equivocation, both units excluded',
-              epoch=1, text='request of DEV_X, second installation', equivocates_with='flow.pl_pair_l_request')
+              ('ACTOR_EQUIVOCATION', '§26.2'), 'A second installation given the same link also writes PAIR_L sequence 1 (change.L1_second_installation): equivocation, both units excluded',
+              epoch=1, carries='L1_second_installation', equivocates_with='flow.pl_pair_l_request')
     unit_case('flow.pl_pair_l_reuse_seq2', 'flow.pl_pairing_device_l', 'PAIR_L', 2, 'flow.pl_pair_l_request', 'flow.pl_pairing_device_l', 'accept',
-              'Sequential reuse: the second installation sees the first unit and writes PAIR_L sequence 2', W2, epoch=1)
+              'Sequential reuse: the second installation sees the first unit and writes PAIR_L sequence 2 (change.L2_reuse)', W2, epoch=1, carries='L2_reuse')
     control('flow.pl_consume_l', 'flow.pl_pairing_device_l', 10, 'DEV_A', dr('OWNER', 'PAIR_L', 3, CERTS['CERT_B']['digest']), 'accept',
             'Phase 1: DEVICE_REVOKE {OWNER, PAIR_L, 3, 4: digest(CERT_B)}', readable=dr_readable('OWNER', 'PAIR_L', 3, 'CERT_B'), rule=ACC_DR)
     control('flow.pl_register_dev_b', 'flow.pl_consume_l', 9, 'DEV_A', dg('OWNER', C('CERT_B', 'CERT_A'), 'PAIR_L'), 'accept',
@@ -1547,13 +1580,21 @@ def build_review_flows() -> None:
     control('flow.f09_recertify_c1_in_i', 'flow.f09_revoke_issuer_in_i', 9, 'OWNER', dg('OWNER', C('CERT_SO_R')), 'accept',
             'The root re-certifies BRIDGE_O as C1 = CERT_SO_R (same kind, mask and scope): bound in I, not registered',
             readable=dg_readable('OWNER', ['CERT_SO_R']), rule=ACC_DG)
-    control('flow.f09_x_register_c1', 'I1_device_grant_dev_a', 9, 'OWNER', dg('OWNER', C('CERT_SO_R')), 'accept',
-            'Candidate X where C0 was never accepted: reconciliation registers C1', readable=dg_readable('OWNER', ['CERT_SO_R']), rule=ACC_DG)
-    control('flow.f09_x_recertify_c1', 'flow.register_bridge_o_in_x', 9, 'OWNER', dg('OWNER', C('CERT_SO_R')), 'accept',
-            'Candidate X where C0 was registered first: re-certified there as C1', readable=dg_readable('OWNER', ['CERT_SO_R']),
-            rule=('LFCP-WIRE-01 §17.4 rule 5', 'A new leaf certificate ID with the same kind, mask and scope.'))
-    package_case('flow.f09_kp_to_bridge_o_after_recert', 'flow.f09_x_recertify_c1', 'DEV_A', 'BRIDGE_O', 'flow.f09_x_recertify_c1', 'accept',
-                 'BRIDGE_O receives the DEK of X: with the certificate it is ready', KP)
+    # Reconciliation in two candidates X: revocations first (§7.1 step 1), then C1.
+    for br, base_head, what in (('a', 'I1_device_grant_dev_a', 'where C0 was never accepted'),
+                                ('b', 'flow.register_bridge_o_in_x', 'where C0 was registered first')):
+        control(f'flow.f09{br}_revoke_pair_j', base_head, 10, 'OWNER', dr('OWNER', 'PAIR_J', 0), 'accept',
+                f"Reconciliation step 1 in candidate X {what}: I's consume of PAIR_J propagated with reason 0",
+                readable=dr_readable('OWNER', 'PAIR_J', 0), rule=('IDENTITY-PROFILE-01 §7.1 step 1', 'Revocations first; reason 3 is propagated as 0.'))
+        control(f'flow.f09{br}_revoke_dev_a', f'flow.f09{br}_revoke_pair_j', 10, 'OWNER', dr('OWNER', 'DEV_A', 1), 'accept',
+                f"Reconciliation step 1 in candidate X {what}: I's revocation of DEV_A", readable=dr_readable('OWNER', 'DEV_A', 1),
+                rule=('IDENTITY-PROFILE-01 §7.1 step 1', 'Every pair revoked in I and not in X is revoked first.'))
+        control(f'flow.f09{br}_register_c1', f'flow.f09{br}_revoke_dev_a', 9, 'OWNER', dg('OWNER', C('CERT_SO_R')), 'accept',
+                f"Reconciliation step 2 in candidate X {what}: C1 = CERT_SO_R, I's current chain for BRIDGE_O",
+                readable=dg_readable('OWNER', ['CERT_SO_R']),
+                rule=('IDENTITY-PROFILE-01 §7.1 step 2; LFCP-WIRE-01 §17.4 rule 5', "A kind-1 device bound in I with a chain whose issuers I has not revoked; in a candidate where C0 was registered, a re-certification with a new leaf certificate ID."))
+    package_case('flow.f09b_kp_owner_to_bridge_o', 'flow.f09b_register_c1', 'OWNER', 'BRIDGE_O', 'flow.f09b_register_c1', 'accept',
+                 'The root seals the DEK of X to BRIDGE_O: with the certificate it is ready', KP)
     control('flow.f09_x_register_cstar', 'I1_device_grant_dev_a', 9, 'OWNER', dg('OWNER', C('CERT_SO_XY')), 'accept',
             'Another issuer registers C* = CERT_SO_XY (scope [X, Y], another digest) in a candidate where BRIDGE_O was unbound',
             readable=dg_readable('OWNER', ['CERT_SO_XY']), rule=ACC_DG)
@@ -1572,6 +1613,9 @@ def build_review_flows() -> None:
             "A phase-2 record whose leaf is CERT_B' (another digest)", readable=dg_readable('OWNER', ["CERT_B'", 'CERT_A'], 'PAIR_L'))
     # §23.3 without field 2: the commit signed by someone other than the new owner.
     build_transfer('T_signer', 'I8_bridge_grant', 'OWNER', 'BOB', 'BOB', None, emit=False)
+    control('transfer_commit_unknown_issuer', 'I8_bridge_grant', 6, 'STRANGER', transfer_body('T_signer'), (M.MISSING, '§13.1'),
+            'Offer by OWNER naming BOB, accept by BOB, no field 2, commit issued and signed by STRANGER, whom nothing describes',
+            readable={'offer': 'by OWNER, new owner BOB', 'accept': 'by BOB'})
     control('transfer_commit_signed_by_other_than_new_owner', 'I8_bridge_grant', 6, 'CAROL', transfer_body('T_signer'), (M.DENIED, '§23.3 item 5'),
             'Offer by OWNER naming BOB, accept by BOB, no field 2, commit issued and signed by CAROL',
             readable={'offer': 'by OWNER, new owner BOB', 'accept': 'by BOB'})
@@ -1793,7 +1837,7 @@ def fixtures() -> dict:
     for label, c in CERTS.items():
         certs[label] = {'root': c['root'], 'device': c['device'], 'kind': c['kind'], 'mask': c['mask'],
                         'scope': [s if isinstance(s, str) else s.hex() for s in c['scope']], 'issuer': c['issuer'],
-                        'serial': hx(c['serial']), 'cose_sign1': hx(c['cose']), 'certificate_id': hx(c['id']),
+                        'serial': hx(c['serial']), 'payload_cbor': hx(c['payload']), 'cose_sign1': hx(c['cose']), 'certificate_id': hx(c['id']),
                         'payload_digest': hx(c['digest'])}
     return {
         'resource': {'id': hx(RES['X']), 'dek0': hx(dek('X', 0)), 'dek1': hx(dek('X', 1))},

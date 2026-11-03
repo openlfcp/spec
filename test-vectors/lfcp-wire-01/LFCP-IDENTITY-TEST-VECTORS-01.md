@@ -531,20 +531,24 @@ Fill Principals `LIMIT_BOB_01..30`, `TOMB_X_001..065`, `TOMB_I_001..064` use the
 | `flow.f12_kp_epoch1_to_pair_k` | flow.f12_i_key_epoch_1 | accept | LFCP-WIRE-01 §25.2 | The new DEK of I sealed to PAIR_K |
 | `flow.f12_cancel_j` | flow.f12_i_key_epoch_1 | accept (exposing) | LFCP-WIRE-01 §17.5 | Then PAIR_J's session is cancelled; PAIR_K's continues |
 | `flow.f12_kp_epoch1_to_pair_j_after_cancel` | flow.f12_cancel_j | `AUTHORIZATION_FAILED` | LFCP-WIRE-01 §25.2 | A cancelled pairing device receives nothing |
-| `flow.f12_pair_k_writes_request` | flow.f12_cancel_j | accept | LFCP-WIRE-01 §26.3 rule 2, §80.1 | PAIR_K writes its request in epoch 1 after J's cancellation |
+| `flow.f12_pair_k_writes_request` | flow.f12_cancel_j | accept | LFCP-WIRE-01 §26.3 rule 2, §80.1 | PAIR_K writes its request in epoch 1 after J's cancellation: change.K1_foreign_request |
 | `flow.f12_register_r7` | I8_bridge_grant | accept | LFCP-WIRE-01 §17.4 | DEVICE_GRANT {BOB, [CERT_R7]} by BOB: a device of BOB with 7 and without 6 |
 | `flow.f12_register_r6` | flow.f12_register_r7 | accept | LFCP-WIRE-01 §17.4 | DEVICE_GRANT {BOB, [CERT_R6]} by BOB: a device of BOB with 6 and without 7 |
 | `flow.f12_register_r7o_in_i` | P2k_pairing_device_k | accept | LFCP-WIRE-01 §17.4 | DEVICE_GRANT {OWNER, [CERT_R7O]} by OWNER in I: a device of OWNER with 7 and without 6 |
 | `flow.rotator_test` | — | table | IDENTITY-PROFILE-01 §8.1; LFCP-WIRE-01 §19, §25.2 | The rotator test of IDENTITY-PROFILE-01 §8.1 for concrete candidates on concrete heads |
 | `flow.f13_second_rotator_epoch_2` | K1_key_epoch | accept | IDENTITY-PROFILE-01 §9.2 (awaiting key holder); LFCP-WIRE-01 §19 | After the first rotator crashed before any package of epoch 1, BOB commits epoch 2 with a fresh DEK |
-| `flow.pl_root_unit_1` | P1_device_grant_dev_a_i | accept | LFCP-WIRE-01 §26.3 rule 2, §80.1 | The root's Data Unit with actor sequence 1 in I (it carries the initial change, profile case change.C0_initial) |
+| `flow.f13_kp_epoch1_to_bob` | K1_key_epoch | accept | LFCP-WIRE-01 §25.2 | The rotator of K1 seals epoch 1 to BOB and records it in its ledger |
+| `flow.f13_kp_epoch1_to_carol` | K1_key_epoch | accept | LFCP-WIRE-01 §25.2 | After the crash, the package to CAROL the ledger does not record is sent |
+| `flow.f13_kp_epoch1_to_dev_b_suspended` | K1_key_epoch | `AUTHORIZATION_FAILED` | LFCP-WIRE-01 §25.2 | DEV_B, suspended at K1, is not a reader: no package of epoch 1 |
+| `flow.pl_root_unit_1` | P0_genesis_i | accept | LFCP-WIRE-01 §26.3 rule 2, §80.1 | The root's Data Unit with actor sequence 1 in I: the initial change change.C0_initial |
+| `flow.pl_root_unit_2` | P0_genesis_i | accept | LFCP-WIRE-01 §26.3 rule 2, §80.1 | The root's Data Unit with actor sequence 2: the fill change change.C1_fill (roster X and Y, devices[p:<OWNER>]) |
 | `flow.pl_key_epoch_1` | P1_device_grant_dev_a_i | accept | LFCP-WIRE-01 §19 | I rotated from epoch 0 to epoch 1 before the session |
 | `flow.pl_pairing_device_l` | flow.pl_key_epoch_1 | accept | LFCP-WIRE-01 §17.4 | DEV_A creates the pairing device PAIR_L |
 | `flow.pl_kp_epoch0_to_pair_l` | flow.pl_pairing_device_l | accept | LFCP-WIRE-01 §25.2 | DEV_A seals the DEK of epoch 0 of I to PAIR_L |
 | `flow.pl_kp_epoch1_to_pair_l` | flow.pl_pairing_device_l | accept | LFCP-WIRE-01 §25.2 | DEV_A seals the DEK of epoch 1 of I to PAIR_L |
-| `flow.pl_pair_l_request` | flow.pl_pairing_device_l | accept | LFCP-WIRE-01 §26.3 rule 2, §80.1 | B writes its request as PAIR_L in epoch 1 |
-| `flow.pl_pair_l_request_second_install` | flow.pl_pairing_device_l | `ACTOR_EQUIVOCATION` | LFCP-WIRE-01 §26.2 | A second installation given the same link also writes PAIR_L sequence 1: equivocation, both units excluded |
-| `flow.pl_pair_l_reuse_seq2` | flow.pl_pairing_device_l | accept | LFCP-WIRE-01 §26.3 rule 2, §80.1 | Sequential reuse: the second installation sees the first unit and writes PAIR_L sequence 2 |
+| `flow.pl_pair_l_request` | flow.pl_pairing_device_l | accept | LFCP-WIRE-01 §26.3 rule 2, §80.1 | B writes its request as PAIR_L in epoch 1: change.L1_request |
+| `flow.pl_pair_l_request_second_install` | flow.pl_pairing_device_l | `ACTOR_EQUIVOCATION` | LFCP-WIRE-01 §26.2 | A second installation given the same link also writes PAIR_L sequence 1 (change.L1_second_installation): equivocation, both units excluded |
+| `flow.pl_pair_l_reuse_seq2` | flow.pl_pairing_device_l | accept | LFCP-WIRE-01 §26.3 rule 2, §80.1 | Sequential reuse: the second installation sees the first unit and writes PAIR_L sequence 2 (change.L2_reuse) |
 | `flow.pl_consume_l` | flow.pl_pairing_device_l | accept (exposing) | LFCP-WIRE-01 §17.5 | Phase 1: DEVICE_REVOKE {OWNER, PAIR_L, 3, 4: digest(CERT_B)} |
 | `flow.pl_register_dev_b` | flow.pl_consume_l | accept | LFCP-WIRE-01 §17.4 rule 7 | Phase 2: DEVICE_GRANT {OWNER, [CERT_B, CERT_A], 2: PAIR_L} |
 | `flow.pl_kp_epoch0_to_dev_b` | flow.pl_register_dev_b | accept | LFCP-WIRE-01 §25.2 | DEV_A seals the DEK of epoch 0 of I to DEV_B |
@@ -558,15 +562,20 @@ Fill Principals `LIMIT_BOB_01..30`, `TOMB_X_001..065`, `TOMB_I_001..064` use the
 | `flow.p40_register_dev_b` | flow.p40_consume + set `forty_cancelled_sessions_in_i` | accept | LFCP-WIRE-01 §17.4 | Phase 2 of the 41st session completes |
 | `flow.f09_revoke_issuer_in_i` | P4s_bind_bridge_o | accept (exposing) | LFCP-WIRE-01 §17.5 | C0's issuer DEV_A revoked in I |
 | `flow.f09_recertify_c1_in_i` | flow.f09_revoke_issuer_in_i | accept | LFCP-WIRE-01 §17.4 | The root re-certifies BRIDGE_O as C1 = CERT_SO_R (same kind, mask and scope): bound in I, not registered |
-| `flow.f09_x_register_c1` | I1_device_grant_dev_a | accept | LFCP-WIRE-01 §17.4 | Candidate X where C0 was never accepted: reconciliation registers C1 |
-| `flow.f09_x_recertify_c1` | flow.register_bridge_o_in_x | accept | LFCP-WIRE-01 §17.4 rule 5 | Candidate X where C0 was registered first: re-certified there as C1 |
-| `flow.f09_kp_to_bridge_o_after_recert` | flow.f09_x_recertify_c1 | accept | LFCP-WIRE-01 §25.2 | BRIDGE_O receives the DEK of X: with the certificate it is ready |
+| `flow.f09a_revoke_pair_j` | I1_device_grant_dev_a | accept (not exposing) | IDENTITY-PROFILE-01 §7.1 step 1 | Reconciliation step 1 in candidate X where C0 was never accepted: I's consume of PAIR_J propagated with reason 0 |
+| `flow.f09a_revoke_dev_a` | flow.f09a_revoke_pair_j | accept (exposing) | IDENTITY-PROFILE-01 §7.1 step 1 | Reconciliation step 1 in candidate X where C0 was never accepted: I's revocation of DEV_A |
+| `flow.f09a_register_c1` | flow.f09a_revoke_dev_a | accept | IDENTITY-PROFILE-01 §7.1 step 2; LFCP-WIRE-01 §17.4 rule 5 | Reconciliation step 2 in candidate X where C0 was never accepted: C1 = CERT_SO_R, I's current chain for BRIDGE_O |
+| `flow.f09b_revoke_pair_j` | flow.register_bridge_o_in_x | accept (not exposing) | IDENTITY-PROFILE-01 §7.1 step 1 | Reconciliation step 1 in candidate X where C0 was registered first: I's consume of PAIR_J propagated with reason 0 |
+| `flow.f09b_revoke_dev_a` | flow.f09b_revoke_pair_j | accept (exposing) | IDENTITY-PROFILE-01 §7.1 step 1 | Reconciliation step 1 in candidate X where C0 was registered first: I's revocation of DEV_A |
+| `flow.f09b_register_c1` | flow.f09b_revoke_dev_a | accept | IDENTITY-PROFILE-01 §7.1 step 2; LFCP-WIRE-01 §17.4 rule 5 | Reconciliation step 2 in candidate X where C0 was registered first: C1 = CERT_SO_R, I's current chain for BRIDGE_O |
+| `flow.f09b_kp_owner_to_bridge_o` | flow.f09b_register_c1 | accept | LFCP-WIRE-01 §25.2 | The root seals the DEK of X to BRIDGE_O: with the certificate it is ready |
 | `flow.f09_x_register_cstar` | I1_device_grant_dev_a | accept | LFCP-WIRE-01 §17.4 | Another issuer registers C* = CERT_SO_XY (scope [X, Y], another digest) in a candidate where BRIDGE_O was unbound |
 | `flow.f06_owner_revokes_dev_b` | I2_device_grant_self_dev_b | accept (exposing) | LFCP-WIRE-01 §17.5 | OWNER revokes DEV_B with reason 1 on I2; the coordinator commits it first |
 | `flow.f06_dev_a_stale_proposal` | I2_device_grant_self_dev_b | accept (exposing) | LFCP-WIRE-01 §17.5 | DEV_A proposed DEVICE_REVOKE {OWNER, DEV_B, 2} on the same head I2: valid there, refused by the coordinator with CONTROL_HEAD_MISMATCH |
 | `flow.f06_dev_a_fresh_revoke` | flow.f06_owner_revokes_dev_b | `AUTHORIZATION_FAILED` | LFCP-WIRE-01 §17.5 rule 5 | After synchronising, the same intent proposed fresh on the new head |
 | `flow.pl_second_manager_consume` | flow.pl_consume_l | `AUTHORIZATION_FAILED` | LFCP-WIRE-01 §17.5 rule 5 | A second manager approving another request of PAIR_L's session after the consume |
 | `flow.pl_register_wrong_digest` | flow.pl_consume_l | `AUTHORIZATION_FAILED` | LFCP-WIRE-01 §17.4 rule 7 | A phase-2 record whose leaf is CERT_B' (another digest) |
+| `transfer_commit_unknown_issuer` | I8_bridge_grant | `MISSING_DEPENDENCY` | LFCP-WIRE-01 §13.1 | Offer by OWNER naming BOB, accept by BOB, no field 2, commit issued and signed by STRANGER, whom nothing describes |
 | `transfer_commit_signed_by_other_than_new_owner` | I8_bridge_grant | `AUTHORIZATION_FAILED` | LFCP-WIRE-01 §23.3 item 5 | Offer by OWNER naming BOB, accept by BOB, no field 2, commit issued and signed by CAROL |
 
 ## KP_matrix
@@ -663,4 +672,4 @@ Fill Principals `LIMIT_BOB_01..30`, `TOMB_X_001..065`, `TOMB_I_001..064` use the
 
 ## Counts
 
-behavioral: 2, bytes: 44, validation: 326; total 372
+behavioral: 2, bytes: 44, validation: 335; total 381
