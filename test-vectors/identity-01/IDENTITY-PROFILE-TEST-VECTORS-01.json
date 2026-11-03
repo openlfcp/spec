@@ -46,6 +46,7 @@
       "DEV_X": "p:qeKxgCtkaEf4VutGgrM7TUpqYNQ4pc4Y9V3OXMef92k",
       "PAIR_J": "p:5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk",
       "PAIR_K": "p:05q3OzQw4oHjrs2DiClWT3arqgMHDLO5PQs9BxoctXc",
+      "PAIR_L": "p:izH8t1m8zAm5-dCY81VHY-IPk1f1eA4CSN1wnuumOps",
       "BRIDGE_O": "p:53IcVYg1EZpS7CCtgDIWqwXUNZhogk4sBp3YBdjOT4g"
     },
     "resource_refs": {
@@ -790,6 +791,56 @@
       }
     },
     {
+      "id": "identity_doc_int_value",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "A change by the root writing devices[p:OWNER].kind as an Automerge int, not a uint (§2.1)",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §3 AI3",
+        "text": "Collaborative Text is never used."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "09ec6878dc4b1a958afee4cb03b2ea58bbe285e5c3583e1f6b60cb7c80b3655d",
+        "deps": [
+          "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+        ],
+        "automerge_change": {
+          "hex": "856f4a8309ec68780172019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000a01020202150634014202560257017002710273027f007f147f046b696e64017f017f14017f017f007f16"
+        },
+        "framed_plaintext": {
+          "hex": "8201587c856f4a8309ec68780172019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000a01020202150634014202560257017002710273027f007f147f046b696e64017f017f14017f017f007f16"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_FIELD_TYPE"
+        }
+      }
+    },
+    {
       "id": "pairing_writes_own_request",
       "type": "validation",
       "kind": "profile_change",
@@ -1394,6 +1445,149 @@
           "code": "PROFILE_INVALID",
           "diagnostic": "UNAUTHORIZED_WRITER"
         }
+      }
+    },
+    {
+      "id": "pairing_l_writes_own_request",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "PAIR_L (control_ref flow.pl_pairing_device_l) creates requests[p:<DEV_B>] with pairing = p:<PAIR_L> (flow F08)",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §3",
+        "text": "The change passes the checks of its bytes, the sequence checks and AI0 to AI4."
+      },
+      "inputs": {
+        "writer": "PAIR_L",
+        "writer_class": "pairing",
+        "writer_ref": "p:izH8t1m8zAm5-dCY81VHY-IPk1f1eA4CSN1wnuumOps",
+        "automerge_actor": "3e401d5a0d64bceb8c58fdde3eb2465e22ce574d2a2102a5df79073442de5a05",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "control_ref": "flow.pl_pairing_device_l",
+        "change_hash": "e46dab72e1b691458d6a1e5bfc0107d92f1d13c938bf87a97ee1f443b3f2d070",
+        "deps": [
+          "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+        ],
+        "automerge_change": {
+          "hex": "856f4a83e46dab7201b803019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1203e401d5a0d64bceb8c58fdde3eb2465e22ce574d2a2102a5df79073442de5a0501170000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0801040204155634014204560a57cf0170027f0105007f0605177a2d703a334c634a553370385a726e5868636e656d7a48527a786b69304a3869586842486e43537a4173367a2d66490a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f774259494e793343564e36664761353134584a337073783063385a49744366496c34515235776b73774c4f735f6e79415667675a535f7549674b67436251364844307763314e4e463645424864625a4a616b4a656c664c4f645948537041435743413447536b4745714e37524b355162473252446c4847424d5f4f466f4e4534714851317a6654335431386567703a697a483874316d387a416d352d64435938315648592d49506b31663165413443534e31776e75756d4f70734445565f42206c6170746f70006465736b746f700600"
+        },
+        "framed_plaintext": {
+          "hex": "82015901c3856f4a83e46dab7201b803019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1203e401d5a0d64bceb8c58fdde3eb2465e22ce574d2a2102a5df79073442de5a0501170000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0801040204155634014204560a57cf0170027f0105007f0605177a2d703a334c634a553370385a726e5868636e656d7a48527a786b69304a3869586842486e43537a4173367a2d66490a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f774259494e793343564e36664761353134584a337073783063385a49744366496c34515235776b73774c4f735f6e79415667675a535f7549674b67436251364844307763314e4e463645424864625a4a616b4a656c664c4f645948537041435743413447536b4745714e37524b355162473252446c4847424d5f4f466f4e4534714851317a6654335431386567703a697a483874316d387a416d352d64435938315648592d49506b31663165413443534e31776e75756d4f70734445565f42206c6170746f70006465736b746f700600"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "pairing_l_second_installation",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "A second installation given the same link writes requests[p:<DEV_X>] as PAIR_L, also its unit 1: admitted by itself; the two units equivocate (W §26.2)",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §3",
+        "text": "The change passes the checks of its bytes, the sequence checks and AI0 to AI4."
+      },
+      "inputs": {
+        "writer": "PAIR_L",
+        "writer_class": "pairing",
+        "writer_ref": "p:izH8t1m8zAm5-dCY81VHY-IPk1f1eA4CSN1wnuumOps",
+        "automerge_actor": "3e401d5a0d64bceb8c58fdde3eb2465e22ce574d2a2102a5df79073442de5a05",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "control_ref": "flow.pl_pairing_device_l",
+        "change_hash": "bf97471a390278e19d877ca2878f5df86175cb7aa9151eb4a196e11cb1690f2f",
+        "deps": [
+          "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+        ],
+        "automerge_change": {
+          "hex": "856f4a83bf97471a01b803019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1203e401d5a0d64bceb8c58fdde3eb2465e22ce574d2a2102a5df79073442de5a0501170000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0801040204155634014204560a57cf0170027f0105007f0605177a2d703a71654b786743746b614566345675744767724d3754557071594e5134706334593956334f584d656639326b0a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f774259494b6e69735941725a4768482d466272526f4b7a4f30314b616d44554f4b584f475056647a6c7a486e5f64704156676766416b4e7046764c744d6b786c43516a4251734d646a59723567494e5752524f3357396b326c4c726c4273435743424937464c6342504f467a7642695f4c745f5f674d33716e584e52756b3849633145337768746e354b305841703a697a483874316d387a416d352d64435938315648592d49506b31663165413443534e31776e75756d4f70734445565f58206c6170746f70006465736b746f700600"
+        },
+        "framed_plaintext": {
+          "hex": "82015901c3856f4a83bf97471a01b803019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1203e401d5a0d64bceb8c58fdde3eb2465e22ce574d2a2102a5df79073442de5a0501170000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0801040204155634014204560a57cf0170027f0105007f0605177a2d703a71654b786743746b614566345675744767724d3754557071594e5134706334593956334f584d656639326b0a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f774259494b6e69735941725a4768482d466272526f4b7a4f30314b616d44554f4b584f475056647a6c7a486e5f64704156676766416b4e7046764c744d6b786c43516a4251734d646a59723567494e5752524f3357396b326c4c726c4273435743424937464c6342504f467a7642695f4c745f5f674d33716e584e52756b3849633145337768746e354b305841703a697a483874316d387a416d352d64435938315648592d49506b31663165413443534e31776e75756d4f70734445565f58206c6170746f70006465736b746f700600"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "pairing_l_reuse_seq2",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "Sequential reuse: the second installation sees the first unit and writes its own request as PAIR_L unit 2",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §3",
+        "text": "The change passes the checks of its bytes, the sequence checks and AI0 to AI4."
+      },
+      "inputs": {
+        "writer": "PAIR_L",
+        "writer_class": "pairing",
+        "writer_ref": "p:izH8t1m8zAm5-dCY81VHY-IPk1f1eA4CSN1wnuumOps",
+        "automerge_actor": "3e401d5a0d64bceb8c58fdde3eb2465e22ce574d2a2102a5df79073442de5a05",
+        "automerge_seq": 2,
+        "unit_actor_seq": 2,
+        "control_ref": "flow.pl_pairing_device_l",
+        "change_hash": "b73051ca3d39d6da46943f50ce0ded3c6fd62375d840d2f9dbcf5d6ed94397ea",
+        "deps": [
+          "e46dab72e1b691458d6a1e5bfc0107d92f1d13c938bf87a97ee1f443b3f2d070"
+        ],
+        "automerge_change": {
+          "hex": "856f4a83b73051ca01b80301e46dab72e1b691458d6a1e5bfc0107d92f1d13c938bf87a97ee1f443b3f2d070203e401d5a0d64bceb8c58fdde3eb2465e22ce574d2a2102a5df79073442de5a05021d0000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0801040204155634014204560a57cf0170027f0105007f06051d7a2d703a71654b786743746b614566345675744767724d3754557071594e5134706334593956334f584d656639326b0a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f774259494b6e69735941725a4768482d466272526f4b7a4f30314b616d44554f4b584f475056647a6c7a486e5f64704156676766416b4e7046764c744d6b786c43516a4251734d646a59723567494e5752524f3357396b326c4c726c4273435743424937464c6342504f467a7642695f4c745f5f674d33716e584e52756b3849633145337768746e354b305841703a697a483874316d387a416d352d64435938315648592d49506b31663165413443534e31776e75756d4f70734445565f58206c6170746f70006465736b746f700600"
+        },
+        "framed_plaintext": {
+          "hex": "82015901c3856f4a83b73051ca01b80301e46dab72e1b691458d6a1e5bfc0107d92f1d13c938bf87a97ee1f443b3f2d070203e401d5a0d64bceb8c58fdde3eb2465e22ce574d2a2102a5df79073442de5a05021d0000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0801040204155634014204560a57cf0170027f0105007f06051d7a2d703a71654b786743746b614566345675744767724d3754557071594e5134706334593956334f584d656639326b0a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f774259494b6e69735941725a4768482d466272526f4b7a4f30314b616d44554f4b584f475056647a6c7a486e5f64704156676766416b4e7046764c744d6b786c43516a4251734d646a59723567494e5752524f3357396b326c4c726c4273435743424937464c6342504f467a7642695f4c745f5f674d33716e584e52756b3849633145337768746e354b305841703a697a483874316d387a416d352d64435938315648592d49506b31663165413443534e31776e75756d4f70734445565f58206c6170746f70006465736b746f700600"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.L1_request",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
       }
     },
     {
@@ -2218,7 +2412,7 @@
       "id": "request_conflicted_valid_invalid",
       "type": "validation",
       "kind": "profile_entry",
-      "description": "Concurrent label values 'Laptop' and 7, delivered J2_label_ok then S_label_uint",
+      "description": "Concurrent label values 'Laptop' and the uint 7, delivered J2_label_ok then S_label_uint",
       "rule": {
         "section": "IDENTITY-PROFILE-01 §4",
         "text": "Rule 2: a field with concurrent values is valid only if every value is valid; for requests a conflicted field (an unknown one included) or two concurrent maps make the entry invalid; a kind conflict makes any entry invalid; the entry reports the diagnostic of its first invalid value, else INVALID_FIELD_TYPE."
@@ -2237,7 +2431,7 @@
           "platform": "desktop"
         },
         "snapshot": {
-          "b64url": "hW9Kg-lHdFcAxAcCIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKIMZ1H4fQkR-oYY-57aFeydjCCptNNe6GueqQkKWN2pvtAll99hhMoovFdy35EIDZusGbOltRhIz3oDyKrb2mj-95vr4xe7FcXxKOKHyAD3egRcBcrluQ4dGY7COWhmLLpJQHAQYDBhMGIwJABkMHVgINAQYCFRMKHZgCIQwjHzQFQhNWK1-1AoABBoEBA4MBAwIAAgF_AAIBf38CAXsHDwYBAAUAfwADAX8CfwACAX4AfwUHAAYRAAcBAAZ_AgIEfgUGBAh_CgQOfxACFAcXAA9_AAAEfwAACY3PQU-DMBiAYY3TzflTFhImurDdYNlE1CWOoMDFFPoxvgBt1xYGxPjbTTTevT55L-9xTKHFDNQUOg1MIWdqghSYRt2PheQ5VjCRcGxAaXUludIgR5JzPctNPw688s6P1wx3tnaTOEZCFob3EqK1bzZh59Nw-_TOwtmJG_bhbW4ua6IjGa1zopdB0rp2ut01h6HLFvM4TPrsoXcMsdr2ZnsqzaJs5pHTAwlolDLrg5dz5fqv5T1tU-GqW2dTmIZYWc-ZH1rCTiSLioxBPXj7oSvR9G2MCtdj62Bw1GIw8sebjHNJkRHN5TUwKjgyrUaM1PD3enb--b9qVCKjlxVJoZpSUJlEobn80Ytf_hoLghLZYSIqonMu628KAH8BDAADAX8AAwF4BQJ7fwV-fwUCBn4DcgQBfwIEAX4DfwIDe38DAHwDDwEEAQkDAH8BAgB_AQQAfgECBAF_AgwBAwB_hgMCAH_WBQQAfPYDAJYBxgIC9gNzAJYBxgL2AxN25hETxgEUZtYFdp2PSXKCQABFs8s1vIBAy6BxxzyIGMRScEMxNEga6ZZuQXL6VMwBksrqL1799-vjvuYwgV1bFYRrStixhk3cAMjamoRhRMIF3UGsTjCLyjjvxBQjQDUvRHI55ESjC9W8CCOla56nU1fMMw4-sitpIccgZfwA-JG-9_gDFmwW477mnkPfjOuzkRvAL90_qpN_qF8MSBHDBI9a4gaTqB8DpbIzGUixJxL6EIrV2WV65bZSuJdHREd_R9NuUo91fY7Su1tvaj0PFccQxgIEgaWYmlPmZy9DHmwrf1cmTkRU_aSrkh0h27wFy_1GDnN7sTdax9a26c7CgSndnBB8VgfxAFawfjHMY6rN2owwTF79Z5C1XDiSNJm4OXTT1Y6Xb9fKxydxC5k6p12jRHDVJ8nVEn1U_rz6AhkAfwIEAH4AAX4dAAQD"
+          "b64url": "hW9KgzPTMgQAxAcCIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKIMZ1H4fQkR-oYY-57aFeydjCCptNNe6GueqQkKWN2pvtAr6-MXuxXF8Sjih8gA93oEXAXK5bkOHRmOwjloZiy6SU8KLNmNTzz32zmdXt9drSd8UaPRj8Tuu4FYAcm9C6L7sHAQYDBhMGIwJABkMHVgINAQYCFRMKHZgCIQwjHzQFQhNWK1-1AoABBoEBA4MBAwIAAgF_AAIBf38CAXsHDwYBAAUAfwADAX8CfwACAX4AfwUHAAYRAAcBAAZ_AgIEfgUGBAh_CgQOfxACFAcXAA9_AAAEfwAACY3PQU-DMBiAYY3TzflTFhImurDdYNlE1CWOoMDFFPoxvgBt1xYGxPjbTTTevT55L-9xTKHFDNQUOg1MIWdqghSYRt2PheQ5VjCRcGxAaXUludIgR5JzPctNPw688s6P1wx3tnaTOEZCFob3EqK1bzZh59Nw-_TOwtmJG_bhbW4ua6IjGa1zopdB0rp2ut01h6HLFvM4TPrsoXcMsdr2ZnsqzaJs5pHTAwlolDLrg5dz5fqv5T1tU-GqW2dTmIZYWc-ZH1rCTiSLioxBPXj7oSvR9G2MCtdj62Bw1GIw8sebjHNJkRHN5TUwKjgyrUaM1PD3enb--b9qVCKjlxVJoZpSUJlEobn80Ytf_hoLghLZYSIqonMu628KAH8BDAADAX8AAwF4BQJ7fwV-fwUCBn4DcgQBfwIEAX4DfwIDe38DAHwDDwEEAQkDAH8BAgB_AQQAfgECBAF_AgwBAwB_hgMCAH_WBQQAfPYDAJYBxgIC9gNzAJYBxgL2AxN25hETxgETZtYFdp2PSXKCQABFs8s1vIBAy6BxxzyIGMRScEMxNEga6ZZuQXL6VMwBksrqL1799-vjvuYwgV1bFYRrStixhk3cAMjamoRhRMIF3UGsTjCLyjjvxBQjQDUvRHI55ESjC9W8CCOla56nU1fMMw4-sitpIccgZfwA-JG-9_gDFmwW477mnkPfjOuzkRvAL90_qpN_qF8MSBHDBI9a4gaTqB8DpbIzGUixJxL6EIrV2WV65bZSuJdHREd_R9NuUo91fY7Su1tvaj0PFccQxgIEgaWYmlPmZy9DHmwrf1cmTkRU_aSrkh0h27wFy_1GDnN7sTdax9a26c7CgSndnBB8VgfxAFawfjHMY6rN2owwTF79Z5C1XDiSNJm4OXTT1Y6Xb9fKxydxC5k6p12jRHDVJ8nVEn1U_rz6AhkAfwIEAH4AAX4dAAME"
         },
         "changes": "J2_label_ok,S_label_uint"
       },
@@ -2254,7 +2448,7 @@
       "id": "request_conflicted_valid_invalid.reverse",
       "type": "validation",
       "kind": "profile_entry",
-      "description": "Concurrent label values 'Laptop' and 7, delivered S_label_uint then J2_label_ok",
+      "description": "Concurrent label values 'Laptop' and the uint 7, delivered S_label_uint then J2_label_ok",
       "rule": {
         "section": "IDENTITY-PROFILE-01 §4",
         "text": "Rule 2: a field with concurrent values is valid only if every value is valid; for requests a conflicted field (an unknown one included) or two concurrent maps make the entry invalid; a kind conflict makes any entry invalid; the entry reports the diagnostic of its first invalid value, else INVALID_FIELD_TYPE."
@@ -2273,7 +2467,7 @@
           "platform": "desktop"
         },
         "snapshot": {
-          "b64url": "hW9Kg0SPzYEAxQcCIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKIMZ1H4fQkR-oYY-57aFeydjCCptNNe6GueqQkKWN2pvtAll99hhMoovFdy35EIDZusGbOltRhIz3oDyKrb2mj-95vr4xe7FcXxKOKHyAD3egRcBcrluQ4dGY7COWhmLLpJQHAQYDBhMGIwJAB0MHVgINAQYCFRMKHZgCIQwjHzQFQhNWK1-1AoABBoEBA4MBAwIAfQEAAQIBfX8Cf3sHDwYBAAUAfwACAX4CAX8AAgF-fwEFBwAGEQAHAQAGfwICBH4FBgQIfwoEDn8QAhQHFwAPfwAABH8AAAmNz0FPgzAYgGGN0835UxYSJrqw3WDZRNQljqDAxRT6Mb4AbdcWBsT420003r0-eS_vcUyhxQzUFDoNTCFnaoIUmEbdj4XkOVYwkXBsQGl1JbnSIEeScz3LTT8OvPLOj9cMd7Z2kzhGQhaG9xKitW82YefTcPv0zsLZiRv24W1uLmuiIxmtc6KXQdK6drrdNYehyxbzOEz67KF3DLHa9mZ7Ks2ibOaR0wMJaJQy64OXc-X6r-U9bVPhqltnU5iGWFnPmR9awk4ki4qMQT14-6Er0fRtjArXY-tgcNRiMPLHm4xzSZERzeU1MCo4Mq1GjNTw93p2_vm_alQio5cVSaGaUlCZRKG5_NGLX_4aC4IS2WEiKqJzLutvCgB_AQwAAwF_AAMBeAUCe38Ffn8FAgZ-A3IEAX8CBAF-A38CA3t_AwB8Aw8BBAEJAwB_AQIAfwEEAH4BAgQBfwIMAQMAf4YDAgB_1gUEAHz2AwCWAcYCAvYDcwCWAcYC9gMTduYRE8YBFGbWBXadj0lygkAARbPLNbyAQMugccc8iBjEUnBDMTRIGumWbkFy-lTMAZLK6i9e_ffr477mMIFdWxWEa0rYsYZN3ADI2pqEYUTCBd1BrE4wi8o478QUI0A1L0RyOeREowvVvAgjpWuep1NXzDMOPrIraSHHIGX8APiRvvf4AxZsFuO-5p5D34zrs5EbwC_dP6qTf6hfDEgRwwSPWuIGk6gfA6WyMxlIsScS-hCK1dlleuW2UriXR0RHf0fTblKPdX2O0rtbb2o9DxXHEMYCBIGlmJpT5mcvQx5sK39XJk5EVP2kq5IdIdu8Bcv9Rg5ze7E3WsfWtunOwoEp3ZwQfFYH8QBWsH4xzGOqzdqMMExe_WeQtVw4kjSZuDl009WOl2_XyscncQuZOqddo0Rw1SfJ1RJ9VP68-gIZAH8CBAB-AAF-HQADBA"
+          "b64url": "hW9Kg6klsBwAxQcCIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKIMZ1H4fQkR-oYY-57aFeydjCCptNNe6GueqQkKWN2pvtAr6-MXuxXF8Sjih8gA93oEXAXK5bkOHRmOwjloZiy6SU8KLNmNTzz32zmdXt9drSd8UaPRj8Tuu4FYAcm9C6L7sHAQYDBhMGIwJAB0MHVgINAQYCFRMKHZgCIQwjHzQFQhNWK1-1AoABBoEBA4MBAwIAfQEAAQIBfX8Cf3sHDwYBAAUAfwACAX4CAX8AAgF-fwEFBwAGEQAHAQAGfwICBH4FBgQIfwoEDn8QAhQHFwAPfwAABH8AAAmNz0FPgzAYgGGN0835UxYSJrqw3WDZRNQljqDAxRT6Mb4AbdcWBsT420003r0-eS_vcUyhxQzUFDoNTCFnaoIUmEbdj4XkOVYwkXBsQGl1JbnSIEeScz3LTT8OvPLOj9cMd7Z2kzhGQhaG9xKitW82YefTcPv0zsLZiRv24W1uLmuiIxmtc6KXQdK6drrdNYehyxbzOEz67KF3DLHa9mZ7Ks2ibOaR0wMJaJQy64OXc-X6r-U9bVPhqltnU5iGWFnPmR9awk4ki4qMQT14-6Er0fRtjArXY-tgcNRiMPLHm4xzSZERzeU1MCo4Mq1GjNTw93p2_vm_alQio5cVSaGaUlCZRKG5_NGLX_4aC4IS2WEiKqJzLutvCgB_AQwAAwF_AAMBeAUCe38Ffn8FAgZ-A3IEAX8CBAF-A38CA3t_AwB8Aw8BBAEJAwB_AQIAfwEEAH4BAgQBfwIMAQMAf4YDAgB_1gUEAHz2AwCWAcYCAvYDcwCWAcYC9gMTduYRE8YBE2bWBXadj0lygkAARbPLNbyAQMugccc8iBjEUnBDMTRIGumWbkFy-lTMAZLK6i9e_ffr477mMIFdWxWEa0rYsYZN3ADI2pqEYUTCBd1BrE4wi8o478QUI0A1L0RyOeREowvVvAgjpWuep1NXzDMOPrIraSHHIGX8APiRvvf4AxZsFuO-5p5D34zrs5EbwC_dP6qTf6hfDEgRwwSPWuIGk6gfA6WyMxlIsScS-hCK1dlleuW2UriXR0RHf0fTblKPdX2O0rtbb2o9DxXHEMYCBIGlmJpT5mcvQx5sK39XJk5EVP2kq5IdIdu8Bcv9Rg5ze7E3WsfWtunOwoEp3ZwQfFYH8QBWsH4xzGOqzdqMMExe_WeQtVw4kjSZuDl009WOl2_XyscncQuZOqddo0Rw1SfJ1RJ9VP68-gIZAH8CBAB-AAF-HQAEAw"
         },
         "changes": "S_label_uint,J2_label_ok"
       },
@@ -2562,6 +2756,42 @@
         "uri": "lfcp://pair/s0mpI-CvMOY8lAmqfXBOyuKnSY9ZNiiaxj-SiybjLP0?endpoint=wss%3A%2F%2Fsync-a.example.test%2Fv1%2Fws&device=5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk#secret=owABAVggFPnMsdNuhnfMO8rhbUQUw1WOCLYA1Vb04p3mc_2NSdECWCB2AOH63_ga8G9L8FA3LNr7Tyct4h5B4qp77imkoEJslA",
         "recomputed_principal_id": {
           "hex": "e5c1f8e321288939f29865fbf667cba16dcc7ad03eb278ba49ef2b618985dcb9"
+        }
+      }
+    },
+    {
+      "id": "pair_uri_pair_l",
+      "type": "bytes",
+      "kind": "pair_uri",
+      "description": "The pairing link of PAIR_L for I (flow F08), registered and active at flow.pl_pairing_device_l",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2",
+        "text": "The link names the pairing device whose binding the receiver verifies before using the secret."
+      },
+      "inputs": {
+        "identity_resource": {
+          "hex": "b349a923e0af30e63c9409aa7d704ecae2a7498f5936289ac63f928b26e32cfd"
+        },
+        "endpoint": "wss://sync-a.example.test/v1/ws",
+        "device": "PAIR_L",
+        "pairing_device_id": {
+          "hex": "8b31fcb759bccc09b9f9d098f3554763e20f9357f5780e0248dd709eeba63a9b"
+        },
+        "ed25519_seed": {
+          "hex": "41f83d9a61957862eab558861feec605cc836812253ff7ed9fb1c528fd7c8911"
+        },
+        "x25519_private": {
+          "hex": "f7756668cc992a90c95f74ec555c9e7f150e72343a1124ee8c9b083ff83f6ab5"
+        },
+        "binding_head": "flow.pl_pairing_device_l"
+      },
+      "expected": {
+        "secret_cbor": {
+          "hex": "a3000101582041f83d9a61957862eab558861feec605cc836812253ff7ed9fb1c528fd7c8911025820f7756668cc992a90c95f74ec555c9e7f150e72343a1124ee8c9b083ff83f6ab5"
+        },
+        "uri": "lfcp://pair/s0mpI-CvMOY8lAmqfXBOyuKnSY9ZNiiaxj-SiybjLP0?endpoint=wss%3A%2F%2Fsync-a.example.test%2Fv1%2Fws&device=izH8t1m8zAm5-dCY81VHY-IPk1f1eA4CSN1wnuumOps#secret=owABAVggQfg9mmGVeGLqtViGH-7GBcyDaBIlP_ftn7HFKP18iRECWCD3dWZozJkqkMlfdOxVXJ5_FQ5yNDoRJO6Mmwg_-D9qtQ",
+        "recomputed_principal_id": {
+          "hex": "8b31fcb759bccc09b9f9d098f3554763e20f9357f5780e0248dd709eeba63a9b"
         }
       }
     },
@@ -3575,6 +3805,34 @@
       }
     },
     {
+      "id": "change.C2_int_kind",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change C2_int_kind by OWNER (unit actor sequence 3, control_ref P0_genesis_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a8309ec68780172019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000a01020202150634014202560257017002710273027f007f147f046b696e64017f017f14017f017f007f16"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "09ec6878dc4b1a958afee4cb03b2ea58bbe285e5c3583e1f6b60cb7c80b3655d",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "8201587c856f4a8309ec68780172019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000a01020202150634014202560257017002710273027f007f147f046b696e64017f017f14017f017f007f16"
+        },
+        "sha256": {
+          "hex": "7f1addee9cd6c398980e5aff387d69fba9fb37370ff6649a2af87bed0eceb265"
+        }
+      }
+    },
+    {
       "id": "change.J1_own_request",
       "type": "bytes",
       "kind": "profile_change_framing",
@@ -3907,6 +4165,90 @@
         },
         "sha256": {
           "hex": "fa9d748ece7eaf25e1cb69480e17f4c4b1514f8a7d87cb33bdb856b7d3817598"
+        }
+      }
+    },
+    {
+      "id": "change.L1_request",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change L1_request by PAIR_L (unit actor sequence 1, control_ref flow.pl_pairing_device_l)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83e46dab7201b803019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1203e401d5a0d64bceb8c58fdde3eb2465e22ce574d2a2102a5df79073442de5a0501170000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0801040204155634014204560a57cf0170027f0105007f0605177a2d703a334c634a553370385a726e5868636e656d7a48527a786b69304a3869586842486e43537a4173367a2d66490a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f774259494e793343564e36664761353134584a337073783063385a49744366496c34515235776b73774c4f735f6e79415667675a535f7549674b67436251364844307763314e4e463645424864625a4a616b4a656c664c4f645948537041435743413447536b4745714e37524b355162473252446c4847424d5f4f466f4e4534714851317a6654335431386567703a697a483874316d387a416d352d64435938315648592d49506b31663165413443534e31776e75756d4f70734445565f42206c6170746f70006465736b746f700600"
+        },
+        "writer": "PAIR_L",
+        "writer_class": "pairing",
+        "writer_ref": "p:izH8t1m8zAm5-dCY81VHY-IPk1f1eA4CSN1wnuumOps",
+        "automerge_actor": "3e401d5a0d64bceb8c58fdde3eb2465e22ce574d2a2102a5df79073442de5a05",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "control_ref": "flow.pl_pairing_device_l",
+        "change_hash": "e46dab72e1b691458d6a1e5bfc0107d92f1d13c938bf87a97ee1f443b3f2d070",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015901c3856f4a83e46dab7201b803019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1203e401d5a0d64bceb8c58fdde3eb2465e22ce574d2a2102a5df79073442de5a0501170000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0801040204155634014204560a57cf0170027f0105007f0605177a2d703a334c634a553370385a726e5868636e656d7a48527a786b69304a3869586842486e43537a4173367a2d66490a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f774259494e793343564e36664761353134584a337073783063385a49744366496c34515235776b73774c4f735f6e79415667675a535f7549674b67436251364844307763314e4e463645424864625a4a616b4a656c664c4f645948537041435743413447536b4745714e37524b355162473252446c4847424d5f4f466f4e4534714851317a6654335431386567703a697a483874316d387a416d352d64435938315648592d49506b31663165413443534e31776e75756d4f70734445565f42206c6170746f70006465736b746f700600"
+        },
+        "sha256": {
+          "hex": "1f87f12aa13beb802f6e400e8b1750fff1384f5dde9534d771a56a3075685919"
+        }
+      }
+    },
+    {
+      "id": "change.L1_second_installation",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change L1_second_installation by PAIR_L (unit actor sequence 1, control_ref flow.pl_pairing_device_l)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83bf97471a01b803019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1203e401d5a0d64bceb8c58fdde3eb2465e22ce574d2a2102a5df79073442de5a0501170000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0801040204155634014204560a57cf0170027f0105007f0605177a2d703a71654b786743746b614566345675744767724d3754557071594e5134706334593956334f584d656639326b0a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f774259494b6e69735941725a4768482d466272526f4b7a4f30314b616d44554f4b584f475056647a6c7a486e5f64704156676766416b4e7046764c744d6b786c43516a4251734d646a59723567494e5752524f3357396b326c4c726c4273435743424937464c6342504f467a7642695f4c745f5f674d33716e584e52756b3849633145337768746e354b305841703a697a483874316d387a416d352d64435938315648592d49506b31663165413443534e31776e75756d4f70734445565f58206c6170746f70006465736b746f700600"
+        },
+        "writer": "PAIR_L",
+        "writer_class": "pairing",
+        "writer_ref": "p:izH8t1m8zAm5-dCY81VHY-IPk1f1eA4CSN1wnuumOps",
+        "automerge_actor": "3e401d5a0d64bceb8c58fdde3eb2465e22ce574d2a2102a5df79073442de5a05",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "control_ref": "flow.pl_pairing_device_l",
+        "change_hash": "bf97471a390278e19d877ca2878f5df86175cb7aa9151eb4a196e11cb1690f2f",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015901c3856f4a83bf97471a01b803019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1203e401d5a0d64bceb8c58fdde3eb2465e22ce574d2a2102a5df79073442de5a0501170000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0801040204155634014204560a57cf0170027f0105007f0605177a2d703a71654b786743746b614566345675744767724d3754557071594e5134706334593956334f584d656639326b0a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f774259494b6e69735941725a4768482d466272526f4b7a4f30314b616d44554f4b584f475056647a6c7a486e5f64704156676766416b4e7046764c744d6b786c43516a4251734d646a59723567494e5752524f3357396b326c4c726c4273435743424937464c6342504f467a7642695f4c745f5f674d33716e584e52756b3849633145337768746e354b305841703a697a483874316d387a416d352d64435938315648592d49506b31663165413443534e31776e75756d4f70734445565f58206c6170746f70006465736b746f700600"
+        },
+        "sha256": {
+          "hex": "1ba5017f4ac58ee8d4f4b8cfe3530c061cea919108aa103bb2025489fbae60a9"
+        }
+      }
+    },
+    {
+      "id": "change.L2_reuse",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change L2_reuse by PAIR_L (unit actor sequence 2, control_ref flow.pl_pairing_device_l)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83b73051ca01b80301e46dab72e1b691458d6a1e5bfc0107d92f1d13c938bf87a97ee1f443b3f2d070203e401d5a0d64bceb8c58fdde3eb2465e22ce574d2a2102a5df79073442de5a05021d0000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0801040204155634014204560a57cf0170027f0105007f06051d7a2d703a71654b786743746b614566345675744767724d3754557071594e5134706334593956334f584d656639326b0a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f774259494b6e69735941725a4768482d466272526f4b7a4f30314b616d44554f4b584f475056647a6c7a486e5f64704156676766416b4e7046764c744d6b786c43516a4251734d646a59723567494e5752524f3357396b326c4c726c4273435743424937464c6342504f467a7642695f4c745f5f674d33716e584e52756b3849633145337768746e354b305841703a697a483874316d387a416d352d64435938315648592d49506b31663165413443534e31776e75756d4f70734445565f58206c6170746f70006465736b746f700600"
+        },
+        "writer": "PAIR_L",
+        "writer_class": "pairing",
+        "writer_ref": "p:izH8t1m8zAm5-dCY81VHY-IPk1f1eA4CSN1wnuumOps",
+        "automerge_actor": "3e401d5a0d64bceb8c58fdde3eb2465e22ce574d2a2102a5df79073442de5a05",
+        "automerge_seq": 2,
+        "unit_actor_seq": 2,
+        "control_ref": "flow.pl_pairing_device_l",
+        "change_hash": "b73051ca3d39d6da46943f50ce0ded3c6fd62375d840d2f9dbcf5d6ed94397ea",
+        "deps": "e46dab72e1b691458d6a1e5bfc0107d92f1d13c938bf87a97ee1f443b3f2d070"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015901c3856f4a83b73051ca01b80301e46dab72e1b691458d6a1e5bfc0107d92f1d13c938bf87a97ee1f443b3f2d070203e401d5a0d64bceb8c58fdde3eb2465e22ce574d2a2102a5df79073442de5a05021d0000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0801040204155634014204560a57cf0170027f0105007f06051d7a2d703a71654b786743746b614566345675744767724d3754557071594e5134706334593956334f584d656639326b0a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f774259494b6e69735941725a4768482d466272526f4b7a4f30314b616d44554f4b584f475056647a6c7a486e5f64704156676766416b4e7046764c744d6b786c43516a4251734d646a59723567494e5752524f3357396b326c4c726c4273435743424937464c6342504f467a7642695f4c745f5f674d33716e584e52756b3849633145337768746e354b305841703a697a483874316d387a416d352d64435938315648592d49506b31663165413443534e31776e75756d4f70734445565f58206c6170746f70006465736b746f700600"
+        },
+        "sha256": {
+          "hex": "3295b0aaff97a0a9e142e092e489f537db5fe6c7d9dc695b2281046b841ceb57"
         }
       }
     },
@@ -4505,7 +4847,7 @@
       "description": "Automerge change S_label_uint by OWNER (unit actor sequence 3, control_ref P2_pairing_device)",
       "inputs": {
         "automerge_change_hex": {
-          "hex": "856f4a83597df61801b4010206bbd835e6191451b657ac2dddbb51699afc76bb8d88d0c01684186cb057e80e9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a031d00000120c6751f87d0911fa8618fb9eda15ec9d8c20a9b4d35ee86b9ea9090a58dda9bed0a01020202150734014202560257017002710273027f017f177f056c6162656c017f017f14077f017f017f1a"
+          "hex": "856f4a83f0a2cd9801b4010206bbd835e6191451b657ac2dddbb51699afc76bb8d88d0c01684186cb057e80e9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a031d00000120c6751f87d0911fa8618fb9eda15ec9d8c20a9b4d35ee86b9ea9090a58dda9bed0a01020202150734014202560257017002710273027f017f177f056c6162656c017f017f13077f017f017f1a"
         },
         "writer": "OWNER",
         "writer_class": "root",
@@ -4514,15 +4856,15 @@
         "automerge_seq": 3,
         "unit_actor_seq": 3,
         "control_ref": "P2_pairing_device",
-        "change_hash": "597df6184ca28bc5772df91080d9bac19b3a5b51848cf7a03c8aadbda68fef79",
+        "change_hash": "f0a2cd98d4f3cf7db399d5edf5dad277c51a3d18fc4eebb815801c9bd0ba2fbb",
         "deps": "06bbd835e6191451b657ac2dddbb51699afc76bb8d88d0c01684186cb057e80e,9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
       },
       "expected": {
         "framed_cbor": {
-          "hex": "820158bf856f4a83597df61801b4010206bbd835e6191451b657ac2dddbb51699afc76bb8d88d0c01684186cb057e80e9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a031d00000120c6751f87d0911fa8618fb9eda15ec9d8c20a9b4d35ee86b9ea9090a58dda9bed0a01020202150734014202560257017002710273027f017f177f056c6162656c017f017f14077f017f017f1a"
+          "hex": "820158bf856f4a83f0a2cd9801b4010206bbd835e6191451b657ac2dddbb51699afc76bb8d88d0c01684186cb057e80e9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a031d00000120c6751f87d0911fa8618fb9eda15ec9d8c20a9b4d35ee86b9ea9090a58dda9bed0a01020202150734014202560257017002710273027f017f177f056c6162656c017f017f13077f017f017f1a"
         },
         "sha256": {
-          "hex": "b3f054831647af9040cdb5d7694455381bed3e566797cd8b2ab3300cac96fbe0"
+          "hex": "99fb555da46a350520d8c8a52b7ecb0cefafcf4bf36d36d031a05b3253290f08"
         }
       }
     },

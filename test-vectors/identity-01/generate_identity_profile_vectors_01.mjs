@@ -206,6 +206,8 @@ function admit(r, root = "OWNER") {
     }
     if ((op.obj === "_root" && (op.key === "profile" || op.key === "identity")) || (identityOid && op.obj === identityOid)) found.add("IMMUTABLE_FIELD_MUTATED");
     if (op.action === "makeText") found.add("INVALID_FIELD_TYPE");
+    // §2.1: the profile's scalars are ImmutableString, boolean and uint; an int, float, counter or timestamp is not one (AI3).
+    if (op.action === "set" && ["int", "float64", "counter", "timestamp"].includes(op.datatype)) found.add("INVALID_FIELD_TYPE");
   }
   const cls = writerClass(r.writer, r.controlRef);
   if (cls === "pairing" || cls === "other") {
@@ -688,6 +690,8 @@ function scenario(id, description, rule, inputs, expected, assertions) {
   changeCase("identity_doc_container_replaced", replaced.r, "CONTAINER_REPLACED", "A change by the root replacing roster with a new map");
   const text = change("C2_text_label", BASE, "OWNER", 3, "P0_genesis_i", (d) => { d.devices[pref("OWNER")].label = "Desktop (text)"; });
   changeCase("identity_doc_text_field", text.r, "INVALID_FIELD_TYPE", "A change by the root writing devices[p:OWNER].label as collaborative Text");
+  const intKind = change("C2_int_kind", BASE, "OWNER", 3, "P0_genesis_i", (d) => { d.devices[pref("OWNER")].kind = 1; });
+  changeCase("identity_doc_int_value", intKind.r, "INVALID_FIELD_TYPE", "A change by the root writing devices[p:OWNER].kind as an Automerge int, not a uint (§2.1)");
 }
 
 // ---- pairing writers (§3 AI4) ----
@@ -718,6 +722,16 @@ changeCase("pairing_takes_over_foreign_request", asJ("J1_takes_over", foreign.do
 }, "P2k_pairing_device_k").r, "UNAUTHORIZED_WRITER", "PAIR_J rewrites pairing and label of PAIR_K's request in one change");
 changeCase("pairing_replaces_foreign_request_map", asJ("J1_replaces_map", foreign.doc, 1, (d) => { put(d.requests, pref("DEV_X"), reqEntry("DEV_X", "PAIR_J")); }, "P2k_pairing_device_k").r,
   "UNAUTHORIZED_WRITER", "PAIR_J replaces PAIR_K's request map with its own");
+// Flow F08: PAIR_L's request in the Identity Resource rotated to epoch 1 (control_ref flow.pl_pairing_device_l).
+{
+  const asL = (name, doc, unitSeq, fn) => change(name, doc, "PAIR_L", unitSeq, "flow.pl_pairing_device_l", fn);
+  const l1 = asL("L1_request", BASE, 1, (d) => { put(d.requests, pref("DEV_B"), reqEntry("DEV_B", "PAIR_L")); });
+  changeCase("pairing_l_writes_own_request", l1.r, null, "PAIR_L (control_ref flow.pl_pairing_device_l) creates requests[p:<DEV_B>] with pairing = p:<PAIR_L> (flow F08)");
+  changeCase("pairing_l_second_installation", asL("L1_second_installation", BASE, 1, (d) => { put(d.requests, pref("DEV_X"), reqEntry("DEV_X", "PAIR_L")); }).r, null,
+    "A second installation given the same link writes requests[p:<DEV_X>] as PAIR_L, also its unit 1: admitted by itself; the two units equivocate (W §26.2)");
+  changeCase("pairing_l_reuse_seq2", asL("L2_reuse", l1.doc, 2, (d) => { put(d.requests, pref("DEV_X"), reqEntry("DEV_X", "PAIR_L")); }).r, null,
+    "Sequential reuse: the second installation sees the first unit and writes its own request as PAIR_L unit 2");
+}
 const cont = asJ("J2_continues_own", own.doc, 2, (d) => { d.requests[pref("DEV_B")].platform = S("laptop"); });
 changeCase("pairing_continues_own_request", cont.r, null, "PAIR_J writes platform into its own request (its second unit)");
 {
@@ -826,11 +840,11 @@ stateCase("request_bad_timestamp", docWith("S_bad_timestamp", (d) => { put(d.req
       "Concurrent values of the unknown field note of requests[p:<DEV_B>] (by PAIR_J and by the root)", { changes: "J2_note_unknown,S_note_unknown_root" });
   }
   const labelOk = asJ("J2_label_ok", own.doc, 2, (d) => { d.requests[pref("DEV_B")].label = S("Laptop"); });
-  const labelBad = change("S_label_uint", own.doc, "OWNER", 3, "P2_pairing_device", (d) => { d.requests[pref("DEV_B")].label = 7; });
+  const labelBad = change("S_label_uint", own.doc, "OWNER", 3, "P2_pairing_device", (d) => { d.requests[pref("DEV_B")].label = new A.Uint(7); });
   for (const [suffix, order] of [["", [labelOk, labelBad]], [".reverse", [labelBad, labelOk]]]) {
     const [m] = A.applyChanges(A.clone(own.doc), order.map((o) => o.r.bytes));
     stateCase(`request_conflicted_valid_invalid${suffix}`, m, "requests", pref("DEV_B"), "INVALID_FIELD_TYPE",
-      `Concurrent label values 'Laptop' and 7, delivered ${order.map((o) => o.r.name).join(" then ")}`, { changes: order.map((o) => o.r.name).join(",") });
+      `Concurrent label values 'Laptop' and the uint 7, delivered ${order.map((o) => o.r.name).join(" then ")}`, { changes: order.map((o) => o.r.name).join(",") });
   }
   const merged = replay(["C0_initial", "C1_fill", "J1_own_request", "K1_same_key"]).doc;
   stateCase("request_conflicted_maps", merged, "requests", pref("DEV_B"), "INVALID_FIELD_TYPE", "Two concurrent maps under requests[p:<DEV_B>] (pairing_concurrent_same_key)");
@@ -882,6 +896,21 @@ add({
             ed25519_seed: J.inputs.ed25519_seed, x25519_private: J.inputs.x25519_private },
   expected: { secret_cbor: { hex: hex(secretCbor) }, uri: pairUri(), recomputed_principal_id: { hex: J.expected.principal_id.hex } },
 });
+{
+  // The link of flow F08: PAIR_L, registered in I on the head flow.pl_pairing_device_l.
+  const L = principal("PAIR_L").c;
+  const sec = Buffer.concat([Buffer.from([0xa3, 0x00, 0x01, 0x01]), bstr(Buffer.from(L.inputs.ed25519_seed.hex, "hex")), Buffer.from([0x02]), bstr(Buffer.from(L.inputs.x25519_private.hex, "hex"))]);
+  const uri = `lfcp://pair/${b64u(I)}?endpoint=${RFC3986(wire.fixtures.endpoint.url)}&device=${b64u(principal("PAIR_L").id)}#secret=${b64u(sec)}`;
+  const binding = W.get("flow.pl_pairing_device_l").expected.post_state.devices.PAIR_L;
+  check("pair_uri_pair_l.binding", [binding.kind, binding.active, binding.registered], [2, true, true]);
+  add({
+    id: "pair_uri_pair_l", type: "bytes", kind: "pair_uri", description: "The pairing link of PAIR_L for I (flow F08), registered and active at flow.pl_pairing_device_l",
+    rule: { section: "IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2", text: "The link names the pairing device whose binding the receiver verifies before using the secret." },
+    inputs: { identity_resource: { hex: hex(I) }, endpoint: wire.fixtures.endpoint.url, device: "PAIR_L", pairing_device_id: { hex: hex(principal("PAIR_L").id) },
+              ed25519_seed: L.inputs.ed25519_seed, x25519_private: L.inputs.x25519_private, binding_head: "flow.pl_pairing_device_l" },
+    expected: { secret_cbor: { hex: hex(sec) }, uri, recomputed_principal_id: { hex: L.expected.principal_id.hex } },
+  });
+}
 const joinUri = legacy.cases.find((c) => c.id === "invite_uri").expected.uri;
 function parsePair(uri) {
   const m = /^lfcp:\/\/pair\/([A-Za-z0-9_-]{43})\?([^#]*)#secret=([A-Za-z0-9_-]+)$/.exec(uri);
@@ -984,7 +1013,7 @@ const doc = {
   fixtures: {
     identity_resource: { hex: hex(I) }, owner: "OWNER", owner_ref: pref("OWNER"),
     actors: Object.fromEntries(["OWNER", "DEV_A", "DEV_B", "PAIR_J", "PAIR_K"].map((l) => [l, actorOf(l)])),
-    refs: Object.fromEntries(["OWNER", "BOB", "DEV_A", "DEV_B", "DEV_X", "PAIR_J", "PAIR_K", "BRIDGE_O"].map((l) => [l, pref(l)])),
+    refs: Object.fromEntries(["OWNER", "BOB", "DEV_A", "DEV_B", "DEV_X", "PAIR_J", "PAIR_K", "PAIR_L", "BRIDGE_O"].map((l) => [l, pref(l)])),
     resource_refs: { X: rref("X"), Y: rref("Y"), I: rref("I") },
   },
   cases: CASES,

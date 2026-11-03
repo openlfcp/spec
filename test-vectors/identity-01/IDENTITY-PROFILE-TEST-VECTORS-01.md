@@ -21,6 +21,7 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `identity_doc_reserved_key_later` | validation | valid | IDENTITY-PROFILE-01 §2.4 | A later change by the root that creates the reserved key recovery: admitted, preserved, never interpreted |
 | `identity_doc_container_replaced` | validation | `CONTAINER_REPLACED` | IDENTITY-PROFILE-01 §3 AI2 | A change by the root replacing roster with a new map |
 | `identity_doc_text_field` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §3 AI3 | A change by the root writing devices[p:OWNER].label as collaborative Text |
+| `identity_doc_int_value` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §3 AI3 | A change by the root writing devices[p:OWNER].kind as an Automerge int, not a uint (§2.1) |
 | `pairing_writes_own_request` | validation | valid | IDENTITY-PROFILE-01 §3 | PAIR_J (control_ref P2) creates requests[p:<DEV_B>] with pairing = p:<PAIR_J> |
 | `pairing_writes_roster` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §3 AI4 | PAIR_J writes roster[X].name |
 | `pairing_deletes_roster` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §3 AI4 | PAIR_J deletes the roster entry of Y |
@@ -33,6 +34,9 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `pairing_edits_foreign_request_label` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §3 AI4 | PAIR_J edits the label of PAIR_K's request |
 | `pairing_takes_over_foreign_request` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §3 AI4 | PAIR_J rewrites pairing and label of PAIR_K's request in one change |
 | `pairing_replaces_foreign_request_map` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §3 AI4 | PAIR_J replaces PAIR_K's request map with its own |
+| `pairing_l_writes_own_request` | validation | valid | IDENTITY-PROFILE-01 §3 | PAIR_L (control_ref flow.pl_pairing_device_l) creates requests[p:<DEV_B>] with pairing = p:<PAIR_L> (flow F08) |
+| `pairing_l_second_installation` | validation | valid | IDENTITY-PROFILE-01 §3 | A second installation given the same link writes requests[p:<DEV_X>] as PAIR_L, also its unit 1: admitted by itself; the two units equivocate (W §26.2) |
+| `pairing_l_reuse_seq2` | validation | valid | IDENTITY-PROFILE-01 §3 | Sequential reuse: the second installation sees the first unit and writes its own request as PAIR_L unit 2 |
 | `pairing_continues_own_request` | validation | valid | IDENTITY-PROFILE-01 §3 | PAIR_J writes platform into its own request (its second unit) |
 | `pairing_concurrent_same_key` | behavioral | state | IDENTITY-PROFILE-01 §3 AI4, §4 rule 2 | PAIR_J and PAIR_K each create requests[p:<DEV_B>], neither having seen the other |
 | `pairing_class_at_control_ref` | validation | valid | IDENTITY-PROFILE-01 §2.3 | pairing_writes_own_request received after P3 (PAIR_J consumed): admitted, its class taken at control_ref P2 |
@@ -53,14 +57,15 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `request_conflicted_kind` | validation | `MISSING_REQUIRED_FIELD` | IDENTITY-PROFILE-01 §4 | Concurrent kind values 1 (root) and 0 (PAIR_J), delivered kindRoot then kindJ |
 | `request_conflicted_kind.reverse` | validation | `MISSING_REQUIRED_FIELD` | IDENTITY-PROFILE-01 §4 | Concurrent kind values 1 (root) and 0 (PAIR_J), delivered kindJ then kindRoot |
 | `request_conflicted_unknown_field` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | Concurrent values of the unknown field note of requests[p:<DEV_B>] (by PAIR_J and by the root) |
-| `request_conflicted_valid_invalid` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | Concurrent label values 'Laptop' and 7, delivered J2_label_ok then S_label_uint |
-| `request_conflicted_valid_invalid.reverse` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | Concurrent label values 'Laptop' and 7, delivered S_label_uint then J2_label_ok |
+| `request_conflicted_valid_invalid` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | Concurrent label values 'Laptop' and the uint 7, delivered J2_label_ok then S_label_uint |
+| `request_conflicted_valid_invalid.reverse` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | Concurrent label values 'Laptop' and the uint 7, delivered S_label_uint then J2_label_ok |
 | `request_conflicted_maps` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | Two concurrent maps under requests[p:<DEV_B>] (pairing_concurrent_same_key) |
 | `roster_bad_ref` | validation | `INVALID_RESOURCE_REF` | IDENTITY-PROFILE-01 §4 | A roster key of 42 characters |
 | `roster_conflicted_name` | validation | valid | IDENTITY-PROFILE-01 §4 | Concurrent names of roster[X] by OWNER and DEV_A: valid, a reader may show any value |
 | `device_entry_missing_keys_union` | behavioral | state | IDENTITY-PROFILE-01 §4 rule 2, §7.1 | Concurrent missing_keys maps of devices[p:<DEV_B>] (by DEV_B and by OWNER) |
 | `identity_snapshot_equivalence` | behavioral | state | IDENTITY-PROFILE-01 §2, SHARED-OBJECTS-PROFILE-01 §14 | The same document from its four units and from a Snapshot |
 | `pair_uri_roundtrip` | bytes | exact bytes | IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2 | The pairing link of PAIR_J for I |
+| `pair_uri_pair_l` | bytes | exact bytes | IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2 | The pairing link of PAIR_L for I (flow F08), registered and active at flow.pl_pairing_device_l |
 | `pair_uri_rejected_by_join_parser` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2 | An invitation parser receives the pairing link |
 | `join_uri_rejected_by_pair_parser` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2 | A pairing parser receives the invite_uri of LFCP-TEST-VECTORS-01 |
 | `pair_uri_device_mismatch` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2 | A pairing link whose device parameter is DEV_B while the secret is PAIR_J's |
@@ -88,6 +93,7 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `C2_reserved_key_later` | OWNER | 3 | P0_genesis_i | `a602855e696b4e93…` |
 | `C2_container_replaced` | OWNER | 3 | P0_genesis_i | `90b9d1af634b97ba…` |
 | `C2_text_label` | OWNER | 3 | P0_genesis_i | `0936dc3136437e97…` |
+| `C2_int_kind` | OWNER | 3 | P0_genesis_i | `09ec6878dc4b1a95…` |
 | `J1_own_request` | PAIR_J | 1 | P2_pairing_device | `06bbd835e6191451…` |
 | `J1_writes_roster` | PAIR_J | 1 | P2_pairing_device | `cf27419f8ccb1270…` |
 | `J1_deletes_roster_entry` | PAIR_J | 1 | P2_pairing_device | `78c0bfc53eacb92a…` |
@@ -100,6 +106,9 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `J1_edits_foreign_label` | PAIR_J | 1 | P2k_pairing_device_k | `9b29782d5366f5dd…` |
 | `J1_takes_over` | PAIR_J | 1 | P2k_pairing_device_k | `90a7508421845027…` |
 | `J1_replaces_map` | PAIR_J | 1 | P2k_pairing_device_k | `cf2026689413c549…` |
+| `L1_request` | PAIR_L | 1 | flow.pl_pairing_device_l | `e46dab72e1b69145…` |
+| `L1_second_installation` | PAIR_L | 1 | flow.pl_pairing_device_l | `bf97471a390278e1…` |
+| `L2_reuse` | PAIR_L | 2 | flow.pl_pairing_device_l | `b73051ca3d39d6da…` |
 | `J2_continues_own` | PAIR_J | 2 | P2_pairing_device | `949cf22abd40c0ff…` |
 | `K1_same_key` | PAIR_K | 1 | P2k_pairing_device_k | `8612879ce6a8e1d8…` |
 | `S_service_valid` | OWNER | 3 | P0_genesis_i | `25e1e9c83fc33ef8…` |
@@ -121,7 +130,7 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `J2_note_unknown` | PAIR_J | 2 | P2_pairing_device | `6947d5798656b81b…` |
 | `S_note_unknown_root` | OWNER | 3 | P2_pairing_device | `3f5087472910c4ce…` |
 | `J2_label_ok` | PAIR_J | 2 | P2_pairing_device | `bebe317bb15c5f12…` |
-| `S_label_uint` | OWNER | 3 | P2_pairing_device | `597df6184ca28bc5…` |
+| `S_label_uint` | OWNER | 3 | P2_pairing_device | `f0a2cd98d4f3cf7d…` |
 | `S_roster_bad_ref` | OWNER | 3 | P0_genesis_i | `da186d84c0125a67…` |
 | `S_name_root` | OWNER | 3 | P1_device_grant_dev_a_i | `381a45664f901809…` |
 | `S_name_dev_a` | DEV_A | 1 | P1_device_grant_dev_a_i | `62b1a887a76a7db5…` |
