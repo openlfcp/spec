@@ -1,5 +1,5 @@
 {
-  "description": "CDDL validation fixtures for LFCP-WIRE-01. Each entry validates one CBOR item against one rule of wire/LFCP-WIRE-01.cddl + wire/LFCP-WIRE-01.supplement.cddl. A \"case\" source decodes the hex value of a published LFCP-TEST-VECTORS-01 case (field of \"expected\" unless \"from\" says otherwise; \"prefix_hex\" is prepended first). A \"diag\" source is a hand-built, non-normative CBOR diagnostic-notation file in this directory (only must-fail structural mismatches remain). Run by scripts/check-cddl.rb.",
+  "description": "CDDL validation fixtures for LFCP-WIRE-01. Each entry validates one CBOR item against one rule of wire/LFCP-WIRE-01.cddl + wire/LFCP-WIRE-01.supplement.cddl. A \"case\" source decodes the hex value of a published LFCP-TEST-VECTORS-01 case (field of \"expected\" unless \"from\" says otherwise; \"prefix_hex\" is prepended first). A \"diag\" source is a hand-built, non-normative CBOR diagnostic-notation file in this directory (only must-fail structural mismatches remain). The invalid-device-* files cover the structural boundaries of LFCP-WIRE-01 \u00a77.3, \u00a717.4 and \u00a717.5 until LFCP-IDENTITY-TEST-VECTORS-01 publishes byte-exact cases. Run by scripts/check-cddl.rb.",
   "fixtures": [
     {
       "rule": "principal-descriptor",
@@ -1541,7 +1541,7 @@
         "from": "inputs"
       },
       "expect": "fail",
-      "note": "Type 9 is not a \u00a714 core type, so no typed-control-record alternative matches."
+      "note": "Type 9 is DEVICE_GRANT (\u00a714, \u00a717.4) since IDENTITY-01, but this body is a capability-grant-body, so the typed-control-record<9, device-grant-body> alternative does not match either; the vector's expected code is revisited with LFCP-IDENTITY-TEST-VECTORS-01."
     },
     {
       "rule": "snapshot",
@@ -1638,6 +1638,118 @@
       },
       "expect": "pass",
       "note": "Structurally valid: route version monotonicity is semantic (LFCP-WIRE-01 \u00a720, SPEC-PATCH-04)."
+    },
+    {
+      "rule": "device-certificate-payload",
+      "source": {
+        "diag": "invalid-device-certificate-payload-map.diag"
+      },
+      "expect": "fail"
+    },
+    {
+      "rule": "device-certificate-payload",
+      "source": {
+        "diag": "invalid-device-certificate-wrong-label.diag"
+      },
+      "expect": "fail"
+    },
+    {
+      "rule": "device-certificate-payload",
+      "source": {
+        "diag": "invalid-device-certificate-six-elements.diag"
+      },
+      "expect": "fail"
+    },
+    {
+      "rule": "device-certificate-payload",
+      "source": {
+        "diag": "invalid-device-certificate-kind-3.diag"
+      },
+      "expect": "fail"
+    },
+    {
+      "rule": "device-certificate-payload",
+      "source": {
+        "diag": "invalid-device-certificate-mask-empty.diag"
+      },
+      "expect": "fail"
+    },
+    {
+      "rule": "device-certificate-payload",
+      "source": {
+        "diag": "invalid-device-certificate-mask-33.diag"
+      },
+      "expect": "fail"
+    },
+    {
+      "rule": "device-certificate-payload",
+      "source": {
+        "diag": "invalid-device-certificate-scope-65.diag"
+      },
+      "expect": "fail"
+    },
+    {
+      "rule": "device-certificate-payload",
+      "source": {
+        "diag": "invalid-device-certificate-serial-15-bytes.diag"
+      },
+      "expect": "fail"
+    },
+    {
+      "rule": "device-certificate",
+      "source": {
+        "diag": "invalid-device-certificate-map-payload.diag"
+      },
+      "expect": "fail"
+    },
+    {
+      "rule": "device-grant-body",
+      "source": {
+        "diag": "invalid-device-grant-body-extra-key.diag"
+      },
+      "expect": "fail"
+    },
+    {
+      "rule": "device-grant-body",
+      "source": {
+        "diag": "invalid-device-grant-chain-empty.diag"
+      },
+      "expect": "fail"
+    },
+    {
+      "rule": "device-grant-body",
+      "source": {
+        "diag": "invalid-device-grant-chain-five.diag"
+      },
+      "expect": "fail"
+    },
+    {
+      "rule": "device-grant-body",
+      "source": {
+        "diag": "invalid-device-grant-root-descriptor.diag"
+      },
+      "expect": "fail"
+    },
+    {
+      "rule": "device-revoke-body",
+      "source": {
+        "diag": "invalid-device-revoke-body-field-3.diag"
+      },
+      "expect": "fail"
+    },
+    {
+      "rule": "device-revoke-body",
+      "source": {
+        "diag": "invalid-device-revoke-approval-31-bytes.diag"
+      },
+      "expect": "fail"
+    },
+    {
+      "rule": "device-revoke-body",
+      "source": {
+        "diag": "invalid-device-revoke-reason-negative.diag"
+      },
+      "expect": "fail"
     }
   ]
 }
