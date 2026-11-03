@@ -98,7 +98,7 @@ Admission (§3) takes, besides the change bytes and the signer's actor, the sign
 
 ### 2.4 Reserved root keys
 
-`recovery` and `succession` are reserved for recovery material pointers and root rotation state (W §108.1). A writer of this version MUST NOT create them; a reader preserves them. Unknown keys under the root, and unknown fields in entries, are preserved and ignored (SOP §17, §18 spirit).
+`recovery` and `succession` are reserved for recovery material pointers and root rotation state (W §108.1). A writer of this version MUST NOT create them; a reader preserves them. Admission has no rule for them: a change that is not the initial change and creates or writes them is admitted when §3 otherwise admits it, and the value is preserved as unknown data and never interpreted (the initial change that creates them is `INVALID_ROOT`, AI0). Unknown keys under the root, and unknown fields in entries, are preserved and ignored (SOP §17, §18 spirit).
 
 ---
 
