@@ -1,0 +1,45 @@
+{
+ "description": "Published vector values that changed between mvp-0.2-baseline.12 and mvp-0.4-baseline.1, each with the decision that approved it. Checked by scripts/check-baseline-changes.mjs; any other changed or removed value fails validation.",
+ "previous_baseline": "mvp-0.2-baseline.12",
+ "suites": [
+  {
+   "suite_file": "test-vectors/lfcp-wire-01/LFCP-TEST-VECTORS-01.json",
+   "changed": [
+    {
+     "path": "cases[id=unknown_core_type_C1].description",
+     "from": "C1 with the reserved core Control Record type 9",
+     "to": "C1 with the reserved core Control Record type 31",
+     "rule": "Orchestrator decision (2026-11-03), ADR 0011 and LFCP-WIRE-01 §14: type 9 is DEVICE_GRANT since IDENTITY-01, so the record no longer demonstrates an unknown core type (an identity-aware receiver rejects these bytes as MALFORMED_MESSAGE, since the body is not a device-grant-body). The case moves to type 31, the last reserved core code, so that it stays an unknown core type for the longest time; its rule, expected code and base case are unchanged."
+    },
+    {
+     "path": "cases[id=unknown_core_type_C1].derivation.mutation.to",
+     "from": 9,
+     "to": 31,
+     "rule": "Orchestrator decision (2026-11-03), ADR 0011 and LFCP-WIRE-01 §14: type 9 is DEVICE_GRANT since IDENTITY-01, so the record no longer demonstrates an unknown core type (an identity-aware receiver rejects these bytes as MALFORMED_MESSAGE, since the body is not a device-grant-body). The case moves to type 31, the last reserved core code, so that it stays an unknown core type for the longest time; its rule, expected code and base case are unchanged."
+    },
+    {
+     "path": "cases[id=unknown_core_type_C1].inputs.cose_sign1.hex",
+     "from": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e2a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203b141a9d660b274f73a042dbe47dcb1fe5b9f1d8d96f782cc8e4728695704adc0309045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a300a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50158201953f4ada1cb4e0f8662108152c82e7e074cbf4859c487461cbe41e5d623e3c2025820b5a22f5f5cbdc3a6f8742ec8b2bc9665d0170478bf5aca7528fdd5eefb94f26c018301020302805840c60d9ef8130cf2e28de9c154548df17ce890cf63410725d9a73caa326b39224ec2d926fbb9ea7ec8496c67d215aaa3cacb0eeb91c7d3ffef3d73607f16409c0e",
+     "to": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e3a6005820c8c3041cd1e87009c39a3fe5a02f4812b8ca2733f3aa6c0117530d4cfc3cc24101010258203b141a9d660b274f73a042dbe47dcb1fe5b9f1d8d96f782cc8e4728695704adc03181f045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a300a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50158201953f4ada1cb4e0f8662108152c82e7e074cbf4859c487461cbe41e5d623e3c2025820b5a22f5f5cbdc3a6f8742ec8b2bc9665d0170478bf5aca7528fdd5eefb94f26c01830102030280584052350aa95f23e91a5691348b22d3299cd8414c4ed01468d1dfe5f56692238f09887fc147618174273d0607c91c032cf0cb28f833fa1f49bd2b4e8b70368a9b05",
+     "rule": "Orchestrator decision (2026-11-03), ADR 0011 and LFCP-WIRE-01 §14: type 9 is DEVICE_GRANT since IDENTITY-01, so the record no longer demonstrates an unknown core type (an identity-aware receiver rejects these bytes as MALFORMED_MESSAGE, since the body is not a device-grant-body). The case moves to type 31, the last reserved core code, so that it stays an unknown core type for the longest time; its rule, expected code and base case are unchanged."
+    }
+   ]
+  },
+  {
+   "suite_file": "test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.json",
+   "changed": []
+  },
+  {
+   "suite_file": "test-vectors/shared-objects-01/SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json",
+   "changed": []
+  },
+  {
+   "suite_file": "test-vectors/shared-sections-01/SHARED-SECTIONS-TEST-VECTORS-01.json",
+   "changed": []
+  },
+  {
+   "suite_file": "test-vectors/shared-sections-01/MARKDOWN-SECTIONS-FIXTURES-01.json",
+   "changed": []
+  }
+ ]
+}
