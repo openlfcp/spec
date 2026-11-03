@@ -51,6 +51,7 @@ const I = RES.I;
 const actorOf = (label) => hex(sha(Buffer.from("OPENLFCP-SHARED-OBJECTS-ACTOR-v1"), I, principal(label).id));
 const pref = (label) => "p:" + b64u(principal(label).id);
 const rref = (name) => b64u(RES[name]);
+const SCOPE_FILL = Array.from({ length: 65 }, (_, k) => b64u(sha(Buffer.from(`LFCP-TV-IDENTITY-SCOPE-${String(k + 1).padStart(2, "0")}`))));
 const recordId = (cid) => W.get(cid).inputs.record_id.hex;
 
 // Writer classes at a Data Unit's control_ref, from I's Control state (§2.3).
@@ -656,6 +657,8 @@ function scenario(id, description, rule, inputs, expected, assertions) {
 {
   const profileMut = change("C2_profile_mutated", BASE, "OWNER", 3, "P0_genesis_i", (d) => { d.profile = S("org.openlfcp.identity.v2"); });
   changeCase("identity_doc_profile_mutated", profileMut.r, "IMMUTABLE_FIELD_MUTATED", "A later change by the root writing profile");
+  const both = change("C2_container_and_profile", BASE, "OWNER", 3, "P0_genesis_i", (d) => { d.roster = {}; d.profile = S("org.openlfcp.identity.v2"); });
+  changeCase("identity_doc_container_and_profile", both.r, "CONTAINER_REPLACED", "A change by the root replacing roster and writing profile: AI2 is reported before AI1");
   const replaced = change("C2_container_replaced", BASE, "OWNER", 3, "P0_genesis_i", (d) => { d.roster = {}; });
   changeCase("identity_doc_container_replaced", replaced.r, "CONTAINER_REPLACED", "A change by the root replacing roster with a new map");
   const text = change("C2_text_label", BASE, "OWNER", 3, "P0_genesis_i", (d) => { d.devices[pref("OWNER")].label = "Desktop (text)"; });
@@ -669,6 +672,10 @@ const own = asJ("J1_own_request", BASE, 1, (d) => { d.requests[pref("DEV_B")] = 
 changeCase("pairing_writes_own_request", own.r, null, "PAIR_J (control_ref P2) creates requests[p:<DEV_B>] with pairing = p:<PAIR_J>");
 changeCase("pairing_writes_roster", asJ("J1_writes_roster", BASE, 1, (d) => { d.roster[rref("X")].name = S("Renamed"); }).r, "UNAUTHORIZED_WRITER", "PAIR_J writes roster[X].name");
 changeCase("pairing_deletes_roster", asJ("J1_deletes_roster_entry", BASE, 1, (d) => { delete d.roster[rref("Y")]; }).r, "UNAUTHORIZED_WRITER", "PAIR_J deletes the roster entry of Y");
+changeCase("pairing_deletes_roster.container", asJ("J1_deletes_roster_container", BASE, 1, (d) => { delete d.roster; }).r, "CONTAINER_REPLACED",
+  "PAIR_J deletes the roster container itself: AI2 is reported before AI4");
+changeCase("pairing_text_in_roster", asJ("J1_text_in_roster", BASE, 1, (d) => { d.roster[rref("X")].name = "renamed as text"; }).r, "UNAUTHORIZED_WRITER",
+  "PAIR_J writes collaborative Text into roster[X]: AI4 is reported before AI3");
 changeCase("pairing_writes_devices", asJ("J1_writes_devices", BASE, 1, (d) => { d.devices[pref("OWNER")].label = S("Hijacked"); }).r, "UNAUTHORIZED_WRITER", "PAIR_J relabels devices[p:<OWNER>]");
 changeCase("pairing_writes_other_request", asJ("J1_two_requests", BASE, 1, (d) => {
   d.requests[pref("DEV_B")] = reqEntry("DEV_B", "PAIR_J");
@@ -722,13 +729,17 @@ changeCase("pairing_continues_own_request", cont.r, null, "PAIR_J writes platfor
 
 function stateCase(id, doc, container, key, want, description, extra = {}) {
   const v = validateEntry(doc, container, key);
-  const got = v.valid ? null : v.conflicted ? "CONFLICTED" : v.diagnostic;
+  // A conflicted entry with an invalid value reports that value's diagnostic (§4 rule 2: valid only if
+  // every value is valid); a conflict of valid values has no diagnostic of its own ("CONFLICTED").
+  const got = v.valid ? null : v.diagnostic ?? (v.conflicted ? "CONFLICTED" : null);
   check(id, got, want);
+  const conflictRule = "Rule 2: a field with concurrent values is valid only if every value is valid; for requests a conflicted field makes the entry invalid; a kind conflict makes any entry invalid.";
   return add({
     id, type: "validation", kind: "profile_entry", description,
-    rule: { section: "IDENTITY-PROFILE-01 §4", text: want === "CONFLICTED" ? "Rule 2: a field with concurrent values is valid only if every value is valid; for requests a conflicted field makes the entry invalid; a kind conflict makes any entry invalid." : "Validation is per entry; the first diagnostic in table order is reported." },
+    rule: { section: "IDENTITY-PROFILE-01 §4", text: v.conflicted ? conflictRule : "Validation is per entry; the first diagnostic in table order is reported." },
     inputs: { container, key, entry: view(values(doc[container], key).length > 1 ? doc[container] : doc[container][key]), snapshot: { b64url: b64u(A.save(doc)) }, ...extra },
-    expected: want === null ? { valid: true } : want === "CONFLICTED" ? { valid: false, error: { code: "PROFILE_INVALID", detail: "conflicted entry (§4 rule 2); no diagnostic of its own" } } : { valid: false, error: { code: "PROFILE_INVALID", diagnostic: want } },
+    expected: want === null ? { valid: true } : want === "CONFLICTED" ? { valid: false, error: { code: "PROFILE_INVALID", detail: "conflicted entry of valid values (§4 rule 2); no diagnostic of its own" } }
+      : { valid: false, error: { code: "PROFILE_INVALID", diagnostic: want, ...(v.conflicted ? { detail: "conflicted entry (§4 rule 2); the diagnostic of its invalid value" } : {}) } },
   });
 }
 
@@ -753,6 +764,14 @@ stateCase("request_service_without_scope", docWith("S_service_no_scope", (d) => 
   "requests", pref("BRIDGE_O"), "MISSING_REQUIRED_FIELD", "A kind-1 request without scope");
 stateCase("request_personal_with_scope", docWith("S_personal_scope", (d) => { d.requests[pref("DEV_B")] = reqEntry("DEV_B", "PAIR_J", { scope: [S(rref("X"))] }); }),
   "requests", pref("DEV_B"), "INVALID_FIELD_TYPE", "A kind-0 request with scope");
+stateCase("request_scope_64", docWith("S_scope_64", (d) => { d.requests[pref("BRIDGE_O")] = reqEntry("BRIDGE_O", "PAIR_J", { kind: 1, scope: SCOPE_FILL.slice(0, 64).map(S) }); }),
+  "requests", pref("BRIDGE_O"), null, "A kind-1 request with 64 Resources in scope");
+stateCase("request_scope_65", docWith("S_scope_65", (d) => { d.requests[pref("BRIDGE_O")] = reqEntry("BRIDGE_O", "PAIR_J", { kind: 1, scope: SCOPE_FILL.slice(0, 65).map(S) }); }),
+  "requests", pref("BRIDGE_O"), "INVALID_FIELD_TYPE", "A kind-1 request with 65 Resources in scope");
+stateCase("request_scope_repeat", docWith("S_scope_repeat", (d) => { d.requests[pref("BRIDGE_O")] = reqEntry("BRIDGE_O", "PAIR_J", { kind: 1, scope: [S(rref("X")), S(rref("X"))] }); }),
+  "requests", pref("BRIDGE_O"), "INVALID_FIELD_TYPE", "A kind-1 request whose scope repeats X");
+stateCase("request_scope_empty", docWith("S_scope_empty", (d) => { d.requests[pref("BRIDGE_O")] = reqEntry("BRIDGE_O", "PAIR_J", { kind: 1, scope: [] }); }),
+  "requests", pref("BRIDGE_O"), "INVALID_FIELD_TYPE", "A kind-1 request with an empty scope");
 stateCase("request_scope_bad_ref", docWith("S_scope_bad_ref", (d) => { d.requests[pref("BRIDGE_O")] = reqEntry("BRIDGE_O", "PAIR_J", { kind: 1, scope: [S(rref("X").slice(0, 42))] }); }),
   "requests", pref("BRIDGE_O"), "INVALID_RESOURCE_REF", "A kind-1 request whose scope element has 42 characters");
 stateCase("request_key_descriptor_mismatch", docWith("S_key_mismatch", (d) => { d.requests[pref("DEV_B")] = reqEntry("DEV_X", "PAIR_J"); }),
@@ -772,14 +791,14 @@ stateCase("request_bad_timestamp", docWith("S_bad_timestamp", (d) => { d.request
   for (const [suffix, order] of [["", ["kindRoot", "kindJ"]], [".reverse", ["kindJ", "kindRoot"]]]) {
     const parts = { kindRoot: kindRoot.r.bytes, kindJ: kindJ.r.bytes };
     const [m] = A.applyChanges(A.clone(own.doc), order.map((o) => parts[o]));
-    stateCase(`request_conflicted_kind${suffix}`, m, "requests", pref("DEV_B"), "CONFLICTED",
+    stateCase(`request_conflicted_kind${suffix}`, m, "requests", pref("DEV_B"), "MISSING_REQUIRED_FIELD",
       `Concurrent kind values 1 (root) and 0 (PAIR_J), delivered ${order.join(" then ")}`, { changes: order.map((o) => (o === "kindRoot" ? "S_kind_root" : "J2_kind_0")).join(",") });
   }
   const labelOk = asJ("J2_label_ok", own.doc, 2, (d) => { d.requests[pref("DEV_B")].label = S("Laptop"); });
   const labelBad = change("S_label_uint", own.doc, "OWNER", 3, "P2_pairing_device", (d) => { d.requests[pref("DEV_B")].label = 7; });
   for (const [suffix, order] of [["", [labelOk, labelBad]], [".reverse", [labelBad, labelOk]]]) {
     const [m] = A.applyChanges(A.clone(own.doc), order.map((o) => o.r.bytes));
-    stateCase(`request_conflicted_valid_invalid${suffix}`, m, "requests", pref("DEV_B"), "CONFLICTED",
+    stateCase(`request_conflicted_valid_invalid${suffix}`, m, "requests", pref("DEV_B"), "INVALID_FIELD_TYPE",
       `Concurrent label values 'Laptop' and 7, delivered ${order.map((o) => o.r.name).join(" then ")}`, { changes: order.map((o) => o.r.name).join(",") });
   }
   const merged = replay(["C0_initial", "C1_fill", "J1_own_request", "K1_same_key"]).doc;

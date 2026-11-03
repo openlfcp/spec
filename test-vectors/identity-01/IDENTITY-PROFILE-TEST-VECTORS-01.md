@@ -17,11 +17,14 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `identity_doc_initial_in_unit_2` | validation | `INVALID_ROOT` | IDENTITY-PROFILE-01 §2.2, §3 AI0 | A well-formed change without dependencies, Automerge sequence 1, carried by the root's Data Unit with actor sequence 2 |
 | `identity_doc_initial_then_fill` | behavioral | state | IDENTITY-PROFILE-01 §2.2, §5.1 | The two changes of §5.1, in both orders, and the same state from a Snapshot |
 | `identity_doc_profile_mutated` | validation | `IMMUTABLE_FIELD_MUTATED` | IDENTITY-PROFILE-01 §3 AI1 | A later change by the root writing profile |
+| `identity_doc_container_and_profile` | validation | `CONTAINER_REPLACED` | IDENTITY-PROFILE-01 §3 AI2 | A change by the root replacing roster and writing profile: AI2 is reported before AI1 |
 | `identity_doc_container_replaced` | validation | `CONTAINER_REPLACED` | IDENTITY-PROFILE-01 §3 AI2 | A change by the root replacing roster with a new map |
 | `identity_doc_text_field` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §3 AI3 | A change by the root writing devices[p:OWNER].label as collaborative Text |
 | `pairing_writes_own_request` | validation | valid | IDENTITY-PROFILE-01 §3 | PAIR_J (control_ref P2) creates requests[p:<DEV_B>] with pairing = p:<PAIR_J> |
 | `pairing_writes_roster` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §3 AI4 | PAIR_J writes roster[X].name |
 | `pairing_deletes_roster` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §3 AI4 | PAIR_J deletes the roster entry of Y |
+| `pairing_deletes_roster.container` | validation | `CONTAINER_REPLACED` | IDENTITY-PROFILE-01 §3 AI2 | PAIR_J deletes the roster container itself: AI2 is reported before AI4 |
+| `pairing_text_in_roster` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §3 AI4 | PAIR_J writes collaborative Text into roster[X]: AI4 is reported before AI3 |
 | `pairing_writes_devices` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §3 AI4 | PAIR_J relabels devices[p:<OWNER>] |
 | `pairing_writes_other_request` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §3 AI4 | PAIR_J creates two request entries in one change |
 | `pairing_wrong_pairing_field` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §3 AI4 | PAIR_J creates requests[p:<DEV_B>] with pairing = p:<DEV_A> |
@@ -36,16 +39,20 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `request_service_valid` | validation | valid | IDENTITY-PROFILE-01 §4 | A kind-1 request with scope [X] |
 | `request_service_without_scope` | validation | `MISSING_REQUIRED_FIELD` | IDENTITY-PROFILE-01 §4 | A kind-1 request without scope |
 | `request_personal_with_scope` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | A kind-0 request with scope |
+| `request_scope_64` | validation | valid | IDENTITY-PROFILE-01 §4 | A kind-1 request with 64 Resources in scope |
+| `request_scope_65` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | A kind-1 request with 65 Resources in scope |
+| `request_scope_repeat` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | A kind-1 request whose scope repeats X |
+| `request_scope_empty` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | A kind-1 request with an empty scope |
 | `request_scope_bad_ref` | validation | `INVALID_RESOURCE_REF` | IDENTITY-PROFILE-01 §4 | A kind-1 request whose scope element has 42 characters |
 | `request_key_descriptor_mismatch` | validation | `INVALID_DESCRIPTOR` | IDENTITY-PROFILE-01 §4 | Key p:<DEV_B>, descriptor of DEV_X |
 | `request_bad_descriptor` | validation | `INVALID_DESCRIPTOR` | IDENTITY-PROFILE-01 §4 | A descriptor that is not the CBOR of a principal-descriptor |
 | `request_missing_label` | validation | `MISSING_REQUIRED_FIELD` | IDENTITY-PROFILE-01 §4 | A request without label |
 | `request_kind_2` | validation | `INVALID_ENUM_VALUE` | IDENTITY-PROFILE-01 §4 | A request with kind 2 |
 | `request_bad_timestamp` | validation | `INVALID_TIMESTAMP` | IDENTITY-PROFILE-01 §4 | requested_at '2026-11-03 10:00:00' (not RFC 3339 UTC) |
-| `request_conflicted_kind` | validation | `PROFILE_INVALID` | IDENTITY-PROFILE-01 §4 | Concurrent kind values 1 (root) and 0 (PAIR_J), delivered kindRoot then kindJ |
-| `request_conflicted_kind.reverse` | validation | `PROFILE_INVALID` | IDENTITY-PROFILE-01 §4 | Concurrent kind values 1 (root) and 0 (PAIR_J), delivered kindJ then kindRoot |
-| `request_conflicted_valid_invalid` | validation | `PROFILE_INVALID` | IDENTITY-PROFILE-01 §4 | Concurrent label values 'Laptop' and 7, delivered J2_label_ok then S_label_uint |
-| `request_conflicted_valid_invalid.reverse` | validation | `PROFILE_INVALID` | IDENTITY-PROFILE-01 §4 | Concurrent label values 'Laptop' and 7, delivered S_label_uint then J2_label_ok |
+| `request_conflicted_kind` | validation | `MISSING_REQUIRED_FIELD` | IDENTITY-PROFILE-01 §4 | Concurrent kind values 1 (root) and 0 (PAIR_J), delivered kindRoot then kindJ |
+| `request_conflicted_kind.reverse` | validation | `MISSING_REQUIRED_FIELD` | IDENTITY-PROFILE-01 §4 | Concurrent kind values 1 (root) and 0 (PAIR_J), delivered kindJ then kindRoot |
+| `request_conflicted_valid_invalid` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | Concurrent label values 'Laptop' and 7, delivered J2_label_ok then S_label_uint |
+| `request_conflicted_valid_invalid.reverse` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | Concurrent label values 'Laptop' and 7, delivered S_label_uint then J2_label_ok |
 | `request_conflicted_maps` | validation | `PROFILE_INVALID` | IDENTITY-PROFILE-01 §4 | Two concurrent maps under requests[p:<DEV_B>] (pairing_concurrent_same_key) |
 | `roster_bad_ref` | validation | `INVALID_RESOURCE_REF` | IDENTITY-PROFILE-01 §4 | A roster key of 42 characters |
 | `roster_conflicted_name` | validation | valid | IDENTITY-PROFILE-01 §4 | Concurrent names of roster[X] by OWNER and DEV_A: valid, a reader may show any value |
@@ -75,11 +82,14 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `C1x_seq_2_without_deps` | OWNER | 1 | P0_genesis_i | `4b8ddbb5760b4010…` |
 | `C0u2_initial_in_unit_2` | OWNER | 2 | P0_genesis_i | `5adf726cee381e65…` |
 | `C2_profile_mutated` | OWNER | 3 | P0_genesis_i | `dbe499d4b4a0e533…` |
+| `C2_container_and_profile` | OWNER | 3 | P0_genesis_i | `b086f8d51b8a9fcf…` |
 | `C2_container_replaced` | OWNER | 3 | P0_genesis_i | `2cf3aff0790789ed…` |
 | `C2_text_label` | OWNER | 3 | P0_genesis_i | `c211ffef979f6b18…` |
 | `J1_own_request` | PAIR_J | 1 | P2_pairing_device | `6dac96e97ce54820…` |
 | `J1_writes_roster` | PAIR_J | 1 | P2_pairing_device | `9da009c8dac2dd80…` |
 | `J1_deletes_roster_entry` | PAIR_J | 1 | P2_pairing_device | `88aeace52e02aadc…` |
+| `J1_deletes_roster_container` | PAIR_J | 1 | P2_pairing_device | `709ed330f667570c…` |
+| `J1_text_in_roster` | PAIR_J | 1 | P2_pairing_device | `d9d5ab07fbcd8d1f…` |
 | `J1_writes_devices` | PAIR_J | 1 | P2_pairing_device | `485ba3cee81cab9f…` |
 | `J1_two_requests` | PAIR_J | 1 | P2_pairing_device | `62f060192e674f95…` |
 | `J1_wrong_pairing` | PAIR_J | 1 | P2_pairing_device | `35e7a7ea1da2d446…` |
@@ -92,6 +102,10 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `S_service_valid` | OWNER | 3 | P0_genesis_i | `224ca22652f4ba7d…` |
 | `S_service_no_scope` | OWNER | 3 | P0_genesis_i | `e8cb569fc3df9c6c…` |
 | `S_personal_scope` | OWNER | 3 | P0_genesis_i | `0c426adb1d798655…` |
+| `S_scope_64` | OWNER | 3 | P0_genesis_i | `55d2eb20d7f45934…` |
+| `S_scope_65` | OWNER | 3 | P0_genesis_i | `bef8a30b1452b52f…` |
+| `S_scope_repeat` | OWNER | 3 | P0_genesis_i | `660625adfca7c714…` |
+| `S_scope_empty` | OWNER | 3 | P0_genesis_i | `a495b70c7283cdf7…` |
 | `S_scope_bad_ref` | OWNER | 3 | P0_genesis_i | `605009450d37176d…` |
 | `S_key_mismatch` | OWNER | 3 | P0_genesis_i | `1ac8263ec9a967e4…` |
 | `S_bad_descriptor` | OWNER | 3 | P0_genesis_i | `3d595a5e63c36cb7…` |
