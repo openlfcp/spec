@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Protocol vector validator (LFCP-004 schema, LFCP-007 checks).
 //
-// - every test-vectors/*/*-TEST-VECTORS-*.json suite MUST pass the
+// - every test-vectors/*/*-TEST-VECTORS-*.json and *-FLOW-FIXTURES-*.json suite MUST pass the
 //   lfcp-vector-format/1 schema (except the directories in OWN_FORMAT) and the checks in lib/vector-checks.mjs
 //   (duplicate keys and ids, canonical b64url, hash recomputation,
 //   deterministic encodings, cross-references);
@@ -100,7 +100,7 @@ const fail = (line) => {
 const OWN_FORMAT = new Map();
 const suites = readdirSync(join(root, "test-vectors"), { withFileTypes: true })
   .filter((entry) => entry.isDirectory() && !OWN_FORMAT.has(entry.name))
-  .flatMap((entry) => listJson(join(root, "test-vectors", entry.name), /-TEST-VECTORS-\d+\.json$/));
+  .flatMap((entry) => listJson(join(root, "test-vectors", entry.name), /-(TEST-VECTORS|FLOW-FIXTURES)-\d+\.json$/));
 if (suites.length === 0) fail("- - / no-suites: no vector suites found under test-vectors/");
 const verified = [];
 for (const path of suites) {

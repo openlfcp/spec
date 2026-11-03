@@ -112,6 +112,31 @@ export const HASH_RULES = [
     pairs: (c) => [["/expected/snapshot_id/hex", c.expected.snapshot_id?.hex, sha256(bytes(c.expected.cose_sign1.hex))]],
   },
   {
+    field: "certificate_id, payload_digest",
+    section:
+      "LFCP-WIRE-01 §7.3 rule 6: certificate ID = SHA-256(exact COSE_Sign1 bytes) (§10.6); payload digest = SHA-256(exact payload bytes)",
+    applies: (c) => c.type === "bytes" && c.kind === "device_certificate",
+    pairs: (c) => [
+      ["/expected/certificate_id/hex", c.expected.certificate_id?.hex, sha256(bytes(c.expected.cose_sign1.hex))],
+      ["/expected/payload_digest/hex", c.expected.payload_digest?.hex, sha256(bytes(c.expected.payload_cbor.hex))],
+    ],
+  },
+  {
+    field: "object_id (signed_object)",
+    section: "LFCP-WIRE-01 §10.6: object_id = SHA-256(exact COSE_Sign1 bytes)",
+    applies: (c) => c.type === "bytes" && c.kind === "signed_object",
+    pairs: (c) => [["/expected/object_id/hex", c.expected.object_id?.hex, sha256(bytes(c.expected.cose_sign1.hex))]],
+  },
+  {
+    field: "inputs record_id, object_id, certificate_id",
+    section: "LFCP-WIRE-01 §10.6 and §13: the ID of a validation case's object is SHA-256(inputs.cose_sign1)",
+    applies: (c) => c.type === "validation" && typeof c.inputs?.cose_sign1?.hex === "string",
+    pairs: (c) =>
+      ["record_id", "object_id", "certificate_id"]
+        .filter((f) => typeof c.inputs[f]?.hex === "string")
+        .map((f) => [`/inputs/${f}/hex`, c.inputs[f].hex, sha256(bytes(c.inputs.cose_sign1.hex))]),
+  },
+  {
     field: "conflicting_D2_id",
     section: "LFCP-WIRE-01 §26 and §10.6: SHA-256(exact COSE_Sign1 bytes)",
     applies: (c) => c.inputs?.conflicting_D2_cose && c.inputs?.conflicting_D2_id,
