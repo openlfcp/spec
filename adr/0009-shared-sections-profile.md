@@ -133,14 +133,17 @@ written in several.
 **Abandoned import.** The creator continues an interrupted import from its
 local import journal (CMP §8), with the same Principal and its actor
 state. A section left without `ready` can only be continued by its
-creator or deleted locally; it is never offered for invitation. Several
-devices of one Principal share one Automerge actor in a Resource (P §8);
-continuing an import on another device therefore needs that device to hold
-the Principal's actor state, not only its keys. Two devices writing as one
+creator or deleted locally; it is never offered for invitation. One
+Principal has one Automerge actor in a Resource (P §8) and one writing
+installation (LFCP-WIRE-01 §7.1, reworded by ADR 0011: a human's other
+installations are other Principals, devices of one root); continuing an
+import on another installation therefore needs that installation to hold
+the Principal's actor state, not only its keys, which is a restored copy,
+not a second device. Two installations writing as one
 Principal concurrently equivocate (LFCP-WIRE-01 §26.2), and the receivers'
 rules exclude both units; the Principal's later work is re-issued and held
 until the rebuild (POST-001). An implementation continues an import only
-from the device that holds the actor state, or from a restored copy of it.
+from the installation that holds the actor state, or from a restored copy of it.
 
 **Authoring budgets.** So that both SDKs write histories every receiver
 accepts, a writer puts in one change at most:
