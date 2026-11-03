@@ -1274,7 +1274,7 @@ A verifier MUST confirm:
 5. the commit itself is signed by that Principal;
 6. the expected next Control Sequence matches the commit sequence.
 
-A commit that fails any of these checks is rejected with `AUTHORIZATION_FAILED`, except that an offer or acceptance whose signature does not verify is rejected with `INVALID_SIGNATURE`.
+A commit that fails any of these checks is rejected with `AUTHORIZATION_FAILED`, except that an offer or acceptance whose signature does not verify is rejected with `INVALID_SIGNATURE`. In the ordering of Section 62 the signature class comes before the authority class, with or without field `2`: an acceptance signed by a Principal other than the one its item 4 requires (the Principal the offer names, or the leaf device of field `2`) is `INVALID_SIGNATURE` before item 3 (the offer names the accepting Principal) or item 5 is checked, and a mismatch between the acceptance's field `2` and the offer's field `3` is found only in a commit whose offer, acceptance and commit signatures all verify, as `AUTHORIZATION_FAILED`.
 
 After commit, the accepting Principal becomes the Resource owner. The former owner keeps no implicit authority; the Capability Grants it issued stay active.
 
@@ -3121,7 +3121,7 @@ rootOf(P)        = devices[P].root if bound(P) (registered, suspended, revoked o
 direct(P, A)     = Section 80 steps 2 to 7 for Principal P and ability A    ; owner => true
 ```
 
-**Ability.** For a standard ability `A` (codes `1` to `11`; codes `12` and `13` are tested on the mask directly in Sections 17.4 and 17.5, never through `holds`), Principal `P` holds `A` at `H`:
+**Ability.** For a standard ability `A` (codes `1` to `10`; codes `12` and `13` are tested on the mask directly in Sections 17.4 and 17.5, never through `holds`), Principal `P` holds `A` at `H`:
 
 ```text
 holds(P, A):
@@ -3131,6 +3131,8 @@ holds(P, A):
     return A in d.mask and direct(d.root, A)
   return direct(P, A)
 ```
+
+`holds(P, 11)` is false for every bound Principal: `invite/claim` is a property of an invitation grant (Section 18), a device holds no grant, and the owner's implicit abilities do not include it, so `11` in a certificate mask confers nothing (Section 7.3 rule 4) even when the root is the subject of an invitation grant or `13` is in the mask. The Key Package exception of Section 25.2 and the read rule of Section 41 therefore never apply to a device through `11`; `owner/act` confers the standard abilities `1` to `10` and the owner-only actions, nothing else.
 
 **Owner-only actions.** Where this document requires "the owner" (not an ability): Genesis signing (Section 15), a Capability Grant without a parent (Section 17.2), revoking any grant (Section 17.3), `COORDINATOR_RECOVERY` (Section 22), a transfer offer (Section 23.1), an extension-type record (Section 14):
 
