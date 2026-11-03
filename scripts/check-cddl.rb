@@ -45,6 +45,12 @@ end
 class RootedParser < CDDL::Parser
   def with_root(name)
     @root_name = name
+    # The tool's failure message (validate_diag) is initialised once per parser
+    # and appended to on every failed comparison; for array rules with
+    # occurrence ranges each failure quotes the previous message, so a parser
+    # reused across many non-matching instances grows it geometrically. Start
+    # each validation from an empty message.
+    @last_message = +""
     self
   end
 
