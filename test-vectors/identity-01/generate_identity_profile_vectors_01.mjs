@@ -314,7 +314,21 @@ function isTimestamp(v) {
 }
 const STATE_ORDER = ["INVALID_ROOT", "MISSING_REQUIRED_FIELD", "INVALID_FIELD_TYPE", "INVALID_RESOURCE_REF", "INVALID_PRINCIPAL_REF", "INVALID_DESCRIPTOR", "INVALID_ENUM_VALUE", "INVALID_TIMESTAMP", "INVALID_EXTENSION_NAMESPACE"];
 const isStr = (v) => A.isImmutableString(v);
-const isUint = (v) => typeof v === "number" && Number.isInteger(v) && v >= 0;
+// A uint is read back as a bigint; an Automerge int (a JS number) is not a uint (§2.1).
+const isUint = (v) => typeof v === "bigint" && v >= 0n;
+/** Writes a plain value on live proxies: numbers as A.Uint, strings as ImmutableString (Automerge turns a Uint nested in a literal into a map). */
+function put(target, key, value) {
+  if (A.isImmutableString(value) || typeof value === "boolean" || value === null) target[key] = value;
+  else if (typeof value === "number") target[key] = new A.Uint(value);
+  else if (typeof value === "string") target[key] = S(value);
+  else if (Array.isArray(value)) {
+    target[key] = [];
+    value.forEach((v, i) => put(target[key], i, v));
+  } else {
+    target[key] = {};
+    for (const [k, v] of Object.entries(value)) put(target[key], k, v);
+  }
+}
 
 function rootDiagnostic(doc, owner = "OWNER") {
   if (!isStr(doc.profile) || str(doc.profile) !== PROFILE) return "INVALID_ROOT";
@@ -341,20 +355,26 @@ function entryDiagnostic(container, key, entry) {
     for (const f of ["label", "kind"]) if (field(f) === undefined) found.add("MISSING_REQUIRED_FIELD");
     if (field("label") !== undefined && !isStr(field("label"))) found.add("INVALID_FIELD_TYPE");
     if (field("kind") !== undefined && !isUint(field("kind"))) found.add("INVALID_FIELD_TYPE");
-    else if (field("kind") !== undefined && field("kind") > 1) found.add("INVALID_ENUM_VALUE");
+    else if (field("kind") !== undefined && field("kind") > 1n) found.add("INVALID_ENUM_VALUE");
     if (field("added_at") !== undefined && !(isStr(field("added_at")) && isTimestamp(str(field("added_at"))))) found.add("INVALID_TIMESTAMP");
     const mk = field("missing_keys");
-    if (mk !== undefined) for (const k of Object.keys(mk)) if (!isResourceRef(k)) found.add("INVALID_RESOURCE_REF");
+    if (mk !== undefined) {
+      if (!mk || typeof mk !== "object" || isStr(mk) || Array.isArray(mk)) found.add("INVALID_FIELD_TYPE");
+      else for (const [k, eps] of Object.entries(mk)) {
+        if (!isResourceRef(k)) found.add("INVALID_RESOURCE_REF");
+        if (!Array.isArray(eps) || !eps.every(isUint)) found.add("INVALID_FIELD_TYPE");
+      }
+    }
   } else {
     if (!isPrincipalRef(key)) found.add("INVALID_PRINCIPAL_REF");
     for (const f of ["descriptor", "pairing", "label", "kind"]) if (field(f) === undefined) found.add("MISSING_REQUIRED_FIELD");
     const kind = field("kind");
     if (kind !== undefined && !isUint(kind)) found.add("INVALID_FIELD_TYPE");
-    else if (kind !== undefined && kind > 1) found.add("INVALID_ENUM_VALUE");
+    else if (kind !== undefined && kind > 1n) found.add("INVALID_ENUM_VALUE");
     const scope = field("scope");
-    if (kind === 1 && scope === undefined) found.add("MISSING_REQUIRED_FIELD");
+    if (kind === 1n && scope === undefined) found.add("MISSING_REQUIRED_FIELD");
     if (scope !== undefined) {
-      if (kind === 0 || !Array.isArray(scope) || scope.length === 0 || scope.length > 64 || !scope.every(isStr) || new Set(scope.map(str)).size !== scope.length) found.add("INVALID_FIELD_TYPE");
+      if (kind === 0n || !Array.isArray(scope) || scope.length === 0 || scope.length > 64 || !scope.every(isStr) || new Set(scope.map(str)).size !== scope.length) found.add("INVALID_FIELD_TYPE");
       else if (!scope.every((s) => isResourceRef(str(s)))) found.add("INVALID_RESOURCE_REF");
     }
     for (const f of ["descriptor", "pairing", "label"]) if (field(f) !== undefined && !isStr(field(f))) found.add("INVALID_FIELD_TYPE");
@@ -418,6 +438,7 @@ const plainEntry = (entry) => Object.fromEntries(Object.keys(entry).map((k) => [
 /** A JSON view of the document: scalars as values, concurrent values as `<field>_conflict_set`. */
 function view(obj) {
   if (A.isImmutableString(obj)) return obj.toString();
+  if (typeof obj === "bigint") return Number(obj);
   if (Array.isArray(obj)) return obj.map(view);
   if (obj && typeof obj === "object") {
     const out = {};
@@ -459,7 +480,7 @@ const C0 = change("C0_initial", empty, "OWNER", 1, "P0_genesis_i", initialFn());
 const C1 = change("C1_fill", C0.doc, "OWNER", 2, "P0_genesis_i", (d) => {
   d.roster[rref("X")] = ROSTER_X;
   d.roster[rref("Y")] = ROSTER_Y;
-  d.devices[pref("OWNER")] = { label: S("Desktop"), kind: 0 };
+  put(d.devices, pref("OWNER"), { label: S("Desktop"), kind: 0 });
 });
 const BASE = C1.doc;
 
@@ -511,6 +532,7 @@ const RULES = {
   AI2: ["IDENTITY-PROFILE-01 §3 AI2", "A change does not replace or delete roster, devices, requests or extensions."],
   AI3: ["IDENTITY-PROFILE-01 §3 AI3", "Collaborative Text is never used."],
   AI4: ["IDENTITY-PROFILE-01 §3 AI4", "A pairing or other writer creates or writes into one entry requests[k] that it owns, deletes nothing and replaces no entry map; pairing stays its own PrincipalRef."],
+  RESERVED: ["IDENTITY-PROFILE-01 §2.4", "Admission has no rule for the reserved root keys: a later change that writes them is admitted when §3 otherwise admits it; the value is preserved uninterpreted."],
   OK: ["IDENTITY-PROFILE-01 §3", "The change passes the checks of its bytes, the sequence checks and AI0 to AI4."],
 };
 
@@ -659,6 +681,9 @@ function scenario(id, description, rule, inputs, expected, assertions) {
   changeCase("identity_doc_profile_mutated", profileMut.r, "IMMUTABLE_FIELD_MUTATED", "A later change by the root writing profile");
   const both = change("C2_container_and_profile", BASE, "OWNER", 3, "P0_genesis_i", (d) => { d.roster = {}; d.profile = S("org.openlfcp.identity.v2"); });
   changeCase("identity_doc_container_and_profile", both.r, "CONTAINER_REPLACED", "A change by the root replacing roster and writing profile: AI2 is reported before AI1");
+  const reserved = change("C2_reserved_key_later", BASE, "OWNER", 3, "P0_genesis_i", (d) => { d.recovery = { note: S("reserved") }; });
+  changeCase("identity_doc_reserved_key_later", reserved.r, null, "A later change by the root that creates the reserved key recovery: admitted, preserved, never interpreted",
+    { rule: "RESERVED" });
   const replaced = change("C2_container_replaced", BASE, "OWNER", 3, "P0_genesis_i", (d) => { d.roster = {}; });
   changeCase("identity_doc_container_replaced", replaced.r, "CONTAINER_REPLACED", "A change by the root replacing roster with a new map");
   const text = change("C2_text_label", BASE, "OWNER", 3, "P0_genesis_i", (d) => { d.devices[pref("OWNER")].label = "Desktop (text)"; });
@@ -668,7 +693,7 @@ function scenario(id, description, rule, inputs, expected, assertions) {
 // ---- pairing writers (§3 AI4) ----
 
 const asJ = (name, doc, unitSeq, fn, controlRef = "P2_pairing_device") => change(name, doc, "PAIR_J", unitSeq, controlRef, fn);
-const own = asJ("J1_own_request", BASE, 1, (d) => { d.requests[pref("DEV_B")] = reqEntry("DEV_B", "PAIR_J"); });
+const own = asJ("J1_own_request", BASE, 1, (d) => { put(d.requests, pref("DEV_B"), reqEntry("DEV_B", "PAIR_J")); });
 changeCase("pairing_writes_own_request", own.r, null, "PAIR_J (control_ref P2) creates requests[p:<DEV_B>] with pairing = p:<PAIR_J>");
 changeCase("pairing_writes_roster", asJ("J1_writes_roster", BASE, 1, (d) => { d.roster[rref("X")].name = S("Renamed"); }).r, "UNAUTHORIZED_WRITER", "PAIR_J writes roster[X].name");
 changeCase("pairing_deletes_roster", asJ("J1_deletes_roster_entry", BASE, 1, (d) => { delete d.roster[rref("Y")]; }).r, "UNAUTHORIZED_WRITER", "PAIR_J deletes the roster entry of Y");
@@ -678,12 +703,12 @@ changeCase("pairing_text_in_roster", asJ("J1_text_in_roster", BASE, 1, (d) => { 
   "PAIR_J writes collaborative Text into roster[X]: AI4 is reported before AI3");
 changeCase("pairing_writes_devices", asJ("J1_writes_devices", BASE, 1, (d) => { d.devices[pref("OWNER")].label = S("Hijacked"); }).r, "UNAUTHORIZED_WRITER", "PAIR_J relabels devices[p:<OWNER>]");
 changeCase("pairing_writes_other_request", asJ("J1_two_requests", BASE, 1, (d) => {
-  d.requests[pref("DEV_B")] = reqEntry("DEV_B", "PAIR_J");
-  d.requests[pref("DEV_X")] = reqEntry("DEV_X", "PAIR_J");
+  put(d.requests, pref("DEV_B"), reqEntry("DEV_B", "PAIR_J"));
+  put(d.requests, pref("DEV_X"), reqEntry("DEV_X", "PAIR_J"));
 }).r, "UNAUTHORIZED_WRITER", "PAIR_J creates two request entries in one change");
-changeCase("pairing_wrong_pairing_field", asJ("J1_wrong_pairing", BASE, 1, (d) => { d.requests[pref("DEV_B")] = reqEntry("DEV_B", "DEV_A"); }).r,
+changeCase("pairing_wrong_pairing_field", asJ("J1_wrong_pairing", BASE, 1, (d) => { put(d.requests, pref("DEV_B"), reqEntry("DEV_B", "DEV_A")); }).r,
   "UNAUTHORIZED_WRITER", "PAIR_J creates requests[p:<DEV_B>] with pairing = p:<DEV_A>");
-const foreign = change("K1_foreign_request", BASE, "PAIR_K", 1, "P2k_pairing_device_k", (d) => { d.requests[pref("DEV_X")] = reqEntry("DEV_X", "PAIR_K"); });
+const foreign = change("K1_foreign_request", BASE, "PAIR_K", 1, "P2k_pairing_device_k", (d) => { put(d.requests, pref("DEV_X"), reqEntry("DEV_X", "PAIR_K")); });
 changeCase("pairing_foreign_request.created", foreign.r, null, "PAIR_K (control_ref P2k) creates requests[p:<DEV_X>]: the foreign request of the next cases");
 changeCase("pairing_edits_foreign_request_label", asJ("J1_edits_foreign_label", foreign.doc, 1, (d) => { d.requests[pref("DEV_X")].label = S("mine now"); }, "P2k_pairing_device_k").r,
   "UNAUTHORIZED_WRITER", "PAIR_J edits the label of PAIR_K's request");
@@ -691,12 +716,12 @@ changeCase("pairing_takes_over_foreign_request", asJ("J1_takes_over", foreign.do
   d.requests[pref("DEV_X")].pairing = S(pref("PAIR_J"));
   d.requests[pref("DEV_X")].label = S("taken");
 }, "P2k_pairing_device_k").r, "UNAUTHORIZED_WRITER", "PAIR_J rewrites pairing and label of PAIR_K's request in one change");
-changeCase("pairing_replaces_foreign_request_map", asJ("J1_replaces_map", foreign.doc, 1, (d) => { d.requests[pref("DEV_X")] = reqEntry("DEV_X", "PAIR_J"); }, "P2k_pairing_device_k").r,
+changeCase("pairing_replaces_foreign_request_map", asJ("J1_replaces_map", foreign.doc, 1, (d) => { put(d.requests, pref("DEV_X"), reqEntry("DEV_X", "PAIR_J")); }, "P2k_pairing_device_k").r,
   "UNAUTHORIZED_WRITER", "PAIR_J replaces PAIR_K's request map with its own");
 const cont = asJ("J2_continues_own", own.doc, 2, (d) => { d.requests[pref("DEV_B")].platform = S("laptop"); });
 changeCase("pairing_continues_own_request", cont.r, null, "PAIR_J writes platform into its own request (its second unit)");
 {
-  const k = change("K1_same_key", BASE, "PAIR_K", 1, "P2k_pairing_device_k", (d) => { d.requests[pref("DEV_B")] = reqEntry("DEV_B", "PAIR_K"); });
+  const k = change("K1_same_key", BASE, "PAIR_K", 1, "P2k_pairing_device_k", (d) => { put(d.requests, pref("DEV_B"), reqEntry("DEV_B", "PAIR_K")); });
   check("pairing_concurrent_same_key.K", admit(k.r), null);
   check("pairing_concurrent_same_key.J", admit(own.r), null);
   const merged = replay(["C0_initial", "C1_fill", "J1_own_request", "K1_same_key"]).doc;
@@ -707,7 +732,7 @@ changeCase("pairing_continues_own_request", cont.r, null, "PAIR_J writes platfor
   scenario("pairing_concurrent_same_key", "PAIR_J and PAIR_K each create requests[p:<DEV_B>], neither having seen the other",
     ["IDENTITY-PROFILE-01 §3 AI4, §4 rule 2", "Each creation passes AI4; the merged entry holds two concurrent maps under one key: a conflicted request, invalid, never approved, neither map chosen."],
     { changes: [{ case: "change.J1_own_request" }, { case: "change.K1_same_key" }], history: [{ case: "change.C0_initial" }, { case: "change.C1_fill" }] },
-    { admitted: ["J1_own_request", "K1_same_key"], entry: pref("DEV_B"), entry_conflicted: true, entry_valid: false },
+    { admitted: ["J1_own_request", "K1_same_key"], entry: pref("DEV_B"), entry_conflicted: true, entry_valid: false, entry_diagnostic: "INVALID_FIELD_TYPE" },
     ["Both delivery orders give the same document and the same outcome."]);
 }
 {
@@ -729,17 +754,15 @@ changeCase("pairing_continues_own_request", cont.r, null, "PAIR_J writes platfor
 
 function stateCase(id, doc, container, key, want, description, extra = {}) {
   const v = validateEntry(doc, container, key);
-  // A conflicted entry with an invalid value reports that value's diagnostic (§4 rule 2: valid only if
-  // every value is valid); a conflict of valid values has no diagnostic of its own ("CONFLICTED").
-  const got = v.valid ? null : v.diagnostic ?? (v.conflicted ? "CONFLICTED" : null);
+  // §4 rule 2: a conflicted entry reports the diagnostic of its first invalid value, else INVALID_FIELD_TYPE.
+  const got = v.valid ? null : v.diagnostic ?? (v.conflicted ? "INVALID_FIELD_TYPE" : null);
   check(id, got, want);
-  const conflictRule = "Rule 2: a field with concurrent values is valid only if every value is valid; for requests a conflicted field makes the entry invalid; a kind conflict makes any entry invalid.";
+  const conflictRule = "Rule 2: a field with concurrent values is valid only if every value is valid; for requests a conflicted field (an unknown one included) or two concurrent maps make the entry invalid; a kind conflict makes any entry invalid; the entry reports the diagnostic of its first invalid value, else INVALID_FIELD_TYPE.";
   return add({
     id, type: "validation", kind: "profile_entry", description,
     rule: { section: "IDENTITY-PROFILE-01 §4", text: v.conflicted ? conflictRule : "Validation is per entry; the first diagnostic in table order is reported." },
     inputs: { container, key, entry: view(values(doc[container], key).length > 1 ? doc[container] : doc[container][key]), snapshot: { b64url: b64u(A.save(doc)) }, ...extra },
-    expected: want === null ? { valid: true } : want === "CONFLICTED" ? { valid: false, error: { code: "PROFILE_INVALID", detail: "conflicted entry of valid values (§4 rule 2); no diagnostic of its own" } }
-      : { valid: false, error: { code: "PROFILE_INVALID", diagnostic: want, ...(v.conflicted ? { detail: "conflicted entry (§4 rule 2); the diagnostic of its invalid value" } : {}) } },
+    expected: want === null ? { valid: true } : { valid: false, error: { code: "PROFILE_INVALID", diagnostic: want, ...(v.conflicted ? { detail: "conflicted entry (§4 rule 2)" } : {}) } },
   });
 }
 
@@ -758,41 +781,49 @@ const fp = (label) => {
 
 const docWith = (name, fn, writer = "OWNER") => change(name, BASE, writer, 3, "P0_genesis_i", fn).doc;
 stateCase("request_valid", own.doc, "requests", pref("DEV_B"), null, "requests[p:<DEV_B>] with a matching descriptor, pairing = p:<PAIR_J>, kind 0", { fingerprint: fp("DEV_B") });
-stateCase("request_service_valid", docWith("S_service_valid", (d) => { d.requests[pref("BRIDGE_O")] = reqEntry("BRIDGE_O", "PAIR_J", { kind: 1, scope: [S(rref("X"))] }); }),
+stateCase("request_service_valid", docWith("S_service_valid", (d) => { put(d.requests, pref("BRIDGE_O"), reqEntry("BRIDGE_O", "PAIR_J", { kind: 1, scope: [S(rref("X"))] })); }),
   "requests", pref("BRIDGE_O"), null, "A kind-1 request with scope [X]");
-stateCase("request_service_without_scope", docWith("S_service_no_scope", (d) => { d.requests[pref("BRIDGE_O")] = reqEntry("BRIDGE_O", "PAIR_J", { kind: 1 }); }),
+stateCase("request_service_without_scope", docWith("S_service_no_scope", (d) => { put(d.requests, pref("BRIDGE_O"), reqEntry("BRIDGE_O", "PAIR_J", { kind: 1 })); }),
   "requests", pref("BRIDGE_O"), "MISSING_REQUIRED_FIELD", "A kind-1 request without scope");
-stateCase("request_personal_with_scope", docWith("S_personal_scope", (d) => { d.requests[pref("DEV_B")] = reqEntry("DEV_B", "PAIR_J", { scope: [S(rref("X"))] }); }),
+stateCase("request_personal_with_scope", docWith("S_personal_scope", (d) => { put(d.requests, pref("DEV_B"), reqEntry("DEV_B", "PAIR_J", { scope: [S(rref("X"))] })); }),
   "requests", pref("DEV_B"), "INVALID_FIELD_TYPE", "A kind-0 request with scope");
-stateCase("request_scope_64", docWith("S_scope_64", (d) => { d.requests[pref("BRIDGE_O")] = reqEntry("BRIDGE_O", "PAIR_J", { kind: 1, scope: SCOPE_FILL.slice(0, 64).map(S) }); }),
+stateCase("request_scope_64", docWith("S_scope_64", (d) => { put(d.requests, pref("BRIDGE_O"), reqEntry("BRIDGE_O", "PAIR_J", { kind: 1, scope: SCOPE_FILL.slice(0, 64).map(S) })); }),
   "requests", pref("BRIDGE_O"), null, "A kind-1 request with 64 Resources in scope");
-stateCase("request_scope_65", docWith("S_scope_65", (d) => { d.requests[pref("BRIDGE_O")] = reqEntry("BRIDGE_O", "PAIR_J", { kind: 1, scope: SCOPE_FILL.slice(0, 65).map(S) }); }),
+stateCase("request_scope_65", docWith("S_scope_65", (d) => { put(d.requests, pref("BRIDGE_O"), reqEntry("BRIDGE_O", "PAIR_J", { kind: 1, scope: SCOPE_FILL.slice(0, 65).map(S) })); }),
   "requests", pref("BRIDGE_O"), "INVALID_FIELD_TYPE", "A kind-1 request with 65 Resources in scope");
-stateCase("request_scope_repeat", docWith("S_scope_repeat", (d) => { d.requests[pref("BRIDGE_O")] = reqEntry("BRIDGE_O", "PAIR_J", { kind: 1, scope: [S(rref("X")), S(rref("X"))] }); }),
+stateCase("request_scope_repeat", docWith("S_scope_repeat", (d) => { put(d.requests, pref("BRIDGE_O"), reqEntry("BRIDGE_O", "PAIR_J", { kind: 1, scope: [S(rref("X")), S(rref("X"))] })); }),
   "requests", pref("BRIDGE_O"), "INVALID_FIELD_TYPE", "A kind-1 request whose scope repeats X");
-stateCase("request_scope_empty", docWith("S_scope_empty", (d) => { d.requests[pref("BRIDGE_O")] = reqEntry("BRIDGE_O", "PAIR_J", { kind: 1, scope: [] }); }),
+stateCase("request_scope_empty", docWith("S_scope_empty", (d) => { put(d.requests, pref("BRIDGE_O"), reqEntry("BRIDGE_O", "PAIR_J", { kind: 1, scope: [] })); }),
   "requests", pref("BRIDGE_O"), "INVALID_FIELD_TYPE", "A kind-1 request with an empty scope");
-stateCase("request_scope_bad_ref", docWith("S_scope_bad_ref", (d) => { d.requests[pref("BRIDGE_O")] = reqEntry("BRIDGE_O", "PAIR_J", { kind: 1, scope: [S(rref("X").slice(0, 42))] }); }),
+stateCase("request_scope_bad_ref", docWith("S_scope_bad_ref", (d) => { put(d.requests, pref("BRIDGE_O"), reqEntry("BRIDGE_O", "PAIR_J", { kind: 1, scope: [S(rref("X").slice(0, 42))] })); }),
   "requests", pref("BRIDGE_O"), "INVALID_RESOURCE_REF", "A kind-1 request whose scope element has 42 characters");
-stateCase("request_key_descriptor_mismatch", docWith("S_key_mismatch", (d) => { d.requests[pref("DEV_B")] = reqEntry("DEV_X", "PAIR_J"); }),
+stateCase("request_key_descriptor_mismatch", docWith("S_key_mismatch", (d) => { put(d.requests, pref("DEV_B"), reqEntry("DEV_X", "PAIR_J")); }),
   "requests", pref("DEV_B"), "INVALID_DESCRIPTOR", "Key p:<DEV_B>, descriptor of DEV_X");
-stateCase("request_bad_descriptor", docWith("S_bad_descriptor", (d) => { d.requests[pref("DEV_B")] = reqEntry("DEV_B", "PAIR_J", { descriptor: S(b64u(Buffer.from([0xa2, 0x00, 0x01, 0x01, 0x02]))) }); }),
+stateCase("request_bad_descriptor", docWith("S_bad_descriptor", (d) => { put(d.requests, pref("DEV_B"), reqEntry("DEV_B", "PAIR_J", { descriptor: S(b64u(Buffer.from([0xa2, 0x00, 0x01, 0x01, 0x02]))) })); }),
   "requests", pref("DEV_B"), "INVALID_DESCRIPTOR", "A descriptor that is not the CBOR of a principal-descriptor");
-stateCase("request_missing_label", docWith("S_missing_label", (d) => { const e = reqEntry("DEV_B", "PAIR_J"); delete e.label; d.requests[pref("DEV_B")] = e; }),
+stateCase("request_missing_label", docWith("S_missing_label", (d) => { const e = reqEntry("DEV_B", "PAIR_J"); delete e.label; put(d.requests, pref("DEV_B"), e); }),
   "requests", pref("DEV_B"), "MISSING_REQUIRED_FIELD", "A request without label");
-stateCase("request_kind_2", docWith("S_kind_2", (d) => { d.requests[pref("DEV_B")] = reqEntry("DEV_B", "PAIR_J", { kind: 2 }); }),
+stateCase("request_kind_2", docWith("S_kind_2", (d) => { put(d.requests, pref("DEV_B"), reqEntry("DEV_B", "PAIR_J", { kind: 2 })); }),
   "requests", pref("DEV_B"), "INVALID_ENUM_VALUE", "A request with kind 2");
-stateCase("request_bad_timestamp", docWith("S_bad_timestamp", (d) => { d.requests[pref("DEV_B")] = reqEntry("DEV_B", "PAIR_J", { requested_at: S("2026-11-03 10:00:00") }); }),
+stateCase("request_bad_timestamp", docWith("S_bad_timestamp", (d) => { put(d.requests, pref("DEV_B"), reqEntry("DEV_B", "PAIR_J", { requested_at: S("2026-11-03 10:00:00") })); }),
   "requests", pref("DEV_B"), "INVALID_TIMESTAMP", "requested_at '2026-11-03 10:00:00' (not RFC 3339 UTC)");
 {
-  // Concurrent values of one field: the root and PAIR_J's request continue from the same entry.
-  const kindRoot = change("S_kind_root", own.doc, "OWNER", 3, "P2_pairing_device", (d) => { d.requests[pref("DEV_B")].kind = 1; });
-  const kindJ = asJ("J2_kind_0", own.doc, 2, (d) => { d.requests[pref("DEV_B")].kind = 0; });
+  // Concurrent values of one field: from a request PAIR_J wrote without kind, the root writes 1 and PAIR_J 0.
+  const noKind = asJ("J1_request_without_kind", BASE, 1, (d) => { const e = reqEntry("DEV_B", "PAIR_J"); delete e.kind; put(d.requests, pref("DEV_B"), e); });
+  const kindRoot = change("S_kind_root", noKind.doc, "OWNER", 3, "P2_pairing_device", (d) => { d.requests[pref("DEV_B")].kind = new A.Uint(1); });
+  const kindJ = asJ("J2_kind_0", noKind.doc, 2, (d) => { d.requests[pref("DEV_B")].kind = new A.Uint(0); });
   for (const [suffix, order] of [["", ["kindRoot", "kindJ"]], [".reverse", ["kindJ", "kindRoot"]]]) {
     const parts = { kindRoot: kindRoot.r.bytes, kindJ: kindJ.r.bytes };
-    const [m] = A.applyChanges(A.clone(own.doc), order.map((o) => parts[o]));
+    const [m] = A.applyChanges(A.clone(noKind.doc), order.map((o) => parts[o]));
     stateCase(`request_conflicted_kind${suffix}`, m, "requests", pref("DEV_B"), "MISSING_REQUIRED_FIELD",
       `Concurrent kind values 1 (root) and 0 (PAIR_J), delivered ${order.join(" then ")}`, { changes: order.map((o) => (o === "kindRoot" ? "S_kind_root" : "J2_kind_0")).join(",") });
+  }
+  const noteJ = asJ("J2_note_unknown", own.doc, 2, (d) => { d.requests[pref("DEV_B")].note = S("from the laptop"); });
+  const noteRoot = change("S_note_unknown_root", own.doc, "OWNER", 3, "P2_pairing_device", (d) => { d.requests[pref("DEV_B")].note = S("from the desktop"); });
+  {
+    const [m] = A.applyChanges(A.clone(own.doc), [noteJ.r.bytes, noteRoot.r.bytes]);
+    stateCase("request_conflicted_unknown_field", m, "requests", pref("DEV_B"), "INVALID_FIELD_TYPE",
+      "Concurrent values of the unknown field note of requests[p:<DEV_B>] (by PAIR_J and by the root)", { changes: "J2_note_unknown,S_note_unknown_root" });
   }
   const labelOk = asJ("J2_label_ok", own.doc, 2, (d) => { d.requests[pref("DEV_B")].label = S("Laptop"); });
   const labelBad = change("S_label_uint", own.doc, "OWNER", 3, "P2_pairing_device", (d) => { d.requests[pref("DEV_B")].label = 7; });
@@ -802,7 +833,7 @@ stateCase("request_bad_timestamp", docWith("S_bad_timestamp", (d) => { d.request
       `Concurrent label values 'Laptop' and 7, delivered ${order.map((o) => o.r.name).join(" then ")}`, { changes: order.map((o) => o.r.name).join(",") });
   }
   const merged = replay(["C0_initial", "C1_fill", "J1_own_request", "K1_same_key"]).doc;
-  stateCase("request_conflicted_maps", merged, "requests", pref("DEV_B"), "CONFLICTED", "Two concurrent maps under requests[p:<DEV_B>] (pairing_concurrent_same_key)");
+  stateCase("request_conflicted_maps", merged, "requests", pref("DEV_B"), "INVALID_FIELD_TYPE", "Two concurrent maps under requests[p:<DEV_B>] (pairing_concurrent_same_key)");
 }
 stateCase("roster_bad_ref", docWith("S_roster_bad_ref", (d) => { d.roster[rref("X").slice(0, 42)] = ROSTER_X; }), "roster", rref("X").slice(0, 42), "INVALID_RESOURCE_REF", "A roster key of 42 characters");
 {
@@ -810,9 +841,9 @@ stateCase("roster_bad_ref", docWith("S_roster_bad_ref", (d) => { d.roster[rref("
   const n2 = change("S_name_dev_a", BASE, "DEV_A", 1, "P1_device_grant_dev_a_i", (d) => { d.roster[rref("X")].name = S("X (laptop)"); });
   const [m] = A.applyChanges(A.clone(BASE), [n1.r.bytes, n2.r.bytes]);
   stateCase("roster_conflicted_name", m, "roster", rref("X"), null, "Concurrent names of roster[X] by OWNER and DEV_A: valid, a reader may show any value");
-  const k1 = change("S_missing_keys_b", BASE, "OWNER", 3, "P4_register_dev_b_approved", (d) => { d.devices[pref("DEV_B")] = { label: S("Phone"), kind: 0, missing_keys: { [rref("X")]: [0] } }; });
-  const k2 = change("S_missing_keys_b2", k1.doc, "DEV_B", 1, "P4_register_dev_b_approved", (d) => { d.devices[pref("DEV_B")].missing_keys = { [rref("X")]: [1], [rref("Y")]: [0] }; });
-  const k3 = change("S_missing_keys_b3", k1.doc, "OWNER", 4, "P4_register_dev_b_approved", (d) => { d.devices[pref("DEV_B")].missing_keys = { [rref("X")]: [0, 2] }; });
+  const k1 = change("S_missing_keys_b", BASE, "OWNER", 3, "P4_register_dev_b_approved", (d) => { put(d.devices, pref("DEV_B"), { label: S("Phone"), kind: 0, missing_keys: { [rref("X")]: [0] } }); });
+  const k2 = change("S_missing_keys_b2", k1.doc, "DEV_B", 1, "P4_register_dev_b_approved", (d) => { put(d.devices[pref("DEV_B")], "missing_keys", { [rref("X")]: [1], [rref("Y")]: [0] }); });
+  const k3 = change("S_missing_keys_b3", k1.doc, "OWNER", 4, "P4_register_dev_b_approved", (d) => { put(d.devices[pref("DEV_B")], "missing_keys", { [rref("X")]: [0, 2] }); });
   const [mk] = A.applyChanges(A.clone(k1.doc), [k2.r.bytes, k3.r.bytes]);
   const vals = values(mk.devices[pref("DEV_B")], "missing_keys").map(view);
   const union = {};
@@ -945,7 +976,7 @@ const doc = {
       engine_package: "@automerge/automerge", engine_version: "3.5.0",
       changes: "Every change is made with time 0 and no message by the SHARED-OBJECTS-PROFILE-01 §8 actor of its writer in the Identity Resource I; the change.* cases give their exact bytes and framing; validation cases reference their causal history by case.",
       writer_class: "inputs.writer_class is the class of §2.3 at inputs.control_ref, from the Control state of I in LFCP-IDENTITY-TEST-VECTORS-01.",
-      diagnostics: "A refused change or an invalid entry is PROFILE_INVALID with the profile diagnostic; a conflicted entry (§4 rule 2) has no diagnostic of its own.",
+      diagnostics: "A refused change or an invalid entry is PROFILE_INVALID with the profile diagnostic; a conflicted entry (§4 rule 2) reports the diagnostic of its first invalid value, else INVALID_FIELD_TYPE.",
       links: "Pairing-link rejections are client-local (W §62): error.code PAIRING_LINK_REJECTED is a test convention, not a wire code.",
     },
     warning: "All private keys in this suite are public test fixtures. They MUST NOT be used in production.",

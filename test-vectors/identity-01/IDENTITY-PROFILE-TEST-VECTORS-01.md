@@ -18,6 +18,7 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `identity_doc_initial_then_fill` | behavioral | state | IDENTITY-PROFILE-01 §2.2, §5.1 | The two changes of §5.1, in both orders, and the same state from a Snapshot |
 | `identity_doc_profile_mutated` | validation | `IMMUTABLE_FIELD_MUTATED` | IDENTITY-PROFILE-01 §3 AI1 | A later change by the root writing profile |
 | `identity_doc_container_and_profile` | validation | `CONTAINER_REPLACED` | IDENTITY-PROFILE-01 §3 AI2 | A change by the root replacing roster and writing profile: AI2 is reported before AI1 |
+| `identity_doc_reserved_key_later` | validation | valid | IDENTITY-PROFILE-01 §2.4 | A later change by the root that creates the reserved key recovery: admitted, preserved, never interpreted |
 | `identity_doc_container_replaced` | validation | `CONTAINER_REPLACED` | IDENTITY-PROFILE-01 §3 AI2 | A change by the root replacing roster with a new map |
 | `identity_doc_text_field` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §3 AI3 | A change by the root writing devices[p:OWNER].label as collaborative Text |
 | `pairing_writes_own_request` | validation | valid | IDENTITY-PROFILE-01 §3 | PAIR_J (control_ref P2) creates requests[p:<DEV_B>] with pairing = p:<PAIR_J> |
@@ -51,9 +52,10 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `request_bad_timestamp` | validation | `INVALID_TIMESTAMP` | IDENTITY-PROFILE-01 §4 | requested_at '2026-11-03 10:00:00' (not RFC 3339 UTC) |
 | `request_conflicted_kind` | validation | `MISSING_REQUIRED_FIELD` | IDENTITY-PROFILE-01 §4 | Concurrent kind values 1 (root) and 0 (PAIR_J), delivered kindRoot then kindJ |
 | `request_conflicted_kind.reverse` | validation | `MISSING_REQUIRED_FIELD` | IDENTITY-PROFILE-01 §4 | Concurrent kind values 1 (root) and 0 (PAIR_J), delivered kindJ then kindRoot |
+| `request_conflicted_unknown_field` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | Concurrent values of the unknown field note of requests[p:<DEV_B>] (by PAIR_J and by the root) |
 | `request_conflicted_valid_invalid` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | Concurrent label values 'Laptop' and 7, delivered J2_label_ok then S_label_uint |
 | `request_conflicted_valid_invalid.reverse` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | Concurrent label values 'Laptop' and 7, delivered S_label_uint then J2_label_ok |
-| `request_conflicted_maps` | validation | `PROFILE_INVALID` | IDENTITY-PROFILE-01 §4 | Two concurrent maps under requests[p:<DEV_B>] (pairing_concurrent_same_key) |
+| `request_conflicted_maps` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | Two concurrent maps under requests[p:<DEV_B>] (pairing_concurrent_same_key) |
 | `roster_bad_ref` | validation | `INVALID_RESOURCE_REF` | IDENTITY-PROFILE-01 §4 | A roster key of 42 characters |
 | `roster_conflicted_name` | validation | valid | IDENTITY-PROFILE-01 §4 | Concurrent names of roster[X] by OWNER and DEV_A: valid, a reader may show any value |
 | `device_entry_missing_keys_union` | behavioral | state | IDENTITY-PROFILE-01 §4 rule 2, §7.1 | Concurrent missing_keys maps of devices[p:<DEV_B>] (by DEV_B and by OWNER) |
@@ -72,56 +74,60 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | Change | Writer | Unit seq | control_ref | Hash |
 |---|---|---|---|---|
 | `C0_initial` | OWNER | 1 | P0_genesis_i | `01e90a06fb48d937…` |
-| `C1_fill` | OWNER | 2 | P0_genesis_i | `415bb6a581e5fccf…` |
+| `C1_fill` | OWNER | 2 | P0_genesis_i | `9246cb767f1e7b73…` |
 | `D0_initial_by_dev_a` | DEV_A | 1 | P1_device_grant_dev_a_i | `cb57429eef83fec8…` |
 | `C0x_initial_extra_key` | OWNER | 1 | P0_genesis_i | `8f6ca9bf5c51f260…` |
 | `C0f_initial_filled_roster` | OWNER | 1 | P0_genesis_i | `02a82925751ed675…` |
 | `C0b_initial_bad_root` | OWNER | 1 | P0_genesis_i | `e081991ddfe26c82…` |
 | `C0s_second_initial` | OWNER | 2 | P0_genesis_i | `7699f7b3852164ed…` |
 | `F_fill_on_second` | OWNER | 3 | P0_genesis_i | `680c57deb90d34e1…` |
-| `C1x_seq_2_without_deps` | OWNER | 1 | P0_genesis_i | `4b8ddbb5760b4010…` |
+| `C1x_seq_2_without_deps` | OWNER | 1 | P0_genesis_i | `41f3388f422ff6df…` |
 | `C0u2_initial_in_unit_2` | OWNER | 2 | P0_genesis_i | `5adf726cee381e65…` |
-| `C2_profile_mutated` | OWNER | 3 | P0_genesis_i | `dbe499d4b4a0e533…` |
-| `C2_container_and_profile` | OWNER | 3 | P0_genesis_i | `b086f8d51b8a9fcf…` |
-| `C2_container_replaced` | OWNER | 3 | P0_genesis_i | `2cf3aff0790789ed…` |
-| `C2_text_label` | OWNER | 3 | P0_genesis_i | `c211ffef979f6b18…` |
-| `J1_own_request` | PAIR_J | 1 | P2_pairing_device | `6dac96e97ce54820…` |
-| `J1_writes_roster` | PAIR_J | 1 | P2_pairing_device | `9da009c8dac2dd80…` |
-| `J1_deletes_roster_entry` | PAIR_J | 1 | P2_pairing_device | `88aeace52e02aadc…` |
-| `J1_deletes_roster_container` | PAIR_J | 1 | P2_pairing_device | `709ed330f667570c…` |
-| `J1_text_in_roster` | PAIR_J | 1 | P2_pairing_device | `d9d5ab07fbcd8d1f…` |
-| `J1_writes_devices` | PAIR_J | 1 | P2_pairing_device | `485ba3cee81cab9f…` |
-| `J1_two_requests` | PAIR_J | 1 | P2_pairing_device | `62f060192e674f95…` |
-| `J1_wrong_pairing` | PAIR_J | 1 | P2_pairing_device | `35e7a7ea1da2d446…` |
-| `K1_foreign_request` | PAIR_K | 1 | P2k_pairing_device_k | `621aa22646112b3e…` |
-| `J1_edits_foreign_label` | PAIR_J | 1 | P2k_pairing_device_k | `78e1915f04dc01ad…` |
-| `J1_takes_over` | PAIR_J | 1 | P2k_pairing_device_k | `2a94b25c33816944…` |
-| `J1_replaces_map` | PAIR_J | 1 | P2k_pairing_device_k | `1fd1e6f6ea9f8b87…` |
-| `J2_continues_own` | PAIR_J | 2 | P2_pairing_device | `b9a0176ad2a49f6d…` |
-| `K1_same_key` | PAIR_K | 1 | P2k_pairing_device_k | `0974d71a5b250033…` |
-| `S_service_valid` | OWNER | 3 | P0_genesis_i | `224ca22652f4ba7d…` |
-| `S_service_no_scope` | OWNER | 3 | P0_genesis_i | `e8cb569fc3df9c6c…` |
-| `S_personal_scope` | OWNER | 3 | P0_genesis_i | `0c426adb1d798655…` |
-| `S_scope_64` | OWNER | 3 | P0_genesis_i | `55d2eb20d7f45934…` |
-| `S_scope_65` | OWNER | 3 | P0_genesis_i | `bef8a30b1452b52f…` |
-| `S_scope_repeat` | OWNER | 3 | P0_genesis_i | `660625adfca7c714…` |
-| `S_scope_empty` | OWNER | 3 | P0_genesis_i | `a495b70c7283cdf7…` |
-| `S_scope_bad_ref` | OWNER | 3 | P0_genesis_i | `605009450d37176d…` |
-| `S_key_mismatch` | OWNER | 3 | P0_genesis_i | `1ac8263ec9a967e4…` |
-| `S_bad_descriptor` | OWNER | 3 | P0_genesis_i | `3d595a5e63c36cb7…` |
-| `S_missing_label` | OWNER | 3 | P0_genesis_i | `80e47a1c7ddfe24d…` |
-| `S_kind_2` | OWNER | 3 | P0_genesis_i | `27de11ff7a7d284c…` |
-| `S_bad_timestamp` | OWNER | 3 | P0_genesis_i | `85bc27720c525093…` |
-| `S_kind_root` | OWNER | 3 | P2_pairing_device | `1be58f397d780554…` |
-| `J2_kind_0` | PAIR_J | 2 | P2_pairing_device | `8a67638d3001553c…` |
-| `J2_label_ok` | PAIR_J | 2 | P2_pairing_device | `60c7b08fa33b1d14…` |
-| `S_label_uint` | OWNER | 3 | P2_pairing_device | `d66590a1437ac947…` |
-| `S_roster_bad_ref` | OWNER | 3 | P0_genesis_i | `1619979fd7929da1…` |
-| `S_name_root` | OWNER | 3 | P1_device_grant_dev_a_i | `2ca84280eecd08ba…` |
-| `S_name_dev_a` | DEV_A | 1 | P1_device_grant_dev_a_i | `d8e0a2fdfa65a9d6…` |
-| `S_missing_keys_b` | OWNER | 3 | P4_register_dev_b_approved | `07ae5eae5c9417b5…` |
-| `S_missing_keys_b2` | DEV_B | 1 | P4_register_dev_b_approved | `5e0de4c3047973da…` |
-| `S_missing_keys_b3` | OWNER | 4 | P4_register_dev_b_approved | `1224ef0572fb2c0d…` |
+| `C2_profile_mutated` | OWNER | 3 | P0_genesis_i | `9e281d2d8c710379…` |
+| `C2_container_and_profile` | OWNER | 3 | P0_genesis_i | `36f8c533f12170af…` |
+| `C2_reserved_key_later` | OWNER | 3 | P0_genesis_i | `a602855e696b4e93…` |
+| `C2_container_replaced` | OWNER | 3 | P0_genesis_i | `90b9d1af634b97ba…` |
+| `C2_text_label` | OWNER | 3 | P0_genesis_i | `0936dc3136437e97…` |
+| `J1_own_request` | PAIR_J | 1 | P2_pairing_device | `06bbd835e6191451…` |
+| `J1_writes_roster` | PAIR_J | 1 | P2_pairing_device | `cf27419f8ccb1270…` |
+| `J1_deletes_roster_entry` | PAIR_J | 1 | P2_pairing_device | `78c0bfc53eacb92a…` |
+| `J1_deletes_roster_container` | PAIR_J | 1 | P2_pairing_device | `983b12fe650b378c…` |
+| `J1_text_in_roster` | PAIR_J | 1 | P2_pairing_device | `98c7ff9c84c815e6…` |
+| `J1_writes_devices` | PAIR_J | 1 | P2_pairing_device | `94e3c213de2be6a7…` |
+| `J1_two_requests` | PAIR_J | 1 | P2_pairing_device | `88739a2cf271ec72…` |
+| `J1_wrong_pairing` | PAIR_J | 1 | P2_pairing_device | `277f16a9455a7ac8…` |
+| `K1_foreign_request` | PAIR_K | 1 | P2k_pairing_device_k | `db61988762bae4b8…` |
+| `J1_edits_foreign_label` | PAIR_J | 1 | P2k_pairing_device_k | `9b29782d5366f5dd…` |
+| `J1_takes_over` | PAIR_J | 1 | P2k_pairing_device_k | `90a7508421845027…` |
+| `J1_replaces_map` | PAIR_J | 1 | P2k_pairing_device_k | `cf2026689413c549…` |
+| `J2_continues_own` | PAIR_J | 2 | P2_pairing_device | `949cf22abd40c0ff…` |
+| `K1_same_key` | PAIR_K | 1 | P2k_pairing_device_k | `8612879ce6a8e1d8…` |
+| `S_service_valid` | OWNER | 3 | P0_genesis_i | `25e1e9c83fc33ef8…` |
+| `S_service_no_scope` | OWNER | 3 | P0_genesis_i | `b212b6bcb3f47550…` |
+| `S_personal_scope` | OWNER | 3 | P0_genesis_i | `3e96126db475cc8b…` |
+| `S_scope_64` | OWNER | 3 | P0_genesis_i | `1bcc5173cecd0872…` |
+| `S_scope_65` | OWNER | 3 | P0_genesis_i | `c1608321da18954d…` |
+| `S_scope_repeat` | OWNER | 3 | P0_genesis_i | `81eff05c840cb69b…` |
+| `S_scope_empty` | OWNER | 3 | P0_genesis_i | `4d002aa99205156e…` |
+| `S_scope_bad_ref` | OWNER | 3 | P0_genesis_i | `c04ad7b42b4d05e7…` |
+| `S_key_mismatch` | OWNER | 3 | P0_genesis_i | `32f585134a7f3ea9…` |
+| `S_bad_descriptor` | OWNER | 3 | P0_genesis_i | `2ebc2b85249b7fde…` |
+| `S_missing_label` | OWNER | 3 | P0_genesis_i | `e5b99f10a43e802d…` |
+| `S_kind_2` | OWNER | 3 | P0_genesis_i | `4e8478e76b2cb5a8…` |
+| `S_bad_timestamp` | OWNER | 3 | P0_genesis_i | `2339f0f1f47bb643…` |
+| `J1_request_without_kind` | PAIR_J | 1 | P2_pairing_device | `3e590c6a664d27ab…` |
+| `S_kind_root` | OWNER | 3 | P2_pairing_device | `bd14b05768b88b8b…` |
+| `J2_kind_0` | PAIR_J | 2 | P2_pairing_device | `f548bd1d85884a1a…` |
+| `J2_note_unknown` | PAIR_J | 2 | P2_pairing_device | `6947d5798656b81b…` |
+| `S_note_unknown_root` | OWNER | 3 | P2_pairing_device | `3f5087472910c4ce…` |
+| `J2_label_ok` | PAIR_J | 2 | P2_pairing_device | `bebe317bb15c5f12…` |
+| `S_label_uint` | OWNER | 3 | P2_pairing_device | `597df6184ca28bc5…` |
+| `S_roster_bad_ref` | OWNER | 3 | P0_genesis_i | `da186d84c0125a67…` |
+| `S_name_root` | OWNER | 3 | P1_device_grant_dev_a_i | `381a45664f901809…` |
+| `S_name_dev_a` | DEV_A | 1 | P1_device_grant_dev_a_i | `62b1a887a76a7db5…` |
+| `S_missing_keys_b` | OWNER | 3 | P4_register_dev_b_approved | `6934ca7883f8bb47…` |
+| `S_missing_keys_b2` | DEV_B | 1 | P4_register_dev_b_approved | `e2600e034ef06c08…` |
+| `S_missing_keys_b3` | OWNER | 4 | P4_register_dev_b_approved | `9f8a550476a8eeb9…` |
 
 Fingerprint of DEV_B: `bicr-ikmc-oec2-llzz`.
 
