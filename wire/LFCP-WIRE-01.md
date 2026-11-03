@@ -811,7 +811,7 @@ Capabilities are established by Control Records.
 | 12 | `device/manage` (certificate masks only, see below) |
 | 13 | `owner/act` (certificate masks only, see below) |
 
-The owner implicitly has all standard abilities.
+The owner implicitly has all standard abilities. An invitation, a claim and the invitation exceptions of Sections 25.2 and 41 require an explicit invitation grant (Section 18); the owner's implicit `invite/claim` is a result of the ability evaluation of Section 80 that no rule consumes.
 
 Codes `12` and `13` have meaning only inside the mask of a Device Certificate (Section 7.3). `12`, `device/manage`: the personal device may sign Device Certificates for its root (Section 7.3, c3) and may issue `DEVICE_GRANT` and `DEVICE_REVOKE` for devices of its root in any Resource where it is active (Sections 17.4 and 17.5). `13`, `owner/act`: in a Resource whose owner is the device's root, the personal device holds every standard ability and may perform every owner-only action (Section 80.1). A mask that lists `12` MUST also list `1` and `2`. In a Capability Grant or Claim ability list, `12` and `13` are kept as received and confer nothing, like unknown codes.
 
@@ -904,13 +904,14 @@ For a record with body `{0: R, 1: chain, ?2: J}` at previous state `S` (chain pl
 5. **Chain state.** Section 7.3 verification step 4. Let `D` be the leaf. If `devices[D]` exists and has a `chain`, the new leaf certificate ID MUST differ from `devices[D].leaf_id`: a repeated record is not a transition; a writer that re-proposes it after `CONTROL_HEAD_MISMATCH` treats its intent as complete (IDENTITY-PROFILE-01 §9). Else `AUTHORIZATION_FAILED`.
 6. **Issuer.** The issuer MUST be one of:
    - `R`;
-   - `D`, when `D` is of kind `0` (self-registration);
+   - `D` itself, when `D` is of kind `0` and `devices[D]` is absent or has no `chain` (a first registration, for example on accepting an invitation; a device that was registered never re-certifies itself, so a device suspended by the cascade stays suspended until the root or an active managing device re-certifies it);
    - a device that issued inside `chain` (any `chain[i]`, `i >= 1`), when `D` is of kind `0`;
    - a device `M` with `devices[M]` active at `S` (Section 17.5), `root = R` and `12` in its mask;
    - when `R` is the owner at `S`: an active device of `R` with `13` in its mask.
    A leaf of kind `1` or `2` is therefore bound or registered only by the root, by an active managing device, or by an owner-acting device of the owning root. Else `AUTHORIZATION_FAILED`.
 7. **Approval.** When field `2` is present: `revoked[(R, J)]` exists with `reason = 3`, `devices[J]` exists with `kind = 2` and `root = R`, and `revoked[(R, J)].approval` equals the certificate payload digest of the leaf (Section 7.3 rule 6). Else `AUTHORIZATION_FAILED`.
-8. **Effect.** For every device `E` in the chain without a binding: `devices[E] = {root: R, kind, mask, scope, registered: false}` and `roles[E] = device`. For the leaf: `chain`, `leaf_id` and `issuers` are set; `registered = true` when `in_scope`, unchanged otherwise (an out-of-scope kind-1 leaf is bound in this Resource and holds nothing in it). The descriptors of all chain devices become known (Section 10.5).
+8. **Limits.** Let `R` be the root. The record MUST NOT bring the number of Principals bound to `R` in this Resource (entries of `devices` with `root = R`, active or not, the chain's new bindings included) above `32`, and MUST NOT be the ninth accepted `DEVICE_GRANT` whose leaf is `D` for `R` in this Resource (at most `8` registrations and re-certifications per pair). Else `AUTHORIZATION_FAILED`. A human needs far fewer; the limits bound what a root with standing can append to a chain it does not own, and keep chain validation linear in practice.
+9. **Effect.** For every device `E` in the chain without a binding: `devices[E] = {root: R, kind, mask, scope, registered: false}` and `roles[E] = device`. For the leaf: `chain`, `leaf_id` and `issuers` are set; `registered = true` when `in_scope`, unchanged otherwise (an out-of-scope kind-1 leaf is bound in this Resource and holds nothing in it). The descriptors of all chain devices become known (Section 10.5).
 
 ### 17.5 Device Revocation
 
@@ -940,7 +941,7 @@ For a record with body `{0: R, 1: D, 2: reason, ?4: approval}` at previous state
 2. **Dependencies, signature.** The issuer's descriptor is known to `S` (`MISSING_DEPENDENCY`); the signature verifies (`INVALID_SIGNATURE`).
 3. **Consistency.** If `devices[D]` exists, its `root` MUST be `R`. `roles[D]`, if present, MUST be `device`. `roles[R]`, if present, MUST be `non-device`. When `reason = 3`, `devices[D]` MUST exist with `kind = 2`. Else `AUTHORIZATION_FAILED`.
 4. **Issuer.** One of: `R`, when `rootStanding(R)` at `S`; a device `M` active at `S` with `root = R` and `12` in its mask; the owner at `S`, or an active device of the owner with `13` in its mask (the owner may expel any device of any root from its Resource); `D` itself when `devices[D]` is registered and `(R, D)` is not in `revoked` (self-retirement, reason `0` only). Else `AUTHORIZATION_FAILED`.
-5. **Not already revoked.** `(R, D)` is not in `revoked`. Else `AUTHORIZATION_FAILED`.
+5. **Not already revoked, within limits.** `(R, D)` is not in `revoked`, and the record does not bring the number of pairs `(R, *)` in `revoked` above `64`. Else `AUTHORIZATION_FAILED`.
 6. **Effect.** `revoked[(R, D)] = {reason, approval}`. Bindings and chains are kept: `rootOf` (Section 80.1) still attributes `D`'s history to `R`.
 
 **Root standing.** `rootStanding(R)` at `S`: `R` is the owner, or `R` is the subject of at least one grant that is active at `S` and does not list `invite/claim`. A Principal that holds only invitation grants has no standing.
@@ -1274,7 +1275,7 @@ A verifier MUST confirm:
 5. the commit itself is signed by that Principal;
 6. the expected next Control Sequence matches the commit sequence.
 
-A commit that fails any of these checks is rejected with `AUTHORIZATION_FAILED`, except that an offer or acceptance whose signature does not verify is rejected with `INVALID_SIGNATURE`. In the ordering of Section 62 the signature class comes before the authority class, with or without field `2`: an acceptance signed by a Principal other than the one its item 4 requires (the Principal the offer names, or the leaf device of field `2`) is `INVALID_SIGNATURE` before item 3 (the offer names the accepting Principal) or item 5 is checked, and a mismatch between the acceptance's field `2` and the offer's field `3` is found only in a commit whose offer, acceptance and commit signatures all verify, as `AUTHORIZATION_FAILED`.
+A commit that fails any of these checks is rejected with `AUTHORIZATION_FAILED`, except that an offer or acceptance whose signature does not verify is rejected with `INVALID_SIGNATURE`. The offer's signer is never a dependency: an offer whose `kid` is neither the current owner nor an owner-acting device of the current owner active at the offer's head (Section 80.1) fails item 1 with `AUTHORIZATION_FAILED`, whether or not the receiver knows that Principal; `MISSING_DEPENDENCY` applies to the referenced Control Head and, with field `2`, to the chain's root descriptor only. In the ordering of Section 62 the signature class comes before the authority class, with or without field `2`: an acceptance signed by a Principal other than the one its item 4 requires (the Principal the offer names, or the leaf device of field `2`) is `INVALID_SIGNATURE` before item 3 (the offer names the accepting Principal) or item 5 is checked, and a mismatch between the acceptance's field `2` and the offer's field `3` is found only in a commit whose offer, acceptance and commit signatures all verify, as `AUTHORIZATION_FAILED`.
 
 After commit, the accepting Principal becomes the Resource owner. The former owner keeps no implicit authority; the Capability Grants it issued stay active.
 
@@ -2019,7 +2020,7 @@ A durability level describes the store that gave the ACK. A server whose store i
 |---|---|
 | `identity-01` | The server validates Control Records of types `9` and `10`, Genesis field `5` and transfer commit field `2`, applies the Key Package rule of Section 25.2 with its same-root sender, keys its hosting policy by the Genesis owner (Section 39), and implements the Control read for revoked readers of Section 41 |
 
-A client MUST NOT propose a record of type `9` or `10`, a Genesis with field `5` or a commit with field `2`, nor upload a Key Package that is authorized only by the same-root rule, to a server whose `READY` does not list `identity-01`; it reports the Resource as hosted on a server without identity support (IDENTITY-PROFILE-01 §6). There is no client-side flag: a server needs none.
+A client MUST NOT propose a record of type `9` or `10`, a Genesis with field `5` or a commit with field `2`, nor upload a Key Package that is authorized only by the same-root rule, to a server whose `READY` does not list `identity-01`; it reports the Resource as hosted on a server without identity support (IDENTITY-PROFILE-01 §6). There is no client-side flag: a server needs none. A server that does not advertise `identity-01` MUST NOT accept those records or packages either: it rejects them as a pre-identity receiver does (Section 100.1: `INVALID_CONTROL_CHAIN` for types `9` and `10`, `MALFORMED_MESSAGE` for Genesis field `5` and commit field `2`, `AUTHORIZATION_FAILED` for a same-root Key Package), so that what `READY` announces is what the server does.
 
 ---
 
@@ -3132,7 +3133,7 @@ holds(P, A):
   return direct(P, A)
 ```
 
-`holds(P, 11)` is false for every bound Principal: `invite/claim` is a property of an invitation grant (Section 18), a device holds no grant, and the owner's implicit abilities do not include it, so `11` in a certificate mask confers nothing (Section 7.3 rule 4) even when the root is the subject of an invitation grant or `13` is in the mask. The Key Package exception of Section 25.2 and the read rule of Section 41 therefore never apply to a device through `11`; `owner/act` confers the standard abilities `1` to `10` and the owner-only actions, nothing else.
+For a bound Principal `holds(P, 11)` is false, an owner-acting device included: `invite/claim` is a property of an invitation grant (Section 18), a device holds no grant, and `11` in a certificate mask confers nothing (Section 7.3 rule 4) even when the root is the subject of an invitation grant or `13` is in the mask. For an unbound Principal the evaluation of Section 80 is unchanged, so `direct(owner, 11)` is true as for every code. Neither owner status nor a true `holds(P, 11)` creates an invitation grant or substitutes for the explicit grant that Sections 18, 25.2 and 41 require. The Key Package exception of Section 25.2 and the read rule of Section 41 therefore never apply to a device through `11`; `owner/act` confers the standard abilities `1` to `10` and the owner-only actions, nothing else.
 
 **Owner-only actions.** Where this document requires "the owner" (not an ability): Genesis signing (Section 15), a Capability Grant without a parent (Section 17.2), revoking any grant (Section 17.3), `COORDINATOR_RECOVERY` (Section 22), a transfer offer (Section 23.1), an extension-type record (Section 14):
 
