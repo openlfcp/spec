@@ -65,6 +65,7 @@ directory).
 | `wire/LFCP-WIRE-01.md` | LFCP Wire protocol (Working Draft) |
 | `profiles/SHARED-OBJECTS-PROFILE-01.md` | Shared Objects application profile `org.openlfcp.shared-objects.v1` (Working Draft) |
 | `profiles/SHARED-SECTIONS-PROFILE-01.md` | Shared sections application profile `org.openlfcp.shared-sections.v1` (Working Draft 0.3, ADR 0009) |
+| `profiles/IDENTITY-PROFILE-01.md` | Working Draft for MVP 0.4, not in this baseline: the Identity Resource profile `org.openlfcp.identity.v1` and device flows (ADR 0011), to enter `mvp-0.4-baseline.1`; listed because every file under `profiles/` is |
 | `integration/MARKDOWN-REFS-01.md` | Markdown projection reference grammar: inline and child-line placements (Working Draft) |
 | `integration/MARKDOWN-SECTIONS-01.md` | Markdown bindings of shared sections (Working Draft) |
 | `integration/SDK-SECTIONS-INTEGRATION-01.md` | SDK receipt, status and parser integration contracts for shared sections, `sections-integration/1` (Working Draft) |
@@ -124,6 +125,7 @@ directory).
 | `adr/0008-recovery-after-server-data-loss.md` | SPEC-PATCH-09: recovery after server data loss (POST-013), accepted by the project owner on 2026-10-08, and POST-001 (hold and retry of a taken actor sequence), decided by the project owner on 2026-10-06 |
 | `adr/0009-shared-sections-profile.md` | The shared sections profile: decisions P1, P2, P3 and P5 approved by the project owner, applied in this baseline |
 | `adr/0010-canonical-changes-and-operation-references.md` | SPEC-PATCH-10: canonical change encoding and operation references (findings F2 to F4); orchestrator decisions of 2026-10-09, applied in `mvp-0.1-baseline.10` and this baseline |
+| `adr/0011-human-root-identity.md` | Accepted for MVP 0.4, not in this baseline: human root identity and device Principals, decisions I1 to I6 of the project owner (2026-11-03); applied in LFCP-WIRE-01 and IDENTITY-PROFILE-01 as Working Drafts, to enter `mvp-0.4-baseline.1`; listed because every file under `adr/` is |
 
 ## Validation
 

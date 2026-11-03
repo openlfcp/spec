@@ -61,6 +61,7 @@ directory).
 | `wire/LFCP-WIRE-01.md` | LFCP Wire protocol (Working Draft) |
 | `profiles/SHARED-OBJECTS-PROFILE-01.md` | Shared Objects application profile `org.openlfcp.shared-objects.v1` (Working Draft) |
 | `profiles/SHARED-SECTIONS-PROFILE-01.md` | Working Draft for MVP 0.2, in `mvp-0.2-baseline.2` (MVP-0.2-BASELINE.md), not in this baseline: the shared sections profile `org.openlfcp.shared-sections.v1` (ADR 0009); listed because every file under `profiles/` is |
+| `profiles/IDENTITY-PROFILE-01.md` | Working Draft for MVP 0.4, not in this baseline: the Identity Resource profile `org.openlfcp.identity.v1` and device flows (ADR 0011), to enter `mvp-0.4-baseline.1`; listed because every file under `profiles/` is |
 | `integration/MARKDOWN-REFS-01.md` | Markdown projection reference grammar: inline and child-line placements (Working Draft) |
 | `integration/MARKDOWN-SECTIONS-01.md` | Working Draft for MVP 0.2, in `mvp-0.2-baseline.2` (MVP-0.2-BASELINE.md), not in this baseline: Markdown bindings of shared sections; listed because every file under `integration/` is |
 | `integration/SDK-SECTIONS-INTEGRATION-01.md` | Working Draft for MVP 0.2, in `mvp-0.2-baseline.2` (MVP-0.2-BASELINE.md), not in this baseline: SDK receipt, status and parser integration contracts for shared sections; listed because every file under `integration/` is |
@@ -114,6 +115,7 @@ directory).
 | `adr/0008-recovery-after-server-data-loss.md` | SPEC-PATCH-09: recovery after server data loss (POST-013), accepted by the project owner on 2026-10-08, and POST-001 (hold and retry of a taken actor sequence), decided by the project owner on 2026-10-06 |
 | `adr/0009-shared-sections-profile.md` | Accepted for MVP 0.2, applied in `mvp-0.2-baseline.1` and later, not in this baseline: the shared sections profile `org.openlfcp.shared-sections.v1` (LFCP-02-083); listed because every file under `adr/` is |
 | `adr/0010-canonical-changes-and-operation-references.md` | SPEC-PATCH-10: canonical change encoding and operation references (findings F2 to F4); orchestrator decisions of 2026-10-09 |
+| `adr/0011-human-root-identity.md` | Accepted for MVP 0.4, not in this baseline: human root identity and device Principals, decisions I1 to I6 of the project owner (2026-11-03); applied in LFCP-WIRE-01 and IDENTITY-PROFILE-01 as Working Drafts, to enter `mvp-0.4-baseline.1`; listed because every file under `adr/` is |
 
 ## Project documents in `openlfcp/.github`
 
