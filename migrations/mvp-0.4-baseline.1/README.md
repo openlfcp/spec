@@ -24,6 +24,18 @@ One published value follows from the registry change:
   derivation are otherwise unchanged. The description, the mutation target
   and the signed bytes change (the record is re-signed).
 
+A second reclassification follows from the ordering of the validation
+classes (LFCP-WIRE-01 §62), which is now normative for every Control
+Record: a transfer commit without field `2` whose embedded offer or accept
+is not a well-formed signed object is `MALFORMED_MESSAGE` (class 1) even
+when its chain placement is wrong (before: `INVALID_CONTROL_CHAIN`) or its
+issuer is unknown (before: `MISSING_DEPENDENCY`). No published vector of
+`mvp-0.2-baseline.12` shows that case, so no value changes for it; the
+identity corpora add `transfer_commit_malformed_offer_bad_placement` and
+`transfer_commit_malformed_offer_unknown_issuer` (IDENTITY-PROFILE-01
+§12), and an implementation pinned to `mvp-0.2-baseline.12` answers the
+old codes.
+
 No other published value of `mvp-0.2-baseline.12` changes. The identity
 vector suites (`LFCP-IDENTITY-TEST-VECTORS-01`,
 `IDENTITY-PROFILE-TEST-VECTORS-01`, `IDENTITY-FLOW-FIXTURES-01`) are new
