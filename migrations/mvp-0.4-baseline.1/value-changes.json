@@ -40,6 +40,21 @@
   {
    "suite_file": "test-vectors/shared-sections-01/MARKDOWN-SECTIONS-FIXTURES-01.json",
    "changed": []
+  },
+  {
+   "suite_file": "test-vectors/lfcp-wire-01/LFCP-IDENTITY-TEST-VECTORS-01.json",
+   "previous": "absent",
+   "changed": []
+  },
+  {
+   "suite_file": "test-vectors/identity-01/IDENTITY-PROFILE-TEST-VECTORS-01.json",
+   "previous": "absent",
+   "changed": []
+  },
+  {
+   "suite_file": "test-vectors/identity-01/IDENTITY-FLOW-FIXTURES-01.json",
+   "previous": "absent",
+   "changed": []
   }
  ]
 }
