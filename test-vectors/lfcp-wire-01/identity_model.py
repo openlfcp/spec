@@ -516,10 +516,21 @@ def structure(typ: int, body: Any) -> dict:
         for e in body[2]:
             if not (isinstance(e, dict) and set(e) <= {0, 1, 2} and {0, 1} <= set(e) and is_h32(e[0]) and is_uint(e[1])):
                 raise Reject(MALFORMED, 'W §28.1: actor-have entry')
+            prev_end = e[1]
+            if 2 in e and not isinstance(e[2], list):
+                raise Reject(MALFORMED, 'W §28.1: the extra ranges of an actor-have are a list')
+            for r in e.get(2, []):
+                # rules 2 to 8: a present key 2 is a non-empty list of sorted, non-overlapping,
+                # non-adjacent ranges strictly above contiguous + 1.
+                if not (isinstance(r, list) and len(r) == 2 and all(is_uint(x) for x in r) and r[0] <= r[1] and r[0] >= prev_end + 2):
+                    raise Reject(MALFORMED, 'W §28.1: the extra ranges of an actor-have are canonical')
+                prev_end = r[1]
+            if 2 in e and not e[2]:
+                raise Reject(MALFORMED, 'W §28.1 rule 2: key 2 is omitted when there are no extra ranges')
             pids.append(e[0])
         if pids != sorted(pids) or len(set(pids)) != len(pids):
             raise Reject(MALFORMED, 'W §19: the final frontier is canonical')
-        return {'epoch': body[0], 'commitment': body[1], 'frontier': {e[0]: e[1] for e in body[2]}}
+        return {'epoch': body[0], 'commitment': body[1], 'frontier': {e[0]: (e[1], [tuple(r) for r in e.get(2, [])]) for e in body[2]}}
     if typ == COMMIT:
         if not (isinstance(body, dict) and {0, 1} <= set(body) <= {0, 1, 2}):
             raise Reject(MALFORMED, 'W §23.3: owner-transfer-commit-body is a closed map')
@@ -699,9 +710,9 @@ def _commit(s, rec, p, b):
         raise Reject(BAD_SIG, 'W §23.3, §62 class 4: the offer verifies under its kid')
     if accept.kid != required[0] or not accept.verifies(required[1]):
         raise Reject(BAD_SIG, 'W §23.3 item 4, §62 class 4: the acceptance is signed by its required signer')
-    if rec.kid != p[4] or p[4] != required[0]:
-        raise Reject(BAD_SIG, 'W §23.3 item 5: the commit is signed by its required signer')
-    outer_signature(rec, p, required)
+    if certs and p[4] != required[0]:
+        raise Reject(BAD_SIG, 'W §23.3: with field 2 the commit is signed by the leaf device')
+    outer_signature(rec, p, issuer_desc)
     if certs:
         chain_signatures(certs, new_owner)
     # class 5
@@ -711,6 +722,8 @@ def _commit(s, rec, p, b):
         s.chain_state(certs, r2)
         if certs[0].kind != 0 or 13 not in certs[0].mask:
             raise Reject(DENIED, 'W §23.3: the accepting leaf is of kind 0 with 13 in its mask')
+    if not certs and p[4] != r2:
+        raise Reject(DENIED, 'W §23.3 item 5: without field 2 the commit is issued by the new owner')
     if s.bound(r2):
         raise Reject(DENIED, 'W §23.3, §80.1: the new owner is not bound as a device')
     if o[0] != s.resource or o[1] != s.head:
@@ -846,8 +859,16 @@ def check_unit(at: State, latest: State, cose: bytes, known_heads: dict) -> None
         raise Reject(DENIED, 'W §26.3 rule 2, §80.1: holds(actor, 2) at the referenced head')
     if q[1] < latest.epoch:
         fr = latest.cutoffs[q[1]]
-        if q[2] not in fr or q[3] > fr[q[2]]:
+        if not within_frontier(fr, q[2], q[3]):
             raise Reject(STALE, 'W §19.1: a closed-epoch unit is within the final frontier')
+
+
+def within_frontier(fr: dict, actor: bytes, seq: int) -> bool:
+    """W §19.1 with W §28.1: within the contiguous prefix or inside one of the extra ranges."""
+    if actor not in fr:
+        return False
+    contiguous, extras = fr[actor]
+    return seq <= contiguous or any(a <= seq <= b for a, b in extras)
 
 
 def check_package(cose: bytes, known_heads: dict) -> None:
