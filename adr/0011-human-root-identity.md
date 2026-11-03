@@ -110,10 +110,11 @@ initial change creates six root keys and is identified by actor, sequence
 - Pre-identity clients are blocked whole at the first device record of a
   Resource (W §14, §100.1); the rollout order of I6 limits that to humans
   who pair.
-- Two published values of `mvp-0.2-baseline.12` are reclassified by the
-  registry change and the class ordering; `migrations/mvp-0.4-baseline.1`
-  records them and the one vector that moves
-  (`unknown_core_type_C1`, type `9` to `31`).
+- Two legacy rejection outcomes are reclassified, by the registry change
+  and by the class ordering; one published vector changes, in three
+  recorded values (`unknown_core_type_C1`, type `9` to `31`), and no
+  published baseline vector covers the malformed transfer case.
+  `migrations/mvp-0.4-baseline.1` records both.
 - Revocation is per Resource (N3): a certificate stays verifiable where
   the revocation has not been seen, which W §98.1 states as a limit. A
   stolen first installation is identity compromise, as owner compromise is
