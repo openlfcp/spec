@@ -22,8 +22,15 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # The Python generators of the Wire suites need cryptography; the
+      # identity corpora check regenerates LFCP-IDENTITY-TEST-VECTORS-01 with
+      # it (the runner's python3; .venv is ignored by Git and by validate.sh).
+      - run: python3 -m venv .venv && .venv/bin/pip install "cryptography==50.0.2"
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: "4.0"
           bundler-cache: true
       - run: ./scripts/validate.sh
+        env:
+          LFCP_PYTHON: .venv/bin/python
+          LFCP_REQUIRE_ALL_CORPORA: "1"

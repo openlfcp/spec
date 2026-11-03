@@ -12,7 +12,8 @@
 //   generate_lfcp_identity_test_vectors_01.py, when the Python module
 //   `cryptography` is available (as for LFCP-TEST-VECTORS-01, the generator
 //   needs it; set LFCP_PYTHON to a Python that has it, for example .venv/bin/python).
-//   Without it the check says so and is skipped, not failed.
+//   Without it the check says so and is skipped, not failed, unless
+//   LFCP_REQUIRE_ALL_CORPORA is set (CI sets it): then it fails.
 
 import { execFileSync, spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
@@ -38,7 +39,12 @@ if (installed !== pinned) {
 }
 for (const c of corpora) {
   if (c.needs && spawnSync(python, ["-c", `import ${c.needs}`], { stdio: "ignore" }).status !== 0) {
-    console.log(`skip  ${c.base}: ${python} lacks the module ${c.needs} (set LFCP_PYTHON)`);
+    if (process.env.LFCP_REQUIRE_ALL_CORPORA) {
+      console.log(`FAIL  ${c.base}: ${python} lacks the module ${c.needs}, and LFCP_REQUIRE_ALL_CORPORA forbids skipping it`);
+      failed = true;
+    } else {
+      console.log(`skip  ${c.base}: ${python} lacks the module ${c.needs} (set LFCP_PYTHON)`);
+    }
     continue;
   }
   const out = mkdtempSync(join(tmpdir(), "lfcp-identity-corpus-"));
