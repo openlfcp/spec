@@ -1,7 +1,7 @@
 # ADR 0011: Human root identity and device Principals
 
 - **Status:** Accepted. Decisions I1 to I6 taken by the project owner on
-  2026-11-03; the normative details by the orchestrator, after three
+  2026-11-03, the clarification I9 on 2026-11-04; the normative details by the orchestrator, after three
   independent reviews of the specification draft. Applied in this text
   (LFCP-WIRE-01 §7.2, §7.3, §17.4, §17.5, §80.1, §100.1 and
   IDENTITY-PROFILE-01); in no implementation baseline yet (the baseline
@@ -39,6 +39,7 @@ decisions below settle what the owner chose; the sections cited say how.
 | I4 | Revocation is `DEVICE_REVOKE` plus an epoch rotation by whoever can rotate and distribute; a terminal cut of a revoked device's exact units, which would change W §26.2, is not done. | W §17.5, §19, §108.1; IP §8 |
 | I5 | No recovery kit, recovery codes or key backups in this MVP; the formats keep room for them. | W §7.3 reserved values, §108.1; IP §2.4 |
 | I6 | Service devices (kind `1`) and headless pairing are in; a herald client release at least one release and two weeks before the release that pairs, the public server updated first; the presets Full, Edit, Read and Service; automatic rotation by the owner's client on an exposing revocation; server hosting quotas keyed by the Genesis owner; assignees as references to the root. | W §37, §39, §100.1; IP §5.4, §8.4, §10, §11 |
+| I9 | The new epoch number of a `KEY_EPOCH` is a chain placement check (`INVALID_CONTROL_CHAIN`, class 2), run before dependencies, signatures and authority. | W §19, §62 |
 
 Orchestrator decisions inside those (one line each): a certificate is a
 seven-element array under the label `LFCP-DEVICE-CERT-v1` with kind, mask,
