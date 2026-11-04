@@ -27,10 +27,11 @@ For MVP 0.2, [MVP-0.2-BASELINE.md](MVP-0.2-BASELINE.md) does the same at the
 tag `mvp-0.2-baseline.1`: the MVP 0.1 baseline unchanged, plus shared
 sections.
 
-MVP 0.4 (one human, several devices: [ADR 0011](adr/0011-human-root-identity.md))
-is being written into LFCP-WIRE-01 and IDENTITY-PROFILE-01 as Working
-Drafts; its baseline `mvp-0.4-baseline.1` is tagged once the identity
-corpora exist (`migrations/mvp-0.4-baseline.1/` records the value changes).
+For MVP 0.4 (one human, several devices: [ADR 0011](adr/0011-human-root-identity.md)),
+[MVP-0.4-BASELINE.md](MVP-0.4-BASELINE.md) lists the files at the tag
+`mvp-0.4-baseline.1`: the MVP 0.2 baseline plus multi-device root identity
+in LFCP-WIRE-01, IDENTITY-PROFILE-01 and the identity corpora
+(`migrations/mvp-0.4-baseline.1/` records the value changes).
 
 Higher entries win. A lower artifact never overrides a higher one; a
 conflict between them is a specification gap to report, not something to
@@ -45,6 +46,7 @@ resolve in code.
 | 5 | Shared Objects test vectors | [test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.md](test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.md), [.json](test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.json) | Test vectors |
 | 6 | Markdown projection refs | [integration/MARKDOWN-REFS-01.md](integration/MARKDOWN-REFS-01.md) | Normative, Working Draft |
 | 6 | Identity Resource profile and device flows (MVP 0.4) | [profiles/IDENTITY-PROFILE-01.md](profiles/IDENTITY-PROFILE-01.md); the wire side in LFCP-WIRE-01 §7.2, §7.3, §17.4, §17.5, §80.1 and §100.1 ([ADR 0011](adr/0011-human-root-identity.md)) | Normative, Working Draft; not in a baseline yet |
+| 6 | Identity test vectors (MVP 0.4) | [test-vectors/lfcp-wire-01/LFCP-IDENTITY-TEST-VECTORS-01.md](test-vectors/lfcp-wire-01/LFCP-IDENTITY-TEST-VECTORS-01.md), [.json](test-vectors/lfcp-wire-01/LFCP-IDENTITY-TEST-VECTORS-01.json); [test-vectors/identity-01/IDENTITY-PROFILE-TEST-VECTORS-01.md](test-vectors/identity-01/IDENTITY-PROFILE-TEST-VECTORS-01.md), [.json](test-vectors/identity-01/IDENTITY-PROFILE-TEST-VECTORS-01.json); [test-vectors/identity-01/IDENTITY-FLOW-FIXTURES-01.md](test-vectors/identity-01/IDENTITY-FLOW-FIXTURES-01.md), [.json](test-vectors/identity-01/IDENTITY-FLOW-FIXTURES-01.json) (IDENTITY-PROFILE-01 §12) | Test vectors |
 | 6 | Obsidian architecture | `obsidian: docs/OBSIDIAN-ARCHITECTURE-01.md` | Architecture |
 | 7 | Implementation code | `sdk-ts`, `sdk-rs`, `server`, `obsidian` | |
 | 8 | UI behavior | `obsidian` | |
@@ -70,6 +72,13 @@ Each vector directory also holds the generator that produced it:
 - [test-vectors/lfcp-wire-01/generate_lfcp_test_vectors_01.py](test-vectors/lfcp-wire-01/generate_lfcp_test_vectors_01.py)
 - [test-vectors/shared-objects-01/generate_shared_objects_test_vectors_01.py](test-vectors/shared-objects-01/generate_shared_objects_test_vectors_01.py)
 - [test-vectors/shared-objects-01/generate_automerge_reference_01.mjs](test-vectors/shared-objects-01/generate_automerge_reference_01.mjs)
+- [test-vectors/lfcp-wire-01/generate_lfcp_identity_test_vectors_01.py](test-vectors/lfcp-wire-01/generate_lfcp_identity_test_vectors_01.py) (with its reference model [identity_model.py](test-vectors/lfcp-wire-01/identity_model.py))
+- [test-vectors/identity-01/generate_identity_profile_vectors_01.mjs](test-vectors/identity-01/generate_identity_profile_vectors_01.mjs)
+- [test-vectors/identity-01/generate_identity_flow_fixtures_01.py](test-vectors/identity-01/generate_identity_flow_fixtures_01.py)
+
+The Python generators of the wire suites need the `cryptography` package
+(`python3 -m venv .venv && .venv/bin/pip install cryptography`); the
+identity flow fixtures need only the standard library.
 
 ## Layout
 

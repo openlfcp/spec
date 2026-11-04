@@ -73,6 +73,11 @@ directory).
 | `test-vectors/lfcp-wire-01/LFCP-TEST-VECTORS-01.json` | Wire vectors, machine-readable (`lfcp-vector-format/1`): byte-exact positives and negatives |
 | `test-vectors/lfcp-wire-01/LFCP-TEST-VECTORS-01.md` | Wire vectors, human-readable, with derivations |
 | `test-vectors/lfcp-wire-01/generate_lfcp_test_vectors_01.py` | Generator; reproduces both Wire vector files byte for byte |
+| `test-vectors/lfcp-wire-01/LFCP-IDENTITY-TEST-VECTORS-01.json` | Working Draft corpus for MVP 0.4, not in this baseline: the wire identity vectors of IDENTITY-PROFILE-01 §12.2 (LFCP-04-403), to enter `mvp-0.4-baseline.1`; listed because every file under `test-vectors/` is |
+| `test-vectors/lfcp-wire-01/LFCP-IDENTITY-TEST-VECTORS-01.md` | Working Draft corpus for MVP 0.4, not in this baseline: the wire identity vectors, human-readable, to enter `mvp-0.4-baseline.1`; listed because every file under `test-vectors/` is |
+| `test-vectors/lfcp-wire-01/generate_lfcp_identity_test_vectors_01.py` | Working Draft corpus for MVP 0.4, not in this baseline: the generator of the wire identity vectors, to enter `mvp-0.4-baseline.1`; listed because every file under `test-vectors/` is |
+| `test-vectors/lfcp-wire-01/identity_model.py` | Working Draft corpus for MVP 0.4, not in this baseline: the identity generator's reference model, to enter `mvp-0.4-baseline.1`; listed because every file under `test-vectors/` is |
+| `test-vectors/identity-01/` | Working Draft corpus for MVP 0.4, not in this baseline: the identity profile corpus, the identity flow fixtures and their generators, to enter `mvp-0.4-baseline.1`; listed because every file under `test-vectors/` is |
 | `test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.json` | Shared Objects vectors, machine-readable: deterministic, validation and behavioral cases |
 | `test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.md` | Shared Objects vectors, human-readable |
 | `test-vectors/shared-objects-01/generate_shared_objects_test_vectors_01.py` | Generator; reproduces both Shared Objects vector files byte for byte |

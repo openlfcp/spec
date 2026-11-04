@@ -136,7 +136,20 @@
           "$ref": "#/$defs/snake_name"
         },
         "description": { "type": "string" },
-        "note": { "type": "string" }
+        "note": { "type": "string" },
+        "rule": {
+          "description": "The section and rule that decide the case; for a rejection, the first failing check in the specification's order.",
+          "$ref": "#/$defs/rule"
+        }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "required": ["section", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "section": { "type": "string", "minLength": 1 },
+        "text": { "type": "string", "minLength": 1 }
       }
     },
     "case": {
@@ -174,15 +187,7 @@
             "to": {}
           }
         },
-        "rule": {
-          "type": "object",
-          "required": ["section", "text"],
-          "additionalProperties": false,
-          "properties": {
-            "section": { "type": "string", "minLength": 1 },
-            "text": { "type": "string", "minLength": 1 }
-          }
-        },
+        "rule": { "$ref": "#/$defs/rule" },
         "why": { "type": "string", "minLength": 1 }
       }
     },
@@ -248,10 +253,15 @@
                   "type": "string"
                 }
               }
+            },
+            "post_state": {
+              "description": "For an accepted input, the derived state facts an implementation must reproduce after it (for example the Control state of LFCP-WIRE-01 §79). Suite conventions define the layout.",
+              "type": "object"
             }
           },
           "if": { "type": "object", "properties": { "valid": { "const": true } } },
-          "then": { "type": "object", "properties": { "error": false } }
+          "then": { "type": "object", "properties": { "error": false } },
+          "else": { "type": "object", "properties": { "post_state": false } }
         }
       },
       "unevaluatedProperties": false

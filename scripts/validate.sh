@@ -2,8 +2,9 @@
 # Validation entry point for the spec repository.
 #
 # 1. every JSON file parses;
-# 2. the vector suites and format fixtures match the lfcp-vector-format/1
-#    schema (scripts/validate-vectors.mjs);
+# 2. the vector suites (*-TEST-VECTORS-*.json, *-FLOW-FIXTURES-*.json) and
+#    format fixtures match the lfcp-vector-format/1 schema
+#    (scripts/validate-vectors.mjs);
 # 3. the lfcp-vector-format/1 migration changed no vector value
 #    (scripts/check-vector-migration.mjs; needs full Git history), and no
 #    vector value changed since the previous MVP baseline tag except the
@@ -20,6 +21,9 @@
 #    pinned @automerge/automerge (scripts/check-automerge-corpus.mjs);
 #    the shared sections corpus matches its schema, regenerates
 #    byte-identically and replays (scripts/check-shared-sections-corpus.mjs);
+#    the identity corpora regenerate byte-identically
+#    (scripts/check-identity-corpora.mjs; the wire identity suite only when
+#    LFCP_PYTHON names a Python with `cryptography`);
 # 8. each MVP-0.N-BASELINE.md lists exactly the canonical files
 #    (scripts/check-baseline.mjs).
 #
@@ -52,4 +56,5 @@ bundle exec ruby scripts/check-cddl.rb
 node scripts/validate-shared-objects.mjs
 node scripts/check-automerge-corpus.mjs
 node scripts/check-shared-sections-corpus.mjs
+node scripts/check-identity-corpora.mjs
 node scripts/check-baseline.mjs

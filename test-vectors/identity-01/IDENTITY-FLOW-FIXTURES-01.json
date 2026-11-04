@@ -1,0 +1,2930 @@
+{
+  "format": "lfcp-vector-format/1",
+  "suite": {
+    "id": "IDENTITY-FLOW-FIXTURES-01",
+    "version": "01",
+    "specification": {
+      "id": "IDENTITY-PROFILE-01",
+      "profile": "org.openlfcp.identity.v1",
+      "revision": "working-draft"
+    },
+    "description": "State-machine and durable-operation fixtures of multi-device identity (IDENTITY-PROFILE-01 §12.3; LFCP-WIRE-01 §107).",
+    "depends_on": [
+      "LFCP-IDENTITY-TEST-VECTORS-01",
+      "IDENTITY-PROFILE-TEST-VECTORS-01",
+      "LFCP-WIRE-01",
+      "IDENTITY-PROFILE-01"
+    ],
+    "conventions": {
+      "steps": "inputs.steps are performed in order; expected.steps gives each step's outcome and the facts it asserts.",
+      "references": "A step case `wire:<id>` names a case of LFCP-IDENTITY-TEST-VECTORS-01, `profile:<id>` one of IDENTITY-PROFILE-TEST-VECTORS-01; the step outcome equals that case's expected outcome. `bytes_of` names a case whose exact bytes a step sends in another context, with the outcome the step states.",
+      "history": "inputs.mode `sequence`: the steps of each Resource and `branch` form one history; the Control state a step's case is decided on contains the last record an earlier step of the same branch committed. An `aside` step shows a rule on another head and is not part of the history. Mode `independent`: each step stands alone.",
+      "phases": "expected `phase` is the state of IDENTITY-PROFILE-01 §9.2 on the Control state of the step's case (`phase_input`), first match wins.",
+      "client_outcomes": "Outcomes without a case are client-procedure results (phase states of IDENTITY-PROFILE-01 §9.2, statuses of §6); they have no wire code."
+    }
+  },
+  "cases": [
+    {
+      "id": "F01_register_write_revoke_cutoff",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "Register DEV_A, write, revoke it, accept an old-head unit, close the epoch, quarantine the unit beyond the frontier and rebuild",
+      "rule": {
+        "section": "LFCP-WIRE-01 §17.5, §19.1, §26.3, §81",
+        "text": "Revocation without rotation leaves old-head units acceptable until the closing KEY_EPOCH; beyond its frontier they are STALE_DATA_EPOCH and replicas rebuild without them."
+      },
+      "inputs": {
+        "mode": "sequence",
+        "steps": [
+          {
+            "action": "replicas R1 and R2 accept the registration",
+            "case": "wire:I1_device_grant_dev_a",
+            "n": 1
+          },
+          {
+            "action": "DEV_A writes sequence 1 at I1",
+            "case": "wire:D_dev_a_seq1",
+            "n": 2
+          },
+          {
+            "action": "DEV_B self-registers and writes at I2",
+            "case": "wire:D_dev_b_seq1",
+            "n": 3
+          },
+          {
+            "action": "BRIDGE writes at I8",
+            "case": "wire:D_bridge_writes_x",
+            "n": 4
+          },
+          {
+            "action": "OWNER revokes DEV_A",
+            "case": "wire:I9_device_revoke_dev_a",
+            "n": 5
+          },
+          {
+            "action": "R1 receives DEV_A sequence 2 at the old head I1, latest I9, and merges it",
+            "case": "wire:D_dev_a_old_head_after_revoke",
+            "n": 6
+          },
+          {
+            "action": "OWNER closes epoch 0",
+            "case": "wire:K1_key_epoch",
+            "n": 7
+          },
+          {
+            "action": "R2 receives the same unit after K1",
+            "case": "wire:D_dev_a_beyond_epoch_cutoff",
+            "n": 8
+          },
+          {
+            "action": "R1 learns K1 and rebuilds without DEV_A sequence 2",
+            "n": 9
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept"
+          },
+          {
+            "n": 2,
+            "outcome": "accept"
+          },
+          {
+            "n": 3,
+            "outcome": "accept"
+          },
+          {
+            "n": 4,
+            "outcome": "accept"
+          },
+          {
+            "n": 5,
+            "outcome": "accept",
+            "exposing": true,
+            "suspended": [
+              "DEV_B"
+            ]
+          },
+          {
+            "n": 6,
+            "outcome": "accept"
+          },
+          {
+            "n": 7,
+            "outcome": "accept",
+            "frontier": {
+              "DEV_A": 1,
+              "DEV_B": 1,
+              "BRIDGE": 1
+            }
+          },
+          {
+            "n": 8,
+            "outcome": "STALE_DATA_EPOCH",
+            "disposition": "quarantine"
+          },
+          {
+            "n": 9,
+            "outcome": "rebuilt",
+            "excluded": [
+              "D_dev_a_old_head_after_revoke"
+            ],
+            "surfaced_as_stale": true
+          }
+        ],
+        "final": {
+          "accepted_epoch_0_units_R1": [
+            "D_dev_a_seq1",
+            "D_dev_b_seq1",
+            "D_bridge_writes_x"
+          ],
+          "accepted_epoch_0_units_R2": [
+            "D_dev_a_seq1",
+            "D_dev_b_seq1",
+            "D_bridge_writes_x"
+          ],
+          "replicas_converge": true
+        }
+      },
+      "assertions": [
+        "R1, which merged the unit before the revocation closed the epoch, and R2, which saw it only after, end with the same accepted set (LFCP-WIRE-01 §19.1)."
+      ]
+    },
+    {
+      "id": "F02_cascade_recertify",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "Revoking DEV_A suspends DEV_B by the cascade; re-certification by the root makes it active again; DEV_B units at each head",
+      "rule": {
+        "section": "LFCP-WIRE-01 §17.5 (cascade), §17.4 rule 5",
+        "text": "A suspended device is not revoked; the root or another managing device may re-certify it with a chain that avoids the revoked issuer."
+      },
+      "inputs": {
+        "mode": "sequence",
+        "steps": [
+          {
+            "action": "DEV_B self-registers with [CERT_B, CERT_A]",
+            "case": "wire:I2_device_grant_self_dev_b",
+            "n": 1
+          },
+          {
+            "action": "DEV_B writes at I2",
+            "case": "wire:D_dev_b_seq1",
+            "n": 2
+          },
+          {
+            "action": "OWNER revokes DEV_A",
+            "case": "wire:I9_device_revoke_dev_a",
+            "n": 3
+          },
+          {
+            "action": "DEV_B writes at I9",
+            "case": "wire:D_dev_b_suspended",
+            "n": 4
+          },
+          {
+            "action": "DEV_B cannot re-certify itself",
+            "case": "wire:device_grant_self_recertify_suspended",
+            "n": 5
+          },
+          {
+            "action": "OWNER re-certifies DEV_B with [CERT_B2]",
+            "case": "wire:I10_recertify_dev_b",
+            "n": 6
+          },
+          {
+            "action": "DEV_B writes at I10",
+            "case": "wire:D_dev_b_recertified",
+            "n": 7
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept",
+            "DEV_B": {
+              "root": "OWNER",
+              "kind": 0,
+              "mask": [
+                1,
+                2,
+                3
+              ],
+              "scope": [],
+              "registered": true,
+              "leaf": "CERT_B",
+              "issuers": [
+                "DEV_A"
+              ],
+              "active": true,
+              "suspended": false,
+              "reads": true
+            }
+          },
+          {
+            "n": 2,
+            "outcome": "accept"
+          },
+          {
+            "n": 3,
+            "outcome": "accept",
+            "DEV_B": {
+              "root": "OWNER",
+              "kind": 0,
+              "mask": [
+                1,
+                2,
+                3
+              ],
+              "scope": [],
+              "registered": true,
+              "leaf": "CERT_B",
+              "issuers": [
+                "DEV_A"
+              ],
+              "active": false,
+              "suspended": true,
+              "reads": false
+            }
+          },
+          {
+            "n": 4,
+            "outcome": "AUTHORIZATION_FAILED"
+          },
+          {
+            "n": 5,
+            "outcome": "AUTHORIZATION_FAILED"
+          },
+          {
+            "n": 6,
+            "outcome": "accept",
+            "DEV_B": {
+              "root": "OWNER",
+              "kind": 0,
+              "mask": [
+                1,
+                2,
+                3
+              ],
+              "scope": [],
+              "registered": true,
+              "leaf": "CERT_B2",
+              "issuers": [],
+              "active": true,
+              "suspended": false,
+              "reads": true
+            }
+          },
+          {
+            "n": 7,
+            "outcome": "accept"
+          }
+        ],
+        "final": {
+          "DEV_B": {
+            "root": "OWNER",
+            "kind": 0,
+            "mask": [
+              1,
+              2,
+              3
+            ],
+            "scope": [],
+            "registered": true,
+            "leaf": "CERT_B2",
+            "issuers": [],
+            "active": true,
+            "suspended": false,
+            "reads": true
+          }
+        }
+      },
+      "assertions": [
+        "The unit at I9 stays refused after I10: activity is evaluated at the head a unit references."
+      ]
+    },
+    {
+      "id": "F03_stale_head_reevaluation",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "Self-registration proposed on a stale head, re-evaluated on the new head; the same DEVICE_GRANT proposed twice",
+      "rule": {
+        "section": "LFCP-WIRE-01 §47; IDENTITY-PROFILE-01 §9.2, §9.3",
+        "text": "A proposer that meets CONTROL_HEAD_MISMATCH synchronises and classifies its phase on the accepted chain; a repeated record is not a transition and the intent is complete."
+      },
+      "inputs": {
+        "mode": "sequence",
+        "steps": [
+          {
+            "action": "The coordinator holds I1",
+            "case": "wire:I1_device_grant_dev_a",
+            "n": 1
+          },
+          {
+            "action": "DEV_B proposes its self-registration on J2 (a stale head)",
+            "bytes_of": "wire:flow.self_register_dev_b_on_j2",
+            "n": 2
+          },
+          {
+            "action": "DEV_B synchronises: its register phase is pending on I1",
+            "phase_input": {
+              "phase": "register",
+              "state": "wire:I1_device_grant_dev_a",
+              "root": "OWNER",
+              "device": "DEV_B",
+              "certificate": "CERT_B"
+            },
+            "n": 3
+          },
+          {
+            "action": "DEV_B proposes a fresh record on I1",
+            "case": "wire:I2_device_grant_self_dev_b",
+            "n": 4
+          },
+          {
+            "action": "A second installation with the same intent classifies it on I2",
+            "phase_input": {
+              "phase": "register",
+              "state": "wire:I2_device_grant_self_dev_b",
+              "root": "OWNER",
+              "device": "DEV_B",
+              "certificate": "CERT_B",
+              "own": false
+            },
+            "n": 5
+          },
+          {
+            "action": "Had it proposed a fresh DEVICE_GRANT with the same leaf, rule 5 refuses it (shown for DEV_A on I1)",
+            "case": "wire:device_grant_repeat_same_leaf_fresh",
+            "aside": true,
+            "n": 6
+          },
+          {
+            "action": "The exact bytes of a committed record sent again",
+            "case": "wire:device_grant_replay_exact_bytes",
+            "aside": true,
+            "n": 7
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept"
+          },
+          {
+            "n": 2,
+            "outcome": "CONTROL_HEAD_MISMATCH",
+            "coordinator_head": "I1_device_grant_dev_a"
+          },
+          {
+            "n": 3,
+            "outcome": "done",
+            "phase": "pending"
+          },
+          {
+            "n": 4,
+            "outcome": "accept"
+          },
+          {
+            "n": 5,
+            "outcome": "done",
+            "phase": "complete",
+            "proposes": false
+          },
+          {
+            "n": 6,
+            "outcome": "AUTHORIZATION_FAILED"
+          },
+          {
+            "n": 7,
+            "outcome": "accept",
+            "ack": "same ACK",
+            "transition": false
+          }
+        ],
+        "final": {
+          "DEV_B_registered": true,
+          "records_added": 1
+        }
+      },
+      "assertions": [
+        "No record is proposed twice as a new transition; a re-sent exact record gets the same ACK."
+      ]
+    },
+    {
+      "id": "F04_root_standing_lost_regained",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "The owner revokes BOB's grant: every device of BOB is inactive; a re-grant restores them without new device records",
+      "rule": {
+        "section": "LFCP-WIRE-01 §7.2 N4, §17.5",
+        "text": "Revoking the root's standing silences all its devices; restoring it restores them without re-registration."
+      },
+      "inputs": {
+        "mode": "sequence",
+        "steps": [
+          {
+            "action": "OWNER revokes J1",
+            "case": "wire:I11_revoke_root_grant_bob",
+            "n": 1
+          },
+          {
+            "action": "DEV_C writes at I11",
+            "case": "wire:D_dev_c_without_standing",
+            "n": 2
+          },
+          {
+            "action": "DEV_C opens X at I11",
+            "case": "wire:CONTROL_GET_by_root_without_standing",
+            "n": 3
+          },
+          {
+            "action": "OWNER grants BOB again",
+            "case": "wire:I12_regrant_bob",
+            "n": 4
+          },
+          {
+            "action": "DEV_C writes at I12",
+            "case": "wire:D_dev_c_regranted",
+            "n": 5
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept",
+            "active": {
+              "DEV_C": false,
+              "DEV_E": false,
+              "BRIDGE": false
+            }
+          },
+          {
+            "n": 2,
+            "outcome": "AUTHORIZATION_FAILED"
+          },
+          {
+            "n": 3,
+            "outcome": "AUTHORIZATION_FAILED"
+          },
+          {
+            "n": 4,
+            "outcome": "accept",
+            "active": {
+              "DEV_C": true,
+              "DEV_E": true,
+              "BRIDGE": true
+            }
+          },
+          {
+            "n": 5,
+            "outcome": "accept"
+          }
+        ],
+        "final": {
+          "device_records_added": 0
+        }
+      },
+      "assertions": [
+        "Activity returns with standing; no DEVICE_GRANT is needed."
+      ]
+    },
+    {
+      "id": "F05_reconciliation",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "Reconciliation of X against I's Control state: revocations first, then registrations, then keys; idempotent; two reconcilers race",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §7.1",
+        "text": "Revocations first; registrations of personal devices active in I and not registered in X; keys by the ledger; a second run proposes nothing."
+      },
+      "inputs": {
+        "mode": "sequence",
+        "steps": [
+          {
+            "action": "I's state at P4: DEV_A and DEV_B registered, (OWNER, PAIR_J) consumed",
+            "case": "wire:P4_register_dev_b_approved",
+            "n": 1
+          },
+          {
+            "action": "X's state: DEV_B self-registered with [CERT_B, CERT_A], DEV_A bound only as an intermediate",
+            "case": "wire:flow.self_register_dev_b_on_j2",
+            "n": 2
+          },
+          {
+            "action": "Step 1: I's revocation of (OWNER, PAIR_J), reason 3 propagated as 0",
+            "case": "wire:flow.reconcile_revoke_pairing_in_x",
+            "n": 3
+          },
+          {
+            "action": "Step 2: DEV_A, bound only as an intermediate in X, is registered with I's chain; DEV_B has the same leaf certificate ID and needs nothing",
+            "case": "wire:flow.reconcile_register_dev_a",
+            "n": 4
+          },
+          {
+            "action": "Step 3: the reconciler seals every epoch of X it holds to DEV_A and DEV_B unless its ledger records the package",
+            "ledger_before": {
+              "DEV_A": [],
+              "DEV_B": []
+            },
+            "n": 5
+          },
+          {
+            "action": "A second reconciler had proposed the same registration on the previous head: CONTROL_HEAD_MISMATCH; after synchronising its phase is",
+            "phase_input": {
+              "phase": "register",
+              "state": "wire:flow.reconcile_register_dev_a",
+              "root": "OWNER",
+              "device": "DEV_A",
+              "certificate": "CERT_A",
+              "own": false
+            },
+            "n": 6
+          },
+          {
+            "action": "A second run of the reconciler",
+            "n": 7
+          },
+          {
+            "action": "The Identity Resource as its own target: steps 1 and 2 are vacuous, step 3 seals I's epochs to DEV_B",
+            "case": "wire:flow.kp_dev_a_to_dev_b_in_i",
+            "n": 8
+          },
+          {
+            "action": "A service device whose issuer I has revoked is never registered in X: the revocation reaches X first and X refuses the chain (shown at I9)",
+            "case": "wire:chain_through_revoked_issuer",
+            "aside": true,
+            "n": 9
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept",
+            "revoked": {
+              "OWNER/PAIR_J": {
+                "reason": 3,
+                "approval": {
+                  "hex": "9de07a946096cfa059af56ebbb39f3d4b427ddd745dc30bfe86bb87b769efa7c"
+                }
+              }
+            },
+            "registered": [
+              "DEV_A",
+              "DEV_B",
+              "PAIR_J"
+            ]
+          },
+          {
+            "n": 2,
+            "outcome": "accept",
+            "DEV_A": {
+              "root": "OWNER",
+              "kind": 0,
+              "mask": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                10,
+                12,
+                13
+              ],
+              "scope": [],
+              "registered": false,
+              "issuers": [],
+              "active": false,
+              "suspended": false,
+              "reads": false
+            }
+          },
+          {
+            "n": 3,
+            "outcome": "accept",
+            "exposing": false
+          },
+          {
+            "n": 4,
+            "outcome": "accept",
+            "DEV_A": {
+              "root": "OWNER",
+              "kind": 0,
+              "mask": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                10,
+                12,
+                13
+              ],
+              "scope": [],
+              "registered": true,
+              "leaf": "CERT_A",
+              "issuers": [],
+              "active": true,
+              "suspended": false,
+              "reads": true
+            },
+            "phase": "committed-own"
+          },
+          {
+            "n": 5,
+            "outcome": "packages sent",
+            "ledger_after": {
+              "DEV_A": [
+                0
+              ],
+              "DEV_B": [
+                0
+              ]
+            }
+          },
+          {
+            "n": 6,
+            "outcome": "done",
+            "phase": "complete"
+          },
+          {
+            "n": 7,
+            "outcome": "nothing to propose",
+            "records": 0,
+            "packages": 0
+          },
+          {
+            "n": 8,
+            "outcome": "accept"
+          },
+          {
+            "n": 9,
+            "outcome": "AUTHORIZATION_FAILED"
+          }
+        ],
+        "final": {
+          "X_devices": {
+            "DEV_A": {
+              "root": "OWNER",
+              "kind": 0,
+              "mask": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                10,
+                12,
+                13
+              ],
+              "scope": [],
+              "registered": true,
+              "leaf": "CERT_A",
+              "issuers": [],
+              "active": true,
+              "suspended": false,
+              "reads": true
+            },
+            "DEV_B": {
+              "root": "OWNER",
+              "kind": 0,
+              "mask": [
+                1,
+                2,
+                3
+              ],
+              "scope": [],
+              "registered": true,
+              "leaf": "CERT_B",
+              "issuers": [
+                "DEV_A"
+              ],
+              "active": true,
+              "suspended": false,
+              "reads": true
+            }
+          },
+          "idempotent": true
+        }
+      },
+      "assertions": [
+        "Registration and key delivery are reconciled independently; an equal leaf certificate ID says nothing about packages."
+      ]
+    },
+    {
+      "id": "F06_concurrent_revokes",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "OWNER and DEV_A revoke DEV_B on one head with different reasons: one record; the other phase is complete",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §9.2 (Revoke)",
+        "text": "Revoked with any other reason, by anyone: complete; the operation continues with the rotation test."
+      },
+      "inputs": {
+        "mode": "sequence",
+        "steps": [
+          {
+            "action": "X at I2",
+            "case": "wire:I2_device_grant_self_dev_b",
+            "n": 1
+          },
+          {
+            "action": "DEV_A proposes DEVICE_REVOKE {OWNER, DEV_B, 2} on I2",
+            "bytes_of": "wire:flow.f06_dev_a_stale_proposal",
+            "n": 2
+          },
+          {
+            "action": "OWNER's DEVICE_REVOKE {OWNER, DEV_B, 1} on I2 was committed first",
+            "case": "wire:flow.f06_owner_revokes_dev_b",
+            "n": 3
+          },
+          {
+            "action": "DEV_A synchronises and classifies its revoke phase",
+            "phase_input": {
+              "phase": "revoke",
+              "state": "wire:flow.f06_owner_revokes_dev_b",
+              "root": "OWNER",
+              "device": "DEV_B"
+            },
+            "n": 4
+          },
+          {
+            "action": "A fresh proposal of the same intent would be refused",
+            "case": "wire:flow.f06_dev_a_fresh_revoke",
+            "n": 5
+          },
+          {
+            "action": "DEV_A continues with the rotation test of §8.1",
+            "n": 6
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept"
+          },
+          {
+            "n": 2,
+            "outcome": "CONTROL_HEAD_MISMATCH"
+          },
+          {
+            "n": 3,
+            "outcome": "accept"
+          },
+          {
+            "n": 4,
+            "outcome": "done",
+            "phase": "complete",
+            "not_superseded": true
+          },
+          {
+            "n": 5,
+            "outcome": "AUTHORIZATION_FAILED"
+          },
+          {
+            "n": 6,
+            "outcome": "rotation test"
+          }
+        ],
+        "final": {
+          "device_revoke_records": 1
+        }
+      },
+      "assertions": [
+        "A different reason recorded by another installation is complete, not superseded."
+      ]
+    },
+    {
+      "id": "F07_invitation_accepted_by_device",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "An invitation accepted by a device of DAVE: the claim names the root, the device registers itself and keys its root",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §7.2; LFCP-WIRE-01 §18.1",
+        "text": "The claimant is the root; the device self-registers, seals the DEKs it holds to its root and adds the Resource to the roster."
+      },
+      "inputs": {
+        "mode": "sequence",
+        "steps": [
+          {
+            "action": "OWNER invites INVITE",
+            "case": "wire:N1_invite_grant",
+            "n": 1
+          },
+          {
+            "action": "DEV_D, a device of DAVE, claims with claimant DAVE, signed by INVITE",
+            "case": "wire:flow.claim_for_root_dave",
+            "n": 2
+          },
+          {
+            "action": "DEV_D registers itself",
+            "case": "wire:flow.self_register_dev_d",
+            "n": 3
+          },
+          {
+            "action": "DEV_D seals epoch 0 to DAVE",
+            "case": "wire:flow.kp_dev_d_to_dave",
+            "n": 4
+          },
+          {
+            "action": "DAVE opens X and reads",
+            "case": "wire:flow.open_as_dave",
+            "n": 5
+          },
+          {
+            "action": "DEV_D adds X to the roster of I",
+            "n": 6
+          },
+          {
+            "action": "A device named as claimant would be refused (shown on I2)",
+            "case": "wire:claim_by_bound_claimant",
+            "aside": true,
+            "n": 7
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept"
+          },
+          {
+            "n": 2,
+            "outcome": "accept"
+          },
+          {
+            "n": 3,
+            "outcome": "accept",
+            "DEV_D": {
+              "root": "DAVE",
+              "kind": 0,
+              "mask": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                10,
+                12,
+                13
+              ],
+              "scope": [],
+              "registered": true,
+              "leaf": "CERT_D",
+              "issuers": [],
+              "active": true,
+              "suspended": false,
+              "reads": true
+            }
+          },
+          {
+            "n": 4,
+            "outcome": "accept"
+          },
+          {
+            "n": 5,
+            "outcome": "accept"
+          },
+          {
+            "n": 6,
+            "outcome": "roster entry written"
+          },
+          {
+            "n": 7,
+            "outcome": "AUTHORIZATION_FAILED"
+          }
+        ],
+        "final": {
+          "claimant_role": "non-device"
+        }
+      },
+      "assertions": [
+        "The root is the member; its devices act for it."
+      ]
+    },
+    {
+      "id": "F08_pairing_personal",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "Pairing DEV_B through PAIR_L in an Identity Resource already rotated to epoch 1: keys of both epochs, request, phases 1 and 2, reuse and equivocation",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §5.3, §9",
+        "text": "A pairing session yields at most one approved payload; nothing is signed for D_B before the consume is committed (N9)."
+      },
+      "inputs": {
+        "mode": "sequence",
+        "pairing_device": "PAIR_L",
+        "steps": [
+          {
+            "action": "I at P1: DEV_A registered",
+            "case": "wire:P1_device_grant_dev_a_i",
+            "n": 1
+          },
+          {
+            "action": "The root's Data Unit with actor sequence 1 carries the initial change (epoch 0)",
+            "case": "wire:flow.pl_root_unit_1",
+            "n": 2
+          },
+          {
+            "action": "The root's Data Unit with actor sequence 2 carries the fill change (epoch 0)",
+            "case": "wire:flow.pl_root_unit_2",
+            "n": 3
+          },
+          {
+            "action": "I is rotated to epoch 1",
+            "case": "wire:flow.pl_key_epoch_1",
+            "n": 4
+          },
+          {
+            "action": "DEV_A holds both DEKs and the root's unit 1, and creates PAIR_L",
+            "case": "wire:flow.pl_pairing_device_l",
+            "n": 5
+          },
+          {
+            "action": "DEV_A seals the DEK of epoch 0 to PAIR_L",
+            "case": "wire:flow.pl_kp_epoch0_to_pair_l",
+            "n": 6
+          },
+          {
+            "action": "DEV_A seals the DEK of epoch 1 to PAIR_L",
+            "case": "wire:flow.pl_kp_epoch1_to_pair_l",
+            "n": 7
+          },
+          {
+            "action": "The link of PAIR_L is shown",
+            "case": "profile:pair_uri_pair_l",
+            "n": 8
+          },
+          {
+            "action": "B opens the root's units 1 and 2 with the DEK of epoch 0 and replays their changes: the document of §5.1 (a Snapshot is used only after unit 1)",
+            "case": "profile:identity_doc_initial_then_fill",
+            "changes": [
+              "change.C0_initial",
+              "change.C1_fill"
+            ],
+            "n": 9
+          },
+          {
+            "action": "A Snapshot whose initial change is not the root's unit 1 is not used",
+            "case": "profile:identity_doc_initial_without_unit_1",
+            "aside": true,
+            "n": 10
+          },
+          {
+            "action": "B writes its request as PAIR_L in epoch 1",
+            "case": "wire:flow.pl_pair_l_request",
+            "n": 11
+          },
+          {
+            "action": "The document admits the change the unit carries",
+            "case": "profile:pairing_l_writes_own_request",
+            "n": 12
+          },
+          {
+            "action": "A shows the fingerprint",
+            "case": "profile:fingerprint_dev_b",
+            "n": 13
+          },
+          {
+            "action": "Phase 1: consume with digest(CERT_B)",
+            "case": "wire:flow.pl_consume_l",
+            "phase_input": {
+              "phase": "consume",
+              "state": "wire:flow.pl_consume_l",
+              "root": "OWNER",
+              "device": "PAIR_L",
+              "digest": "9de07a946096cfa059af56ebbb39f3d4b427ddd745dc30bfe86bb87b769efa7c"
+            },
+            "n": 14
+          },
+          {
+            "action": "A second manager that approved another request of the session proposes its consume",
+            "case": "wire:flow.pl_second_manager_consume",
+            "phase_input": {
+              "phase": "consume",
+              "state": "wire:flow.pl_consume_l",
+              "root": "OWNER",
+              "device": "PAIR_L",
+              "digest": "9185a719dc6b0e95b07beaa6bdb4846c15fca353884adcba99986225016e415e"
+            },
+            "n": 15
+          },
+          {
+            "action": "A phase-2 record with another digest is refused",
+            "case": "wire:flow.pl_register_wrong_digest",
+            "n": 16
+          },
+          {
+            "action": "Phase 2",
+            "case": "wire:flow.pl_register_dev_b",
+            "n": 17
+          },
+          {
+            "action": "Lost ACK of phase 2: the exact bytes are re-sent",
+            "bytes_of": "wire:flow.pl_register_dev_b",
+            "n": 18
+          },
+          {
+            "action": "DEV_A seals the DEK of epoch 0 to DEV_B",
+            "case": "wire:flow.pl_kp_epoch0_to_dev_b",
+            "n": 19
+          },
+          {
+            "action": "DEV_A seals the DEK of epoch 1 to DEV_B",
+            "case": "wire:flow.pl_kp_epoch1_to_dev_b",
+            "n": 20
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept"
+          },
+          {
+            "n": 2,
+            "outcome": "accept",
+            "carries": {
+              "change": "change.C0_initial",
+              "change_hash": "01e90a06fb48d9374cabea78ae072590af66a62f54ebebfea8f5425156717417",
+              "writer_class": "root"
+            }
+          },
+          {
+            "n": 3,
+            "outcome": "accept",
+            "carries": {
+              "change": "change.C1_fill",
+              "change_hash": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1",
+              "writer_class": "root"
+            }
+          },
+          {
+            "n": 4,
+            "outcome": "accept"
+          },
+          {
+            "n": 5,
+            "outcome": "accept"
+          },
+          {
+            "n": 6,
+            "outcome": "accept"
+          },
+          {
+            "n": 7,
+            "outcome": "accept"
+          },
+          {
+            "n": 8,
+            "outcome": "exact bytes"
+          },
+          {
+            "n": 9,
+            "outcome": "see case"
+          },
+          {
+            "n": 10,
+            "outcome": "see case"
+          },
+          {
+            "n": 11,
+            "outcome": "accept",
+            "carries": {
+              "change": "change.L1_request",
+              "change_hash": "e46dab72e1b691458d6a1e5bfc0107d92f1d13c938bf87a97ee1f443b3f2d070",
+              "writer_class": "pairing"
+            }
+          },
+          {
+            "n": 12,
+            "outcome": "accept"
+          },
+          {
+            "n": 13,
+            "outcome": "exact bytes"
+          },
+          {
+            "n": 14,
+            "outcome": "accept",
+            "phase": "committed-own",
+            "exposing": true
+          },
+          {
+            "n": 15,
+            "outcome": "AUTHORIZATION_FAILED",
+            "phase": "superseded",
+            "signs": false
+          },
+          {
+            "n": 16,
+            "outcome": "AUTHORIZATION_FAILED"
+          },
+          {
+            "n": 17,
+            "outcome": "accept",
+            "DEV_B": {
+              "root": "OWNER",
+              "kind": 0,
+              "mask": [
+                1,
+                2,
+                3
+              ],
+              "scope": [],
+              "registered": true,
+              "leaf": "CERT_B",
+              "issuers": [
+                "DEV_A"
+              ],
+              "active": true,
+              "suspended": false,
+              "reads": true
+            },
+            "phase": "committed-own"
+          },
+          {
+            "n": 18,
+            "outcome": "same ACK"
+          },
+          {
+            "n": 19,
+            "outcome": "accept"
+          },
+          {
+            "n": 20,
+            "outcome": "accept"
+          }
+        ],
+        "final": {
+          "DEV_B_registered_in_I": true,
+          "approved_payloads": 1,
+          "DEV_B_epochs": [
+            0,
+            1
+          ]
+        }
+      },
+      "assertions": [
+        "Before the link is shown A holds, verified, the root's unit 1 and the DEK of every epoch of I, and seals them all to the pairing device (§5.3 step 1).",
+        "One session: the link, the binding, the signer of every pairing unit and the pairing field of every request change name PAIR_L."
+      ]
+    },
+    {
+      "id": "F08.link_reuse_and_equivocation",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "One link, two installations: sequential reuse, and concurrent equivocation",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §5.3 (Concurrency and failure); LFCP-WIRE-01 §26.2",
+        "text": "Two installations given one link write as PAIR_L: the second writes sequence 2, or both units are excluded as equivocation and A sees no request."
+      },
+      "inputs": {
+        "mode": "independent",
+        "pairing_device": "PAIR_L",
+        "steps": [
+          {
+            "action": "The first installation writes PAIR_L sequence 1",
+            "case": "wire:flow.pl_pair_l_request",
+            "n": 1
+          },
+          {
+            "action": "Sequential reuse: the second installation sees it and writes sequence 2",
+            "case": "wire:flow.pl_pair_l_reuse_seq2",
+            "branch": "reuse",
+            "n": 2
+          },
+          {
+            "action": "Concurrent: the second installation also writes sequence 1",
+            "case": "wire:flow.pl_pair_l_request_second_install",
+            "branch": "equivocation",
+            "n": 3
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept",
+            "carries": {
+              "change": "change.L1_request",
+              "change_hash": "e46dab72e1b691458d6a1e5bfc0107d92f1d13c938bf87a97ee1f443b3f2d070",
+              "writer_class": "pairing"
+            }
+          },
+          {
+            "n": 2,
+            "outcome": "accept",
+            "carries": {
+              "change": "change.L2_reuse",
+              "change_hash": "b73051ca3d39d6da46943f50ce0ded3c6fd62375d840d2f9dbcf5d6ed94397ea",
+              "writer_class": "pairing"
+            }
+          },
+          {
+            "n": 3,
+            "outcome": "ACTOR_EQUIVOCATION",
+            "carries": {
+              "change": "change.L1_second_installation",
+              "change_hash": "bf97471a390278e19d877ca2878f5df86175cb7aa9151eb4a196e11cb1690f2f",
+              "writer_class": "pairing"
+            },
+            "excluded": [
+              "flow.pl_pair_l_request",
+              "flow.pl_pair_l_request_second_install"
+            ],
+            "request_seen_by_A": false
+          }
+        ],
+        "final": {}
+      },
+      "assertions": [
+        "An equivocating pair is excluded with the changes depending on it (SHARED-OBJECTS-PROFILE-01 §14.1)."
+      ]
+    },
+    {
+      "id": "F08.binding_limit",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "OWNER at 31 live devices in I: the pairing device takes the 32nd place, the consume frees it, D_B is registered; at 32 no link",
+      "rule": {
+        "section": "LFCP-WIRE-01 §17.4 rule 8; IDENTITY-PROFILE-01 §5.3 step 1",
+        "text": "Rule 8 counts live bindings; a revoked pairing device frees its place."
+      },
+      "inputs": {
+        "mode": "sequence",
+        "steps": [
+          {
+            "action": "31 live devices of OWNER in I (DEV_A and LIMIT_OWNER_01..30)",
+            "case": "wire:flow.p31_pairing_device",
+            "record_set": "owner_bindings_30_in_i",
+            "n": 1
+          },
+          {
+            "action": "At 32 live devices a further pairing device is refused: no link until a device is revoked",
+            "case": "wire:flow.p31_second_pairing_refused",
+            "n": 2
+          },
+          {
+            "action": "The consume of PAIR_M frees its place",
+            "case": "wire:flow.p31_consume",
+            "n": 3
+          },
+          {
+            "action": "DEV_B takes the 32nd place",
+            "case": "wire:flow.p31_register_dev_b",
+            "n": 4
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept"
+          },
+          {
+            "n": 2,
+            "outcome": "AUTHORIZATION_FAILED"
+          },
+          {
+            "n": 3,
+            "outcome": "accept"
+          },
+          {
+            "n": 4,
+            "outcome": "accept"
+          }
+        ],
+        "final": {
+          "live_devices_of_OWNER": 32
+        }
+      },
+      "assertions": []
+    },
+    {
+      "id": "F08.forty_sessions",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "40 sessions created and cancelled one after the other, then a session completes",
+      "rule": {
+        "section": "LFCP-WIRE-01 §17.4 rule 8",
+        "text": "Revoked pairing devices free their places."
+      },
+      "inputs": {
+        "mode": "sequence",
+        "steps": [
+          {
+            "action": "40 pairing devices created and cancelled in I",
+            "case": "wire:flow.p40_pairing_device",
+            "record_set": "forty_cancelled_sessions_in_i",
+            "n": 1
+          },
+          {
+            "action": "Phase 1 of the 41st session",
+            "case": "wire:flow.p40_consume",
+            "n": 2
+          },
+          {
+            "action": "Phase 2 completes",
+            "case": "wire:flow.p40_register_dev_b",
+            "n": 3
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept"
+          },
+          {
+            "n": 2,
+            "outcome": "accept"
+          },
+          {
+            "n": 3,
+            "outcome": "accept"
+          }
+        ],
+        "final": {
+          "cancelled_sessions": 40,
+          "completed": true
+        }
+      },
+      "assertions": []
+    },
+    {
+      "id": "F09_pairing_service",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "Pairing the service device BRIDGE_O: approved with C0 = CERT_SO (digest d), bound in I, C0's issuer revoked, re-certified as C1 = CERT_SO_R; the candidates",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §5.3 steps 6 and 8, §6",
+        "text": "Only a certificate whose digest equals the approval proves the result; a candidate whose chain never carried that leaf is unproven; a timeout is never a decision."
+      },
+      "inputs": {
+        "mode": "sequence",
+        "pairing_device": "PAIR_J",
+        "steps": [
+          {
+            "action": "Phase 1 with digest(CERT_SO)",
+            "case": "wire:P3s_consume_for_bridge_o",
+            "n": 1
+          },
+          {
+            "action": "Phase 2: bind-only DEVICE_GRANT in I",
+            "case": "wire:P4s_bind_bridge_o",
+            "n": 2
+          },
+          {
+            "action": "BRIDGE_O cannot write in I",
+            "case": "wire:D_bridge_o_in_i",
+            "n": 3
+          },
+          {
+            "action": "Every candidate is offline: B shows",
+            "n": 4
+          },
+          {
+            "action": "C0's issuer DEV_A is revoked in I",
+            "case": "wire:flow.f09_revoke_issuer_in_i",
+            "n": 5
+          },
+          {
+            "action": "The root re-certifies BRIDGE_O as C1 (same kind, mask and scope)",
+            "case": "wire:flow.f09_recertify_c1_in_i",
+            "n": 6
+          },
+          {
+            "action": "Candidate X where C0 was never accepted: reconciliation step 1 propagates the consume of PAIR_J",
+            "case": "wire:flow.f09a_revoke_pair_j",
+            "branch": "X never C0",
+            "n": 7
+          },
+          {
+            "action": "… and the revocation of DEV_A",
+            "case": "wire:flow.f09a_revoke_dev_a",
+            "branch": "X never C0",
+            "n": 8
+          },
+          {
+            "action": "… then step 2 registers C1",
+            "case": "wire:flow.f09a_register_c1",
+            "branch": "X never C0",
+            "n": 9
+          },
+          {
+            "action": "Candidate X where C0 was registered first (before I revoked DEV_A)",
+            "case": "wire:flow.register_bridge_o_in_x",
+            "branch": "X with C0",
+            "n": 10
+          },
+          {
+            "action": "Reconciliation step 1: the consume of PAIR_J",
+            "case": "wire:flow.f09b_revoke_pair_j",
+            "branch": "X with C0",
+            "n": 11
+          },
+          {
+            "action": "… and the revocation of DEV_A, which suspends BRIDGE_O",
+            "case": "wire:flow.f09b_revoke_dev_a",
+            "branch": "X with C0",
+            "n": 12
+          },
+          {
+            "action": "Step 2 re-certifies BRIDGE_O as C1: B takes C0 from the history as its result and uses C1",
+            "case": "wire:flow.f09b_register_c1",
+            "branch": "X with C0",
+            "n": 13
+          },
+          {
+            "action": "The root seals the DEK of X to BRIDGE_O; with the certificate and the DEK it is ready",
+            "case": "wire:flow.f09b_kp_owner_to_bridge_o",
+            "branch": "X with C0",
+            "n": 14
+          },
+          {
+            "action": "Candidate X where another issuer registered C* (scope [X, Y], another digest)",
+            "case": "wire:flow.f09_x_register_cstar",
+            "branch": "X with C*",
+            "n": 15
+          },
+          {
+            "action": "B restarts: it resumes from its persisted candidates",
+            "n": 16
+          },
+          {
+            "action": "A crashes after the bind-only DEVICE_GRANT was accepted, before its ACK was persisted",
+            "phase_input": {
+              "phase": "register",
+              "state": "wire:P4s_bind_bridge_o",
+              "root": "OWNER",
+              "device": "BRIDGE_O",
+              "certificate": "CERT_SO",
+              "own": true
+            },
+            "n": 17
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept",
+            "approval": "257bfe55501cbe494398004e881120270ac92379ee641ce0324ab0097a87f3bb"
+          },
+          {
+            "n": 2,
+            "outcome": "accept",
+            "BRIDGE_O": {
+              "root": "OWNER",
+              "kind": 1,
+              "mask": [
+                1,
+                2
+              ],
+              "scope": [
+                "X"
+              ],
+              "registered": false,
+              "leaf": "CERT_SO",
+              "issuers": [
+                "DEV_A"
+              ],
+              "active": false,
+              "suspended": false,
+              "reads": false
+            }
+          },
+          {
+            "n": 3,
+            "outcome": "AUTHORIZATION_FAILED"
+          },
+          {
+            "n": 4,
+            "outcome": "approved, waiting for registration"
+          },
+          {
+            "n": 5,
+            "outcome": "accept"
+          },
+          {
+            "n": 6,
+            "outcome": "accept"
+          },
+          {
+            "n": 7,
+            "outcome": "accept"
+          },
+          {
+            "n": 8,
+            "outcome": "accept"
+          },
+          {
+            "n": 9,
+            "outcome": "accept",
+            "leaves": [
+              "CERT_SO_R"
+            ],
+            "proven": false,
+            "status": "approval not provable here"
+          },
+          {
+            "n": 10,
+            "outcome": "accept"
+          },
+          {
+            "n": 11,
+            "outcome": "accept"
+          },
+          {
+            "n": 12,
+            "outcome": "accept",
+            "BRIDGE_O": {
+              "root": "OWNER",
+              "kind": 1,
+              "mask": [
+                1,
+                2
+              ],
+              "scope": [
+                "X"
+              ],
+              "registered": true,
+              "leaf": "CERT_SO",
+              "issuers": [
+                "DEV_A"
+              ],
+              "active": false,
+              "suspended": true,
+              "reads": false
+            }
+          },
+          {
+            "n": 13,
+            "outcome": "accept",
+            "leaves": [
+              "CERT_SO",
+              "CERT_SO_R"
+            ],
+            "proven": true,
+            "uses": "CERT_SO_R",
+            "BRIDGE_O": {
+              "root": "OWNER",
+              "kind": 1,
+              "mask": [
+                1,
+                2
+              ],
+              "scope": [
+                "X"
+              ],
+              "registered": true,
+              "leaf": "CERT_SO_R",
+              "issuers": [],
+              "active": true,
+              "suspended": false,
+              "reads": true
+            }
+          },
+          {
+            "n": 14,
+            "outcome": "accept",
+            "status": "ready"
+          },
+          {
+            "n": 15,
+            "outcome": "accept",
+            "leaves": [
+              "CERT_SO_XY"
+            ],
+            "proven": false,
+            "used": false,
+            "Y": "never shown as granted"
+          },
+          {
+            "n": 16,
+            "outcome": "candidates resumed"
+          },
+          {
+            "n": 17,
+            "outcome": "done",
+            "phase": "committed-own",
+            "proposes": false
+          }
+        ],
+        "final": {
+          "registered_in_I": false,
+          "approved_scope": [
+            "X"
+          ]
+        }
+      },
+      "assertions": [
+        "The first verified certificate decides: until B holds one, no candidate outcome is known; a candidate absent from the scope is not granted."
+      ]
+    },
+    {
+      "id": "F10_request_feasibility",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "Request validation and the feasibility check before anything is committed",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §5.3 step 4, §4",
+        "text": "A preset whose complete future chain fails W §7.3 steps 1 and 4 and W §17.4 rules 4 to 6 and 8 is not offered."
+      },
+      "inputs": {
+        "mode": "independent",
+        "steps": [
+          {
+            "action": "A valid request",
+            "case": "profile:request_valid",
+            "n": 1
+          },
+          {
+            "action": "A request written by another pairing device into this one",
+            "case": "profile:pairing_edits_foreign_request_label",
+            "n": 2
+          },
+          {
+            "action": "The descriptor changes between display and confirmation",
+            "n": 3
+          },
+          {
+            "action": "A manager with a chain of three certificates: Full is not offered",
+            "case": "wire:device_grant_feasibility_full_depth_4",
+            "n": 4
+          },
+          {
+            "action": "A manager whose mask lacks 3 cannot issue Edit",
+            "case": "wire:device_grant_feasibility_mask_exceeds_issuer",
+            "n": 5
+          },
+          {
+            "action": "An Edit device cannot issue at all",
+            "case": "wire:device_grant_feasibility_edit_issuer",
+            "n": 6
+          },
+          {
+            "action": "A service scope trimmed to nothing",
+            "n": 7
+          },
+          {
+            "action": "The manager's own authority is re-checked after a head change",
+            "n": 8
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept"
+          },
+          {
+            "n": 2,
+            "outcome": "UNAUTHORIZED_WRITER"
+          },
+          {
+            "n": 3,
+            "outcome": "re-confirmation"
+          },
+          {
+            "n": 4,
+            "outcome": "MALFORMED_MESSAGE",
+            "offered": [
+              "Edit",
+              "Read"
+            ]
+          },
+          {
+            "n": 5,
+            "outcome": "AUTHORIZATION_FAILED"
+          },
+          {
+            "n": 6,
+            "outcome": "AUTHORIZATION_FAILED"
+          },
+          {
+            "n": 7,
+            "outcome": "no consume; session cancelled"
+          },
+          {
+            "n": 8,
+            "outcome": "re-checked"
+          }
+        ],
+        "final": {
+          "consume_proposed_for_infeasible_preset": false
+        }
+      },
+      "assertions": [
+        "No consume is proposed for a preset that fails the check."
+      ]
+    },
+    {
+      "id": "F11_revoker_chain_through_target",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "DEV_E, issued by DEV_C, revokes DEV_C: it re-certifies first, then revokes, then retires",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §8.1",
+        "text": "The revoker's own chain MUST NOT pass through D; it first obtains a fresh chain from the root or a managing device whose chain avoids D, and only then revokes."
+      },
+      "inputs": {
+        "mode": "sequence",
+        "steps": [
+          {
+            "action": "X at I8: DEV_E active with chain [CERT_E, CERT_C]",
+            "case": "wire:I8_bridge_grant",
+            "n": 1
+          },
+          {
+            "action": "Without re-certification the revocation would suspend DEV_E itself: the pre-check refuses it",
+            "case": "wire:flow.f11_dev_e_revokes_dev_c_unrecertified",
+            "branch": "prevented",
+            "n": 2
+          },
+          {
+            "action": "BOB re-certifies DEV_E with [CERT_E2]",
+            "case": "wire:flow.f11_recertify_dev_e",
+            "n": 3
+          },
+          {
+            "action": "DEV_E revokes DEV_C and stays active",
+            "case": "wire:flow.f11_dev_e_revokes_dev_c",
+            "n": 4
+          },
+          {
+            "action": "DEV_E retires itself; rotation is left to another installation",
+            "case": "wire:flow.f11_dev_e_retires",
+            "n": 5
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept",
+            "DEV_E": {
+              "root": "BOB",
+              "kind": 0,
+              "mask": [
+                1,
+                2,
+                5,
+                12
+              ],
+              "scope": [],
+              "registered": true,
+              "leaf": "CERT_E",
+              "issuers": [
+                "DEV_C"
+              ],
+              "active": true,
+              "suspended": false,
+              "reads": true
+            }
+          },
+          {
+            "n": 2,
+            "outcome": "accept",
+            "DEV_E": {
+              "root": "BOB",
+              "kind": 0,
+              "mask": [
+                1,
+                2,
+                5,
+                12
+              ],
+              "scope": [],
+              "registered": true,
+              "leaf": "CERT_E",
+              "issuers": [
+                "DEV_C"
+              ],
+              "active": false,
+              "suspended": true,
+              "reads": false
+            },
+            "client": "refused by the pre-check"
+          },
+          {
+            "n": 3,
+            "outcome": "accept",
+            "DEV_E": {
+              "root": "BOB",
+              "kind": 0,
+              "mask": [
+                1,
+                2,
+                5,
+                12
+              ],
+              "scope": [],
+              "registered": true,
+              "leaf": "CERT_E2",
+              "issuers": [],
+              "active": true,
+              "suspended": false,
+              "reads": true
+            }
+          },
+          {
+            "n": 4,
+            "outcome": "accept",
+            "DEV_E": {
+              "root": "BOB",
+              "kind": 0,
+              "mask": [
+                1,
+                2,
+                5,
+                12
+              ],
+              "scope": [],
+              "registered": true,
+              "leaf": "CERT_E2",
+              "issuers": [],
+              "active": true,
+              "suspended": false,
+              "reads": true
+            },
+            "exposing": true
+          },
+          {
+            "n": 5,
+            "outcome": "accept",
+            "rotates": false
+          }
+        ],
+        "final": {}
+      },
+      "assertions": [
+        "A device never re-certifies itself (device_grant_self_recertify_active_managing)."
+      ]
+    },
+    {
+      "id": "F12_rotation_with_open_session",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "Rotating I while PAIR_J and PAIR_K are open, then closing J; the rotator test on concrete states",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §8.2, §8.1",
+        "text": "The new DEK is sealed to every Principal with holds(P, 1) at the new head, open pairing devices included; consumed or cancelled ones receive nothing."
+      },
+      "inputs": {
+        "mode": "sequence",
+        "steps": [
+          {
+            "action": "I at P2: PAIR_J open",
+            "case": "wire:P2_pairing_device",
+            "n": 1
+          },
+          {
+            "action": "PAIR_K open",
+            "case": "wire:P2k_pairing_device_k",
+            "n": 2
+          },
+          {
+            "action": "DEV_A rotates I to epoch 1",
+            "case": "wire:flow.f12_i_key_epoch_1",
+            "n": 3
+          },
+          {
+            "action": "The new DEK to OWNER",
+            "case": "wire:flow.f12_kp_epoch1_to_owner",
+            "n": 4
+          },
+          {
+            "action": "The new DEK to PAIR_J",
+            "case": "wire:flow.f12_kp_epoch1_to_pair_j",
+            "n": 5
+          },
+          {
+            "action": "The new DEK to PAIR_K",
+            "case": "wire:flow.f12_kp_epoch1_to_pair_k",
+            "n": 6
+          },
+          {
+            "action": "J's session is cancelled",
+            "case": "wire:flow.f12_cancel_j",
+            "n": 7
+          },
+          {
+            "action": "A cancelled pairing device receives nothing",
+            "case": "wire:flow.f12_kp_epoch1_to_pair_j_after_cancel",
+            "n": 8
+          },
+          {
+            "action": "K's request continues in epoch 1",
+            "case": "wire:flow.f12_pair_k_writes_request",
+            "n": 9
+          },
+          {
+            "action": "The rotator test of §8.1 in X (CAROL is a foreign reader) and in I",
+            "case": "wire:flow.rotator_test",
+            "n": 10
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept"
+          },
+          {
+            "n": 2,
+            "outcome": "accept"
+          },
+          {
+            "n": 3,
+            "outcome": "accept"
+          },
+          {
+            "n": 4,
+            "outcome": "accept"
+          },
+          {
+            "n": 5,
+            "outcome": "accept"
+          },
+          {
+            "n": 6,
+            "outcome": "accept"
+          },
+          {
+            "n": 7,
+            "outcome": "accept",
+            "exposing": true
+          },
+          {
+            "n": 8,
+            "outcome": "AUTHORIZATION_FAILED"
+          },
+          {
+            "n": 9,
+            "outcome": "accept",
+            "carries": {
+              "change": "change.K1_foreign_request",
+              "change_hash": "db61988762bae4b82700c8060b87f3d85b3dfba590c0d597b27e370aa433b7dd",
+              "writer_class": "pairing"
+            }
+          },
+          {
+            "n": 10,
+            "outcome": "see case",
+            "tables": {
+              "X at flow.f12_register_r6 (CAROL is a foreign reader)": {
+                "readers": [
+                  "BOB",
+                  "BRIDGE",
+                  "CAROL",
+                  "DAVE",
+                  "DEV_A",
+                  "DEV_B",
+                  "DEV_C",
+                  "DEV_E",
+                  "DEV_R6",
+                  "DEV_R7",
+                  "OWNER"
+                ],
+                "candidates": {
+                  "DEV_R7": {
+                    "holds_6": false,
+                    "holds_7": true,
+                    "every_reader_of_own_root": false,
+                    "rotator": false
+                  },
+                  "DEV_R6": {
+                    "holds_6": true,
+                    "holds_7": false,
+                    "every_reader_of_own_root": false,
+                    "rotator": false
+                  },
+                  "BOB": {
+                    "holds_6": true,
+                    "holds_7": true,
+                    "every_reader_of_own_root": false,
+                    "rotator": true
+                  },
+                  "OWNER": {
+                    "holds_6": true,
+                    "holds_7": true,
+                    "every_reader_of_own_root": false,
+                    "rotator": true
+                  },
+                  "DEV_A": {
+                    "holds_6": true,
+                    "holds_7": true,
+                    "every_reader_of_own_root": false,
+                    "rotator": true
+                  }
+                }
+              },
+              "I at flow.f12_register_r7o_in_i (every reader is of OWNER)": {
+                "readers": [
+                  "DEV_A",
+                  "DEV_R7O",
+                  "OWNER",
+                  "PAIR_J",
+                  "PAIR_K"
+                ],
+                "candidates": {
+                  "DEV_R7O": {
+                    "holds_6": false,
+                    "holds_7": true,
+                    "every_reader_of_own_root": true,
+                    "rotator": true
+                  },
+                  "DEV_A": {
+                    "holds_6": true,
+                    "holds_7": true,
+                    "every_reader_of_own_root": true,
+                    "rotator": true
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "final": {
+          "rotators": {
+            "X at flow.f12_register_r6 (CAROL is a foreign reader)": [
+              "BOB",
+              "DEV_A",
+              "OWNER"
+            ],
+            "I at flow.f12_register_r7o_in_i (every reader is of OWNER)": [
+              "DEV_A",
+              "DEV_R7O"
+            ]
+          }
+        }
+      },
+      "assertions": [
+        "7 without 6 in a Resource with a foreign reader, or 6 without 7: awaiting rotation, no KEY_EPOCH committed; both, or 7 alone in I where every reader is of the root: rotates."
+      ]
+    },
+    {
+      "id": "F13_durable_phases",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "Crash and concurrency around every ACK of a pairing approval (I) and of revoke plus rotate (X)",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §9.1 to §9.5",
+        "text": "Phases are classified against the accepted chain by the table of §9.2; a phase is repeated only with its exact bytes; a KEY_EPOCH is rebuilt, never re-proposed."
+      },
+      "inputs": {
+        "mode": "sequence",
+        "steps": [
+          {
+            "action": "Approval journal before phase 1: the complete certificate payload of DEV_B and its digest, and the exact bytes of P3; the chain is at P2",
+            "case": "wire:P2_pairing_device",
+            "phase_input": {
+              "phase": "consume",
+              "state": "wire:P2_pairing_device",
+              "root": "OWNER",
+              "device": "PAIR_J",
+              "digest": "9de07a946096cfa059af56ebbb39f3d4b427ddd745dc30bfe86bb87b769efa7c"
+            },
+            "journal": {
+              "phase": "consume",
+              "resource": "I",
+              "pairing_device": "PAIR_J",
+              "certificate_payload_cbor": "87734c4643502d4445564943452d434552542d76315820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da3005820dcb709537a7c66b9d785c9de9b31d1cf1922d09f225e10479c24b302ceb3f9f2015820652fee2202a009b43a1c3d3073534d17a1011dd6d925a9097a57cb39d6074a900258203819290612a37b44ae506c6d910e51c604cfce168344e2a1d0d737d3dd3d7c7a00830102038050743db8168bce7e78a1f0c81ab52553b0",
+              "certificate_payload_digest": "9de07a946096cfa059af56ebbb39f3d4b427ddd745dc30bfe86bb87b769efa7c",
+              "next_record": "P3_consume_for_dev_b"
+            },
+            "n": 1
+          },
+          {
+            "action": "Crash after sending P3; after restart the chain holds P3",
+            "case": "wire:P3_consume_for_dev_b",
+            "phase_input": {
+              "phase": "consume",
+              "state": "wire:P3_consume_for_dev_b",
+              "root": "OWNER",
+              "device": "PAIR_J",
+              "digest": "9de07a946096cfa059af56ebbb39f3d4b427ddd745dc30bfe86bb87b769efa7c"
+            },
+            "n": 2
+          },
+          {
+            "action": "Its ACK was lost: the exact bytes of P3 are re-sent",
+            "bytes_of": "wire:P3_consume_for_dev_b",
+            "n": 3
+          },
+          {
+            "action": "Phase 2 after the restart: the certificate is signed from the journaled payload (CERT_B, whose payload digest is the approval)",
+            "phase_input": {
+              "phase": "register",
+              "state": "wire:P3_consume_for_dev_b",
+              "root": "OWNER",
+              "device": "DEV_B",
+              "certificate": "CERT_B"
+            },
+            "journal": {
+              "phase": "register",
+              "certificate_payload_cbor": "87734c4643502d4445564943452d434552542d76315820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da3005820dcb709537a7c66b9d785c9de9b31d1cf1922d09f225e10479c24b302ceb3f9f2015820652fee2202a009b43a1c3d3073534d17a1011dd6d925a9097a57cb39d6074a900258203819290612a37b44ae506c6d910e51c604cfce168344e2a1d0d737d3dd3d7c7a00830102038050743db8168bce7e78a1f0c81ab52553b0",
+              "next_record": "P4_register_dev_b_approved"
+            },
+            "n": 4
+          },
+          {
+            "action": "Crash after the ACK of P4 and before it was persisted",
+            "case": "wire:P4_register_dev_b_approved",
+            "phase_input": {
+              "phase": "register",
+              "state": "wire:P4_register_dev_b_approved",
+              "root": "OWNER",
+              "device": "DEV_B",
+              "certificate": "CERT_B",
+              "own": true
+            },
+            "n": 5
+          },
+          {
+            "action": "Exact-byte retry of P4",
+            "bytes_of": "wire:P4_register_dev_b_approved",
+            "n": 6
+          },
+          {
+            "action": "Revoke journal in X: revoke (OWNER, DEV_A) with reason 1; the chain is at I8",
+            "case": "wire:I8_bridge_grant",
+            "phase_input": {
+              "phase": "revoke",
+              "state": "wire:I8_bridge_grant",
+              "root": "OWNER",
+              "device": "DEV_A"
+            },
+            "n": 7
+          },
+          {
+            "action": "After the ACK of I9 (or after a crash), the revoke phase",
+            "case": "wire:I9_device_revoke_dev_a",
+            "phase_input": {
+              "phase": "revoke",
+              "state": "wire:I9_device_revoke_dev_a",
+              "root": "OWNER",
+              "device": "DEV_A"
+            },
+            "n": 8
+          },
+          {
+            "action": "The rotate phase after the revocation at I9",
+            "phase_input": {
+              "phase": "rotate",
+              "state": "wire:I9_device_revoke_dev_a",
+              "revoked_at": "wire:I9_device_revoke_dev_a"
+            },
+            "n": 9
+          },
+          {
+            "action": "A rotation planned at I8 had sealed its DEK to DEV_A, a reader at I8 and not at I9, the head the KEY_EPOCH is committed on: that DEK is not used",
+            "n": 10
+          },
+          {
+            "action": "The KEY_EPOCH with a fresh DEK is committed on I9",
+            "case": "wire:K1_key_epoch",
+            "phase_input": {
+              "phase": "rotate",
+              "state": "wire:K1_key_epoch",
+              "revoked_at": "wire:I9_device_revoke_dev_a"
+            },
+            "n": 11
+          },
+          {
+            "action": "Partial delivery: the package of epoch 1 to BOB is sent and recorded, then the rotator crashes",
+            "case": "wire:flow.f13_kp_epoch1_to_bob",
+            "branch": "partial delivery",
+            "ledger": [
+              {
+                "resource": "X",
+                "epoch": 1,
+                "recipient": "BOB",
+                "package_id": "f8d7b1738e7f7a139a32fea00103cb0ffc05c36bbab2a40bde4869105e73c8a7"
+              }
+            ],
+            "n": 12
+          },
+          {
+            "action": "After the restart the package phases are classified by the ledger: BOB complete, CAROL pending; the package to CAROL is sent",
+            "case": "wire:flow.f13_kp_epoch1_to_carol",
+            "branch": "partial delivery",
+            "n": 13
+          },
+          {
+            "action": "DEV_B, suspended at K1, is not a reader and is skipped",
+            "case": "wire:flow.f13_kp_epoch1_to_dev_b_suspended",
+            "branch": "partial delivery",
+            "n": 14
+          },
+          {
+            "action": "Alternative: the rotator of K1 crashed before any package; readers hold epoch 1 in KEY_BLOCKED",
+            "branch": "no package",
+            "ledger": [],
+            "n": 15
+          },
+          {
+            "action": "After a bounded wait a second rotator commits epoch 2 with a fresh DEK",
+            "case": "wire:flow.f13_second_rotator_epoch_2",
+            "branch": "no package",
+            "n": 16
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept",
+            "phase": "pending"
+          },
+          {
+            "n": 2,
+            "outcome": "accept",
+            "phase": "committed-own"
+          },
+          {
+            "n": 3,
+            "outcome": "same ACK"
+          },
+          {
+            "n": 4,
+            "outcome": "done",
+            "phase": "pending",
+            "signed_certificate": "CERT_B",
+            "certificate_payload_matches_journal": true
+          },
+          {
+            "n": 5,
+            "outcome": "accept",
+            "phase": "committed-own"
+          },
+          {
+            "n": 6,
+            "outcome": "same ACK"
+          },
+          {
+            "n": 7,
+            "outcome": "accept",
+            "phase": "pending"
+          },
+          {
+            "n": 8,
+            "outcome": "accept",
+            "phase": "complete"
+          },
+          {
+            "n": 9,
+            "outcome": "done",
+            "phase": "pending"
+          },
+          {
+            "n": 10,
+            "outcome": "fresh DEK (§9.4)",
+            "DEV_A_reads": {
+              "I8": true,
+              "I9": false
+            }
+          },
+          {
+            "n": 11,
+            "outcome": "accept",
+            "phase": "complete"
+          },
+          {
+            "n": 12,
+            "outcome": "accept"
+          },
+          {
+            "n": 13,
+            "outcome": "accept",
+            "package_phases": {
+              "BOB": "complete",
+              "CAROL": "pending"
+            },
+            "ledger_after": [
+              {
+                "resource": "X",
+                "epoch": 1,
+                "recipient": "BOB",
+                "package_id": "f8d7b1738e7f7a139a32fea00103cb0ffc05c36bbab2a40bde4869105e73c8a7"
+              },
+              {
+                "resource": "X",
+                "epoch": 1,
+                "recipient": "CAROL",
+                "package_id": "e53aab95313a043827185c6eab722ece86e0858c82f016b2f31a4ce182486a10"
+              }
+            ]
+          },
+          {
+            "n": 14,
+            "outcome": "AUTHORIZATION_FAILED"
+          },
+          {
+            "n": 15,
+            "outcome": "awaiting key holder"
+          },
+          {
+            "n": 16,
+            "outcome": "accept"
+          }
+        ],
+        "final": {}
+      },
+      "assertions": [
+        "No installation reconstructs a DEK it does not hold; journals hold no secrets (§9.8): the certificate payload is not a secret."
+      ]
+    },
+    {
+      "id": "F14_frontier_from_verified_set",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "The final frontier comes from the rotator's verified accepted set, extra ranges included",
+      "rule": {
+        "section": "LFCP-WIRE-01 §19, §19.1, §28.1; IDENTITY-PROFILE-01 §8.3",
+        "text": "A Have Vector is a fetch hint; a sequence the rotator could not fetch and verify stays outside the frontier; an accepted range after a hole is kept as an extra range."
+      },
+      "inputs": {
+        "mode": "sequence",
+        "steps": [
+          {
+            "action": "DEV_A sequence 1 in Y",
+            "case": "wire:flow.y_dev_a_seq1",
+            "n": 1
+          },
+          {
+            "action": "DEV_A sequence 2",
+            "case": "wire:flow.y_dev_a_seq2",
+            "n": 2
+          },
+          {
+            "action": "DEV_A sequence 4, previous = sequence 2 (sequence 3 never written)",
+            "case": "wire:flow.y_dev_a_seq4",
+            "n": 3
+          },
+          {
+            "action": "An advertised unit that fails authorization (BRIDGE in Y) is not counted",
+            "case": "wire:D_bridge_in_y",
+            "n": 4
+          },
+          {
+            "action": "The server advertises DEV_A 1..100; only 1, 2 and 4 are fetchable and verify",
+            "n": 5
+          },
+          {
+            "action": "A frontier that writes the range after the hole as [3, 4] is not canonical",
+            "case": "wire:flow.y_key_epoch_noncanonical_range",
+            "n": 6
+          },
+          {
+            "action": "DEV_A closes epoch 0 with the frontier {0: DEV_A, 1: 2, 2: [[4, 4]]}",
+            "case": "wire:flow.y_key_epoch_1",
+            "n": 7
+          },
+          {
+            "action": "Sequence 4 received after the KEY_EPOCH: inside the extra range",
+            "case": "wire:flow.y_dev_a_seq4_after_epoch",
+            "n": 8
+          },
+          {
+            "action": "A sequence 3 arriving after the KEY_EPOCH: in the hole",
+            "case": "wire:flow.y_dev_a_seq3_after_epoch",
+            "n": 9
+          },
+          {
+            "action": "Sequence 5 after the KEY_EPOCH: beyond the frontier",
+            "case": "wire:flow.y_dev_a_seq5_after_epoch",
+            "n": 10
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept"
+          },
+          {
+            "n": 2,
+            "outcome": "accept"
+          },
+          {
+            "n": 3,
+            "outcome": "accept"
+          },
+          {
+            "n": 4,
+            "outcome": "AUTHORIZATION_FAILED",
+            "counted": false
+          },
+          {
+            "n": 5,
+            "outcome": "verified accepted set DEV_A {1, 2, 4}"
+          },
+          {
+            "n": 6,
+            "outcome": "MALFORMED_MESSAGE"
+          },
+          {
+            "n": 7,
+            "outcome": "accept",
+            "frontier": {
+              "DEV_A": {
+                "contiguous": 2,
+                "extra_ranges": [
+                  [
+                    4,
+                    4
+                  ]
+                ]
+              }
+            }
+          },
+          {
+            "n": 8,
+            "outcome": "accept"
+          },
+          {
+            "n": 9,
+            "outcome": "STALE_DATA_EPOCH",
+            "disposition": "quarantine"
+          },
+          {
+            "n": 10,
+            "outcome": "STALE_DATA_EPOCH",
+            "disposition": "quarantine"
+          }
+        ],
+        "final": {
+          "frontier": {
+            "DEV_A": {
+              "contiguous": 2,
+              "extra_ranges": [
+                [
+                  4,
+                  4
+                ]
+              ]
+            }
+          },
+          "frontier_rule": "the verified accepted sequences of each actor: the contiguous prefix plus every accepted range after a hole (W §28.1 extra ranges)"
+        }
+      },
+      "assertions": [
+        "A replica that merged sequence 4 keeps it when it learns the KEY_EPOCH; only units outside the recorded frontier are rebuilt out."
+      ]
+    },
+    {
+      "id": "F15_rotation_policy_by_exposure",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "Rotation follows exposing revocations only (independent cases, one per kind of revocation)",
+      "rule": {
+        "section": "LFCP-WIRE-01 §17.5 (exposure); IDENTITY-PROFILE-01 §8.4",
+        "text": "A revocation that removes no registered reader never triggers a rotation; one rotation covers every exposing revocation since the last."
+      },
+      "inputs": {
+        "mode": "independent",
+        "steps": [
+          {
+            "action": "An exposing revocation",
+            "case": "wire:I9_device_revoke_dev_a",
+            "n": 1
+          },
+          {
+            "action": "An unbound tombstone without descendants",
+            "case": "wire:Vu1_revoke_unbound",
+            "n": 2
+          },
+          {
+            "action": "An out-of-scope binding revoked",
+            "case": "wire:flow.revoke_out_of_scope_bridge_in_y",
+            "n": 3
+          },
+          {
+            "action": "An already suspended device revoked",
+            "case": "wire:flow.revoke_suspended_dev_b",
+            "n": 4
+          },
+          {
+            "action": "A never-reading device revoked",
+            "case": "wire:W2",
+            "n": 5
+          },
+          {
+            "action": "An intermediate-only device with a reading descendant revoked",
+            "case": "wire:V2_revoke_dev_c",
+            "n": 6
+          },
+          {
+            "action": "Three exposing revocations in one epoch",
+            "n": 7
+          },
+          {
+            "action": "A former member cannot issue the tombstone at all",
+            "case": "wire:device_revoke_by_former_member",
+            "n": 8
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept",
+            "exposing": true,
+            "rotations": 1
+          },
+          {
+            "n": 2,
+            "outcome": "accept",
+            "exposing": false,
+            "rotations": 0
+          },
+          {
+            "n": 3,
+            "outcome": "accept",
+            "exposing": false,
+            "rotations": 0
+          },
+          {
+            "n": 4,
+            "outcome": "accept",
+            "exposing": false,
+            "rotations": 0
+          },
+          {
+            "n": 5,
+            "outcome": "accept",
+            "exposing": false,
+            "rotations": 0
+          },
+          {
+            "n": 6,
+            "outcome": "accept",
+            "exposing": true,
+            "rotations": 1,
+            "descendant_receives_new_epoch": false
+          },
+          {
+            "n": 7,
+            "outcome": "one rotation"
+          },
+          {
+            "n": 8,
+            "outcome": "AUTHORIZATION_FAILED"
+          }
+        ],
+        "final": {
+          "exposing": {
+            "I9_device_revoke_dev_a": true,
+            "V2_revoke_dev_c": true,
+            "Vu1_revoke_unbound": false,
+            "W2": false,
+            "flow.revoke_out_of_scope_bridge_in_y": false,
+            "flow.revoke_suspended_dev_b": false
+          }
+        }
+      },
+      "assertions": [
+        "Exposure is computed from the Resource's own chain alone."
+      ]
+    },
+    {
+      "id": "F16_device_grant_fork",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "Two valid competing DEVICE_GRANTs on one prev",
+      "rule": {
+        "section": "LFCP-WIRE-01 §13.2; IDENTITY-PROFILE-01 §9.7",
+        "text": "Neither is the head; approval and reconciliation are suspended; no branch is chosen by time, order or ACK."
+      },
+      "inputs": {
+        "mode": "sequence",
+        "records": [
+          "wire:J0_genesis",
+          "wire:J1_grant_bob",
+          "wire:J2_grant_carol",
+          "wire:I1_device_grant_dev_a",
+          "wire:Rd1",
+          "wire:W1"
+        ],
+        "steps": [
+          {
+            "action": "X at I1",
+            "case": "wire:I1_device_grant_dev_a",
+            "n": 1
+          },
+          {
+            "action": "Rd1 on I1, delivered to one manager",
+            "case": "wire:Rd1",
+            "branch": "Rd1",
+            "n": 2
+          },
+          {
+            "action": "W1 on I1, delivered to another manager",
+            "case": "wire:W1",
+            "branch": "W1",
+            "n": 3
+          },
+          {
+            "action": "Both branches known",
+            "n": 4
+          },
+          {
+            "action": "Approval, reconciliation and automatic rotation taking I or X as input",
+            "n": 5
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept"
+          },
+          {
+            "n": 2,
+            "outcome": "accept"
+          },
+          {
+            "n": 3,
+            "outcome": "accept"
+          },
+          {
+            "n": 4,
+            "outcome": "CONTROL_CONFLICT",
+            "competing": [
+              "Rd1",
+              "W1"
+            ]
+          },
+          {
+            "n": 5,
+            "outcome": "suspended"
+          }
+        ],
+        "final": {
+          "state": "CONTROL_CONFLICT"
+        }
+      },
+      "assertions": [
+        "A validator given both records reports CONTROL_CONFLICT and applies neither."
+      ]
+    },
+    {
+      "id": "F17_revoked_device",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "A revoked device reconnects",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §8.6; LFCP-WIRE-01 §41",
+        "text": "Access refused alone, or revocation proven through the Control read for a revoked reader; uploads are checked by object."
+      },
+      "inputs": {
+        "mode": "sequence",
+        "steps": [
+          {
+            "action": "DEV_A was offline during I9 and reconnects at I10",
+            "case": "wire:CONTROL_GET_by_revoked_reader",
+            "n": 1
+          },
+          {
+            "action": "DEV_A requests data",
+            "case": "wire:DATA_GET_by_revoked_session",
+            "n": 2
+          },
+          {
+            "action": "DEV_A re-supplies a valid foreign Key Package the server lost",
+            "case": "wire:KEY_PACKAGE_PUT_by_revoked_session_foreign_package",
+            "n": 3
+          },
+          {
+            "action": "A device that never read (DEV_W at W2)",
+            "case": "wire:CONTROL_GET_by_never_reader",
+            "branch": "never reader",
+            "n": 4
+          },
+          {
+            "action": "Online: pushes stop before the revoking record is pushed (W §69)",
+            "n": 5
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept",
+            "status": "revocation proven",
+            "head": "I9_device_revoke_dev_a"
+          },
+          {
+            "n": 2,
+            "outcome": "AUTHORIZATION_FAILED"
+          },
+          {
+            "n": 3,
+            "outcome": "accept"
+          },
+          {
+            "n": 4,
+            "outcome": "AUTHORIZATION_FAILED",
+            "status": "access refused"
+          },
+          {
+            "n": 5,
+            "outcome": "unsubscribed before push"
+          }
+        ],
+        "final": {}
+      },
+      "assertions": [
+        "The device never creates Data Units for the Resource again and is never re-paired under the same Principal."
+      ]
+    },
+    {
+      "id": "F18_barrier",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "The four barrier entries against a pre-identity validator, a herald and an identity-aware one (independent cases)",
+      "rule": {
+        "section": "LFCP-WIRE-01 §100.1, §37",
+        "text": "A pre-identity client rejects the barrier and blocks the Resource; a herald persists the blocked state with the update message; an identity-aware client accepts."
+      },
+      "inputs": {
+        "mode": "independent",
+        "steps": [
+          {
+            "action": "type 9",
+            "case": "wire:I1_device_grant_dev_a",
+            "n": 1
+          },
+          {
+            "action": "type 10",
+            "case": "wire:I9_device_revoke_dev_a",
+            "n": 2
+          },
+          {
+            "action": "Genesis field 5",
+            "case": "wire:G1_genesis_by_dev_a",
+            "n": 3
+          },
+          {
+            "action": "commit field 2",
+            "case": "wire:T1_commit",
+            "n": 4
+          },
+          {
+            "action": "A blocked client writes on its last validated head",
+            "n": 5
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept",
+            "pre_identity": "INVALID_CONTROL_CHAIN",
+            "herald": "blocked at this head (persisted)",
+            "identity_aware": "accept"
+          },
+          {
+            "n": 2,
+            "outcome": "accept",
+            "pre_identity": "INVALID_CONTROL_CHAIN",
+            "herald": "blocked at this head (persisted)",
+            "identity_aware": "accept"
+          },
+          {
+            "n": 3,
+            "outcome": "accept",
+            "pre_identity": "MALFORMED_MESSAGE",
+            "herald": "blocked at this head (persisted)",
+            "identity_aware": "accept"
+          },
+          {
+            "n": 4,
+            "outcome": "accept",
+            "pre_identity": "MALFORMED_MESSAGE",
+            "herald": "blocked at this head (persisted)",
+            "identity_aware": "accept"
+          },
+          {
+            "n": 5,
+            "outcome": "accepted until the epoch closes"
+          }
+        ],
+        "final": {
+          "server_without_identity_01": {
+            "type 9": "INVALID_CONTROL_CHAIN",
+            "type 10": "INVALID_CONTROL_CHAIN",
+            "Genesis field 5": "MALFORMED_MESSAGE",
+            "commit field 2": "MALFORMED_MESSAGE"
+          }
+        }
+      },
+      "assertions": [
+        "A server whose READY lacks identity-01 rejects these records as a pre-identity receiver does."
+      ]
+    },
+    {
+      "id": "F19_key_bootstrap",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "Devices that never received their first packages get every epoch from the next reconciling manager (independent cases)",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §7.1 step 3",
+        "text": "Key delivery is unconditional: no complaint, no data/write and no DEK of I is needed on the recipient side."
+      },
+      "inputs": {
+        "mode": "independent",
+        "steps": [
+          {
+            "action": "A Read device in X",
+            "case": "wire:flow.kp_owner_to_dev_r",
+            "n": 1
+          },
+          {
+            "action": "A device registered in I whose approver crashed before its first package",
+            "case": "wire:flow.kp_dev_a_to_dev_b_in_i",
+            "n": 2
+          },
+          {
+            "action": "A service device bound in I and registered in X",
+            "case": "wire:flow.kp_dev_a_to_bridge_o_in_x",
+            "n": 3
+          },
+          {
+            "action": "None of them wrote missing_keys",
+            "n": 4
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept"
+          },
+          {
+            "n": 2,
+            "outcome": "accept"
+          },
+          {
+            "n": 3,
+            "outcome": "accept"
+          },
+          {
+            "n": 4,
+            "outcome": "served anyway"
+          }
+        ],
+        "final": {
+          "I_is_a_target": true
+        }
+      },
+      "assertions": [
+        "The ledger, not a complaint, drives the delivery."
+      ]
+    }
+  ]
+}

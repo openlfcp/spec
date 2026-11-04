@@ -2,8 +2,10 @@
 
 [`lfcp-vector-format-1.schema.json`](lfcp-vector-format-1.schema.json) is the
 JSON Schema (draft 2020-12) for every machine-readable vector suite in
-`test-vectors/`. The LFCP Wire suite, the Shared Objects Profile suite and the
-shared sections suite use it.
+`test-vectors/`. The LFCP Wire suite, the Shared Objects Profile suite, the
+shared sections suite and the identity suites (LFCP-IDENTITY-TEST-VECTORS-01,
+IDENTITY-PROFILE-TEST-VECTORS-01 and the flow fixtures
+IDENTITY-FLOW-FIXTURES-01) use it.
 
 ## Suite
 
@@ -98,6 +100,23 @@ Optional fields for negative cases:
   `rule` (`section` and exact `text`) and `why` acceptance would break the
   protocol.
 
+Optional fields of every case:
+
+- `rule`: the section and the rule (`section`, `text`) that decide the
+  case; for a rejection, the first check that fails in the order the
+  specification gives (for example the classes of LFCP-WIRE-01 §62). The
+  identity suites give it on every case, so that a negative names its
+  deciding rule even when it is not a single mutation of a positive.
+
+Optional field of an accepted validation case:
+
+- `expected.post_state`: the state facts an implementation must derive
+  after accepting the input, for example the Control state of
+  LFCP-WIRE-01 §79 after an identity Control Record (roles, devices with
+  their activity, revocations, the roots with standing, `issuer_root`,
+  exposure). Its layout is a suite convention (`suite.conventions`).
+  Implementations compare the facts it lists; they need not hold more.
+
 ### `behavioral`: logical state
 
 For Automerge/profile scenarios where independent implementations may produce
@@ -165,7 +184,8 @@ Each requirement is enforced in exactly one place.
 | A negative's mutation changes something | validator `no-op-mutation` |
 | Behavioral cases not forced into byte shape | schema (`behavioral` branch has no byte requirements) |
 | Byte-exact cases carry expected bytes | schema (`bytes` branch: `expected` with at least one value) |
-| Wire, Shared Objects and shared sections suites accepted | the suites validate in CI |
+| Deciding rule and post-state well-formed | schema (`rule`, `expected.post_state`) |
+| Wire, Shared Objects, shared sections and identity suites accepted (`*-TEST-VECTORS-*.json` and `*-FLOW-FIXTURES-*.json`) | the suites validate in CI |
 
 ### Hash recomputation
 

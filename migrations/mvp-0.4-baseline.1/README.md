@@ -39,4 +39,8 @@ old codes.
 No other published value of `mvp-0.2-baseline.12` changes. The identity
 vector suites (`LFCP-IDENTITY-TEST-VECTORS-01`,
 `IDENTITY-PROFILE-TEST-VECTORS-01`, `IDENTITY-FLOW-FIXTURES-01`) are new
-and are listed here as absent at the previous baseline when they are added.
+(task LFCP-04-403) and are listed as absent at the previous baseline: all
+their values count as added. They use two optional fields that
+`lfcp-vector-format/1` gains with them, a case's deciding `rule` and an
+accepted case's `expected.post_state` (`schemas/README.md`); no field of an
+existing suite changes meaning.

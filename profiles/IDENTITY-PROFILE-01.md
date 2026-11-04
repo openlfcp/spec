@@ -36,7 +36,7 @@ Terms (root, device, kind, mask, scope, managing device, owner-acting device, bo
 
 ## 2. Document
 
-The Data Plane of the Identity Resource follows SOP §§7–14 (Automerge 3.5.0 / automerge 0.12, one change per transaction, framing, expansion and depth limits, canonical change encoding, operation references, Snapshot equivalence and rebuilds) and SOP §18 for `extensions`. SOP §§15–17 do **not** apply: this profile has its own root keys and no `objects`.
+The Data Plane of the Identity Resource follows SOP §§7–14 (Automerge 3.5.0 / automerge 0.12, one change per transaction, framing, expansion and depth limits, canonical change encoding, operation references, Snapshot equivalence and rebuilds) and SOP §18 for `extensions`. SOP §§15–17 do **not** apply: this profile has its own root keys and no `objects`. The Automerge actor of a writer is the one of SOP §8 unchanged, with its label `OPENLFCP-SHARED-OBJECTS-ACTOR-v1` and the Identity Resource's ID: this profile declares no actor domain of its own.
 
 ### 2.1 Structure
 
@@ -98,7 +98,7 @@ Admission (§3) takes, besides the change bytes and the signer's actor, the sign
 
 ### 2.4 Reserved root keys
 
-`recovery` and `succession` are reserved for recovery material pointers and root rotation state (W §108.1). A writer of this version MUST NOT create them; a reader preserves them. Unknown keys under the root, and unknown fields in entries, are preserved and ignored (SOP §17, §18 spirit).
+`recovery` and `succession` are reserved for recovery material pointers and root rotation state (W §108.1). A writer of this version MUST NOT create them; a reader preserves them. Admission has no rule for them: a change that is not the initial change and creates or writes them is admitted when §3 otherwise admits it, and the value is preserved as unknown data and never interpreted (the initial change that creates them is `INVALID_ROOT`, AI0). Unknown keys under the root, and unknown fields in entries, are preserved and ignored (SOP §17, §18 spirit).
 
 ---
 
@@ -137,8 +137,8 @@ Two writers that create `requests[k]` concurrently, neither having seen the othe
 Rules:
 
 1. Validation is per entry. An invalid `roster`, `devices` or `requests` entry is ignored by readers (never shown, never reconciled, never approved); the rest of the document stays usable (SOP §77). An invalid root is `INVALID_ROOT` and the document is unusable.
-2. A field with concurrent values (SOP §45: distinct values only) is valid only if every value is valid. For `requests` a conflicted field makes the entry invalid. For `roster` and `devices`, `endpoints`, `coordinator`, `name`, `label`, `platform`, `revoked` and `archived` are display or hint fields and a reader MAY show any value; `missing_keys` is read as the union of its concurrent values; a `kind` conflict makes the entry invalid.
-3. Unknown keys under the root, and unknown fields in entries, are preserved and ignored.
+2. A field with concurrent values (SOP §45: distinct values only) is valid only if every value is valid. For `requests` a conflicted field makes the entry invalid, an unknown field included, and so do two concurrent maps under one key. For `roster` and `devices`, `endpoints`, `coordinator`, `name`, `label`, `platform`, `revoked` and `archived` are display or hint fields and a reader MAY show any value; `missing_keys` is read as the union of its concurrent values; a `kind` conflict makes the entry invalid. An entry that a conflict makes invalid reports the diagnostic of its first invalid value in table order, and `INVALID_FIELD_TYPE` when every concurrent value is valid by itself.
+3. Unknown keys under the root, and unknown fields in entries, are preserved and otherwise ignored (rule 2 still applies to a conflicted unknown field of a request).
 4. The diagnostics above are profile-level codes reported to the application (SOP §74.1 model), not wire codes. When one value breaks several rules, the first in table order is reported.
 5. Nothing in the document confers authority (W §7.2, N7). `devices` entries are metadata; authority in any Resource, the Identity Resource included, comes from that Resource's Control Chain, and the certificates of service devices are read from `I`'s Control state, never from the document. On disagreement the chain is right.
 6. Deleting a `roster` entry or setting `archived` never revokes anything.
