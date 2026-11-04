@@ -249,6 +249,38 @@ function admit(r, root = "OWNER") {
     }
     if (violation) found.add("UNAUTHORIZED_WRITER");
   }
+  // AI5 (decision I8): devices[k].missing_keys, and anything inside it, is written only by the Principal k names.
+  {
+    const mine = pref(r.writer);
+    const devicesOid = oid(prev, "devices");
+    const entryKey = new Map(); // entry map object id (in the history or made here) -> key
+    const hint = new Map(); // object id inside some devices[k].missing_keys -> k
+    for (const key of Object.keys(prev.devices ?? {})) {
+      const eid = oid(prev.devices, key);
+      if (!eid) continue;
+      entryKey.set(eid, key);
+      const walk = (parent, prop) => {
+        const v = parent[prop];
+        if (!v || typeof v !== "object" || A.isImmutableString(v)) return;
+        hint.set(oid(parent, prop), key);
+        for (const p of Object.keys(v)) walk(v, Array.isArray(v) ? Number(p) : p);
+      };
+      if (prev.devices[key] && typeof prev.devices[key] === "object") walk(prev.devices[key], "missing_keys");
+    }
+    let foreign = false;
+    ops.forEach((op, i) => {
+      if (op.obj === devicesOid) {
+        // Deleting or replacing devices[k] is not a write of missing_keys; a map made here may receive one.
+        if (op.action === "makeMap") entryKey.set(idOf(i), op.key);
+        return;
+      }
+      const key = entryKey.has(op.obj) && op.key === "missing_keys" ? entryKey.get(op.obj) : hint.get(op.obj);
+      if (key === undefined) return;
+      if (op.action.startsWith("make")) hint.set(idOf(i), key);
+      if (key !== mine) foreign = true;
+    });
+    if (foreign) found.add("UNAUTHORIZED_WRITER");
+  }
   return ADMISSION_ORDER.find((d) => found.has(d)) ?? null;
 }
 
@@ -534,6 +566,7 @@ const RULES = {
   AI2: ["IDENTITY-PROFILE-01 §3 AI2", "A change does not replace or delete roster, devices, requests or extensions."],
   AI3: ["IDENTITY-PROFILE-01 §3 AI3", "Collaborative Text is never used."],
   AI4: ["IDENTITY-PROFILE-01 §3 AI4", "A pairing or other writer creates or writes into one entry requests[k] that it owns, deletes nothing and replaces no entry map; pairing stays its own PrincipalRef."],
+  AI5: ["IDENTITY-PROFILE-01 §2.1, §3 AI5", "devices[k].missing_keys, and anything inside it, is created, written or deleted only by the Principal whose PrincipalRef is k (the root for its own entry); deleting the entry devices[k], or replacing it with a map without missing_keys, is not a write of missing_keys."],
   RESERVED: ["IDENTITY-PROFILE-01 §2.4", "Admission has no rule for the reserved root keys: a later change that writes them is admitted when §3 otherwise admits it; the value is preserved uninterpreted."],
   OK: ["IDENTITY-PROFILE-01 §3", "The change passes the checks of its bytes, the sequence checks and AI0 to AI4."],
 };
@@ -869,6 +902,70 @@ stateCase("roster_bad_ref", docWith("S_roster_bad_ref", (d) => { d.roster[rref("
     { changes: [{ case: "change.S_missing_keys_b" }, { case: "change.S_missing_keys_b2" }, { case: "change.S_missing_keys_b3" }], snapshot: { b64url: b64u(A.save(mk)) } },
     { entry_valid: true, missing_keys_conflict_set: vals, missing_keys_read: union }, ["The reader seals the union of the listed epochs."]);
 }
+
+// ---- the missing_keys writer (§3 AI5, decision I8) ----
+{
+  const AT = "P4_register_dev_b_approved"; // OWNER root, DEV_A and DEV_B personal in I
+  const B = pref("DEV_B");
+  const X = rref("X");
+  const ai5 = (id, r, want, description, rule = "AI5") => changeCase(id, r, want, description, { rule });
+  const entry = change("M0_entry_dev_b", BASE, "OWNER", 3, AT, (d) => { put(d.devices, B, { label: S("Phone"), kind: 0 }); });
+  ai5("missing_keys_entry_without_hint", entry.r, null, "OWNER creates devices[p:<DEV_B>] = {label, kind} without missing_keys: the base of the next cases");
+  const own = change("M1_dev_b_writes_hint", entry.doc, "DEV_B", 1, AT, (d) => { put(d.devices[B], "missing_keys", { [X]: [1], [rref("Y")]: [0] }); });
+  ai5("missing_keys_device_writes_own", own.r, null, "DEV_B writes its own hint devices[p:<DEV_B>].missing_keys = {X: [1], Y: [0]}");
+  ai5("missing_keys_device_appends_own", change("M2_dev_b_appends_hint", own.doc, "DEV_B", 2, AT, (d) => { const l = d.devices[B].missing_keys[X]; put(l, l.length, 2); }).r, null,
+    "DEV_B appends epoch 2 to its own missing_keys[X]");
+  ai5("missing_keys_device_clears_own", change("M2_dev_b_clears_hint", own.doc, "DEV_B", 2, AT, (d) => { delete d.devices[B].missing_keys; }).r, null,
+    "DEV_B deletes its own missing_keys once the packages arrived (§7.1 step 3)");
+  ai5("missing_keys_root_writes_own_entry", change("M1_root_writes_own_hint", BASE, "OWNER", 3, AT, (d) => { put(d.devices[pref("OWNER")], "missing_keys", { [X]: [0] }); }).r, null,
+    "OWNER writes missing_keys in its own entry devices[p:<OWNER>]: the root is the device of that entry");
+  const rootForeign = change("M1_root_writes_dev_b_hint", entry.doc, "OWNER", 4, AT, (d) => { put(d.devices[B], "missing_keys", { [X]: [0, 2] }); });
+  ai5("missing_keys_root_writes_device_hint", rootForeign.r, "UNAUTHORIZED_WRITER", "OWNER writes devices[p:<DEV_B>].missing_keys");
+  ai5("missing_keys_root_creates_entry_with_hint", CHANGES.get("S_missing_keys_b"), "UNAUTHORIZED_WRITER",
+    "OWNER creates devices[p:<DEV_B>] with missing_keys inside the new entry map (change S_missing_keys_b of device_entry_missing_keys_union)");
+  ai5("missing_keys_root_clears_device_hint", change("M2_root_clears_dev_b_hint", own.doc, "OWNER", 4, AT, (d) => { delete d.devices[B].missing_keys; }).r, "UNAUTHORIZED_WRITER",
+    "OWNER deletes the hint DEV_B wrote");
+  ai5("missing_keys_root_appends_device_hint", change("M2_root_appends_dev_b_hint", own.doc, "OWNER", 4, AT, (d) => { const l = d.devices[B].missing_keys[X]; put(l, l.length, 3); }).r, "UNAUTHORIZED_WRITER",
+    "OWNER appends epoch 3 to the list missing_keys[X] that DEV_B wrote");
+  ai5("missing_keys_manager_writes_device_hint", change("M2_dev_a_writes_dev_b_hint", own.doc, "DEV_A", 1, AT, (d) => { put(d.devices[B].missing_keys, X, [0]); }).r, "UNAUTHORIZED_WRITER",
+    "DEV_A (personal, Full) replaces missing_keys[X] in DEV_B's hint");
+  ai5("missing_keys_root_relabels_and_writes_hint", change("M2_root_relabels_and_hints", entry.doc, "OWNER", 4, AT, (d) => {
+    d.devices[B].label = S("Phone (A)");
+    put(d.devices[B], "missing_keys", { [X]: [0] });
+  }).r, "UNAUTHORIZED_WRITER", "OWNER relabels devices[p:<DEV_B>] and writes its missing_keys in one change: the whole change is refused");
+  ai5("missing_keys_root_deletes_device_entry", change("M2_root_deletes_dev_b_entry", own.doc, "OWNER", 4, AT, (d) => { delete d.devices[B]; }).r, null,
+    "OWNER deletes the entry devices[p:<DEV_B>] that holds DEV_B's hint: not a write of missing_keys");
+  ai5("missing_keys_root_replaces_device_entry", change("M2_root_replaces_dev_b_entry", own.doc, "OWNER", 4, AT, (d) => { put(d.devices, B, { label: S("Phone"), kind: 0 }); }).r, null,
+    "OWNER replaces the entry devices[p:<DEV_B>] with a new map without missing_keys: not a write of missing_keys");
+  ai5("missing_keys_service_writes_own", change("M1_bridge_o_writes_own_hint", BASE, "BRIDGE_O", 1, "P4s_bind_bridge_o", (d) => {
+    put(d.devices, pref("BRIDGE_O"), { label: S("Bridge"), kind: 1, missing_keys: { [X]: [0] } });
+  }).r, "UNAUTHORIZED_WRITER", "BRIDGE_O (class other) creates its own devices entry with missing_keys: AI4 refuses it, and AI5 admits nothing AI4 refuses", "AI4");
+
+  // Concurrent writes: DEV_B and OWNER write the hint, neither having seen the other; OWNER then writes on top of its own change.
+  const after = change("M3_root_after_refused", rootForeign.doc, "OWNER", 5, AT, (d) => { d.devices[B].label = S("Phone (A)"); });
+  const names = ["C0_initial", "C1_fill", "M0_entry_dev_b", "M1_dev_b_writes_hint", "M1_root_writes_dev_b_hint", "M3_root_after_refused"];
+  const orders = { device_first: names, root_first: ["C0_initial", "C1_fill", "M0_entry_dev_b", "M1_root_writes_dev_b_hint", "M3_root_after_refused", "M1_dev_b_writes_hint"] };
+  const want = { admitted: ["C0_initial", "C1_fill", "M0_entry_dev_b", "M1_dev_b_writes_hint"], refused: { M1_root_writes_dev_b_hint: "UNAUTHORIZED_WRITER" }, pending: ["M3_root_after_refused"] };
+  const docs = [];
+  for (const [k, order] of Object.entries(orders)) {
+    const res = replay(order);
+    check(`missing_keys_concurrent_device_and_root.${k}`, { admitted: names.filter((n) => res.admitted.includes(n)), refused: res.refused, pending: res.pending }, want);
+    docs.push(res.doc);
+  }
+  check("missing_keys_concurrent_device_and_root.order", view(docs[1]), view(docs[0]));
+  const m = docs[0];
+  const vals = values(m.devices[B], "missing_keys").map(view);
+  check("missing_keys_concurrent_device_and_root.state", [vals, validateEntry(m, "devices", B).valid], [[{ [X]: [1], [rref("Y")]: [0] }], true]);
+  check("missing_keys_concurrent_device_and_root.after", admit(after.r), null);
+  scenario("missing_keys_concurrent_device_and_root",
+    "DEV_B and OWNER write devices[p:<DEV_B>].missing_keys concurrently, neither having seen the other; OWNER's next change depends on its own",
+    ["IDENTITY-PROFILE-01 §3 AI5, SHARED-OBJECTS-PROFILE-01 §14.1", "Each change is decided by itself: the device's is admitted, the other writer's is PROFILE_INVALID (UNAUTHORIZED_WRITER), not merged, and blocks its dependants."],
+    { changes: names.map((n) => ({ case: `change.${n}` })), orders },
+    { ...want, refused: { M1_root_writes_dev_b_hint: { code: "PROFILE_INVALID", diagnostic: "UNAUTHORIZED_WRITER" } },
+      state: { entry: B, entry_valid: true, missing_keys_conflict_set: vals, missing_keys_read: vals[0] } },
+    ["Both delivery orders give the same document: missing_keys holds DEV_B's value only, with no concurrent value.",
+     "M3_root_after_refused passes AI5 by itself (it writes only label) but waits forever: it depends on a refused change."]);
+}
 {
   const units = replay(["C0_initial", "C1_fill", "J1_own_request", "J2_continues_own"]).doc;
   const snap = A.load(A.save(units));
@@ -999,7 +1096,7 @@ const doc = {
   suite: {
     id: SUITE_ID, version: "01",
     specification: { id: "IDENTITY-PROFILE-01", profile: PROFILE, revision: "working-draft" },
-    description: "Identity Resource profile vectors (IDENTITY-PROFILE-01 §12.2 ID-05): the initial change, admission AI0 to AI4, per-entry state validation, pairing links, device fingerprints, the approval digest, rootOf tables and assignee display.",
+    description: "Identity Resource profile vectors (IDENTITY-PROFILE-01 §12.2 ID-05): the initial change, admission AI0 to AI5, per-entry state validation, pairing links, device fingerprints, the approval digest, rootOf tables and assignee display.",
     depends_on: ["IDENTITY-PROFILE-01", "SHARED-OBJECTS-PROFILE-01", "LFCP-WIRE-01", "LFCP-IDENTITY-TEST-VECTORS-01"],
     conventions: {
       engine_package: "@automerge/automerge", engine_version: "3.5.0",
