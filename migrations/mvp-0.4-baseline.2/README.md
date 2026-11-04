@@ -29,7 +29,9 @@ Three published values change:
   the whole message rejected the old bytes and accepts the new ones.
 
 Added, with no published value changed: in `LFCP-IDENTITY-TEST-VECTORS-01`
-the six `key_epoch_wrong_number*` and `key_epoch_repeats_current_number`
-cases (LFCP-WIRE-01 §19, §62 class 2, decision I9); in
-`IDENTITY-PROFILE-TEST-VECTORS-01` the `missing_keys_*` admission cases and
-scenarios of AI5, with their `change.*` records.
+six cases, `key_epoch_repeats_current_number` and the five
+`key_epoch_wrong_number*` cases (LFCP-WIRE-01 §19, §62 class 2, decision
+I9); in `IDENTITY-PROFILE-TEST-VECTORS-01` the `missing_keys_*` admission
+cases and scenarios of AI5 (own, foreign and concurrent writes, and hidden,
+deleted and replaced entry maps) and the `identity_doc_*entry*` cases of
+AI2 on a hidden entry value, with their `change.*` records.
