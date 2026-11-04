@@ -11,12 +11,22 @@ check works.
 I9 and I12, tasks LFCP-04-403b and LFCP-04-403c) and adds vectors for them.
 Every suite of `mvp-0.4-baseline.1` is listed and compared value by value.
 
-One published value changes:
+Three published values change:
 
 - `IDENTITY-PROFILE-TEST-VECTORS-01`, `suite.description`: the corpus now
   covers the admission rule AI5 (IDENTITY-PROFILE-01 §3, decision I8), so
   the description names "admission AI0 to AI5" instead of "AI0 to AI4". No
   case changes.
+- `LFCP-IDENTITY-TEST-VECTORS-01`, `READY_identity_01`: a corpus defect.
+  The case was generated with envelope type `1` (`CHALLENGE`) and the wire
+  profile `"lfcp-1"`, so its bytes were not a `READY` message (LFCP-WIRE-01
+  §33, §37) and a strict decoder rejects them as `MALFORMED_MESSAGE`. It now
+  uses type `3` (`READY`) and the profile `"LFCP-WIRE-01"`, as every other
+  `READY` of the corpora. `expected.message_cbor` and
+  `inputs.wire_profile` change; field `5` (`["identity-01"]`), the Message
+  ID, the correlation and the other fields are unchanged. An implementation
+  that compared only field `5` passes before and after; one that decoded
+  the whole message rejected the old bytes and accepts the new ones.
 
 Added, with no published value changed: in `LFCP-IDENTITY-TEST-VECTORS-01`
 the six `key_epoch_wrong_number*` and `key_epoch_repeats_current_number`

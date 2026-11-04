@@ -24,7 +24,20 @@
   },
   {
    "suite_file": "test-vectors/lfcp-wire-01/LFCP-IDENTITY-TEST-VECTORS-01.json",
-   "changed": []
+   "changed": [
+    {
+     "path": "cases[id=READY_identity_01].inputs.wire_profile",
+     "from": "lfcp-1",
+     "to": "LFCP-WIRE-01",
+     "rule": "Corpus defect found by the server task LFCP-04-408 (orchestrator, 2026-11-04; task LFCP-04-403c): READY_identity_01 was generated with envelope type 1 (CHALLENGE) and wire profile \"lfcp-1\", so its bytes were not a READY message (LFCP-WIRE-01 §33, §37). It now uses type 3 (READY) and the profile \"LFCP-WIRE-01\" of every other READY in the corpora; field 5 [\"identity-01\"], the Message ID, the correlation and the other READY fields are unchanged."
+    },
+    {
+     "path": "cases[id=READY_identity_01].expected.message_cbor.hex",
+     "from": "a4000101504eeca76c5cb6b05680561cbc76e4be0a02505c2da13dc7fad1bc1b890c17732acf4804a600666c6663702d3101582073a5809efe3ec76131e969b550345b64628580c1122e8e5fa701da0630fe855e021a0010000003010419753005816b6964656e746974792d3031",
+     "to": "a4000301504eeca76c5cb6b05680561cbc76e4be0a02505c2da13dc7fad1bc1b890c17732acf4804a6006c4c4643502d574952452d303101582073a5809efe3ec76131e969b550345b64628580c1122e8e5fa701da0630fe855e021a0010000003010419753005816b6964656e746974792d3031",
+     "rule": "Corpus defect found by the server task LFCP-04-408 (orchestrator, 2026-11-04; task LFCP-04-403c): READY_identity_01 was generated with envelope type 1 (CHALLENGE) and wire profile \"lfcp-1\", so its bytes were not a READY message (LFCP-WIRE-01 §33, §37). It now uses type 3 (READY) and the profile \"LFCP-WIRE-01\" of every other READY in the corpora; field 5 [\"identity-01\"], the Message ID, the correlation and the other READY fields are unchanged."
+    }
+   ]
   },
   {
    "suite_file": "test-vectors/identity-01/IDENTITY-PROFILE-TEST-VECTORS-01.json",

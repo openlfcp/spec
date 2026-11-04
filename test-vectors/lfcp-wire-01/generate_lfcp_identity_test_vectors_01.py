@@ -1760,13 +1760,13 @@ def build_data_plane() -> None:
         CASE_BY_ID[cid]['inputs']['session'] = 'DEV_A'
         CASE_BY_ID[cid]['kind'] = 'session_upload'
         CASE_BY_ID[cid]['inputs']['request'] = 'KEY_PACKAGE_PUT' if cid.startswith('KEY') else 'DATA_PUT'
-    ready = base.wire_msg(1, base.msgid('READY-IDENTITY-01'), {0: 'lfcp-1', 1: base.SERVER_ID, 2: 1048576, 3: 1, 4: 30000, 5: ['identity-01']},
+    ready = base.wire_msg(3, base.msgid('READY-IDENTITY-01'), {0: 'LFCP-WIRE-01', 1: base.SERVER_ID, 2: 1048576, 3: 1, 4: 30000, 5: ['identity-01']},
                           correlation=base.msgid('AUTH'))
     add_case({'id': 'READY_identity_01', 'type': 'bytes', 'kind': 'wire_message',
               'description': 'READY with field 5 ["identity-01"]',
               'rule': {'section': 'LFCP-WIRE-01 §37', 'text': 'Field 5 lists the server extensions; identity-01 announces the identity rules.'},
               'inputs': {'message_type': 'READY', 'message_id': hx(base.msgid('READY-IDENTITY-01')), 'correlation': hx(base.msgid('AUTH')),
-                         'wire_profile': 'lfcp-1', 'server_id': hx(base.SERVER_ID), 'max_message_bytes': 1048576,
+                         'wire_profile': 'LFCP-WIRE-01', 'server_id': hx(base.SERVER_ID), 'max_message_bytes': 1048576,
                          'durability': 1, 'heartbeat_ms': 30000, 'extension': 'identity-01'},
               'expected': {'message_cbor': hx(ready)}})
 
