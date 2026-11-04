@@ -1099,7 +1099,7 @@ Reason codes:
 | 3 | Ownership transfer |
 | 4 | Manual security rotation |
 
-The new epoch number MUST be exactly the previous Data Epoch plus one. A Key Epoch Record whose new epoch number is anything else breaks the chain and is rejected with `INVALID_CONTROL_CHAIN`.
+The new epoch number MUST be exactly the previous Data Epoch plus one. A Key Epoch Record whose new epoch number is anything else breaks the chain and is rejected with `INVALID_CONTROL_CHAIN`. The epoch number is a chain placement check: it runs in class 2 of Section 62, after the structure of the record (class 1) and before its dependencies, its signature and its issuer's authority (classes 3 to 5). A Key Epoch Record with a wrong epoch number is therefore `INVALID_CONTROL_CHAIN` even when its signature does not verify, its issuer is unknown or its issuer lacks `key/rotate`; one whose final frontier is also not canonical is `MALFORMED_MESSAGE`.
 
 The issuer MUST possess `key/rotate` (`holds(kid, 7)`, Section 80.1).
 
@@ -2553,7 +2553,7 @@ Where a rule rejects a record or message without naming a code, the code follows
 **Ordering of the checks.** Sections 13, 13.1 and 10.5 imply an order for Control Records; it is normative for every record, and in particular for every record that embeds signed objects (`DEVICE_GRANT`, `DEVICE_REVOKE`, a Genesis with field `5`, a transfer commit with or without field `2`) and for the objects they embed (certificates, offer, accept). A verifier runs the classes below in this order and reports the first failure; a record that fails several rules of one class reports the first rule in that class's listed order.
 
 1. **Structure**, outer record then every embedded object, in full: closed maps, field types and sizes, array shapes and labels, repeats, kind, mask and scope consistency, reason and approval consistency, canonical bytes of every nested protected header and payload (Section 5.2): `MALFORMED_MESSAGE`.
-2. **Chain placement** (Section 13.1): sequence, `prev_control_id`, Resource ID: `INVALID_CONTROL_CHAIN`. An unknown core Control Record type (Section 14) is in this class.
+2. **Chain placement** (Section 13.1): sequence, `prev_control_id`, Resource ID: `INVALID_CONTROL_CHAIN`. An unknown core Control Record type (Section 14) and the new epoch number of a Key Epoch Record (Section 19) are in this class.
 3. **Dependencies**: the referenced head is known; the root descriptor and the issuer descriptor are available from the state or from the embedded chain; an offer's new owner descriptor is in the offer: `MISSING_DEPENDENCY`.
 4. **Signatures**: the outer object's `kid` is its issuer (Section 13) and verifies, and is the signer Sections 15 and 23.3 require of a Genesis and of a transfer commit with field `2`; each embedded certificate's `kid` is the Principal Section 7.3 (c2) requires and verifies; an embedded accept verifies under its required signer; an embedded offer verifies under its `kid` when that `kid` is the current owner or a device bound to the current owner, and an offer with any other `kid`, known or not, is not a dependency and fails Section 23.3 item 1 in class 5: `INVALID_SIGNATURE`.
 5. **Authority and state**: standing, roles, bindings, (c3), (c4), (c6), revocations, issuer rights, approval, re-registration rules, Section 23.3 state checks: `AUTHORIZATION_FAILED`.
