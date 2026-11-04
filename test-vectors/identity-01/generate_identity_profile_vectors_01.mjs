@@ -1072,6 +1072,26 @@ function encodeTargeted(name, doc, writer, unitSeq, controlRef, makeOps) {
     ["OWNER's hidden hint is refused and its dependent conflict resolution stays pending.",
      "DEV_B's hidden hint is admitted; resolving the entry conflict exposes exactly its own {X: [5]} hint."]);
 }
+// AI5 on a replaced entry map: OWNER replaced devices[p:<DEV_B>] after DEV_B wrote its hint (review-spec-4b P3).
+{
+  const AT = "P4_register_dev_b_approved", B = pref("DEV_B"), X = rref("X");
+  const replaced = CHANGES.get("M2_root_replaces_dev_b_entry");
+  const doc = historyOf([replaced.hash]);
+  const entry = CHANGES.get("M0_entry_dev_b"), hint = CHANGES.get("M1_dev_b_writes_hint");
+  const at = (r, pred) => `${r.decoded.startOp + r.decoded.ops.findIndex(pred)}@${r.actor}`;
+  const oldMap = at(entry, (op) => op.action === "makeMap" && op.key === B);
+  const list = at(hint, (op) => op.action === "makeList" && op.key === X);
+  const first = at(hint, (op) => op.obj === list && op.insert);
+  check("replaced_entry.base", [oid(doc.devices, B) !== oldMap, admit(replaced)], [true, null]);
+  const append = (value) => () => [{ action: "set", obj: list, elemId: first, insert: true, datatype: "uint", value, pred: [] }];
+  changeCase("missing_keys_root_appends_replaced_entry_hint",
+    encodeTargeted("H4_root_appends_replaced_hint", doc, "OWNER", 5, AT, append(7)).r, "UNAUTHORIZED_WRITER",
+    "OWNER appends epoch 7 to missing_keys[X] that DEV_B wrote in the entry map OWNER has since replaced", { rule: "AI5" });
+  changeCase("missing_keys_device_appends_replaced_entry_hint",
+    encodeTargeted("H4_dev_b_appends_replaced_hint", doc, "DEV_B", 2, AT, append(7)).r, null,
+    "DEV_B appends epoch 7 to its own missing_keys[X] in the entry map OWNER has since replaced", { rule: "AI5" });
+}
+
 // AI2 on the causal history: a scalar over a list of a hidden conflicting entry map (review-spec-4b P3).
 {
   const AT = "P1_device_grant_dev_a_i"; // OWNER root, DEV_A personal

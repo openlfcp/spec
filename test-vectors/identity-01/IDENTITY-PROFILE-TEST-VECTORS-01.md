@@ -85,6 +85,8 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `missing_keys_root_appends_deleted_entry_hint` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §2.1, §3 AI5 | OWNER appends epoch 6 to missing_keys[X] after both conflicting devices[p:<DEV_B>] maps were deleted |
 | `missing_keys_device_appends_deleted_entry_hint` | validation | valid | IDENTITY-PROFILE-01 §2.1, §3 AI5 | DEV_B appends epoch 6 to missing_keys[X] after both conflicting devices[p:<DEV_B>] maps were deleted |
 | `missing_keys_hidden_entry_resolution` | behavioral | state | IDENTITY-PROFILE-01 §3 AI5, SHARED-OBJECTS-PROFILE-01 §14.1 | Resolving a device entry conflict after a foreign or an own hidden hint |
+| `missing_keys_root_appends_replaced_entry_hint` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §2.1, §3 AI5 | OWNER appends epoch 7 to missing_keys[X] that DEV_B wrote in the entry map OWNER has since replaced |
+| `missing_keys_device_appends_replaced_entry_hint` | validation | valid | IDENTITY-PROFILE-01 §2.1, §3 AI5 | DEV_B appends epoch 7 to its own missing_keys[X] in the entry map OWNER has since replaced |
 | `identity_doc_hidden_entry_list_replaced` | validation | `CONTAINER_REPLACED` | IDENTITY-PROFILE-01 §3 AI2 | OWNER writes a scalar over endpoints of the hidden conflicting map of roster[Z] (OWNER and DEV_A created roster[Z] concurrently) |
 | `identity_doc_entry_list_replaced` | validation | `CONTAINER_REPLACED` | IDENTITY-PROFILE-01 §3 AI2 | OWNER writes a scalar over endpoints of the selected map of roster[Z]: the same rule on the visible value |
 | `identity_doc_hidden_entry_scalar_written` | validation | valid | IDENTITY-PROFILE-01 §3 AI2 | OWNER writes a scalar over the scalar name of the hidden map of roster[Z]: no object is replaced, admitted |
@@ -186,6 +188,8 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `H3_device_deleted_append` | DEV_B | 2 | P4_register_dev_b_approved | `309b523ba8e3c813…` |
 | `H2_resolve_after_foreign_hint` | DEV_A | 2 | P4_register_dev_b_approved | `f2fb4837b5420a5f…` |
 | `H2_resolve_after_own_hint` | DEV_A | 2 | P4_register_dev_b_approved | `80c5cb2bfc4183b5…` |
+| `H4_root_appends_replaced_hint` | OWNER | 5 | P4_register_dev_b_approved | `4aa75d8b70db7c9b…` |
+| `H4_dev_b_appends_replaced_hint` | DEV_B | 2 | P4_register_dev_b_approved | `2ae2241761330216…` |
 | `R0_root_creates_roster_z` | OWNER | 3 | P1_device_grant_dev_a_i | `3f207f8e3a74b918…` |
 | `R0_dev_a_creates_roster_z` | DEV_A | 1 | P1_device_grant_dev_a_i | `59586ba8c6caadfe…` |
 | `R1_root_scalar_over_hidden_endpoints` | OWNER | 4 | P1_device_grant_dev_a_i | `7fa912d394419f0a…` |
