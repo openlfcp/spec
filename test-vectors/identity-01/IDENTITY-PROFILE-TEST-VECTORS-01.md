@@ -63,6 +63,21 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `roster_bad_ref` | validation | `INVALID_RESOURCE_REF` | IDENTITY-PROFILE-01 §4 | A roster key of 42 characters |
 | `roster_conflicted_name` | validation | valid | IDENTITY-PROFILE-01 §4 | Concurrent names of roster[X] by OWNER and DEV_A: valid, a reader may show any value |
 | `device_entry_missing_keys_union` | behavioral | state | IDENTITY-PROFILE-01 §4 rule 2, §7.1 | Concurrent missing_keys maps of devices[p:<DEV_B>] (by DEV_B and by OWNER) |
+| `missing_keys_entry_without_hint` | validation | valid | IDENTITY-PROFILE-01 §2.1, §3 AI5 | OWNER creates devices[p:<DEV_B>] = {label, kind} without missing_keys: the base of the next cases |
+| `missing_keys_device_writes_own` | validation | valid | IDENTITY-PROFILE-01 §2.1, §3 AI5 | DEV_B writes its own hint devices[p:<DEV_B>].missing_keys = {X: [1], Y: [0]} |
+| `missing_keys_device_appends_own` | validation | valid | IDENTITY-PROFILE-01 §2.1, §3 AI5 | DEV_B appends epoch 2 to its own missing_keys[X] |
+| `missing_keys_device_clears_own` | validation | valid | IDENTITY-PROFILE-01 §2.1, §3 AI5 | DEV_B deletes its own missing_keys once the packages arrived (§7.1 step 3) |
+| `missing_keys_root_writes_own_entry` | validation | valid | IDENTITY-PROFILE-01 §2.1, §3 AI5 | OWNER writes missing_keys in its own entry devices[p:<OWNER>]: the root is the device of that entry |
+| `missing_keys_root_writes_device_hint` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §2.1, §3 AI5 | OWNER writes devices[p:<DEV_B>].missing_keys |
+| `missing_keys_root_creates_entry_with_hint` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §2.1, §3 AI5 | OWNER creates devices[p:<DEV_B>] with missing_keys inside the new entry map (change S_missing_keys_b of device_entry_missing_keys_union) |
+| `missing_keys_root_clears_device_hint` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §2.1, §3 AI5 | OWNER deletes the hint DEV_B wrote |
+| `missing_keys_root_appends_device_hint` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §2.1, §3 AI5 | OWNER appends epoch 3 to the list missing_keys[X] that DEV_B wrote |
+| `missing_keys_manager_writes_device_hint` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §2.1, §3 AI5 | DEV_A (personal, Full) replaces missing_keys[X] in DEV_B's hint |
+| `missing_keys_root_relabels_and_writes_hint` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §2.1, §3 AI5 | OWNER relabels devices[p:<DEV_B>] and writes its missing_keys in one change: the whole change is refused |
+| `missing_keys_root_deletes_device_entry` | validation | valid | IDENTITY-PROFILE-01 §2.1, §3 AI5 | OWNER deletes the entry devices[p:<DEV_B>] that holds DEV_B's hint: not a write of missing_keys |
+| `missing_keys_root_replaces_device_entry` | validation | valid | IDENTITY-PROFILE-01 §2.1, §3 AI5 | OWNER replaces the entry devices[p:<DEV_B>] with a new map without missing_keys: not a write of missing_keys |
+| `missing_keys_service_writes_own` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §3 AI4 | BRIDGE_O (class other) creates its own devices entry with missing_keys: AI4 refuses it, and AI5 admits nothing AI4 refuses |
+| `missing_keys_concurrent_device_and_root` | behavioral | state | IDENTITY-PROFILE-01 §3 AI5, SHARED-OBJECTS-PROFILE-01 §14.1 | DEV_B and OWNER write devices[p:<DEV_B>].missing_keys concurrently, neither having seen the other; OWNER's next change depends on its own |
 | `identity_snapshot_equivalence` | behavioral | state | IDENTITY-PROFILE-01 §2, SHARED-OBJECTS-PROFILE-01 §14 | The same document from its four units and from a Snapshot |
 | `pair_uri_roundtrip` | bytes | exact bytes | IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2 | The pairing link of PAIR_J for I |
 | `pair_uri_pair_l` | bytes | exact bytes | IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2 | The pairing link of PAIR_L for I (flow F08), registered and active at flow.pl_pairing_device_l |
@@ -137,6 +152,20 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `S_missing_keys_b` | OWNER | 3 | P4_register_dev_b_approved | `6934ca7883f8bb47…` |
 | `S_missing_keys_b2` | DEV_B | 1 | P4_register_dev_b_approved | `e2600e034ef06c08…` |
 | `S_missing_keys_b3` | OWNER | 4 | P4_register_dev_b_approved | `9f8a550476a8eeb9…` |
+| `M0_entry_dev_b` | OWNER | 3 | P4_register_dev_b_approved | `c684d45e3235cbbe…` |
+| `M1_dev_b_writes_hint` | DEV_B | 1 | P4_register_dev_b_approved | `2892dbcf1b9a9a08…` |
+| `M2_dev_b_appends_hint` | DEV_B | 2 | P4_register_dev_b_approved | `a19a8e510f125415…` |
+| `M2_dev_b_clears_hint` | DEV_B | 2 | P4_register_dev_b_approved | `83913407a075fd15…` |
+| `M1_root_writes_own_hint` | OWNER | 3 | P4_register_dev_b_approved | `310029fefa17fb81…` |
+| `M1_root_writes_dev_b_hint` | OWNER | 4 | P4_register_dev_b_approved | `e82c5f55dc2dd7c9…` |
+| `M2_root_clears_dev_b_hint` | OWNER | 4 | P4_register_dev_b_approved | `9130140f2db8302b…` |
+| `M2_root_appends_dev_b_hint` | OWNER | 4 | P4_register_dev_b_approved | `b950bdd4f31a2544…` |
+| `M2_dev_a_writes_dev_b_hint` | DEV_A | 1 | P4_register_dev_b_approved | `bf0789df236ff3f5…` |
+| `M2_root_relabels_and_hints` | OWNER | 4 | P4_register_dev_b_approved | `12dda630315a246d…` |
+| `M2_root_deletes_dev_b_entry` | OWNER | 4 | P4_register_dev_b_approved | `91750a885751c8b0…` |
+| `M2_root_replaces_dev_b_entry` | OWNER | 4 | P4_register_dev_b_approved | `f248b73cecbb40a2…` |
+| `M1_bridge_o_writes_own_hint` | BRIDGE_O | 1 | P4s_bind_bridge_o | `d50636739ab9905e…` |
+| `M3_root_after_refused` | OWNER | 5 | P4_register_dev_b_approved | `5ddd9c3f43d65b05…` |
 
 Fingerprint of DEV_B: `bicr-ikmc-oec2-llzz`.
 
