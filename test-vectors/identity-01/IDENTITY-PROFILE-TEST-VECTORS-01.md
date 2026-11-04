@@ -78,6 +78,13 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `missing_keys_root_replaces_device_entry` | validation | valid | IDENTITY-PROFILE-01 §2.1, §3 AI5 | OWNER replaces the entry devices[p:<DEV_B>] with a new map without missing_keys: not a write of missing_keys |
 | `missing_keys_service_writes_own` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §3 AI4 | BRIDGE_O (class other) creates its own devices entry with missing_keys: AI4 refuses it, and AI5 admits nothing AI4 refuses |
 | `missing_keys_concurrent_device_and_root` | behavioral | state | IDENTITY-PROFILE-01 §3 AI5, SHARED-OBJECTS-PROFILE-01 §14.1 | DEV_B and OWNER write devices[p:<DEV_B>].missing_keys concurrently, neither having seen the other; OWNER's next change depends on its own |
+| `missing_keys_root_writes_hidden_device_hint` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §2.1, §3 AI5 | OWNER writes missing_keys = {X: [5]} into the hidden conflicting map of devices[p:<DEV_B>] |
+| `missing_keys_device_writes_hidden_own_hint` | validation | valid | IDENTITY-PROFILE-01 §2.1, §3 AI5 | DEV_B writes missing_keys = {X: [5]} into its hidden conflicting entry map, created by OWNER |
+| `missing_keys_root_appends_hidden_hint` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §2.1, §3 AI5 | OWNER appends epoch 6 inside the hidden device entry's missing_keys[X] list |
+| `missing_keys_device_appends_hidden_hint` | validation | valid | IDENTITY-PROFILE-01 §2.1, §3 AI5 | DEV_B appends epoch 6 inside the hidden device entry's missing_keys[X] list |
+| `missing_keys_root_appends_deleted_entry_hint` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §2.1, §3 AI5 | OWNER appends epoch 6 to missing_keys[X] after both conflicting devices[p:<DEV_B>] maps were deleted |
+| `missing_keys_device_appends_deleted_entry_hint` | validation | valid | IDENTITY-PROFILE-01 §2.1, §3 AI5 | DEV_B appends epoch 6 to missing_keys[X] after both conflicting devices[p:<DEV_B>] maps were deleted |
+| `missing_keys_hidden_entry_resolution` | behavioral | state | IDENTITY-PROFILE-01 §3 AI5, SHARED-OBJECTS-PROFILE-01 §14.1 | Resolving a device entry conflict after a foreign or an own hidden hint |
 | `identity_snapshot_equivalence` | behavioral | state | IDENTITY-PROFILE-01 §2, SHARED-OBJECTS-PROFILE-01 §14 | The same document from its four units and from a Snapshot |
 | `pair_uri_roundtrip` | bytes | exact bytes | IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2 | The pairing link of PAIR_J for I |
 | `pair_uri_pair_l` | bytes | exact bytes | IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2 | The pairing link of PAIR_L for I (flow F08), registered and active at flow.pl_pairing_device_l |
@@ -166,6 +173,16 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `M2_root_replaces_dev_b_entry` | OWNER | 4 | P4_register_dev_b_approved | `f248b73cecbb40a2…` |
 | `M1_bridge_o_writes_own_hint` | BRIDGE_O | 1 | P4s_bind_bridge_o | `d50636739ab9905e…` |
 | `M3_root_after_refused` | OWNER | 5 | P4_register_dev_b_approved | `5ddd9c3f43d65b05…` |
+| `H0_dev_a_conflicting_entry` | DEV_A | 1 | P4_register_dev_b_approved | `282c2f9b50b143d2…` |
+| `H1_root_hidden_hint` | OWNER | 4 | P4_register_dev_b_approved | `81f872dd17a082d6…` |
+| `H1_dev_b_hidden_hint` | DEV_B | 1 | P4_register_dev_b_approved | `24c68b3d14c433f6…` |
+| `H2_root_hidden_append` | OWNER | 4 | P4_register_dev_b_approved | `2df4a399c094f067…` |
+| `H2_device_hidden_append` | DEV_B | 2 | P4_register_dev_b_approved | `2f07f3cfa3970b40…` |
+| `H2_root_deletes_conflicting_entries` | OWNER | 4 | P4_register_dev_b_approved | `1fa5d4ddb5c98640…` |
+| `H3_root_deleted_append` | OWNER | 5 | P4_register_dev_b_approved | `4add316e1030ecad…` |
+| `H3_device_deleted_append` | DEV_B | 2 | P4_register_dev_b_approved | `309b523ba8e3c813…` |
+| `H2_resolve_after_foreign_hint` | DEV_A | 2 | P4_register_dev_b_approved | `f2fb4837b5420a5f…` |
+| `H2_resolve_after_own_hint` | DEV_A | 2 | P4_register_dev_b_approved | `80c5cb2bfc4183b5…` |
 
 Fingerprint of DEV_B: `bicr-ikmc-oec2-llzz`.
 
