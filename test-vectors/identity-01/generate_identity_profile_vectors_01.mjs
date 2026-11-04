@@ -176,7 +176,8 @@ function admit(r, root = "OWNER") {
     return initialContent(doc, root) ? null : "INVALID_ROOT";
   }
   const prev = historyOf(r.deps);
-  const latest = A.getAllChanges(prev).map((b) => A.decodeChange(b)).filter((d) => d.actor === r.actor).length;
+  const history = A.getAllChanges(prev).map((b) => A.decodeChange(b));
+  const latest = history.filter((d) => d.actor === r.actor).length;
   if (r.seq !== latest + 1) return "INVALID_AUTOMERGE_BYTES";
   const [next] = A.applyChanges(A.clone(prev), [r.bytes]);
   const found = new Set();
@@ -253,31 +254,27 @@ function admit(r, root = "OWNER") {
   {
     const mine = pref(r.writer);
     const devicesOid = oid(prev, "devices");
-    const entryKey = new Map(); // entry map object id (in the history or made here) -> key
-    const hint = new Map(); // object id inside some devices[k].missing_keys -> k
-    for (const key of Object.keys(prev.devices ?? {})) {
-      const eid = oid(prev.devices, key);
-      if (!eid) continue;
-      entryKey.set(eid, key);
-      const walk = (parent, prop) => {
-        const v = parent[prop];
-        if (!v || typeof v !== "object" || A.isImmutableString(v)) return;
-        hint.set(oid(parent, prop), key);
-        for (const p of Object.keys(v)) walk(v, Array.isArray(v) ? Number(p) : p);
-      };
-      if (prev.devices[key] && typeof prev.devices[key] === "object") walk(prev.devices[key], "missing_keys");
-    }
+    const entryKey = new Map(); // every map ever created at devices[k] in this causal history -> k
+    const made = new Map(); // object id -> creation operation, including hidden and deleted objects
+    const remember = (op, id) => {
+      if (!op.action.startsWith("make")) return;
+      made.set(id, op);
+      if (op.obj === devicesOid && op.action === "makeMap") entryKey.set(id, op.key);
+    };
+    // Do not traverse the engine's visible document: it omits conflicting values and their descendants.
+    for (const d of history) d.ops.forEach((op, i) => remember(op, `${d.startOp + i}@${d.actor}`));
+    const hintKey = (obj) => {
+      for (let creation = made.get(obj); creation; creation = made.get(creation.obj)) {
+        if (creation.key === "missing_keys" && entryKey.has(creation.obj)) return entryKey.get(creation.obj);
+      }
+      return undefined;
+    };
     let foreign = false;
     ops.forEach((op, i) => {
-      if (op.obj === devicesOid) {
-        // Deleting or replacing devices[k] is not a write of missing_keys; a map made here may receive one.
-        if (op.action === "makeMap") entryKey.set(idOf(i), op.key);
-        return;
-      }
-      const key = entryKey.has(op.obj) && op.key === "missing_keys" ? entryKey.get(op.obj) : hint.get(op.obj);
-      if (key === undefined) return;
-      if (op.action.startsWith("make")) hint.set(idOf(i), key);
-      if (key !== mine) foreign = true;
+      const key = entryKey.has(op.obj) && op.key === "missing_keys" ? entryKey.get(op.obj) : hintKey(op.obj);
+      if (key !== undefined && key !== mine) foreign = true;
+      // Entry deletion/replacement is not a hint write; new objects retain their creation ancestry.
+      remember(op, idOf(i));
     });
     if (foreign) found.add("UNAUTHORIZED_WRITER");
   }
@@ -965,6 +962,94 @@ stateCase("roster_bad_ref", docWith("S_roster_bad_ref", (d) => { d.roster[rref("
       state: { entry: B, entry_valid: true, missing_keys_conflict_set: vals, missing_keys_read: vals[0] } },
     ["Both delivery orders give the same document: missing_keys holds DEV_B's value only, with no concurrent value.",
      "M3_root_after_refused passes AI5 by itself (it writes only label) but waits forever: it depends on a refused change."]);
+}
+
+// AI5 uses object creation history, including maps the engine does not select (REVIEW-403b R1).
+{
+  const AT = "P4_register_dev_b_approved", B = pref("DEV_B"), X = rref("X");
+  const entry = CHANGES.get("M0_entry_dev_b");
+  const left = historyOf([entry.hash]);
+  const right = change("H0_dev_a_conflicting_entry", BASE, "DEV_A", 1, AT,
+    (d) => { put(d.devices, B, { label: S("Other phone"), kind: 0 }); });
+  check("hidden_entry.base", [admit(entry), admit(right.r)], [null, null]);
+  const merged = A.merge(A.clone(left), A.clone(right.doc));
+  const hidden = oid(left.devices, B), visible = oid(merged.devices, B);
+  check("hidden_entry.conflicts", Object.keys(A.getConflicts(merged.devices, B)).sort(), [hidden, visible].sort());
+  if (hidden === visible) throw new Error("the regression requires the original device map to be hidden");
+
+  // The editor exposes only the selected map. Encode operations addressed to the hidden object instead;
+  // every reference is into the causal history or an earlier operation of this change (SOP §11.4).
+  const targeted = (name, doc, writer, unitSeq, makeOps) => {
+    const history = A.getAllChanges(doc).map((b) => A.decodeChange(b));
+    const actor = actorOf(writer);
+    const startOp = 1 + Math.max(...history.map((d) => d.startOp + d.ops.length - 1));
+    const bytes = A.encodeChange({ actor, seq: 1 + history.filter((d) => d.actor === actor).length,
+      startOp, time: 0, message: "", deps: A.getHeads(doc), ops: makeOps((i) => `${startOp + i}@${actor}`) });
+    const r = record(name, writer, bytes, unitSeq, AT);
+    const [next] = A.applyChanges(A.clone(doc), [bytes]);
+    check(`${name}.applied`, [A.getHeads(next).includes(r.hash), A.getMissingDeps(next)], [true, []]);
+    return { r, doc: next };
+  };
+  const hintOps = (id) => [
+    { action: "makeMap", obj: hidden, key: "missing_keys", pred: [] },
+    { action: "makeList", obj: id(0), key: X, pred: [] },
+    { action: "set", obj: id(1), elemId: "_head", insert: true, datatype: "uint", value: 5, pred: [] },
+  ];
+  const foreign = targeted("H1_root_hidden_hint", merged, "OWNER", 4, hintOps);
+  const own = targeted("H1_dev_b_hidden_hint", merged, "DEV_B", 1, hintOps);
+  changeCase("missing_keys_root_writes_hidden_device_hint", foreign.r, "UNAUTHORIZED_WRITER",
+    "OWNER writes missing_keys = {X: [5]} into the hidden conflicting map of devices[p:<DEV_B>]", { rule: "AI5" });
+  changeCase("missing_keys_device_writes_hidden_own_hint", own.r, null,
+    "DEV_B writes missing_keys = {X: [5]} into its hidden conflicting entry map, created by OWNER", { rule: "AI5" });
+
+  const list = `${own.r.decoded.startOp + 1}@${own.r.actor}`;
+  const first = `${own.r.decoded.startOp + 2}@${own.r.actor}`;
+  const appendOps = () => [{ action: "set", obj: list, elemId: first, insert: true, datatype: "uint", value: 6, pred: [] }];
+  for (const [writer, unitSeq, suffix, want] of [["OWNER", 4, "root", "UNAUTHORIZED_WRITER"], ["DEV_B", 2, "device", null]]) {
+    const appended = targeted(`H2_${suffix}_hidden_append`, own.doc, writer, unitSeq, appendOps);
+    changeCase(`missing_keys_${suffix}_appends_hidden_hint`, appended.r, want,
+      `${writer} appends epoch 6 inside the hidden device entry's missing_keys[X] list`, { rule: "AI5" });
+  }
+  const deleted = change("H2_root_deletes_conflicting_entries", own.doc, "OWNER", 4, AT, (d) => { delete d.devices[B]; });
+  check("hidden_entry.delete", [admit(deleted.r), B in deleted.doc.devices], [null, false]);
+  for (const [writer, unitSeq, suffix, want] of [["OWNER", 5, "root", "UNAUTHORIZED_WRITER"], ["DEV_B", 2, "device", null]]) {
+    const appended = targeted(`H3_${suffix}_deleted_append`, deleted.doc, writer, unitSeq, appendOps);
+    changeCase(`missing_keys_${suffix}_appends_deleted_entry_hint`, appended.r, want,
+      `${writer} appends epoch 6 to missing_keys[X] after both conflicting devices[p:<DEV_B>] maps were deleted`, { rule: "AI5" });
+  }
+
+  // Resolve the entry conflict by removing only the selected map. The foreign branch must never expose its hint.
+  const resolve = (name, branch) => targeted(name, branch.doc, "DEV_A", 2, () => [
+    { action: "del", obj: oid(merged, "devices"), key: B, pred: [visible] },
+  ]);
+  const afterForeign = resolve("H2_resolve_after_foreign_hint", foreign);
+  const afterOwn = resolve("H2_resolve_after_own_hint", own);
+  const base = ["C0_initial", "C1_fill", entry.name, right.r.name];
+  const orders = {
+    foreign: [...base, foreign.r.name, afterForeign.r.name],
+    device: [...base, own.r.name, afterOwn.r.name],
+  };
+  const expected = {};
+  for (const [branch, order] of Object.entries(orders)) {
+    const result = replay(order);
+    const want = branch === "foreign"
+      ? { admitted: base, refused: { [foreign.r.name]: "UNAUTHORIZED_WRITER" }, pending: [afterForeign.r.name] }
+      : { admitted: order, refused: {}, pending: [] };
+    check(`hidden_entry.${branch}`, { admitted: result.admitted, refused: result.refused, pending: result.pending }, want);
+    expected[branch] = { ...want, state: view(result.doc) };
+    if (branch === "device") {
+      check("hidden_entry.resolved", [oid(result.doc.devices, B), view(result.doc.devices[B].missing_keys), validateEntry(result.doc, "devices", B).valid],
+        [hidden, { [X]: [5] }, true]);
+    } else {
+      check("hidden_entry.foreign_not_merged", A.getAllChanges(result.doc).some((b) => A.decodeChange(b).hash === foreign.r.hash), false);
+    }
+  }
+  expected.foreign.refused = { [foreign.r.name]: { code: "PROFILE_INVALID", diagnostic: "UNAUTHORIZED_WRITER" } };
+  scenario("missing_keys_hidden_entry_resolution", "Resolving a device entry conflict after a foreign or an own hidden hint",
+    ["IDENTITY-PROFILE-01 §3 AI5, SHARED-OBJECTS-PROFILE-01 §14.1", "AI5 checks every entry map in the causal history, selected or hidden; a refused change blocks its dependants."],
+    { changes: [...new Set(Object.values(orders).flat())].map((n) => ({ case: `change.${n}` })), orders }, expected,
+    ["OWNER's hidden hint is refused and its dependent conflict resolution stays pending.",
+     "DEV_B's hidden hint is admitted; resolving the entry conflict exposes exactly its own {X: [5]} hint."]);
 }
 {
   const units = replay(["C0_initial", "C1_fill", "J1_own_request", "J2_continues_own"]).doc;

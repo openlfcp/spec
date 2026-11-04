@@ -3499,6 +3499,560 @@
       ]
     },
     {
+      "id": "missing_keys_root_writes_hidden_device_hint",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "OWNER writes missing_keys = {X: [5]} into the hidden conflicting map of devices[p:<DEV_B>]",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §2.1, §3 AI5",
+        "text": "devices[k].missing_keys, and anything inside it, is created, written or deleted only by the Principal whose PrincipalRef is k (the root for its own entry); deleting the entry devices[k], or replacing it with a map without missing_keys, is not a write of missing_keys."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 4,
+        "unit_actor_seq": 4,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "81f872dd17a082d6757459bc54f86c234d1b92c29f776fce19956b0be080708d",
+        "deps": [
+          "282c2f9b50b143d22bba075171c658072d6f71b72e0bd4e114bc5d250175725f",
+          "c684d45e3235cbbe265abe7d8020a45c244addd7846cb531490ae77d5936f0e9"
+        ],
+        "automerge_change": {
+          "hex": "856f4a8381f872dd01cd0102282c2f9b50b143d22bba075171c658072d6f71b72e0bd4e114bc5d250175725fc684d45e3235cbbe265abe7d8020a45c244addd7846cb531490ae77d5936f0e92030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041a00000009010202041304153c3402420456045701700203007d171a1b00027f007e0c6d697373696e675f6b6579732b66304a5953486b344a59436e694e3874425a5959696161362d484d55693352754555784a6455464b576e55000102017d00020102007f13050300"
+        },
+        "framed_plaintext": {
+          "hex": "820158d8856f4a8381f872dd01cd0102282c2f9b50b143d22bba075171c658072d6f71b72e0bd4e114bc5d250175725fc684d45e3235cbbe265abe7d8020a45c244addd7846cb531490ae77d5936f0e92030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041a00000009010202041304153c3402420456045701700203007d171a1b00027f007e0c6d697373696e675f6b6579732b66304a5953486b344a59436e694e3874425a5959696161362d484d55693352754555784a6455464b576e55000102017d00020102007f13050300"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.H0_dev_a_conflicting_entry",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.M0_entry_dev_b",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "UNAUTHORIZED_WRITER"
+        }
+      }
+    },
+    {
+      "id": "missing_keys_device_writes_hidden_own_hint",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "DEV_B writes missing_keys = {X: [5]} into its hidden conflicting entry map, created by OWNER",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §2.1, §3 AI5",
+        "text": "devices[k].missing_keys, and anything inside it, is created, written or deleted only by the Principal whose PrincipalRef is k (the root for its own entry); deleting the entry devices[k], or replacing it with a map without missing_keys, is not a write of missing_keys."
+      },
+      "inputs": {
+        "writer": "DEV_B",
+        "writer_class": "personal",
+        "writer_ref": "p:3LcJU3p8ZrnXhcnemzHRzxki0J8iXhBHnCSzAs6z-fI",
+        "automerge_actor": "58fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "24c68b3d14c433f6086b5c7d0f03ac7f2215f619ca2fb1ece3332471a19e4393",
+        "deps": [
+          "282c2f9b50b143d22bba075171c658072d6f71b72e0bd4e114bc5d250175725f",
+          "c684d45e3235cbbe265abe7d8020a45c244addd7846cb531490ae77d5936f0e9"
+        ],
+        "automerge_change": {
+          "hex": "856f4a8324c68b3d01f00102282c2f9b50b143d22bba075171c658072d6f71b72e0bd4e114bc5d250175725fc684d45e3235cbbe265abe7d8020a45c244addd7846cb531490ae77d5936f0e92058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9011a0000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a09010402041304153c340242045604570170027f0102007d171a1b00027f007e0c6d697373696e675f6b6579732b66304a5953486b344a59436e694e3874425a5959696161362d484d55693352754555784a6455464b576e55000102017d00020102007f13050300"
+        },
+        "framed_plaintext": {
+          "hex": "820158fb856f4a8324c68b3d01f00102282c2f9b50b143d22bba075171c658072d6f71b72e0bd4e114bc5d250175725fc684d45e3235cbbe265abe7d8020a45c244addd7846cb531490ae77d5936f0e92058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9011a0000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a09010402041304153c340242045604570170027f0102007d171a1b00027f007e0c6d697373696e675f6b6579732b66304a5953486b344a59436e694e3874425a5959696161362d484d55693352754555784a6455464b576e55000102017d00020102007f13050300"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.H0_dev_a_conflicting_entry",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.M0_entry_dev_b",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "missing_keys_root_appends_hidden_hint",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "OWNER appends epoch 6 inside the hidden device entry's missing_keys[X] list",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §2.1, §3 AI5",
+        "text": "devices[k].missing_keys, and anything inside it, is created, written or deleted only by the Principal whose PrincipalRef is k (the root for its own entry); deleting the entry devices[k], or replacing it with a map without missing_keys, is not a write of missing_keys."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 4,
+        "unit_actor_seq": 4,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "2df4a399c094f06712acb15c7cb7778d54681d14479adebf259e6044e504bd08",
+        "deps": [
+          "24c68b3d14c433f6086b5c7d0f03ac7f2215f619ca2fb1ece3332471a19e4393"
+        ],
+        "automerge_change": {
+          "hex": "856f4a832df4a399018c010124c68b3d14c433f6086b5c7d0f03ac7f2215f619ca2fb1ece3332471a19e43932030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041d0000012058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9090102020211021302340242025602570170027f017f1b7f017f1c00017f017f13067f00"
+        },
+        "framed_plaintext": {
+          "hex": "82015897856f4a832df4a399018c010124c68b3d14c433f6086b5c7d0f03ac7f2215f619ca2fb1ece3332471a19e43932030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041d0000012058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9090102020211021302340242025602570170027f017f1b7f017f1c00017f017f13067f00"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.H0_dev_a_conflicting_entry",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.M0_entry_dev_b",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.H1_dev_b_hidden_hint",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "UNAUTHORIZED_WRITER"
+        }
+      }
+    },
+    {
+      "id": "missing_keys_device_appends_hidden_hint",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "DEV_B appends epoch 6 inside the hidden device entry's missing_keys[X] list",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §2.1, §3 AI5",
+        "text": "devices[k].missing_keys, and anything inside it, is created, written or deleted only by the Principal whose PrincipalRef is k (the root for its own entry); deleting the entry devices[k], or replacing it with a map without missing_keys, is not a write of missing_keys."
+      },
+      "inputs": {
+        "writer": "DEV_B",
+        "writer_class": "personal",
+        "writer_ref": "p:3LcJU3p8ZrnXhcnemzHRzxki0J8iXhBHnCSzAs6z-fI",
+        "automerge_actor": "58fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9",
+        "automerge_seq": 2,
+        "unit_actor_seq": 2,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "2f07f3cfa3970b409900fa7ea9022e1c064cf36d3d69aa914fb969a3238b9f0e",
+        "deps": [
+          "24c68b3d14c433f6086b5c7d0f03ac7f2215f619ca2fb1ece3332471a19e4393"
+        ],
+        "automerge_change": {
+          "hex": "856f4a832f07f3cf016b0124c68b3d14c433f6086b5c7d0f03ac7f2215f619ca2fb1ece3332471a19e43932058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9021d000000090102020211021302340242025602570170027f007f1b7f007f1c00017f017f13067f00"
+        },
+        "framed_plaintext": {
+          "hex": "82015875856f4a832f07f3cf016b0124c68b3d14c433f6086b5c7d0f03ac7f2215f619ca2fb1ece3332471a19e43932058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9021d000000090102020211021302340242025602570170027f007f1b7f007f1c00017f017f13067f00"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.H0_dev_a_conflicting_entry",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.M0_entry_dev_b",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.H1_dev_b_hidden_hint",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "missing_keys_root_appends_deleted_entry_hint",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "OWNER appends epoch 6 to missing_keys[X] after both conflicting devices[p:<DEV_B>] maps were deleted",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §2.1, §3 AI5",
+        "text": "devices[k].missing_keys, and anything inside it, is created, written or deleted only by the Principal whose PrincipalRef is k (the root for its own entry); deleting the entry devices[k], or replacing it with a map without missing_keys, is not a write of missing_keys."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 5,
+        "unit_actor_seq": 5,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "4add316e1030ecadc3e30ba4d6987d205686bea2e6cdb41cd3fa8d38512053b3",
+        "deps": [
+          "1fa5d4ddb5c9864096733ac170c08cdf77705648f90904956f0ac88a459c1bc6"
+        ],
+        "automerge_change": {
+          "hex": "856f4a834add316e018c01011fa5d4ddb5c9864096733ac170c08cdf77705648f90904956f0ac88a459c1bc62030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a051e0000012058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9090102020211021302340242025602570170027f017f1b7f017f1c00017f017f13067f00"
+        },
+        "framed_plaintext": {
+          "hex": "82015897856f4a834add316e018c01011fa5d4ddb5c9864096733ac170c08cdf77705648f90904956f0ac88a459c1bc62030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a051e0000012058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9090102020211021302340242025602570170027f017f1b7f017f1c00017f017f13067f00"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.H0_dev_a_conflicting_entry",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.M0_entry_dev_b",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.H1_dev_b_hidden_hint",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.H2_root_deletes_conflicting_entries",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "UNAUTHORIZED_WRITER"
+        }
+      }
+    },
+    {
+      "id": "missing_keys_device_appends_deleted_entry_hint",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "DEV_B appends epoch 6 to missing_keys[X] after both conflicting devices[p:<DEV_B>] maps were deleted",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §2.1, §3 AI5",
+        "text": "devices[k].missing_keys, and anything inside it, is created, written or deleted only by the Principal whose PrincipalRef is k (the root for its own entry); deleting the entry devices[k], or replacing it with a map without missing_keys, is not a write of missing_keys."
+      },
+      "inputs": {
+        "writer": "DEV_B",
+        "writer_class": "personal",
+        "writer_ref": "p:3LcJU3p8ZrnXhcnemzHRzxki0J8iXhBHnCSzAs6z-fI",
+        "automerge_actor": "58fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9",
+        "automerge_seq": 2,
+        "unit_actor_seq": 2,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "309b523ba8e3c813d66e9c2809731efa1dd14ab8a5e41b3236ef7d35f02c3e5d",
+        "deps": [
+          "1fa5d4ddb5c9864096733ac170c08cdf77705648f90904956f0ac88a459c1bc6"
+        ],
+        "automerge_change": {
+          "hex": "856f4a83309b523b016b011fa5d4ddb5c9864096733ac170c08cdf77705648f90904956f0ac88a459c1bc62058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9021e000000090102020211021302340242025602570170027f007f1b7f007f1c00017f017f13067f00"
+        },
+        "framed_plaintext": {
+          "hex": "82015875856f4a83309b523b016b011fa5d4ddb5c9864096733ac170c08cdf77705648f90904956f0ac88a459c1bc62058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9021e000000090102020211021302340242025602570170027f007f1b7f007f1c00017f017f13067f00"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.H0_dev_a_conflicting_entry",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.M0_entry_dev_b",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.H1_dev_b_hidden_hint",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.H2_root_deletes_conflicting_entries",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "missing_keys_hidden_entry_resolution",
+      "type": "behavioral",
+      "kind": "identity_document",
+      "description": "Resolving a device entry conflict after a foreign or an own hidden hint",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §3 AI5, SHARED-OBJECTS-PROFILE-01 §14.1",
+        "text": "AI5 checks every entry map in the causal history, selected or hidden; a refused change blocks its dependants."
+      },
+      "inputs": {
+        "changes": [
+          {
+            "case": "change.C0_initial"
+          },
+          {
+            "case": "change.C1_fill"
+          },
+          {
+            "case": "change.M0_entry_dev_b"
+          },
+          {
+            "case": "change.H0_dev_a_conflicting_entry"
+          },
+          {
+            "case": "change.H1_root_hidden_hint"
+          },
+          {
+            "case": "change.H2_resolve_after_foreign_hint"
+          },
+          {
+            "case": "change.H1_dev_b_hidden_hint"
+          },
+          {
+            "case": "change.H2_resolve_after_own_hint"
+          }
+        ],
+        "orders": {
+          "foreign": [
+            "C0_initial",
+            "C1_fill",
+            "M0_entry_dev_b",
+            "H0_dev_a_conflicting_entry",
+            "H1_root_hidden_hint",
+            "H2_resolve_after_foreign_hint"
+          ],
+          "device": [
+            "C0_initial",
+            "C1_fill",
+            "M0_entry_dev_b",
+            "H0_dev_a_conflicting_entry",
+            "H1_dev_b_hidden_hint",
+            "H2_resolve_after_own_hint"
+          ]
+        }
+      },
+      "expected": {
+        "foreign": {
+          "admitted": [
+            "C0_initial",
+            "C1_fill",
+            "M0_entry_dev_b",
+            "H0_dev_a_conflicting_entry"
+          ],
+          "refused": {
+            "H1_root_hidden_hint": {
+              "code": "PROFILE_INVALID",
+              "diagnostic": "UNAUTHORIZED_WRITER"
+            }
+          },
+          "pending": [
+            "H2_resolve_after_foreign_hint"
+          ],
+          "state": {
+            "devices": {
+              "p:3LcJU3p8ZrnXhcnemzHRzxki0J8iXhBHnCSzAs6z-fI_conflict_set": [
+                {
+                  "kind": 0,
+                  "label": "Other phone"
+                },
+                {
+                  "kind": 0,
+                  "label": "Phone"
+                }
+              ],
+              "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0": {
+                "kind": 0,
+                "label": "Desktop"
+              }
+            },
+            "extensions": {},
+            "identity": {
+              "root": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0"
+            },
+            "profile": "org.openlfcp.identity.v1",
+            "requests": {},
+            "roster": {
+              "f0JYSHk4JYCniN8tBZYYiaa6-HMUi3RuEUxJdUFKWnU": {
+                "coordinator": "wss://sync-a.example.test/v1/ws",
+                "endpoints": [
+                  "wss://sync-a.example.test/v1/ws"
+                ],
+                "name": "Project X",
+                "profile": "org.lfcp.test.raw.v1"
+              },
+              "wo-8gV109matXrXCfat9SZvB8bFNugzxc61YUZycGyA": {
+                "coordinator": "wss://sync-a.example.test/v1/ws",
+                "endpoints": [
+                  "wss://sync-a.example.test/v1/ws"
+                ],
+                "name": "Project Y",
+                "profile": "org.lfcp.test.raw.v1"
+              }
+            }
+          }
+        },
+        "device": {
+          "admitted": [
+            "C0_initial",
+            "C1_fill",
+            "M0_entry_dev_b",
+            "H0_dev_a_conflicting_entry",
+            "H1_dev_b_hidden_hint",
+            "H2_resolve_after_own_hint"
+          ],
+          "refused": {},
+          "pending": [],
+          "state": {
+            "devices": {
+              "p:3LcJU3p8ZrnXhcnemzHRzxki0J8iXhBHnCSzAs6z-fI": {
+                "kind": 0,
+                "label": "Phone",
+                "missing_keys": {
+                  "f0JYSHk4JYCniN8tBZYYiaa6-HMUi3RuEUxJdUFKWnU": [
+                    5
+                  ]
+                }
+              },
+              "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0": {
+                "kind": 0,
+                "label": "Desktop"
+              }
+            },
+            "extensions": {},
+            "identity": {
+              "root": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0"
+            },
+            "profile": "org.openlfcp.identity.v1",
+            "requests": {},
+            "roster": {
+              "f0JYSHk4JYCniN8tBZYYiaa6-HMUi3RuEUxJdUFKWnU": {
+                "coordinator": "wss://sync-a.example.test/v1/ws",
+                "endpoints": [
+                  "wss://sync-a.example.test/v1/ws"
+                ],
+                "name": "Project X",
+                "profile": "org.lfcp.test.raw.v1"
+              },
+              "wo-8gV109matXrXCfat9SZvB8bFNugzxc61YUZycGyA": {
+                "coordinator": "wss://sync-a.example.test/v1/ws",
+                "endpoints": [
+                  "wss://sync-a.example.test/v1/ws"
+                ],
+                "name": "Project Y",
+                "profile": "org.lfcp.test.raw.v1"
+              }
+            }
+          }
+        }
+      },
+      "assertions": [
+        "OWNER's hidden hint is refused and its dependent conflict resolution stays pending.",
+        "DEV_B's hidden hint is admitted; resolving the entry conflict exposes exactly its own {X: [5]} hint."
+      ]
+    },
+    {
       "id": "identity_snapshot_equivalence",
       "type": "behavioral",
       "kind": "identity_document",
@@ -6279,6 +6833,286 @@
         },
         "sha256": {
           "hex": "7b8536fec07df9e9b69e4cf5f17d5dcb4ffbc63c26593110dcad58081cf0a87a"
+        }
+      }
+    },
+    {
+      "id": "change.H0_dev_a_conflicting_entry",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change H0_dev_a_conflicting_entry by DEV_A (unit actor sequence 1, control_ref P4_register_dev_b_approved)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83282c2f9b01d301019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b120f92960bd51fb4aebe23684a0f7e6e8e92acc0c4e55554593fcc9c3d6e723c16c01170000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0801040204153a340142045605570c70027f0102007f0502177d2d703a334c634a553370385a726e5868636e656d7a48527a786b69304a3869586842486e43537a4173367a2d6649056c6162656c046b696e64037f0002017d00b601134f746865722070686f6e65000300"
+        },
+        "writer": "DEV_A",
+        "writer_class": "personal",
+        "writer_ref": "p:BJj_M0x8sMFxBep-osf2GpxULvYqcxCwV7GoQ4tdz58",
+        "automerge_actor": "f92960bd51fb4aebe23684a0f7e6e8e92acc0c4e55554593fcc9c3d6e723c16c",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "282c2f9b50b143d22bba075171c658072d6f71b72e0bd4e114bc5d250175725f",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "820158de856f4a83282c2f9b01d301019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b120f92960bd51fb4aebe23684a0f7e6e8e92acc0c4e55554593fcc9c3d6e723c16c01170000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0801040204153a340142045605570c70027f0102007f0502177d2d703a334c634a553370385a726e5868636e656d7a48527a786b69304a3869586842486e43537a4173367a2d6649056c6162656c046b696e64037f0002017d00b601134f746865722070686f6e65000300"
+        },
+        "sha256": {
+          "hex": "378c0639915c5db070386f6e071d3ffbd67ecb4f3f8a1ae6d589c0cfa0de7af8"
+        }
+      }
+    },
+    {
+      "id": "change.H1_root_hidden_hint",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change H1_root_hidden_hint by OWNER (unit actor sequence 4, control_ref P4_register_dev_b_approved)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a8381f872dd01cd0102282c2f9b50b143d22bba075171c658072d6f71b72e0bd4e114bc5d250175725fc684d45e3235cbbe265abe7d8020a45c244addd7846cb531490ae77d5936f0e92030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041a00000009010202041304153c3402420456045701700203007d171a1b00027f007e0c6d697373696e675f6b6579732b66304a5953486b344a59436e694e3874425a5959696161362d484d55693352754555784a6455464b576e55000102017d00020102007f13050300"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 4,
+        "unit_actor_seq": 4,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "81f872dd17a082d6757459bc54f86c234d1b92c29f776fce19956b0be080708d",
+        "deps": "282c2f9b50b143d22bba075171c658072d6f71b72e0bd4e114bc5d250175725f,c684d45e3235cbbe265abe7d8020a45c244addd7846cb531490ae77d5936f0e9"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "820158d8856f4a8381f872dd01cd0102282c2f9b50b143d22bba075171c658072d6f71b72e0bd4e114bc5d250175725fc684d45e3235cbbe265abe7d8020a45c244addd7846cb531490ae77d5936f0e92030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041a00000009010202041304153c3402420456045701700203007d171a1b00027f007e0c6d697373696e675f6b6579732b66304a5953486b344a59436e694e3874425a5959696161362d484d55693352754555784a6455464b576e55000102017d00020102007f13050300"
+        },
+        "sha256": {
+          "hex": "4b1a5089ecbf0488d720e979b885750f85ca2eede3e019a6247184f0dd09a365"
+        }
+      }
+    },
+    {
+      "id": "change.H1_dev_b_hidden_hint",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change H1_dev_b_hidden_hint by DEV_B (unit actor sequence 1, control_ref P4_register_dev_b_approved)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a8324c68b3d01f00102282c2f9b50b143d22bba075171c658072d6f71b72e0bd4e114bc5d250175725fc684d45e3235cbbe265abe7d8020a45c244addd7846cb531490ae77d5936f0e92058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9011a0000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a09010402041304153c340242045604570170027f0102007d171a1b00027f007e0c6d697373696e675f6b6579732b66304a5953486b344a59436e694e3874425a5959696161362d484d55693352754555784a6455464b576e55000102017d00020102007f13050300"
+        },
+        "writer": "DEV_B",
+        "writer_class": "personal",
+        "writer_ref": "p:3LcJU3p8ZrnXhcnemzHRzxki0J8iXhBHnCSzAs6z-fI",
+        "automerge_actor": "58fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "24c68b3d14c433f6086b5c7d0f03ac7f2215f619ca2fb1ece3332471a19e4393",
+        "deps": "282c2f9b50b143d22bba075171c658072d6f71b72e0bd4e114bc5d250175725f,c684d45e3235cbbe265abe7d8020a45c244addd7846cb531490ae77d5936f0e9"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "820158fb856f4a8324c68b3d01f00102282c2f9b50b143d22bba075171c658072d6f71b72e0bd4e114bc5d250175725fc684d45e3235cbbe265abe7d8020a45c244addd7846cb531490ae77d5936f0e92058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9011a0000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a09010402041304153c340242045604570170027f0102007d171a1b00027f007e0c6d697373696e675f6b6579732b66304a5953486b344a59436e694e3874425a5959696161362d484d55693352754555784a6455464b576e55000102017d00020102007f13050300"
+        },
+        "sha256": {
+          "hex": "7e8b6e7f4a90c674735ef20e64cd1de984aa1757f636fb658da97257129b8a3a"
+        }
+      }
+    },
+    {
+      "id": "change.H2_root_hidden_append",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change H2_root_hidden_append by OWNER (unit actor sequence 4, control_ref P4_register_dev_b_approved)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a832df4a399018c010124c68b3d14c433f6086b5c7d0f03ac7f2215f619ca2fb1ece3332471a19e43932030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041d0000012058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9090102020211021302340242025602570170027f017f1b7f017f1c00017f017f13067f00"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 4,
+        "unit_actor_seq": 4,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "2df4a399c094f06712acb15c7cb7778d54681d14479adebf259e6044e504bd08",
+        "deps": "24c68b3d14c433f6086b5c7d0f03ac7f2215f619ca2fb1ece3332471a19e4393"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015897856f4a832df4a399018c010124c68b3d14c433f6086b5c7d0f03ac7f2215f619ca2fb1ece3332471a19e43932030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041d0000012058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9090102020211021302340242025602570170027f017f1b7f017f1c00017f017f13067f00"
+        },
+        "sha256": {
+          "hex": "72500c3d17afc140a9258c68947444f998cd2f27d5de40e2d6cfdc4659cdb915"
+        }
+      }
+    },
+    {
+      "id": "change.H2_device_hidden_append",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change H2_device_hidden_append by DEV_B (unit actor sequence 2, control_ref P4_register_dev_b_approved)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a832f07f3cf016b0124c68b3d14c433f6086b5c7d0f03ac7f2215f619ca2fb1ece3332471a19e43932058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9021d000000090102020211021302340242025602570170027f007f1b7f007f1c00017f017f13067f00"
+        },
+        "writer": "DEV_B",
+        "writer_class": "personal",
+        "writer_ref": "p:3LcJU3p8ZrnXhcnemzHRzxki0J8iXhBHnCSzAs6z-fI",
+        "automerge_actor": "58fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9",
+        "automerge_seq": 2,
+        "unit_actor_seq": 2,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "2f07f3cfa3970b409900fa7ea9022e1c064cf36d3d69aa914fb969a3238b9f0e",
+        "deps": "24c68b3d14c433f6086b5c7d0f03ac7f2215f619ca2fb1ece3332471a19e4393"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015875856f4a832f07f3cf016b0124c68b3d14c433f6086b5c7d0f03ac7f2215f619ca2fb1ece3332471a19e43932058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9021d000000090102020211021302340242025602570170027f007f1b7f007f1c00017f017f13067f00"
+        },
+        "sha256": {
+          "hex": "537b1da13b245252240789e5bed450f3ef080aa1554f67126f3b7b1374943108"
+        }
+      }
+    },
+    {
+      "id": "change.H2_root_deletes_conflicting_entries",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change H2_root_deletes_conflicting_entries by OWNER (unit actor sequence 4, control_ref P4_register_dev_b_approved)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a831fa5d4dd01db010224c68b3d14c433f6086b5c7d0f03ac7f2215f619ca2fb1ece3332471a19e4393c684d45e3235cbbe265abe7d8020a45c244addd7846cb531490ae77d5936f0e92030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041d00000120f92960bd51fb4aebe23684a0f7e6e8e92acc0c4e55554593fcc9c3d6e723c16c0901020202152f3401420256027002710373037f007f057f2d703a334c634a553370385a726e5868636e656d7a48527a786b69304a3869586842486e43537a4173367a2d6649017f037f007f027e00017e1700"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 4,
+        "unit_actor_seq": 4,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "1fa5d4ddb5c9864096733ac170c08cdf77705648f90904956f0ac88a459c1bc6",
+        "deps": "24c68b3d14c433f6086b5c7d0f03ac7f2215f619ca2fb1ece3332471a19e4393,c684d45e3235cbbe265abe7d8020a45c244addd7846cb531490ae77d5936f0e9"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "820158e6856f4a831fa5d4dd01db010224c68b3d14c433f6086b5c7d0f03ac7f2215f619ca2fb1ece3332471a19e4393c684d45e3235cbbe265abe7d8020a45c244addd7846cb531490ae77d5936f0e92030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041d00000120f92960bd51fb4aebe23684a0f7e6e8e92acc0c4e55554593fcc9c3d6e723c16c0901020202152f3401420256027002710373037f007f057f2d703a334c634a553370385a726e5868636e656d7a48527a786b69304a3869586842486e43537a4173367a2d6649017f037f007f027e00017e1700"
+        },
+        "sha256": {
+          "hex": "313df9bb8ed0f2c315ab5e02954c23401f6aceff0f84c791d9762a6d5602ec45"
+        }
+      }
+    },
+    {
+      "id": "change.H3_root_deleted_append",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change H3_root_deleted_append by OWNER (unit actor sequence 5, control_ref P4_register_dev_b_approved)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a834add316e018c01011fa5d4ddb5c9864096733ac170c08cdf77705648f90904956f0ac88a459c1bc62030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a051e0000012058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9090102020211021302340242025602570170027f017f1b7f017f1c00017f017f13067f00"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 5,
+        "unit_actor_seq": 5,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "4add316e1030ecadc3e30ba4d6987d205686bea2e6cdb41cd3fa8d38512053b3",
+        "deps": "1fa5d4ddb5c9864096733ac170c08cdf77705648f90904956f0ac88a459c1bc6"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015897856f4a834add316e018c01011fa5d4ddb5c9864096733ac170c08cdf77705648f90904956f0ac88a459c1bc62030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a051e0000012058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9090102020211021302340242025602570170027f017f1b7f017f1c00017f017f13067f00"
+        },
+        "sha256": {
+          "hex": "815a21923f0ccabd57aacec47572bf11960b3c794e92ff5f2630ebb8e22f43c9"
+        }
+      }
+    },
+    {
+      "id": "change.H3_device_deleted_append",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change H3_device_deleted_append by DEV_B (unit actor sequence 2, control_ref P4_register_dev_b_approved)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83309b523b016b011fa5d4ddb5c9864096733ac170c08cdf77705648f90904956f0ac88a459c1bc62058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9021e000000090102020211021302340242025602570170027f007f1b7f007f1c00017f017f13067f00"
+        },
+        "writer": "DEV_B",
+        "writer_class": "personal",
+        "writer_ref": "p:3LcJU3p8ZrnXhcnemzHRzxki0J8iXhBHnCSzAs6z-fI",
+        "automerge_actor": "58fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9",
+        "automerge_seq": 2,
+        "unit_actor_seq": 2,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "309b523ba8e3c813d66e9c2809731efa1dd14ab8a5e41b3236ef7d35f02c3e5d",
+        "deps": "1fa5d4ddb5c9864096733ac170c08cdf77705648f90904956f0ac88a459c1bc6"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015875856f4a83309b523b016b011fa5d4ddb5c9864096733ac170c08cdf77705648f90904956f0ac88a459c1bc62058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9021e000000090102020211021302340242025602570170027f007f1b7f007f1c00017f017f13067f00"
+        },
+        "sha256": {
+          "hex": "0e2a55b40396c7ccc8739da47a5fb7f5cf3cefed0c237d558a986913d015cb89"
+        }
+      }
+    },
+    {
+      "id": "change.H2_resolve_after_foreign_hint",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change H2_resolve_after_foreign_hint by DEV_A (unit actor sequence 2, control_ref P4_register_dev_b_approved)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83f2fb483701b9010181f872dd17a082d6757459bc54f86c234d1b92c29f776fce19956b0be080708d20f92960bd51fb4aebe23684a0f7e6e8e92acc0c4e55554593fcc9c3d6e723c16c021d0000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0901020202152f3401420256027002710273027f017f057f2d703a334c634a553370385a726e5868636e656d7a48527a786b69304a3869586842486e43537a4173367a2d6649017f037f007f017f007f17"
+        },
+        "writer": "DEV_A",
+        "writer_class": "personal",
+        "writer_ref": "p:BJj_M0x8sMFxBep-osf2GpxULvYqcxCwV7GoQ4tdz58",
+        "automerge_actor": "f92960bd51fb4aebe23684a0f7e6e8e92acc0c4e55554593fcc9c3d6e723c16c",
+        "automerge_seq": 2,
+        "unit_actor_seq": 2,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "f2fb4837b5420a5f55a53c36aa6c765f3182e6c8032fb8110d60705b526c20c4",
+        "deps": "81f872dd17a082d6757459bc54f86c234d1b92c29f776fce19956b0be080708d"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "820158c4856f4a83f2fb483701b9010181f872dd17a082d6757459bc54f86c234d1b92c29f776fce19956b0be080708d20f92960bd51fb4aebe23684a0f7e6e8e92acc0c4e55554593fcc9c3d6e723c16c021d0000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0901020202152f3401420256027002710273027f017f057f2d703a334c634a553370385a726e5868636e656d7a48527a786b69304a3869586842486e43537a4173367a2d6649017f037f007f017f007f17"
+        },
+        "sha256": {
+          "hex": "ab1bcb844cd03e9505f2504820fd752e5fe1d0411d723a9f5be00f630c5d7364"
+        }
+      }
+    },
+    {
+      "id": "change.H2_resolve_after_own_hint",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change H2_resolve_after_own_hint by DEV_A (unit actor sequence 2, control_ref P4_register_dev_b_approved)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a8380c5cb2b01b9010124c68b3d14c433f6086b5c7d0f03ac7f2215f619ca2fb1ece3332471a19e439320f92960bd51fb4aebe23684a0f7e6e8e92acc0c4e55554593fcc9c3d6e723c16c021d0000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0901020202152f3401420256027002710273027f017f057f2d703a334c634a553370385a726e5868636e656d7a48527a786b69304a3869586842486e43537a4173367a2d6649017f037f007f017f007f17"
+        },
+        "writer": "DEV_A",
+        "writer_class": "personal",
+        "writer_ref": "p:BJj_M0x8sMFxBep-osf2GpxULvYqcxCwV7GoQ4tdz58",
+        "automerge_actor": "f92960bd51fb4aebe23684a0f7e6e8e92acc0c4e55554593fcc9c3d6e723c16c",
+        "automerge_seq": 2,
+        "unit_actor_seq": 2,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "80c5cb2bfc4183b562e3c955ba54d723e42e3bf3c18ea98eea1de423f96b0752",
+        "deps": "24c68b3d14c433f6086b5c7d0f03ac7f2215f619ca2fb1ece3332471a19e4393"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "820158c4856f4a8380c5cb2b01b9010124c68b3d14c433f6086b5c7d0f03ac7f2215f619ca2fb1ece3332471a19e439320f92960bd51fb4aebe23684a0f7e6e8e92acc0c4e55554593fcc9c3d6e723c16c021d0000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0901020202152f3401420256027002710273027f017f057f2d703a334c634a553370385a726e5868636e656d7a48527a786b69304a3869586842486e43537a4173367a2d6649017f037f007f017f007f17"
+        },
+        "sha256": {
+          "hex": "f7cf72fd4c2cc1a2d1168ba984be9a958d7ae20a01a323f2edd7ac6dd0732b81"
         }
       }
     }
