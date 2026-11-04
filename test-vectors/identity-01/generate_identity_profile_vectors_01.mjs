@@ -197,19 +197,28 @@ function admit(r, root = "OWNER") {
       }
     }
   }
-  for (const op of ops) {
+  // AI2 (§3): the root containers are never written after the initial change, and a scalar replaces an object only
+  // when its operation names that object as a predecessor (SOP §11.4 R6). Objects are indexed from the whole causal
+  // history, hidden and deleted ones included, and from the earlier operations of this change.
+  const madeObjects = new Set();
+  const entryMaps = new Set();
+  const entryContainers = ["roster", "devices", "requests"].map((k) => oid(prev, k));
+  const index = (op, id) => {
+    if (!op.action.startsWith("make")) return;
+    madeObjects.add(id);
+    if (op.action === "makeMap" && entryContainers.includes(op.obj)) entryMaps.add(id);
+  };
+  for (const d of history) d.ops.forEach((op, i) => index(op, `${d.startOp + i}@${d.actor}`));
+  const replacesObject = (op) => op.action === "set" && (op.pred ?? []).some((p) => madeObjects.has(p));
+  ops.forEach((op, i) => {
     if (op.obj === "_root" && CONTAINERS.includes(op.key)) found.add("CONTAINER_REPLACED");
-    if (containerOids[op.obj] && op.action === "set" && values(prev[containerOids[op.obj]], op.key).some((v) => typeof v === "object" && !A.isImmutableString(v))) found.add("CONTAINER_REPLACED");
-    if (entryOf.has(op.obj) && entryOf.get(op.obj).length === 2 && op.action === "set") {
-      const [k, key] = entryOf.get(op.obj);
-      const cur = prev[k][key]?.[op.key];
-      if (cur && typeof cur === "object" && !A.isImmutableString(cur)) found.add("CONTAINER_REPLACED");
-    }
+    if ((containerOids[op.obj] || entryMaps.has(op.obj)) && replacesObject(op)) found.add("CONTAINER_REPLACED");
     if ((op.obj === "_root" && (op.key === "profile" || op.key === "identity")) || (identityOid && op.obj === identityOid)) found.add("IMMUTABLE_FIELD_MUTATED");
     if (op.action === "makeText") found.add("INVALID_FIELD_TYPE");
     // §2.1: the profile's scalars are ImmutableString, boolean and uint; an int, float, counter or timestamp is not one (AI3).
     if (op.action === "set" && ["int", "float64", "counter", "timestamp"].includes(op.datatype)) found.add("INVALID_FIELD_TYPE");
-  }
+    index(op, idOf(i));
+  });
   const cls = writerClass(r.writer, r.controlRef);
   if (cls === "pairing" || cls === "other") {
     const mine = pref(r.writer);
@@ -564,6 +573,7 @@ const RULES = {
   AI3: ["IDENTITY-PROFILE-01 §3 AI3", "Collaborative Text is never used."],
   AI4: ["IDENTITY-PROFILE-01 §3 AI4", "A pairing or other writer creates or writes into one entry requests[k] that it owns, deletes nothing and replaces no entry map; pairing stays its own PrincipalRef."],
   AI5: ["IDENTITY-PROFILE-01 §2.1, §3 AI5", "devices[k].missing_keys, and anything inside it, is created, written or deleted only by the Principal whose PrincipalRef is k (the root for its own entry); deleting the entry devices[k], or replacing it with a map without missing_keys, is not a write of missing_keys."],
+  AI2_HISTORY: ["IDENTITY-PROFILE-01 §3 AI2", "A change does not write a scalar over an entry map, or over a list or map field of one, whether or not the engine selects that value; the replaced objects are the operation's predecessors (SOP §11.4 R6)."],
   RESERVED: ["IDENTITY-PROFILE-01 §2.4", "Admission has no rule for the reserved root keys: a later change that writes them is admitted when §3 otherwise admits it; the value is preserved uninterpreted."],
   OK: ["IDENTITY-PROFILE-01 §3", "The change passes the checks of its bytes, the sequence checks and AI0 to AI4."],
 };
@@ -964,6 +974,23 @@ stateCase("roster_bad_ref", docWith("S_roster_bad_ref", (d) => { d.roster[rref("
      "M3_root_after_refused passes AI5 by itself (it writes only label) but waits forever: it depends on a refused change."]);
 }
 
+/**
+ * A change whose operations are written directly, so that they can address an object the engine does not
+ * select (a hidden conflicting value). Every reference is into the causal history or an earlier operation of
+ * the change (SOP §11.4); the change is checked to apply without missing dependencies.
+ */
+function encodeTargeted(name, doc, writer, unitSeq, controlRef, makeOps) {
+  const history = A.getAllChanges(doc).map((b) => A.decodeChange(b));
+  const actor = actorOf(writer);
+  const startOp = 1 + Math.max(...history.map((d) => d.startOp + d.ops.length - 1));
+  const bytes = A.encodeChange({ actor, seq: 1 + history.filter((d) => d.actor === actor).length,
+    startOp, time: 0, message: "", deps: A.getHeads(doc), ops: makeOps((i) => `${startOp + i}@${actor}`) });
+  const r = record(name, writer, bytes, unitSeq, controlRef);
+  const [next] = A.applyChanges(A.clone(doc), [bytes]);
+  check(`${name}.applied`, [A.getHeads(next).includes(r.hash), A.getMissingDeps(next)], [true, []]);
+  return { r, doc: next };
+}
+
 // AI5 uses object creation history, including maps the engine does not select (REVIEW-403b R1).
 {
   const AT = "P4_register_dev_b_approved", B = pref("DEV_B"), X = rref("X");
@@ -979,17 +1006,7 @@ stateCase("roster_bad_ref", docWith("S_roster_bad_ref", (d) => { d.roster[rref("
 
   // The editor exposes only the selected map. Encode operations addressed to the hidden object instead;
   // every reference is into the causal history or an earlier operation of this change (SOP §11.4).
-  const targeted = (name, doc, writer, unitSeq, makeOps) => {
-    const history = A.getAllChanges(doc).map((b) => A.decodeChange(b));
-    const actor = actorOf(writer);
-    const startOp = 1 + Math.max(...history.map((d) => d.startOp + d.ops.length - 1));
-    const bytes = A.encodeChange({ actor, seq: 1 + history.filter((d) => d.actor === actor).length,
-      startOp, time: 0, message: "", deps: A.getHeads(doc), ops: makeOps((i) => `${startOp + i}@${actor}`) });
-    const r = record(name, writer, bytes, unitSeq, AT);
-    const [next] = A.applyChanges(A.clone(doc), [bytes]);
-    check(`${name}.applied`, [A.getHeads(next).includes(r.hash), A.getMissingDeps(next)], [true, []]);
-    return { r, doc: next };
-  };
+  const targeted = (name, doc, writer, unitSeq, makeOps) => encodeTargeted(name, doc, writer, unitSeq, AT, makeOps);
   const hintOps = (id) => [
     { action: "makeMap", obj: hidden, key: "missing_keys", pred: [] },
     { action: "makeList", obj: id(0), key: X, pred: [] },
@@ -1050,6 +1067,77 @@ stateCase("roster_bad_ref", docWith("S_roster_bad_ref", (d) => { d.roster[rref("
     { changes: [...new Set(Object.values(orders).flat())].map((n) => ({ case: `change.${n}` })), orders }, expected,
     ["OWNER's hidden hint is refused and its dependent conflict resolution stays pending.",
      "DEV_B's hidden hint is admitted; resolving the entry conflict exposes exactly its own {X: [5]} hint."]);
+}
+// AI5 on a replaced entry map: OWNER replaced devices[p:<DEV_B>] after DEV_B wrote its hint (review-spec-4b P3).
+{
+  const AT = "P4_register_dev_b_approved", B = pref("DEV_B"), X = rref("X");
+  const replaced = CHANGES.get("M2_root_replaces_dev_b_entry");
+  const doc = historyOf([replaced.hash]);
+  const entry = CHANGES.get("M0_entry_dev_b"), hint = CHANGES.get("M1_dev_b_writes_hint");
+  const at = (r, pred) => `${r.decoded.startOp + r.decoded.ops.findIndex(pred)}@${r.actor}`;
+  const oldMap = at(entry, (op) => op.action === "makeMap" && op.key === B);
+  const list = at(hint, (op) => op.action === "makeList" && op.key === X);
+  const first = at(hint, (op) => op.obj === list && op.insert);
+  check("replaced_entry.base", [oid(doc.devices, B) !== oldMap, admit(replaced)], [true, null]);
+  const append = (value) => () => [{ action: "set", obj: list, elemId: first, insert: true, datatype: "uint", value, pred: [] }];
+  changeCase("missing_keys_root_appends_replaced_entry_hint",
+    encodeTargeted("H4_root_appends_replaced_hint", doc, "OWNER", 5, AT, append(7)).r, "UNAUTHORIZED_WRITER",
+    "OWNER appends epoch 7 to missing_keys[X] that DEV_B wrote in the entry map OWNER has since replaced", { rule: "AI5" });
+  changeCase("missing_keys_device_appends_replaced_entry_hint",
+    encodeTargeted("H4_dev_b_appends_replaced_hint", doc, "DEV_B", 2, AT, append(7)).r, null,
+    "DEV_B appends epoch 7 to its own missing_keys[X] in the entry map OWNER has since replaced", { rule: "AI5" });
+}
+
+// AI2 on the causal history: a scalar over a list of a hidden conflicting entry map (review-spec-4b P3).
+{
+  const AT = "P1_device_grant_dev_a_i"; // OWNER root, DEV_A personal
+  const Z = SCOPE_FILL[0];
+  const entryZ = (name) => ({ profile: S("org.lfcp.test.raw.v1"), endpoints: [S(wire.fixtures.endpoint.url)], coordinator: S(wire.fixtures.endpoint.coordinator), name: S(name) });
+  const left = change("R0_root_creates_roster_z", BASE, "OWNER", 3, AT, (d) => { d.roster[Z] = entryZ("Z (desktop)"); });
+  const right = change("R0_dev_a_creates_roster_z", BASE, "DEV_A", 1, AT, (d) => { d.roster[Z] = entryZ("Z (laptop)"); });
+  check("hidden_roster.base", [admit(left.r), admit(right.r)], [null, null]);
+  const merged = A.merge(A.clone(left.doc), A.clone(right.doc));
+  const conflicts = Object.keys(A.getConflicts(merged.roster, Z)).sort();
+  const visibleMap = oid(merged.roster, Z);
+  const hiddenMap = conflicts.find((c) => c !== visibleMap);
+  check("hidden_roster.conflicts", [conflicts.length, conflicts.includes(visibleMap)], [2, true]);
+  const byActor = { [left.r.actor]: left.r, [right.r.actor]: right.r };
+  // The operation that made the value of `key` in the entry map `map` (made by one of the two changes).
+  const opIn = (map, key) => {
+    const r = byActor[map.split("@")[1]];
+    const i = r.decoded.ops.findIndex((op) => op.obj === map && op.key === key);
+    if (i < 0) throw new Error(`no ${key} in ${map}`);
+    return `${r.decoded.startOp + i}@${r.actor}`;
+  };
+  const scalarOver = (map, key, value) => () => [{ action: "set", obj: map, key, value, pred: [opIn(map, key)] }];
+  const ai2 = (id, r, want, description) => changeCase(id, r, want, description, { rule: "AI2_HISTORY" });
+  ai2("identity_doc_hidden_entry_list_replaced",
+    encodeTargeted("R1_root_scalar_over_hidden_endpoints", merged, "OWNER", 4, AT, scalarOver(hiddenMap, "endpoints", "wss://replaced.invalid")).r,
+    "CONTAINER_REPLACED", "OWNER writes a scalar over endpoints of the hidden conflicting map of roster[Z] (OWNER and DEV_A created roster[Z] concurrently)");
+  ai2("identity_doc_entry_list_replaced",
+    encodeTargeted("R1_root_scalar_over_visible_endpoints", merged, "OWNER", 4, AT, scalarOver(visibleMap, "endpoints", "wss://replaced.invalid")).r,
+    "CONTAINER_REPLACED", "OWNER writes a scalar over endpoints of the selected map of roster[Z]: the same rule on the visible value");
+  ai2("identity_doc_hidden_entry_scalar_written",
+    encodeTargeted("R1_root_renames_hidden_entry", merged, "OWNER", 4, AT, scalarOver(hiddenMap, "name", "Z (renamed)")).r,
+    null, "OWNER writes a scalar over the scalar name of the hidden map of roster[Z]: no object is replaced, admitted");
+  // Only the predecessors decide (review-spec-5 R1): a scalar beside a list replaces nothing, and an object made
+  // earlier in the same change is replaced like one of the history.
+  ai2("identity_doc_scalar_beside_entry_list",
+    encodeTargeted("R1_root_scalar_beside_endpoints", merged, "OWNER", 4, AT, () => [{ action: "set", obj: visibleMap, key: "endpoints", value: "wss://alternative.invalid", pred: [] }]).r,
+    null, "OWNER writes a scalar endpoints beside the list of the selected map of roster[Z], naming no predecessor: a concurrent value, nothing replaced, admitted");
+  ai2("identity_doc_list_made_in_change_replaced",
+    encodeTargeted("R1_root_replaces_own_new_list", merged, "OWNER", 4, AT, (id) => [
+      { action: "makeList", obj: hiddenMap, key: "endpoints", pred: [opIn(hiddenMap, "endpoints")] },
+      { action: "set", obj: hiddenMap, key: "endpoints", value: "wss://replaced.invalid", pred: [id(0)] },
+    ]).r,
+    "CONTAINER_REPLACED", "OWNER replaces endpoints of the hidden map of roster[Z] with a new list, then that new list with a scalar, in one change");
+  const W = SCOPE_FILL[1];
+  ai2("identity_doc_entry_map_made_in_change_replaced",
+    encodeTargeted("R1_root_replaces_own_new_entry", merged, "OWNER", 4, AT, (id) => [
+      { action: "makeMap", obj: oid(merged, "roster"), key: W, pred: [] },
+      { action: "set", obj: oid(merged, "roster"), key: W, value: "not an entry", pred: [id(0)] },
+    ]).r,
+    "CONTAINER_REPLACED", "OWNER creates a new entry map roster[W], then replaces it with a scalar, in one change");
 }
 {
   const units = replay(["C0_initial", "C1_fill", "J1_own_request", "J2_continues_own"]).doc;
