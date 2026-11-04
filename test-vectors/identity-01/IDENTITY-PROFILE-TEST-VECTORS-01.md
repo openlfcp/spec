@@ -90,6 +90,9 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `identity_doc_hidden_entry_list_replaced` | validation | `CONTAINER_REPLACED` | IDENTITY-PROFILE-01 §3 AI2 | OWNER writes a scalar over endpoints of the hidden conflicting map of roster[Z] (OWNER and DEV_A created roster[Z] concurrently) |
 | `identity_doc_entry_list_replaced` | validation | `CONTAINER_REPLACED` | IDENTITY-PROFILE-01 §3 AI2 | OWNER writes a scalar over endpoints of the selected map of roster[Z]: the same rule on the visible value |
 | `identity_doc_hidden_entry_scalar_written` | validation | valid | IDENTITY-PROFILE-01 §3 AI2 | OWNER writes a scalar over the scalar name of the hidden map of roster[Z]: no object is replaced, admitted |
+| `identity_doc_scalar_beside_entry_list` | validation | valid | IDENTITY-PROFILE-01 §3 AI2 | OWNER writes a scalar endpoints beside the list of the selected map of roster[Z], naming no predecessor: a concurrent value, nothing replaced, admitted |
+| `identity_doc_list_made_in_change_replaced` | validation | `CONTAINER_REPLACED` | IDENTITY-PROFILE-01 §3 AI2 | OWNER replaces endpoints of the hidden map of roster[Z] with a new list, then that new list with a scalar, in one change |
+| `identity_doc_entry_map_made_in_change_replaced` | validation | `CONTAINER_REPLACED` | IDENTITY-PROFILE-01 §3 AI2 | OWNER creates a new entry map roster[W], then replaces it with a scalar, in one change |
 | `identity_snapshot_equivalence` | behavioral | state | IDENTITY-PROFILE-01 §2, SHARED-OBJECTS-PROFILE-01 §14 | The same document from its four units and from a Snapshot |
 | `pair_uri_roundtrip` | bytes | exact bytes | IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2 | The pairing link of PAIR_J for I |
 | `pair_uri_pair_l` | bytes | exact bytes | IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2 | The pairing link of PAIR_L for I (flow F08), registered and active at flow.pl_pairing_device_l |
@@ -195,6 +198,9 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `R1_root_scalar_over_hidden_endpoints` | OWNER | 4 | P1_device_grant_dev_a_i | `7fa912d394419f0a…` |
 | `R1_root_scalar_over_visible_endpoints` | OWNER | 4 | P1_device_grant_dev_a_i | `cd278522252b7b5c…` |
 | `R1_root_renames_hidden_entry` | OWNER | 4 | P1_device_grant_dev_a_i | `03748f855bde753c…` |
+| `R1_root_scalar_beside_endpoints` | OWNER | 4 | P1_device_grant_dev_a_i | `e382456f57c4a3bb…` |
+| `R1_root_replaces_own_new_list` | OWNER | 4 | P1_device_grant_dev_a_i | `629e0228c9695508…` |
+| `R1_root_replaces_own_new_entry` | OWNER | 4 | P1_device_grant_dev_a_i | `6b5ac5c57cfcd5be…` |
 
 Fingerprint of DEV_B: `bicr-ikmc-oec2-llzz`.
 

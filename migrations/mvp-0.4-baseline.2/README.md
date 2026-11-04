@@ -34,4 +34,5 @@ six cases, `key_epoch_repeats_current_number` and the five
 I9); in `IDENTITY-PROFILE-TEST-VECTORS-01` the `missing_keys_*` admission
 cases and scenarios of AI5 (own, foreign and concurrent writes, and hidden,
 deleted and replaced entry maps) and the `identity_doc_*entry*` cases of
-AI2 on a hidden entry value, with their `change.*` records.
+AI2 (a hidden entry value, a scalar beside a list, an object made earlier
+in the same change), with their `change.*` records.

@@ -4358,6 +4358,185 @@
       }
     },
     {
+      "id": "identity_doc_scalar_beside_entry_list",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "OWNER writes a scalar endpoints beside the list of the selected map of roster[Z], naming no predecessor: a concurrent value, nothing replaced, admitted",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §3 AI2",
+        "text": "A change does not write a scalar over an entry map, or over a list or map field of one, whether or not the engine selects that value; the replaced objects are the operation's predecessors (SOP §11.4 R6)."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 4,
+        "unit_actor_seq": 4,
+        "control_ref": "P1_device_grant_dev_a_i",
+        "change_hash": "e382456f57c4a3bb3a2c4eb08907e051867d5b544b9f78085e57ff2c6a8bee81",
+        "deps": [
+          "3f207f8e3a74b91849eefda8534e9f6f0eb1ffb3db6ee46c7d5dfe4f10dfab9c",
+          "59586ba8c6caadfe3059300f6b12bb47ee70efac82dd27e64a9987320b9581f7"
+        ],
+        "automerge_change": {
+          "hex": "856f4a83e382456f01c901023f207f8e3a74b91849eefda8534e9f6f0eb1ffb3db6ee46c7d5dfe4f10dfab9c59586ba8c6caadfe3059300f6b12bb47ee70efac82dd27e64a9987320b9581f72030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041d00000120f92960bd51fb4aebe23684a0f7e6e8e92acc0c4e55554593fcc9c3d6e723c16c0801020202150b340142025603571970027f017f177f09656e64706f696e7473017f017f96037773733a2f2f616c7465726e61746976652e696e76616c69647f00"
+        },
+        "framed_plaintext": {
+          "hex": "820158d4856f4a83e382456f01c901023f207f8e3a74b91849eefda8534e9f6f0eb1ffb3db6ee46c7d5dfe4f10dfab9c59586ba8c6caadfe3059300f6b12bb47ee70efac82dd27e64a9987320b9581f72030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041d00000120f92960bd51fb4aebe23684a0f7e6e8e92acc0c4e55554593fcc9c3d6e723c16c0801020202150b340142025603571970027f017f177f09656e64706f696e7473017f017f96037773733a2f2f616c7465726e61746976652e696e76616c69647f00"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.R0_root_creates_roster_z",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.R0_dev_a_creates_roster_z",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "identity_doc_list_made_in_change_replaced",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "OWNER replaces endpoints of the hidden map of roster[Z] with a new list, then that new list with a scalar, in one change",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §3 AI2",
+        "text": "A change does not write a scalar over an entry map, or over a list or map field of one, whether or not the engine selects that value; the replaced objects are the operation's predecessors (SOP §11.4 R6)."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 4,
+        "unit_actor_seq": 4,
+        "control_ref": "P1_device_grant_dev_a_i",
+        "change_hash": "629e0228c969550850a1cee1e4455df15a2869a5de9fe922662bb4c5b54da354",
+        "deps": [
+          "3f207f8e3a74b91849eefda8534e9f6f0eb1ffb3db6ee46c7d5dfe4f10dfab9c",
+          "59586ba8c6caadfe3059300f6b12bb47ee70efac82dd27e64a9987320b9581f7"
+        ],
+        "automerge_change": {
+          "hex": "856f4a83629e022801b001023f207f8e3a74b91849eefda8534e9f6f0eb1ffb3db6ee46c7d5dfe4f10dfab9c59586ba8c6caadfe3059300f6b12bb47ee70efac82dd27e64a9987320b9581f72030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041d0000000a01020202150b3401420356045716700271027303020002170209656e64706f696e7473027e02017e00e6027773733a2f2f7265706c616365642e696e76616c6964020102007e1904"
+        },
+        "framed_plaintext": {
+          "hex": "820158bb856f4a83629e022801b001023f207f8e3a74b91849eefda8534e9f6f0eb1ffb3db6ee46c7d5dfe4f10dfab9c59586ba8c6caadfe3059300f6b12bb47ee70efac82dd27e64a9987320b9581f72030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041d0000000a01020202150b3401420356045716700271027303020002170209656e64706f696e7473027e02017e00e6027773733a2f2f7265706c616365642e696e76616c6964020102007e1904"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.R0_root_creates_roster_z",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.R0_dev_a_creates_roster_z",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "CONTAINER_REPLACED"
+        }
+      }
+    },
+    {
+      "id": "identity_doc_entry_map_made_in_change_replaced",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "OWNER creates a new entry map roster[W], then replaces it with a scalar, in one change",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §3 AI2",
+        "text": "A change does not write a scalar over an entry map, or over a list or map field of one, whether or not the engine selects that value; the replaced objects are the operation's predecessors (SOP §11.4 R6)."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 4,
+        "unit_actor_seq": 4,
+        "control_ref": "P1_device_grant_dev_a_i",
+        "change_hash": "6b5ac5c57cfcd5be11fad0a1b20bb8a3fd0408474f601afebb03ffa74fe9235f",
+        "deps": [
+          "3f207f8e3a74b91849eefda8534e9f6f0eb1ffb3db6ee46c7d5dfe4f10dfab9c",
+          "59586ba8c6caadfe3059300f6b12bb47ee70efac82dd27e64a9987320b9581f7"
+        ],
+        "automerge_change": {
+          "hex": "856f4a836b5ac5c501c801023f207f8e3a74b91849eefda8534e9f6f0eb1ffb3db6ee46c7d5dfe4f10dfab9c59586ba8c6caadfe3059300f6b12bb47ee70efac82dd27e64a9987320b9581f72030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041d0000000a01020202152d340142035604570c70037102730202000204022b614a6e584d526268363833755475594837433273353238503050725f75356f394f4a59504236306b435a67027e00017e00c6016e6f7420616e20656e7472797e00017f007f1d"
+        },
+        "framed_plaintext": {
+          "hex": "820158d3856f4a836b5ac5c501c801023f207f8e3a74b91849eefda8534e9f6f0eb1ffb3db6ee46c7d5dfe4f10dfab9c59586ba8c6caadfe3059300f6b12bb47ee70efac82dd27e64a9987320b9581f72030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041d0000000a01020202152d340142035604570c70037102730202000204022b614a6e584d526268363833755475594837433273353238503050725f75356f394f4a59504236306b435a67027e00017e00c6016e6f7420616e20656e7472797e00017f007f1d"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.R0_root_creates_roster_z",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.R0_dev_a_creates_roster_z",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "CONTAINER_REPLACED"
+        }
+      }
+    },
+    {
       "id": "identity_snapshot_equivalence",
       "type": "behavioral",
       "kind": "identity_document",
@@ -7614,6 +7793,90 @@
         },
         "sha256": {
           "hex": "232c7c6d9af5896ef2476582cb9461ab0d7a05041697749aa6cb352657b63d7c"
+        }
+      }
+    },
+    {
+      "id": "change.R1_root_scalar_beside_endpoints",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change R1_root_scalar_beside_endpoints by OWNER (unit actor sequence 4, control_ref P1_device_grant_dev_a_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83e382456f01c901023f207f8e3a74b91849eefda8534e9f6f0eb1ffb3db6ee46c7d5dfe4f10dfab9c59586ba8c6caadfe3059300f6b12bb47ee70efac82dd27e64a9987320b9581f72030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041d00000120f92960bd51fb4aebe23684a0f7e6e8e92acc0c4e55554593fcc9c3d6e723c16c0801020202150b340142025603571970027f017f177f09656e64706f696e7473017f017f96037773733a2f2f616c7465726e61746976652e696e76616c69647f00"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 4,
+        "unit_actor_seq": 4,
+        "control_ref": "P1_device_grant_dev_a_i",
+        "change_hash": "e382456f57c4a3bb3a2c4eb08907e051867d5b544b9f78085e57ff2c6a8bee81",
+        "deps": "3f207f8e3a74b91849eefda8534e9f6f0eb1ffb3db6ee46c7d5dfe4f10dfab9c,59586ba8c6caadfe3059300f6b12bb47ee70efac82dd27e64a9987320b9581f7"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "820158d4856f4a83e382456f01c901023f207f8e3a74b91849eefda8534e9f6f0eb1ffb3db6ee46c7d5dfe4f10dfab9c59586ba8c6caadfe3059300f6b12bb47ee70efac82dd27e64a9987320b9581f72030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041d00000120f92960bd51fb4aebe23684a0f7e6e8e92acc0c4e55554593fcc9c3d6e723c16c0801020202150b340142025603571970027f017f177f09656e64706f696e7473017f017f96037773733a2f2f616c7465726e61746976652e696e76616c69647f00"
+        },
+        "sha256": {
+          "hex": "d184da830ed8030143a4e0957d60f8707c5cdbcd87d90f86090ea24c4fa3dd4c"
+        }
+      }
+    },
+    {
+      "id": "change.R1_root_replaces_own_new_list",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change R1_root_replaces_own_new_list by OWNER (unit actor sequence 4, control_ref P1_device_grant_dev_a_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83629e022801b001023f207f8e3a74b91849eefda8534e9f6f0eb1ffb3db6ee46c7d5dfe4f10dfab9c59586ba8c6caadfe3059300f6b12bb47ee70efac82dd27e64a9987320b9581f72030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041d0000000a01020202150b3401420356045716700271027303020002170209656e64706f696e7473027e02017e00e6027773733a2f2f7265706c616365642e696e76616c6964020102007e1904"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 4,
+        "unit_actor_seq": 4,
+        "control_ref": "P1_device_grant_dev_a_i",
+        "change_hash": "629e0228c969550850a1cee1e4455df15a2869a5de9fe922662bb4c5b54da354",
+        "deps": "3f207f8e3a74b91849eefda8534e9f6f0eb1ffb3db6ee46c7d5dfe4f10dfab9c,59586ba8c6caadfe3059300f6b12bb47ee70efac82dd27e64a9987320b9581f7"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "820158bb856f4a83629e022801b001023f207f8e3a74b91849eefda8534e9f6f0eb1ffb3db6ee46c7d5dfe4f10dfab9c59586ba8c6caadfe3059300f6b12bb47ee70efac82dd27e64a9987320b9581f72030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041d0000000a01020202150b3401420356045716700271027303020002170209656e64706f696e7473027e02017e00e6027773733a2f2f7265706c616365642e696e76616c6964020102007e1904"
+        },
+        "sha256": {
+          "hex": "5f7cf35d82c9085e3272dea5d8ee0ed875f6e21b7d5a21bed04250592640dd16"
+        }
+      }
+    },
+    {
+      "id": "change.R1_root_replaces_own_new_entry",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change R1_root_replaces_own_new_entry by OWNER (unit actor sequence 4, control_ref P1_device_grant_dev_a_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a836b5ac5c501c801023f207f8e3a74b91849eefda8534e9f6f0eb1ffb3db6ee46c7d5dfe4f10dfab9c59586ba8c6caadfe3059300f6b12bb47ee70efac82dd27e64a9987320b9581f72030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041d0000000a01020202152d340142035604570c70037102730202000204022b614a6e584d526268363833755475594837433273353238503050725f75356f394f4a59504236306b435a67027e00017e00c6016e6f7420616e20656e7472797e00017f007f1d"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 4,
+        "unit_actor_seq": 4,
+        "control_ref": "P1_device_grant_dev_a_i",
+        "change_hash": "6b5ac5c57cfcd5be11fad0a1b20bb8a3fd0408474f601afebb03ffa74fe9235f",
+        "deps": "3f207f8e3a74b91849eefda8534e9f6f0eb1ffb3db6ee46c7d5dfe4f10dfab9c,59586ba8c6caadfe3059300f6b12bb47ee70efac82dd27e64a9987320b9581f7"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "820158d3856f4a836b5ac5c501c801023f207f8e3a74b91849eefda8534e9f6f0eb1ffb3db6ee46c7d5dfe4f10dfab9c59586ba8c6caadfe3059300f6b12bb47ee70efac82dd27e64a9987320b9581f72030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041d0000000a01020202152d340142035604570c70037102730202000204022b614a6e584d526268363833755475594837433273353238503050725f75356f394f4a59504236306b435a67027e00017e00c6016e6f7420616e20656e7472797e00017f007f1d"
+        },
+        "sha256": {
+          "hex": "a4fc8aace04163c3fe30e3eb5576fab31afb35ce8db324587d7de1759afffd11"
         }
       }
     }
