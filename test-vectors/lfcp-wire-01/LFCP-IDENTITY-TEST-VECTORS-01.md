@@ -401,6 +401,12 @@ Fill Principals `LIMIT_BOB_01..30`, `TOMB_X_001..065`, `TOMB_I_001..064` use the
 | `key_epoch_by_dev_f` | T1_commit | accept | LFCP-WIRE-01 §19, §80.1 | KEY_EPOCH on T1_commit by DEV_F (BOB owns X, 13 in its mask) |
 | `key_epoch_by_dev_c` | I8_bridge_grant | `AUTHORIZATION_FAILED` | LFCP-WIRE-01 §19, §80.1 | KEY_EPOCH on I8 by DEV_C (7 not in its mask) |
 | `key_epoch_by_bridge` | I8_bridge_grant | `AUTHORIZATION_FAILED` | LFCP-WIRE-01 §19, §80.1 | KEY_EPOCH on I8 by BRIDGE |
+| `key_epoch_wrong_number` | I8_bridge_grant | `INVALID_CONTROL_CHAIN` | LFCP-WIRE-01 §19, §62 class 2 | KEY_EPOCH on I8 (epoch 0) by OWNER with new epoch number 2 |
+| `key_epoch_repeats_current_number` | K1_key_epoch | `INVALID_CONTROL_CHAIN` | LFCP-WIRE-01 §19, §62 class 2 | KEY_EPOCH on K1 (epoch 1) by OWNER with new epoch number 1 again |
+| `key_epoch_wrong_number_and_bad_sig` | I8_bridge_grant | `INVALID_CONTROL_CHAIN` | LFCP-WIRE-01 §19, §62 class 2 | key_epoch_wrong_number with the last record-signature bit flipped: class 2 before class 4 |
+| `key_epoch_wrong_number_unknown_issuer` | I8_bridge_grant | `INVALID_CONTROL_CHAIN` | LFCP-WIRE-01 §19, §62 class 2 | KEY_EPOCH with new epoch number 2 by STRANGER, whom no record describes: class 2 before class 3 |
+| `key_epoch_wrong_number_without_key_rotate` | I8_bridge_grant | `INVALID_CONTROL_CHAIN` | LFCP-WIRE-01 §19, §62 class 2 | key_epoch_by_dev_c (7 not in its mask) with new epoch number 2: class 2 before class 5 |
+| `key_epoch_wrong_number_noncanonical_frontier` | I8_bridge_grant | `MALFORMED_MESSAGE` | LFCP-WIRE-01 §28.1 | KEY_EPOCH with new epoch number 2 whose frontier has the range [3, 4] adjacent to contiguous 2: class 1 before class 2 |
 | `type_11_reserved` | I1_device_grant_dev_a | `INVALID_CONTROL_CHAIN` | LFCP-WIRE-01 §14 | A Control Record of the reserved core type 11 |
 | `ability_12_in_grant_confers_nothing.grant` | I3_owner_action_by_dev_a | accept | LFCP-WIRE-01 §17.1 | CAPABILITY_GRANT to DAVE {1,12} by OWNER on I3: 12 confers nothing in a grant |
 | `ability_12_in_grant_confers_nothing` | ability_12_in_grant_confers_nothing.grant | `AUTHORIZATION_FAILED` | LFCP-WIRE-01 §17.4 rule 6 | Then DEVICE_GRANT {OWNER, [CERT_A2]} by DAVE |
@@ -672,4 +678,4 @@ Fill Principals `LIMIT_BOB_01..30`, `TOMB_X_001..065`, `TOMB_I_001..064` use the
 
 ## Counts
 
-behavioral: 2, bytes: 44, validation: 335; total 381
+behavioral: 2, bytes: 44, validation: 341; total 387
