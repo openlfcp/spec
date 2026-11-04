@@ -2069,7 +2069,7 @@ If successful, the server returns `RESOURCE_HOSTED`.
 
 A `RESOURCE_HOST` of the Genesis a server already hosts changes nothing; the server answers it with `RESOURCE_HOSTED` again, subject to its hosting policy.
 
-A server that advertises `identity-01` (Section 37) keys the hosting policy and quotas of every hosting row it creates by the Genesis owner (field `1`), whether or not the Genesis has field `5`: the owner, not the session Principal, is the host, whichever session sends the `RESOURCE_HOST`, and the session Principal is never the host of a new row. Hosting rows recorded before the server advertised `identity-01` keep their recorded host and are not re-keyed; a quota lookup counts a Principal's Resources under either key, as the recorded host of such a row and as the owner of a new one.
+A server that advertises `identity-01` (Section 37) keys the hosting policy and quotas of every hosting row it creates by the Genesis owner (field `1`), whether or not the Genesis has field `5`: the owner, not the session Principal, is the host, whichever session sends the `RESOURCE_HOST`, and the session Principal is never the host of a new row. Hosting rows recorded before the server advertised `identity-01` keep their recorded host and are not re-keyed. The quota of a Principal `P` counts every hosting row, recorded before or after, whose recorded host is `P` or whose Genesis owner is `P`, each row once: keeping an old row's host does not take its Resource out of its owner's quota.
 
 ---
 
