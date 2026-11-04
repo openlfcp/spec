@@ -2018,7 +2018,7 @@ A durability level describes the store that gave the ACK. A server whose store i
 
 | Extension | Meaning |
 |---|---|
-| `identity-01` | The server validates Control Records of types `9` and `10`, Genesis field `5` and transfer commit field `2`, applies the Key Package rule of Section 25.2 with its same-root sender, keys its hosting policy by the Genesis owner (Section 39), and implements the Control read for revoked readers of Section 41 |
+| `identity-01` | The server validates Control Records of types `9` and `10`, Genesis field `5` and transfer commit field `2`, applies the Key Package rule of Section 25.2 with its same-root sender, keys the hosting policy of a Genesis with field `5` by its owner (Section 39), and implements the Control read for revoked readers of Section 41 |
 
 A client MUST NOT propose a record of type `9` or `10`, a Genesis with field `5` or a commit with field `2`, nor upload a Key Package that is authorized only by the same-root rule, to a server whose `READY` does not list `identity-01`; it reports the Resource as hosted on a server without identity support (IDENTITY-PROFILE-01 §6). There is no client-side flag: a server needs none. A server that does not advertise `identity-01` MUST NOT accept those records or packages either: it rejects them as a pre-identity receiver does (Section 100.1: `INVALID_CONTROL_CHAIN` for types `9` and `10`, `MALFORMED_MESSAGE` for Genesis field `5` and commit field `2`, `AUTHORIZATION_FAILED` for a same-root Key Package), so that what `READY` announces is what the server does.
 
@@ -2069,7 +2069,7 @@ If successful, the server returns `RESOURCE_HOSTED`.
 
 A `RESOURCE_HOST` of the Genesis a server already hosts changes nothing; the server answers it with `RESOURCE_HOSTED` again, subject to its hosting policy.
 
-A server that advertises `identity-01` (Section 37) keys its hosting policy and quotas by the Genesis owner (field `1`): for a Genesis with field `5` the owner, not the session Principal, is the host. Hosting rows recorded before that keep their recorded host; a quota lookup counts a Principal's Resources under either key.
+A server that advertises `identity-01` (Section 37) keys the hosting policy and quotas of a Genesis with field `5` (a Resource created from a device, Section 15) by the Genesis owner (field `1`): the owner, not the session Principal, is the host, whichever session sends the `RESOURCE_HOST`. A Genesis without field `5` keeps the session Principal as its host, as before `identity-01`, also when that session is not the Genesis owner. Hosting rows recorded before that keep their recorded host; a quota lookup counts a Principal's Resources under either key, as the recorded host and as the owner-keyed host.
 
 ---
 
@@ -2128,7 +2128,7 @@ A client that holds the Resource's Genesis re-hosts it when a route answers `RES
 1. the route is in the Resource's current route set (Sections 15 and 20); and
 2. the client has seen that route host the Resource before: it received a `RESOURCE_HOSTED` or a `RESOURCE_OPENED` for the Resource from it.
 
-The client sends `RESOURCE_HOST` with the exact Genesis bytes (Section 39), opens the Resource again and re-supplies what the route lacks (Section 68.1). Any Principal that holds the Genesis may do this; it is not a Control Plane mutation, and the Genesis is unchanged. The server applies its hosting policy and quotas to the session that hosts; a server that advertises `identity-01` applies the owner-keyed hosting and quota rules of Section 39 to re-hosting as well, while authentication, credentials and transport rate limits still apply to the uploading session.
+The client sends `RESOURCE_HOST` with the exact Genesis bytes (Section 39), opens the Resource again and re-supplies what the route lacks (Section 68.1). Any Principal that holds the Genesis may do this; it is not a Control Plane mutation, and the Genesis is unchanged. The server applies its hosting policy and quotas to the session that hosts; a server that advertises `identity-01` applies the hosting key of Section 39 to re-hosting as well: a Genesis with field `5` is hosted for its owner, whichever session re-hosts it, and a Genesis without field `5` for the session that re-hosts it, so a device that re-hosts its root's Resource created before `identity-01` meets the server's hosting policy as itself. Authentication, credentials and transport rate limits apply to the uploading session in both cases.
 
 A client does not re-host on a route it has never seen host the Resource, and does not re-host a Resource that the route answers with `NACK(RESOURCE_TOMBSTONED)`. When the route refuses the `RESOURCE_HOST` (`HOSTING_DENIED`, `QUOTA_EXCEEDED`, `RATE_LIMITED`), the client stops re-hosting on that route and tells the user; it does not retry a `HOSTING_DENIED` automatically.
 
