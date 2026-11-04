@@ -30679,6 +30679,736 @@
       }
     },
     {
+      "id": "key_epoch_wrong_number",
+      "type": "validation",
+      "kind": "control_record",
+      "description": "KEY_EPOCH on I8 (epoch 0) by OWNER with new epoch number 2",
+      "rule": {
+        "section": "LFCP-WIRE-01 §19, §62 class 2",
+        "text": "the new epoch number is the previous Data Epoch plus one, checked before dependencies and signatures"
+      },
+      "inputs": {
+        "resource": "X",
+        "signer": "OWNER",
+        "issuer": "OWNER",
+        "control_seq": 11,
+        "control_type": 4,
+        "control_type_name": "KEY_EPOCH",
+        "body": {
+          "epoch": 2,
+          "frontier": {
+            "DEV_A": 1,
+            "DEV_B": 1,
+            "BRIDGE": 1
+          },
+          "reason": 0
+        },
+        "payload_cbor": {
+          "hex": "a60058207f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75010b0258205011ba59696a6c99c2439bacd429067e5d184832238ccf1f7e798c60e368da380304045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a40002015820d32a6a3b73b3f00e1e4191321fdb85f1d9fd5bf3d5290ba70d4198df404188050283a20058200498ff334c7cb0c17105ea7ea2c7f61a9c542ef62a7310b057b1a8438b5dcf9f0101a2005820c544bf4b19b625a300b3b12ccd84d08a804e0299e503a78a4bc1179639c6919a0101a2005820dcb709537a7c66b9d785c9de9b31d1cf1922d09f225e10479c24b302ceb3f9f201010300"
+        },
+        "protected_header_cbor": {
+          "hex": "a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d"
+        },
+        "signature": {
+          "hex": "45125b0d74c22120568158b2ea4540e2052292208b97974b502904023d5a2071ba16c370be3a147815496b2ba0260d7d03aeeaa0ef66b773283a427843d25300"
+        },
+        "cose_sign1": {
+          "hex": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da059010ba60058207f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75010b0258205011ba59696a6c99c2439bacd429067e5d184832238ccf1f7e798c60e368da380304045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a40002015820d32a6a3b73b3f00e1e4191321fdb85f1d9fd5bf3d5290ba70d4198df404188050283a20058200498ff334c7cb0c17105ea7ea2c7f61a9c542ef62a7310b057b1a8438b5dcf9f0101a2005820c544bf4b19b625a300b3b12ccd84d08a804e0299e503a78a4bc1179639c6919a0101a2005820dcb709537a7c66b9d785c9de9b31d1cf1922d09f225e10479c24b302ceb3f9f201010300584045125b0d74c22120568158b2ea4540e2052292208b97974b502904023d5a2071ba16c370be3a147815496b2ba0260d7d03aeeaa0ef66b773283a427843d25300"
+        },
+        "record_id": {
+          "hex": "0ef8256b4589f088be21208e2466f53fb36ec7f779fced1a824f501c6c60c1a1"
+        }
+      },
+      "context": {
+        "resource_id": {
+          "hex": "7f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75"
+        },
+        "records": [
+          {
+            "case": "J0_genesis",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J1_grant_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J2_grant_carol",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I1_device_grant_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I2_device_grant_self_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I3_owner_action_by_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I4_device_grant_dev_c_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I5_device_grant_dev_e_by_dev_c",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I6_grant_by_member_device",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I7_revoke_covered_by_sibling",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I8_bridge_grant",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "head": {
+          "case": "I8_bridge_grant",
+          "field": "record_id",
+          "in": "inputs"
+        },
+        "head_record_id": {
+          "hex": "5011ba59696a6c99c2439bacd429067e5d184832238ccf1f7e798c60e368da38"
+        },
+        "head_control_seq": 10
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "INVALID_CONTROL_CHAIN"
+        }
+      }
+    },
+    {
+      "id": "key_epoch_repeats_current_number",
+      "type": "validation",
+      "kind": "control_record",
+      "description": "KEY_EPOCH on K1 (epoch 1) by OWNER with new epoch number 1 again",
+      "rule": {
+        "section": "LFCP-WIRE-01 §19, §62 class 2",
+        "text": "the new epoch number is the previous Data Epoch plus one, checked before dependencies and signatures"
+      },
+      "inputs": {
+        "resource": "X",
+        "signer": "OWNER",
+        "issuer": "OWNER",
+        "control_seq": 13,
+        "control_type": 4,
+        "control_type_name": "KEY_EPOCH",
+        "body": {
+          "epoch": 1,
+          "frontier": {
+            "DEV_A": 1,
+            "DEV_B": 1,
+            "BRIDGE": 1
+          },
+          "reason": 0
+        },
+        "payload_cbor": {
+          "hex": "a60058207f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75010d025820cb63dff337d72914db96f762dfb299e1d2168dd96df92b49bf81f127c8eabdff0304045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a40001015820abe6f21b3c02fe93a1e6de62b9d667d2f3ccc42058a55893bcfa9d187b363ff10283a20058200498ff334c7cb0c17105ea7ea2c7f61a9c542ef62a7310b057b1a8438b5dcf9f0101a2005820c544bf4b19b625a300b3b12ccd84d08a804e0299e503a78a4bc1179639c6919a0101a2005820dcb709537a7c66b9d785c9de9b31d1cf1922d09f225e10479c24b302ceb3f9f201010300"
+        },
+        "protected_header_cbor": {
+          "hex": "a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d"
+        },
+        "signature": {
+          "hex": "7daaa2db5d4e8ec769dfe5e748639b6fe71de531200412513925eab5f8937d2b2778548a700ae926ea5c0b8ea412438da8bbf918a60a012f65ff4b3ec5fa3306"
+        },
+        "cose_sign1": {
+          "hex": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da059010ba60058207f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75010d025820cb63dff337d72914db96f762dfb299e1d2168dd96df92b49bf81f127c8eabdff0304045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a40001015820abe6f21b3c02fe93a1e6de62b9d667d2f3ccc42058a55893bcfa9d187b363ff10283a20058200498ff334c7cb0c17105ea7ea2c7f61a9c542ef62a7310b057b1a8438b5dcf9f0101a2005820c544bf4b19b625a300b3b12ccd84d08a804e0299e503a78a4bc1179639c6919a0101a2005820dcb709537a7c66b9d785c9de9b31d1cf1922d09f225e10479c24b302ceb3f9f20101030058407daaa2db5d4e8ec769dfe5e748639b6fe71de531200412513925eab5f8937d2b2778548a700ae926ea5c0b8ea412438da8bbf918a60a012f65ff4b3ec5fa3306"
+        },
+        "record_id": {
+          "hex": "125fd6e22c7ab38dafeb1803f6a6a94a90c536e59bf9cc2f6d5a1a70c29a1eac"
+        }
+      },
+      "context": {
+        "resource_id": {
+          "hex": "7f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75"
+        },
+        "records": [
+          {
+            "case": "J0_genesis",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J1_grant_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J2_grant_carol",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I1_device_grant_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I2_device_grant_self_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I3_owner_action_by_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I4_device_grant_dev_c_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I5_device_grant_dev_e_by_dev_c",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I6_grant_by_member_device",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I7_revoke_covered_by_sibling",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I8_bridge_grant",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I9_device_revoke_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "K1_key_epoch",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "head": {
+          "case": "K1_key_epoch",
+          "field": "record_id",
+          "in": "inputs"
+        },
+        "head_record_id": {
+          "hex": "cb63dff337d72914db96f762dfb299e1d2168dd96df92b49bf81f127c8eabdff"
+        },
+        "head_control_seq": 12
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "INVALID_CONTROL_CHAIN"
+        }
+      }
+    },
+    {
+      "id": "key_epoch_wrong_number_and_bad_sig",
+      "type": "validation",
+      "kind": "control_record",
+      "description": "key_epoch_wrong_number with the last record-signature bit flipped: class 2 before class 4",
+      "rule": {
+        "section": "LFCP-WIRE-01 §19, §62 class 2",
+        "text": "the new epoch number is the previous Data Epoch plus one, checked before dependencies and signatures"
+      },
+      "inputs": {
+        "resource": "X",
+        "signer": "OWNER",
+        "issuer": "OWNER",
+        "control_seq": 11,
+        "control_type": 4,
+        "control_type_name": "KEY_EPOCH",
+        "body": {
+          "epoch": 2,
+          "frontier": {
+            "DEV_A": 1,
+            "DEV_B": 1,
+            "BRIDGE": 1
+          },
+          "reason": 0
+        },
+        "payload_cbor": {
+          "hex": "a60058207f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75010b0258205011ba59696a6c99c2439bacd429067e5d184832238ccf1f7e798c60e368da380304045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a40002015820d32a6a3b73b3f00e1e4191321fdb85f1d9fd5bf3d5290ba70d4198df404188050283a20058200498ff334c7cb0c17105ea7ea2c7f61a9c542ef62a7310b057b1a8438b5dcf9f0101a2005820c544bf4b19b625a300b3b12ccd84d08a804e0299e503a78a4bc1179639c6919a0101a2005820dcb709537a7c66b9d785c9de9b31d1cf1922d09f225e10479c24b302ceb3f9f201010300"
+        },
+        "protected_header_cbor": {
+          "hex": "a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d"
+        },
+        "signature": {
+          "hex": "45125b0d74c22120568158b2ea4540e2052292208b97974b502904023d5a2071ba16c370be3a147815496b2ba0260d7d03aeeaa0ef66b773283a427843d25301"
+        },
+        "cose_sign1": {
+          "hex": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da059010ba60058207f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75010b0258205011ba59696a6c99c2439bacd429067e5d184832238ccf1f7e798c60e368da380304045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a40002015820d32a6a3b73b3f00e1e4191321fdb85f1d9fd5bf3d5290ba70d4198df404188050283a20058200498ff334c7cb0c17105ea7ea2c7f61a9c542ef62a7310b057b1a8438b5dcf9f0101a2005820c544bf4b19b625a300b3b12ccd84d08a804e0299e503a78a4bc1179639c6919a0101a2005820dcb709537a7c66b9d785c9de9b31d1cf1922d09f225e10479c24b302ceb3f9f201010300584045125b0d74c22120568158b2ea4540e2052292208b97974b502904023d5a2071ba16c370be3a147815496b2ba0260d7d03aeeaa0ef66b773283a427843d25301"
+        },
+        "record_id": {
+          "hex": "892b0682e7026a3636574c1eb3bc58a25956c760aff21c9a140506b2a1681ebc"
+        }
+      },
+      "context": {
+        "resource_id": {
+          "hex": "7f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75"
+        },
+        "records": [
+          {
+            "case": "J0_genesis",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J1_grant_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J2_grant_carol",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I1_device_grant_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I2_device_grant_self_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I3_owner_action_by_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I4_device_grant_dev_c_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I5_device_grant_dev_e_by_dev_c",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I6_grant_by_member_device",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I7_revoke_covered_by_sibling",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I8_bridge_grant",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "head": {
+          "case": "I8_bridge_grant",
+          "field": "record_id",
+          "in": "inputs"
+        },
+        "head_record_id": {
+          "hex": "5011ba59696a6c99c2439bacd429067e5d184832238ccf1f7e798c60e368da38"
+        },
+        "head_control_seq": 10
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "INVALID_CONTROL_CHAIN"
+        }
+      }
+    },
+    {
+      "id": "key_epoch_wrong_number_unknown_issuer",
+      "type": "validation",
+      "kind": "control_record",
+      "description": "KEY_EPOCH with new epoch number 2 by STRANGER, whom no record describes: class 2 before class 3",
+      "rule": {
+        "section": "LFCP-WIRE-01 §19, §62 class 2",
+        "text": "the new epoch number is the previous Data Epoch plus one, checked before dependencies and signatures"
+      },
+      "inputs": {
+        "resource": "X",
+        "signer": "STRANGER",
+        "issuer": "STRANGER",
+        "control_seq": 11,
+        "control_type": 4,
+        "control_type_name": "KEY_EPOCH",
+        "body": {
+          "epoch": 2,
+          "frontier": {
+            "DEV_A": 1,
+            "DEV_B": 1,
+            "BRIDGE": 1
+          },
+          "reason": 0
+        },
+        "payload_cbor": {
+          "hex": "a60058207f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75010b0258205011ba59696a6c99c2439bacd429067e5d184832238ccf1f7e798c60e368da380304045820378b3ced9a1cef9bff6ef2e0495a624d6c5605e7865c5319e29b4ece0c161e9105a40002015820d32a6a3b73b3f00e1e4191321fdb85f1d9fd5bf3d5290ba70d4198df404188050283a20058200498ff334c7cb0c17105ea7ea2c7f61a9c542ef62a7310b057b1a8438b5dcf9f0101a2005820c544bf4b19b625a300b3b12ccd84d08a804e0299e503a78a4bc1179639c6919a0101a2005820dcb709537a7c66b9d785c9de9b31d1cf1922d09f225e10479c24b302ceb3f9f201010300"
+        },
+        "protected_header_cbor": {
+          "hex": "a20127045820378b3ced9a1cef9bff6ef2e0495a624d6c5605e7865c5319e29b4ece0c161e91"
+        },
+        "signature": {
+          "hex": "a7c2e8d55d7df0c25dd4b10df0dbcca432a340a56ffc9948cb8330cdb46f3b5f17bd8290d53a0053d72be3a3d11ac57eaed0bd4bf2204b5c07563939850dfe00"
+        },
+        "cose_sign1": {
+          "hex": "845826a20127045820378b3ced9a1cef9bff6ef2e0495a624d6c5605e7865c5319e29b4ece0c161e91a059010ba60058207f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75010b0258205011ba59696a6c99c2439bacd429067e5d184832238ccf1f7e798c60e368da380304045820378b3ced9a1cef9bff6ef2e0495a624d6c5605e7865c5319e29b4ece0c161e9105a40002015820d32a6a3b73b3f00e1e4191321fdb85f1d9fd5bf3d5290ba70d4198df404188050283a20058200498ff334c7cb0c17105ea7ea2c7f61a9c542ef62a7310b057b1a8438b5dcf9f0101a2005820c544bf4b19b625a300b3b12ccd84d08a804e0299e503a78a4bc1179639c6919a0101a2005820dcb709537a7c66b9d785c9de9b31d1cf1922d09f225e10479c24b302ceb3f9f2010103005840a7c2e8d55d7df0c25dd4b10df0dbcca432a340a56ffc9948cb8330cdb46f3b5f17bd8290d53a0053d72be3a3d11ac57eaed0bd4bf2204b5c07563939850dfe00"
+        },
+        "record_id": {
+          "hex": "4a2ca87b2c3ee50b36c2e698c4a4388ae4812b4cd211b7b52bb6da206a483af2"
+        }
+      },
+      "context": {
+        "resource_id": {
+          "hex": "7f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75"
+        },
+        "records": [
+          {
+            "case": "J0_genesis",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J1_grant_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J2_grant_carol",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I1_device_grant_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I2_device_grant_self_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I3_owner_action_by_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I4_device_grant_dev_c_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I5_device_grant_dev_e_by_dev_c",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I6_grant_by_member_device",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I7_revoke_covered_by_sibling",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I8_bridge_grant",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "head": {
+          "case": "I8_bridge_grant",
+          "field": "record_id",
+          "in": "inputs"
+        },
+        "head_record_id": {
+          "hex": "5011ba59696a6c99c2439bacd429067e5d184832238ccf1f7e798c60e368da38"
+        },
+        "head_control_seq": 10
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "INVALID_CONTROL_CHAIN"
+        }
+      }
+    },
+    {
+      "id": "key_epoch_wrong_number_without_key_rotate",
+      "type": "validation",
+      "kind": "control_record",
+      "description": "key_epoch_by_dev_c (7 not in its mask) with new epoch number 2: class 2 before class 5",
+      "rule": {
+        "section": "LFCP-WIRE-01 §19, §62 class 2",
+        "text": "the new epoch number is the previous Data Epoch plus one, checked before dependencies and signatures"
+      },
+      "inputs": {
+        "resource": "X",
+        "signer": "DEV_C",
+        "issuer": "DEV_C",
+        "control_seq": 11,
+        "control_type": 4,
+        "control_type_name": "KEY_EPOCH",
+        "body": {
+          "epoch": 2,
+          "frontier": {
+            "DEV_A": 1,
+            "DEV_B": 1,
+            "BRIDGE": 1
+          },
+          "reason": 0
+        },
+        "payload_cbor": {
+          "hex": "a60058207f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75010b0258205011ba59696a6c99c2439bacd429067e5d184832238ccf1f7e798c60e368da380304045820677a1bdf4849dd10af8a29a4ea08c895abc5042f3aedeb49a2d56750511d90d305a40002015820d32a6a3b73b3f00e1e4191321fdb85f1d9fd5bf3d5290ba70d4198df404188050283a20058200498ff334c7cb0c17105ea7ea2c7f61a9c542ef62a7310b057b1a8438b5dcf9f0101a2005820c544bf4b19b625a300b3b12ccd84d08a804e0299e503a78a4bc1179639c6919a0101a2005820dcb709537a7c66b9d785c9de9b31d1cf1922d09f225e10479c24b302ceb3f9f201010300"
+        },
+        "protected_header_cbor": {
+          "hex": "a20127045820677a1bdf4849dd10af8a29a4ea08c895abc5042f3aedeb49a2d56750511d90d3"
+        },
+        "signature": {
+          "hex": "9c2f03224e2c31b26946d3ac5a00895f58cc638b6b2265961605269593dfb24b93514b7eb36e988ae99d38c0f9f7e108d37b8d8b001e6f3882fd9df3b685660c"
+        },
+        "cose_sign1": {
+          "hex": "845826a20127045820677a1bdf4849dd10af8a29a4ea08c895abc5042f3aedeb49a2d56750511d90d3a059010ba60058207f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75010b0258205011ba59696a6c99c2439bacd429067e5d184832238ccf1f7e798c60e368da380304045820677a1bdf4849dd10af8a29a4ea08c895abc5042f3aedeb49a2d56750511d90d305a40002015820d32a6a3b73b3f00e1e4191321fdb85f1d9fd5bf3d5290ba70d4198df404188050283a20058200498ff334c7cb0c17105ea7ea2c7f61a9c542ef62a7310b057b1a8438b5dcf9f0101a2005820c544bf4b19b625a300b3b12ccd84d08a804e0299e503a78a4bc1179639c6919a0101a2005820dcb709537a7c66b9d785c9de9b31d1cf1922d09f225e10479c24b302ceb3f9f20101030058409c2f03224e2c31b26946d3ac5a00895f58cc638b6b2265961605269593dfb24b93514b7eb36e988ae99d38c0f9f7e108d37b8d8b001e6f3882fd9df3b685660c"
+        },
+        "record_id": {
+          "hex": "5f00b62d876966cad3e54eda294d52f35361aef45fb68c41c74bf25851631953"
+        }
+      },
+      "context": {
+        "resource_id": {
+          "hex": "7f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75"
+        },
+        "records": [
+          {
+            "case": "J0_genesis",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J1_grant_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J2_grant_carol",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I1_device_grant_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I2_device_grant_self_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I3_owner_action_by_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I4_device_grant_dev_c_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I5_device_grant_dev_e_by_dev_c",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I6_grant_by_member_device",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I7_revoke_covered_by_sibling",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I8_bridge_grant",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "head": {
+          "case": "I8_bridge_grant",
+          "field": "record_id",
+          "in": "inputs"
+        },
+        "head_record_id": {
+          "hex": "5011ba59696a6c99c2439bacd429067e5d184832238ccf1f7e798c60e368da38"
+        },
+        "head_control_seq": 10
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "INVALID_CONTROL_CHAIN"
+        }
+      }
+    },
+    {
+      "id": "key_epoch_wrong_number_noncanonical_frontier",
+      "type": "validation",
+      "kind": "control_record",
+      "description": "KEY_EPOCH with new epoch number 2 whose frontier has the range [3, 4] adjacent to contiguous 2: class 1 before class 2",
+      "rule": {
+        "section": "LFCP-WIRE-01 §28.1",
+        "text": "the extra ranges of an actor-have are canonical"
+      },
+      "inputs": {
+        "resource": "X",
+        "signer": "OWNER",
+        "issuer": "OWNER",
+        "control_seq": 11,
+        "control_type": 4,
+        "control_type_name": "KEY_EPOCH",
+        "body": {
+          "epoch": 2,
+          "frontier": {
+            "DEV_A": {
+              "contiguous": 2,
+              "extra_ranges": [
+                [
+                  3,
+                  4
+                ]
+              ]
+            }
+          },
+          "reason": 0
+        },
+        "payload_cbor": {
+          "hex": "a60058207f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75010b0258205011ba59696a6c99c2439bacd429067e5d184832238ccf1f7e798c60e368da380304045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a40002015820d32a6a3b73b3f00e1e4191321fdb85f1d9fd5bf3d5290ba70d4198df404188050281a30058200498ff334c7cb0c17105ea7ea2c7f61a9c542ef62a7310b057b1a8438b5dcf9f010202818203040300"
+        },
+        "protected_header_cbor": {
+          "hex": "a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d"
+        },
+        "signature": {
+          "hex": "6f2652d992a81a31a73eacc145da3fefce5c50d9920b75afaa1cceb1b0f824b988a60826446642851c891500a9d54842370723f16890db887df28324a51ef006"
+        },
+        "cose_sign1": {
+          "hex": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058c4a60058207f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75010b0258205011ba59696a6c99c2439bacd429067e5d184832238ccf1f7e798c60e368da380304045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a40002015820d32a6a3b73b3f00e1e4191321fdb85f1d9fd5bf3d5290ba70d4198df404188050281a30058200498ff334c7cb0c17105ea7ea2c7f61a9c542ef62a7310b057b1a8438b5dcf9f01020281820304030058406f2652d992a81a31a73eacc145da3fefce5c50d9920b75afaa1cceb1b0f824b988a60826446642851c891500a9d54842370723f16890db887df28324a51ef006"
+        },
+        "record_id": {
+          "hex": "18b18fbe0904ccda60bdf83a3474f09ef8e7ff973bed11efbdf3772c92d13fc0"
+        }
+      },
+      "context": {
+        "resource_id": {
+          "hex": "7f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75"
+        },
+        "records": [
+          {
+            "case": "J0_genesis",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J1_grant_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J2_grant_carol",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I1_device_grant_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I2_device_grant_self_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I3_owner_action_by_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I4_device_grant_dev_c_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I5_device_grant_dev_e_by_dev_c",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I6_grant_by_member_device",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I7_revoke_covered_by_sibling",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I8_bridge_grant",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "head": {
+          "case": "I8_bridge_grant",
+          "field": "record_id",
+          "in": "inputs"
+        },
+        "head_record_id": {
+          "hex": "5011ba59696a6c99c2439bacd429067e5d184832238ccf1f7e798c60e368da38"
+        },
+        "head_control_seq": 10
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "MALFORMED_MESSAGE"
+        }
+      }
+    },
+    {
       "id": "type_11_reserved",
       "type": "validation",
       "kind": "control_record",

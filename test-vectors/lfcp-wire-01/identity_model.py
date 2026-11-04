@@ -681,7 +681,7 @@ def _claim(s, rec, p, b):
 
 def _key_epoch(s, rec, p, b):
     if b['epoch'] != s.epoch + 1:
-        raise Reject(PLACEMENT, 'W §19: the new epoch is the previous Data Epoch plus one')
+        raise Reject(PLACEMENT, 'W §19, §62 class 2: the new epoch number is the previous Data Epoch plus one, checked before dependencies and signatures')
     _issuer_checks(s, rec, p)
     if not s.holds(p[4], 7):
         raise Reject(DENIED, 'W §19, §80.1: the issuer holds key/rotate')

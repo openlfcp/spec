@@ -1179,6 +1179,24 @@ def build_records() -> None:
             'KEY_EPOCH on I8 by DEV_C (7 not in its mask)', readable={'epoch': 1, 'frontier': K1_FRONTIER, 'reason': 0})
     control('key_epoch_by_bridge', 'I8_bridge_grant', 4, 'BRIDGE', key_epoch_body('X', 1, K1_FRONTIER, 0), (M.DENIED, '§19'),
             'KEY_EPOCH on I8 by BRIDGE', readable={'epoch': 1, 'frontier': K1_FRONTIER, 'reason': 0})
+    # The epoch number is a chain placement check (W §19, §62 class 2; decision I9): after structure,
+    # before dependencies, signatures and authority.
+    control('key_epoch_wrong_number', 'I8_bridge_grant', 4, 'OWNER', key_epoch_body('X', 2, K1_FRONTIER, 0), (M.PLACEMENT, '§19'),
+            'KEY_EPOCH on I8 (epoch 0) by OWNER with new epoch number 2', readable={'epoch': 2, 'frontier': K1_FRONTIER, 'reason': 0})
+    control('key_epoch_repeats_current_number', 'K1_key_epoch', 4, 'OWNER', key_epoch_body('X', 1, K1_FRONTIER, 0), (M.PLACEMENT, '§19'),
+            'KEY_EPOCH on K1 (epoch 1) by OWNER with new epoch number 1 again', readable={'epoch': 1, 'frontier': K1_FRONTIER, 'reason': 0})
+    control('key_epoch_wrong_number_and_bad_sig', 'I8_bridge_grant', 4, 'OWNER', key_epoch_body('X', 2, K1_FRONTIER, 0), (M.PLACEMENT, '§19'),
+            'key_epoch_wrong_number with the last record-signature bit flipped: class 2 before class 4',
+            readable={'epoch': 2, 'frontier': K1_FRONTIER, 'reason': 0}, flip=True)
+    control('key_epoch_wrong_number_unknown_issuer', 'I8_bridge_grant', 4, 'STRANGER', key_epoch_body('X', 2, K1_FRONTIER, 0), (M.PLACEMENT, '§19'),
+            'KEY_EPOCH with new epoch number 2 by STRANGER, whom no record describes: class 2 before class 3',
+            readable={'epoch': 2, 'frontier': K1_FRONTIER, 'reason': 0})
+    control('key_epoch_wrong_number_without_key_rotate', 'I8_bridge_grant', 4, 'DEV_C', key_epoch_body('X', 2, K1_FRONTIER, 0), (M.PLACEMENT, '§19'),
+            'key_epoch_by_dev_c (7 not in its mask) with new epoch number 2: class 2 before class 5',
+            readable={'epoch': 2, 'frontier': K1_FRONTIER, 'reason': 0})
+    control('key_epoch_wrong_number_noncanonical_frontier', 'I8_bridge_grant', 4, 'OWNER', key_epoch_body('X', 2, {'DEV_A': (2, [[3, 4]])}, 0),
+            (M.MALFORMED, '§28.1'), 'KEY_EPOCH with new epoch number 2 whose frontier has the range [3, 4] adjacent to contiguous 2: class 1 before class 2',
+            readable={'epoch': 2, 'frontier': {'DEV_A': {'contiguous': 2, 'extra_ranges': [[3, 4]]}}, 'reason': 0})
     control('type_11_reserved', 'I1_device_grant_dev_a', 11, 'OWNER', {}, (M.PLACEMENT, '§14'),
             'A Control Record of the reserved core type 11', readable={})
     control('ability_12_in_grant_confers_nothing.grant', 'I3_owner_action_by_dev_a', 1, 'OWNER', grant_body('DAVE', [1, 12], []), 'accept',
