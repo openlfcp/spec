@@ -5,11 +5,12 @@ full WIRE-01 conformance, documents remain Working Drafts.**
 
 This file answers one question: *what exactly do I implement against for
 MVP 0.4?* The answer is every file listed below, at the Git tag
-`mvp-0.4-baseline.2` of this repository.
+`mvp-0.4-baseline.3` of this repository.
 
 | Tag | Status |
 | --- | --- |
-| mvp-0.4-baseline.2 | **To be tagged.** `mvp-0.4-baseline.1` with clarified identity rules and added vectors (tasks LFCP-04-403b and LFCP-04-403c): LFCP-WIRE-01 §19 and §62 (the new epoch number of a `KEY_EPOCH` is a chain placement check, class 2; decision I9), §39 and §41.1 (every new hosting row is keyed by the Genesis owner, with or without field `5`; rows recorded before keep their host; decision I12), §41 (the revoked-reader replies to `RESOURCE_OPEN`, `CONTROL_GET` and presence) and §62 (a rejected pairing link is client-local); IDENTITY-PROFILE-01 §3 (admission rule AI5: `missing_keys` is written only by its device, decision I8; AI2 and AI5 decided on the causal history, hidden values included) and §5.2. Three published values change: the description of IDENTITY-PROFILE-TEST-VECTORS-01, and `READY_identity_01`, which was not a `READY` message (`migrations/mvp-0.4-baseline.2/value-changes.json`). |
+| mvp-0.4-baseline.3 | **To be tagged.** `mvp-0.4-baseline.2` with the depth of admission rule AI2 clarified and vectors added (task LFCP-04-403d, from the SDK reviews sdk-rs#5 P2-1 and sdk-ts#16 P1). IDENTITY-PROFILE-01 §3: AI2 protects an entry map, and a list or map held in a field of an entry map, and nothing deeper. A list at an entry key is not an entry map. The rule is that of `mvp-0.4-baseline.2`. The profile corpus gains the cases of the depth boundary, and the generator's reference admission no longer refuses a scalar over a list held directly at an entry key. No published value changes (`migrations/mvp-0.4-baseline.3/value-changes.json`). |
+| mvp-0.4-baseline.2 | Superseded by `mvp-0.4-baseline.3`, which clarifies AI2 and adds the depth vectors that two SDKs lacked. The rules are unchanged. Never moved. `mvp-0.4-baseline.1` with clarified identity rules and added vectors (tasks LFCP-04-403b and LFCP-04-403c): LFCP-WIRE-01 §19 and §62 (the new epoch number of a `KEY_EPOCH` is a chain placement check, class 2; decision I9), §39 and §41.1 (every new hosting row is keyed by the Genesis owner, with or without field `5`; rows recorded before keep their host; decision I12), §41 (the revoked-reader replies to `RESOURCE_OPEN`, `CONTROL_GET` and presence) and §62 (a rejected pairing link is client-local); IDENTITY-PROFILE-01 §3 (admission rule AI5: `missing_keys` is written only by its device, decision I8; AI2 and AI5 decided on the causal history, hidden values included) and §5.2. Three published values change: the description of IDENTITY-PROFILE-TEST-VECTORS-01, and `READY_identity_01`, which was not a `READY` message (`migrations/mvp-0.4-baseline.2/value-changes.json`). |
 | mvp-0.4-baseline.1 | Superseded by `mvp-0.4-baseline.2`, because the clarifications of LFCP-WIRE-01 §19, §39, §41 and IDENTITY-PROFILE-01 §3 change normative rules and `READY_identity_01` was not a `READY` message. Never moved. `mvp-0.2-baseline.12` plus multi-device root identity (ADR 0011, decisions I1 to I6): LFCP-WIRE-01 §7.1 to §7.3 (Root Identity, Device Principals, Device Certificates and certificate chains), §14 (Control Record types `9` `DEVICE_GRANT` and `10` `DEVICE_REVOKE`), §15 (Genesis field `5`), §17.1, §17.4 and §17.5, §23.3 (transfer commit field `2`), §25.2 (the same-root Key Package rule), §37 (the server extension `identity-01`), §41 (the Control read for a revoked reader), §62 (the ordering of the validation classes, normative for every Control Record), §79, §80.1 and §100.1; the profile IDENTITY-PROFILE-01 (`org.openlfcp.identity.v1`); and the three identity corpora of IDENTITY-PROFILE-01 §12 (task LFCP-04-403). One published value moves: `unknown_core_type_C1` uses the reserved type `31` instead of `9` (`migrations/mvp-0.4-baseline.1/value-changes.json`). |
 
 - The listed specifications are Working Drafts. They keep their identifiers;
@@ -28,13 +29,13 @@ MVP 0.4?* The answer is every file listed below, at the Git tag
 
 ## Pinning
 
-Implementations pin the tag `mvp-0.4-baseline.2` of `openlfcp/spec`, never
-a branch, in their `spec.lock`, and move to it from `mvp-0.4-baseline.1` or
-`mvp-0.2-baseline.12` deliberately (IDENTITY-PROFILE-01 §11). An
-implementation pinned to an earlier tag answers the codes recorded there.
+Implementations pin the tag `mvp-0.4-baseline.3` of `openlfcp/spec`, never
+a branch, in their `spec.lock`, and move to it from `mvp-0.4-baseline.2`,
+`mvp-0.4-baseline.1` or `mvp-0.2-baseline.12` deliberately
+(IDENTITY-PROFILE-01 §11). An implementation pinned to an earlier tag answers the codes recorded there.
 
 A later approved Working Draft correction does not move the tag. It
-produces a new tag, such as `mvp-0.4-baseline.3`, with an updated copy of
+produces a new tag, such as `mvp-0.4-baseline.4`, with an updated copy of
 this file and a `migrations/mvp-0.4-baseline.N/` entry. Implementations
 move to it deliberately.
 
@@ -138,9 +139,10 @@ The checks are those of MVP-0.2-BASELINE.md, plus:
 
 - vector values against the previous baseline tag, from the newest
   `migrations/mvp-0.M-baseline.N/value-changes.json`: for this baseline,
-  `migrations/mvp-0.4-baseline.2/`, against `mvp-0.4-baseline.1`, every
-  suite listed (for `mvp-0.4-baseline.1`, against `mvp-0.2-baseline.12`,
-  with the three identity suites new);
+  `migrations/mvp-0.4-baseline.3/`, against `mvp-0.4-baseline.2`, every
+  suite listed (for `mvp-0.4-baseline.2`, against `mvp-0.4-baseline.1`; for
+  `mvp-0.4-baseline.1`, against `mvp-0.2-baseline.12`, with the three
+  identity suites new);
 - the identity suites, including `IDENTITY-FLOW-FIXTURES-01.json`:
   schema-valid, every hash recomputed (`scripts/validate-vectors.mjs`), and
   regenerated byte for byte (`scripts/check-identity-corpora.mjs`; the wire
@@ -148,6 +150,14 @@ The checks are those of MVP-0.2-BASELINE.md, plus:
   for the generator of LFCP-TEST-VECTORS-01; CI installs it and sets
   `LFCP_REQUIRE_ALL_CORPORA`, so the suite is never skipped there);
 - this manifest's file list, as for MVP-0.1-BASELINE.md.
+
+## Changes from `mvp-0.4-baseline.2` (`mvp-0.4-baseline.3`)
+
+| Kind | Files |
+| --- | --- |
+| Changed, normative (clarification) | `profiles/IDENTITY-PROFILE-01.md` §3: the AI2 row names "a list or map held in a field of an entry map", as its paragraph did. AI2, unlike AI5, is not recursive: it does not refuse a scalar over a deeper list or map (`devices[k].missing_keys[X]`, an object inside an unknown field), nor over a list held directly at an entry key. §4 and AI5 still apply. The rule is that of `mvp-0.4-baseline.2`. §12.2 ID-05 names the new cases |
+| Changed, vectors | `test-vectors/identity-01/IDENTITY-PROFILE-TEST-VECTORS-01.*` and its generator: the AI2 depth cases. Admitted: a device's scalar over its own `missing_keys[X]` (§4 then marks the entry invalid), a scalar over `devices[k].future[X]` of an unknown field, over the map `roster[k].ext.a`, and over a list held directly at `devices[k]`. Controls: a scalar over the map `roster[k].ext` (depth 3) is `CONTAINER_REPLACED`; the root's scalar over a device's `missing_keys[X]` is `UNAUTHORIZED_WRITER` by AI5. The reference admission no longer refuses a scalar over a list at an entry key, and its AI4 index no longer fails on such a list. No published value changes |
+| Added, migration | `migrations/mvp-0.4-baseline.3/` |
 
 ## Changes from `mvp-0.4-baseline.1` (`mvp-0.4-baseline.2`)
 
