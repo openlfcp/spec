@@ -183,7 +183,6 @@ function admit(r, root = "OWNER") {
   const found = new Set();
   const ops = r.decoded.ops;
   const idOf = (i) => `${r.decoded.startOp + i}@${r.actor}`;
-  const containerOids = Object.fromEntries(CONTAINERS.map((k) => [oid(prev, k), k]));
   const identityOid = oid(prev, "identity");
   // Objects of entries (and the lists inside them) in the history: object id -> [container, key].
   const entryOf = new Map();
@@ -191,6 +190,7 @@ function admit(r, root = "OWNER") {
     for (const [key, entry] of Object.entries(prev[k] ?? {})) {
       const eid = oid(prev[k], key);
       if (eid) entryOf.set(eid, [k, key]);
+      if (Array.isArray(entry)) continue; // a list at an entry key is not an entry map: it has no fields
       for (const [f, v] of Object.entries(entry ?? {})) {
         const lid = oid(entry, f);
         if (lid && v && typeof v === "object" && !A.isImmutableString(v)) entryOf.set(lid, [k, key, f]);
@@ -210,9 +210,14 @@ function admit(r, root = "OWNER") {
   };
   for (const d of history) d.ops.forEach((op, i) => index(op, `${d.startOp + i}@${d.actor}`));
   const replacesObject = (op) => op.action === "set" && (op.pred ?? []).some((p) => madeObjects.has(p));
+  // AI2 protects two levels, never deeper: an entry map, and a list or map held in a field of an entry map. An entry
+  // key that holds a list holds no entry map, so a scalar over that list replaces nothing AI2 protects.
+  const replacesEntryMap = (op) => op.action === "set" && (op.pred ?? []).some((p) => entryMaps.has(p));
+  const extensionsOid = oid(prev, "extensions");
   ops.forEach((op, i) => {
     if (op.obj === "_root" && CONTAINERS.includes(op.key)) found.add("CONTAINER_REPLACED");
-    if ((containerOids[op.obj] || entryMaps.has(op.obj)) && replacesObject(op)) found.add("CONTAINER_REPLACED");
+    if (entryContainers.includes(op.obj) && replacesEntryMap(op)) found.add("CONTAINER_REPLACED");
+    if ((op.obj === extensionsOid || entryMaps.has(op.obj)) && replacesObject(op)) found.add("CONTAINER_REPLACED");
     if ((op.obj === "_root" && (op.key === "profile" || op.key === "identity")) || (identityOid && op.obj === identityOid)) found.add("IMMUTABLE_FIELD_MUTATED");
     if (op.action === "makeText") found.add("INVALID_FIELD_TYPE");
     // §2.1: the profile's scalars are ImmutableString, boolean and uint; an int, float, counter or timestamp is not one (AI3).
