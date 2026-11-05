@@ -104,6 +104,9 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `identity_doc_scalar_over_entry_field_map` | validation | `CONTAINER_REPLACED` | IDENTITY-PROFILE-01 §3 AI2 | OWNER writes the string "s" over the map roster[X].ext, held in a field of an entry map (depth 3): the control of the previous case |
 | `identity_doc_list_at_entry_key_written` | validation | valid | IDENTITY-PROFILE-01 §3 | OWNER writes a list devices[p:<DEV_X>] = ["a"], not an entry map: admitted (§4 judges the entry), the base of the next case |
 | `identity_doc_scalar_over_list_at_entry_key` | validation | valid | IDENTITY-PROFILE-01 §3 AI2 | OWNER writes the string "s" over the list devices[p:<DEV_X>]: a list held directly in devices is not an entry map, admitted |
+| `identity_doc_change_after_list_entry` | validation | valid | IDENTITY-PROFILE-01 §3 | OWNER relabels its own entry devices[p:<OWNER>] while devices[p:<DEV_X>] holds the list of identity_doc_list_at_entry_key_written: admitted |
+| `identity_doc_change_after_scalar_entry` | validation | valid | IDENTITY-PROFILE-01 §3 | OWNER relabels its own entry devices[p:<OWNER>] after identity_doc_scalar_over_list_at_entry_key, while devices[p:<DEV_X>] holds the string "s": admitted |
+| `identity_doc_change_after_scalar_entry.entry` | validation | valid | IDENTITY-PROFILE-01 §4 | The entry devices[p:<OWNER>] after identity_doc_change_after_scalar_entry: valid, with label "Renamed"; the entry devices[p:<DEV_X>] does not affect it (§4 rule 1) |
 | `identity_snapshot_equivalence` | behavioral | state | IDENTITY-PROFILE-01 §2, SHARED-OBJECTS-PROFILE-01 §14 | The same document from its four units and from a Snapshot |
 | `pair_uri_roundtrip` | bytes | exact bytes | IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2 | The pairing link of PAIR_J for I |
 | `pair_uri_pair_l` | bytes | exact bytes | IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2 | The pairing link of PAIR_L for I (flow F08), registered and active at flow.pl_pairing_device_l |
@@ -221,6 +224,8 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `D1_root_scalar_over_roster_ext` | OWNER | 4 | P4_register_dev_b_approved | `a33e25e594ae5dc7…` |
 | `D0_root_writes_list_at_devices_key` | OWNER | 3 | P4_register_dev_b_approved | `dc616a1f956738b2…` |
 | `D1_root_scalar_over_list_at_devices_key` | OWNER | 4 | P4_register_dev_b_approved | `bbb1e8310f769034…` |
+| `D1_root_relabels_beside_list_entry` | OWNER | 4 | P4_register_dev_b_approved | `e89a10c4a78bc5c8…` |
+| `D2_root_relabels_beside_scalar_entry` | OWNER | 5 | P4_register_dev_b_approved | `b5a17fef116cb33e…` |
 
 Fingerprint of DEV_B: `bicr-ikmc-oec2-llzz`.
 

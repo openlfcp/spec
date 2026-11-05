@@ -1187,9 +1187,20 @@ function encodeTargeted(name, doc, writer, unitSeq, controlRef, makeOps) {
   const listEntry = change("D0_root_writes_list_at_devices_key", BASE, "OWNER", 3, AT, (d) => { d.devices[DX] = [S("a")]; });
   ai2("identity_doc_list_at_entry_key_written", listEntry.r, null,
     "OWNER writes a list devices[p:<DEV_X>] = [\"a\"], not an entry map: admitted (§4 judges the entry), the base of the next case", "OK");
-  ai2("identity_doc_scalar_over_list_at_entry_key",
-    change("D1_root_scalar_over_list_at_devices_key", listEntry.doc, "OWNER", 4, AT, (d) => { d.devices[DX] = S("s"); }).r, null,
+  const scalarEntry = change("D1_root_scalar_over_list_at_devices_key", listEntry.doc, "OWNER", 4, AT, (d) => { d.devices[DX] = S("s"); });
+  ai2("identity_doc_scalar_over_list_at_entry_key", scalarEntry.r, null,
     "OWNER writes the string \"s\" over the list devices[p:<DEV_X>]: a list held directly in devices is not an entry map, admitted");
+  // A later change beside an entry that is not a map is decided like any other (review of spec#6, R1): the invalid
+  // entry is ignored by readers and the rest of the document stays usable (§4 rule 1).
+  const relabel = (d) => { d.devices[O].label = S("Renamed"); };
+  ai2("identity_doc_change_after_list_entry",
+    change("D1_root_relabels_beside_list_entry", listEntry.doc, "OWNER", 4, AT, relabel).r, null,
+    "OWNER relabels its own entry devices[p:<OWNER>] while devices[p:<DEV_X>] holds the list of identity_doc_list_at_entry_key_written: admitted", "OK");
+  const after = change("D2_root_relabels_beside_scalar_entry", scalarEntry.doc, "OWNER", 5, AT, relabel);
+  ai2("identity_doc_change_after_scalar_entry", after.r, null,
+    "OWNER relabels its own entry devices[p:<OWNER>] after identity_doc_scalar_over_list_at_entry_key, while devices[p:<DEV_X>] holds the string \"s\": admitted", "OK");
+  stateCase("identity_doc_change_after_scalar_entry.entry", after.doc, "devices", O, null,
+    "The entry devices[p:<OWNER>] after identity_doc_change_after_scalar_entry: valid, with label \"Renamed\"; the entry devices[p:<DEV_X>] does not affect it (§4 rule 1)");
 }
 {
   const units = replay(["C0_initial", "C1_fill", "J1_own_request", "J2_continues_own"]).doc;
