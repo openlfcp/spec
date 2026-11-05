@@ -579,6 +579,7 @@ const RULES = {
   AI4: ["IDENTITY-PROFILE-01 §3 AI4", "A pairing or other writer creates or writes into one entry requests[k] that it owns, deletes nothing and replaces no entry map; pairing stays its own PrincipalRef."],
   AI5: ["IDENTITY-PROFILE-01 §2.1, §3 AI5", "devices[k].missing_keys, and anything inside it, is created, written or deleted only by the Principal whose PrincipalRef is k (the root for its own entry); deleting the entry devices[k], or replacing it with a map without missing_keys, is not a write of missing_keys."],
   AI2_HISTORY: ["IDENTITY-PROFILE-01 §3 AI2", "A change does not write a scalar over an entry map, or over a list or map field of one, whether or not the engine selects that value; the replaced objects are the operation's predecessors (SOP §11.4 R6)."],
+  AI2_DEPTH: ["IDENTITY-PROFILE-01 §3 AI2", "AI2 protects an entry map of roster, devices or requests and a list or map held in a field of one, and nothing deeper: a scalar over a deeper list or map, or over a list held directly at an entry key, is admitted by AI2 and judged by §4."],
   RESERVED: ["IDENTITY-PROFILE-01 §2.4", "Admission has no rule for the reserved root keys: a later change that writes them is admitted when §3 otherwise admits it; the value is preserved uninterpreted."],
   OK: ["IDENTITY-PROFILE-01 §3", "The change passes the checks of its bytes, the sequence checks and AI0 to AI4."],
 };
@@ -1143,6 +1144,51 @@ function encodeTargeted(name, doc, writer, unitSeq, controlRef, makeOps) {
       { action: "set", obj: oid(merged, "roster"), key: W, value: "not an entry", pred: [id(0)] },
     ]).r,
     "CONTAINER_REPLACED", "OWNER creates a new entry map roster[W], then replaces it with a scalar, in one change");
+}
+// AI2 depth (sdk-rs#5 P2-1, sdk-ts#16 P1): only an entry map (depth 2) and a list or map held in a field of an
+// entry map (depth 3) are protected. A scalar over an object one level deeper, or over a list held directly at
+// devices[k], is admitted by AI2; §4 then judges the entry, and AI5 still decides who writes into missing_keys.
+{
+  const AT = "P4_register_dev_b_approved"; // OWNER root, DEV_A and DEV_B personal in I
+  const B = pref("DEV_B"), X = rref("X"), O = pref("OWNER");
+  const ai2 = (id, r, want, description, rule = "AI2_DEPTH") => changeCase(id, r, want, description, { rule });
+  const hint = CHANGES.get("M1_dev_b_writes_hint");
+  const withHint = historyOf([hint.hash]);
+  const own = change("D1_dev_b_scalar_over_own_hint_list", withHint, "DEV_B", 2, AT, (d) => { d.devices[B].missing_keys[X] = true; });
+  ai2("identity_doc_device_scalar_over_own_hint_list", own.r, null,
+    "DEV_B writes the boolean true over its own list devices[p:<DEV_B>].missing_keys[X] (depth 4, after missing_keys_device_writes_own): not an entry map or a field of one, admitted");
+  stateCase("identity_doc_device_scalar_over_own_hint_list.entry", own.doc, "devices", B, "INVALID_FIELD_TYPE",
+    "The entry devices[p:<DEV_B>] after identity_doc_device_scalar_over_own_hint_list: missing_keys[X] is not a list of uint, so §4 marks the entry invalid");
+  ai2("identity_doc_root_scalar_over_device_hint_list",
+    change("D1_root_scalar_over_dev_b_hint_list", withHint, "OWNER", 4, AT, (d) => { d.devices[B].missing_keys[X] = true; }).r, "UNAUTHORIZED_WRITER",
+    "OWNER writes the boolean true over DEV_B's list devices[p:<DEV_B>].missing_keys[X] (depth 4): AI2 does not apply, AI5 refuses the foreign writer", "AI5");
+
+  const future = change("D0_root_writes_unknown_nested_field", BASE, "OWNER", 3, AT, (d) => { d.devices[O].future = { [X]: [S("a")] }; });
+  ai2("identity_doc_unknown_nested_field_written", future.r, null,
+    "OWNER writes an unknown field devices[p:<OWNER>].future = {X: [\"a\"]}: admitted, the base of the next case", "OK");
+  const futureScalar = change("D1_root_scalar_over_unknown_nested_list", future.doc, "OWNER", 4, AT, (d) => { d.devices[O].future[X] = S("s"); });
+  ai2("identity_doc_scalar_over_unknown_nested_list", futureScalar.r, null,
+    "OWNER writes the string \"s\" over the list devices[p:<OWNER>].future[X] of an unknown field (depth 4): admitted");
+  stateCase("identity_doc_scalar_over_unknown_nested_list.entry", futureScalar.doc, "devices", O, null,
+    "The entry devices[p:<OWNER>] after identity_doc_scalar_over_unknown_nested_list: the unknown field is preserved and the entry stays valid");
+
+  const ext = change("D0_root_writes_roster_ext", BASE, "OWNER", 3, AT, (d) => { d.roster[X].ext = { a: {} }; });
+  ai2("identity_doc_unknown_nested_map_written", ext.r, null,
+    "OWNER writes an unknown field roster[X].ext = {a: {}}: admitted, the base of the next two cases", "OK");
+  ai2("identity_doc_scalar_over_unknown_nested_map",
+    change("D1_root_scalar_over_roster_ext_a", ext.doc, "OWNER", 4, AT, (d) => { d.roster[X].ext.a = S("s"); }).r, null,
+    "OWNER writes the string \"s\" over the map roster[X].ext.a (depth 4): admitted");
+  ai2("identity_doc_scalar_over_entry_field_map",
+    change("D1_root_scalar_over_roster_ext", ext.doc, "OWNER", 4, AT, (d) => { d.roster[X].ext = S("s"); }).r, "CONTAINER_REPLACED",
+    "OWNER writes the string \"s\" over the map roster[X].ext, held in a field of an entry map (depth 3): the control of the previous case");
+
+  const DX = pref("DEV_X");
+  const listEntry = change("D0_root_writes_list_at_devices_key", BASE, "OWNER", 3, AT, (d) => { d.devices[DX] = [S("a")]; });
+  ai2("identity_doc_list_at_entry_key_written", listEntry.r, null,
+    "OWNER writes a list devices[p:<DEV_X>] = [\"a\"], not an entry map: admitted (§4 judges the entry), the base of the next case", "OK");
+  ai2("identity_doc_scalar_over_list_at_entry_key",
+    change("D1_root_scalar_over_list_at_devices_key", listEntry.doc, "OWNER", 4, AT, (d) => { d.devices[DX] = S("s"); }).r, null,
+    "OWNER writes the string \"s\" over the list devices[p:<DEV_X>]: a list held directly in devices is not an entry map, admitted");
 }
 {
   const units = replay(["C0_initial", "C1_fill", "J1_own_request", "J2_continues_own"]).doc;

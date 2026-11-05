@@ -93,6 +93,17 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `identity_doc_scalar_beside_entry_list` | validation | valid | IDENTITY-PROFILE-01 §3 AI2 | OWNER writes a scalar endpoints beside the list of the selected map of roster[Z], naming no predecessor: a concurrent value, nothing replaced, admitted |
 | `identity_doc_list_made_in_change_replaced` | validation | `CONTAINER_REPLACED` | IDENTITY-PROFILE-01 §3 AI2 | OWNER replaces endpoints of the hidden map of roster[Z] with a new list, then that new list with a scalar, in one change |
 | `identity_doc_entry_map_made_in_change_replaced` | validation | `CONTAINER_REPLACED` | IDENTITY-PROFILE-01 §3 AI2 | OWNER creates a new entry map roster[W], then replaces it with a scalar, in one change |
+| `identity_doc_device_scalar_over_own_hint_list` | validation | valid | IDENTITY-PROFILE-01 §3 AI2 | DEV_B writes the boolean true over its own list devices[p:<DEV_B>].missing_keys[X] (depth 4, after missing_keys_device_writes_own): not an entry map or a field of one, admitted |
+| `identity_doc_device_scalar_over_own_hint_list.entry` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | The entry devices[p:<DEV_B>] after identity_doc_device_scalar_over_own_hint_list: missing_keys[X] is not a list of uint, so §4 marks the entry invalid |
+| `identity_doc_root_scalar_over_device_hint_list` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §2.1, §3 AI5 | OWNER writes the boolean true over DEV_B's list devices[p:<DEV_B>].missing_keys[X] (depth 4): AI2 does not apply, AI5 refuses the foreign writer |
+| `identity_doc_unknown_nested_field_written` | validation | valid | IDENTITY-PROFILE-01 §3 | OWNER writes an unknown field devices[p:<OWNER>].future = {X: ["a"]}: admitted, the base of the next case |
+| `identity_doc_scalar_over_unknown_nested_list` | validation | valid | IDENTITY-PROFILE-01 §3 AI2 | OWNER writes the string "s" over the list devices[p:<OWNER>].future[X] of an unknown field (depth 4): admitted |
+| `identity_doc_scalar_over_unknown_nested_list.entry` | validation | valid | IDENTITY-PROFILE-01 §4 | The entry devices[p:<OWNER>] after identity_doc_scalar_over_unknown_nested_list: the unknown field is preserved and the entry stays valid |
+| `identity_doc_unknown_nested_map_written` | validation | valid | IDENTITY-PROFILE-01 §3 | OWNER writes an unknown field roster[X].ext = {a: {}}: admitted, the base of the next two cases |
+| `identity_doc_scalar_over_unknown_nested_map` | validation | valid | IDENTITY-PROFILE-01 §3 AI2 | OWNER writes the string "s" over the map roster[X].ext.a (depth 4): admitted |
+| `identity_doc_scalar_over_entry_field_map` | validation | `CONTAINER_REPLACED` | IDENTITY-PROFILE-01 §3 AI2 | OWNER writes the string "s" over the map roster[X].ext, held in a field of an entry map (depth 3): the control of the previous case |
+| `identity_doc_list_at_entry_key_written` | validation | valid | IDENTITY-PROFILE-01 §3 | OWNER writes a list devices[p:<DEV_X>] = ["a"], not an entry map: admitted (§4 judges the entry), the base of the next case |
+| `identity_doc_scalar_over_list_at_entry_key` | validation | valid | IDENTITY-PROFILE-01 §3 AI2 | OWNER writes the string "s" over the list devices[p:<DEV_X>]: a list held directly in devices is not an entry map, admitted |
 | `identity_snapshot_equivalence` | behavioral | state | IDENTITY-PROFILE-01 §2, SHARED-OBJECTS-PROFILE-01 §14 | The same document from its four units and from a Snapshot |
 | `pair_uri_roundtrip` | bytes | exact bytes | IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2 | The pairing link of PAIR_J for I |
 | `pair_uri_pair_l` | bytes | exact bytes | IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2 | The pairing link of PAIR_L for I (flow F08), registered and active at flow.pl_pairing_device_l |
@@ -201,6 +212,15 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `R1_root_scalar_beside_endpoints` | OWNER | 4 | P1_device_grant_dev_a_i | `e382456f57c4a3bb…` |
 | `R1_root_replaces_own_new_list` | OWNER | 4 | P1_device_grant_dev_a_i | `629e0228c9695508…` |
 | `R1_root_replaces_own_new_entry` | OWNER | 4 | P1_device_grant_dev_a_i | `6b5ac5c57cfcd5be…` |
+| `D1_dev_b_scalar_over_own_hint_list` | DEV_B | 2 | P4_register_dev_b_approved | `18447358058a1f38…` |
+| `D1_root_scalar_over_dev_b_hint_list` | OWNER | 4 | P4_register_dev_b_approved | `cf742a6c37ceab99…` |
+| `D0_root_writes_unknown_nested_field` | OWNER | 3 | P4_register_dev_b_approved | `8b409db4f1f93c13…` |
+| `D1_root_scalar_over_unknown_nested_list` | OWNER | 4 | P4_register_dev_b_approved | `00b8fa4f8ff75e91…` |
+| `D0_root_writes_roster_ext` | OWNER | 3 | P4_register_dev_b_approved | `d3732e81ed97909a…` |
+| `D1_root_scalar_over_roster_ext_a` | OWNER | 4 | P4_register_dev_b_approved | `658c9e1537cc57ab…` |
+| `D1_root_scalar_over_roster_ext` | OWNER | 4 | P4_register_dev_b_approved | `a33e25e594ae5dc7…` |
+| `D0_root_writes_list_at_devices_key` | OWNER | 3 | P4_register_dev_b_approved | `dc616a1f956738b2…` |
+| `D1_root_scalar_over_list_at_devices_key` | OWNER | 4 | P4_register_dev_b_approved | `bbb1e8310f769034…` |
 
 Fingerprint of DEV_B: `bicr-ikmc-oec2-llzz`.
 
