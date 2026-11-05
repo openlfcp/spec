@@ -184,19 +184,6 @@ function admit(r, root = "OWNER") {
   const ops = r.decoded.ops;
   const idOf = (i) => `${r.decoded.startOp + i}@${r.actor}`;
   const identityOid = oid(prev, "identity");
-  // Objects of entries (and the lists inside them) in the history: object id -> [container, key].
-  const entryOf = new Map();
-  for (const k of ["roster", "devices", "requests"]) {
-    for (const [key, entry] of Object.entries(prev[k] ?? {})) {
-      const eid = oid(prev[k], key);
-      if (eid) entryOf.set(eid, [k, key]);
-      if (Array.isArray(entry)) continue; // a list at an entry key is not an entry map: it has no fields
-      for (const [f, v] of Object.entries(entry ?? {})) {
-        const lid = oid(entry, f);
-        if (lid && v && typeof v === "object" && !A.isImmutableString(v)) entryOf.set(lid, [k, key, f]);
-      }
-    }
-  }
   // AI2 (§3): the root containers are never written after the initial change, and a scalar replaces an object only
   // when its operation names that object as a predecessor (SOP §11.4 R6). Objects are indexed from the whole causal
   // history, hidden and deleted ones included, and from the earlier operations of this change.
@@ -209,6 +196,20 @@ function admit(r, root = "OWNER") {
     if (op.action === "makeMap" && entryContainers.includes(op.obj)) entryMaps.add(id);
   };
   for (const d of history) d.ops.forEach((op, i) => index(op, `${d.startOp + i}@${d.actor}`));
+  // Objects of entries (and the lists inside them) in the history: object id -> [container, key]. Only an entry map
+  // has fields: a list, a scalar or a Text at an entry key is not one, and the engine cannot be asked for its fields.
+  const entryOf = new Map();
+  for (const k of ["roster", "devices", "requests"]) {
+    for (const [key, entry] of Object.entries(prev[k] ?? {})) {
+      const eid = oid(prev[k], key);
+      if (eid) entryOf.set(eid, [k, key]);
+      if (!entryMaps.has(eid)) continue;
+      for (const [f, v] of Object.entries(entry)) {
+        const lid = oid(entry, f);
+        if (lid && v && typeof v === "object" && !A.isImmutableString(v)) entryOf.set(lid, [k, key, f]);
+      }
+    }
+  }
   const replacesObject = (op) => op.action === "set" && (op.pred ?? []).some((p) => madeObjects.has(p));
   // AI2 protects two levels, never deeper: an entry map, and a list or map held in a field of an entry map. An entry
   // key that holds a list holds no entry map, so a scalar over that list replaces nothing AI2 protects.
