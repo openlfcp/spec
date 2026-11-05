@@ -15,8 +15,8 @@ listed and compared value by value.
 No published value changes.
 
 Added, with no published value changed, in `IDENTITY-PROFILE-TEST-VECTORS-01`:
-the `identity_doc_*` cases of the AI2 depth boundary, with their
-`change.D0_*` and `change.D1_*` records.
+the `identity_doc_*` cases of the AI2 depth boundary and their follow-ups,
+with their `change.D0_*`, `change.D1_*` and `change.D2_*` records.
 
 - Admitted:
   - a device's scalar over its own list `devices[k].missing_keys[X]`
@@ -26,7 +26,10 @@ the `identity_doc_*` cases of the AI2 depth boundary, with their
     a `.entry` state case in which the entry stays valid;
   - a scalar over the map `roster[k].ext.a` (depth 4);
   - a scalar over a list held directly at `devices[k]`, which is not an
-    entry map.
+    entry map;
+  - the root relabelling its own entry while `devices[k]` holds that list
+    or that scalar, with a `.entry` state case in which the root's entry
+    stays valid (§4 rule 1; review of spec#6, R1).
 - Controls:
   - a scalar over the map `roster[k].ext` (depth 3) is `CONTAINER_REPLACED`;
   - the root's scalar over a device's `missing_keys[X]` is
