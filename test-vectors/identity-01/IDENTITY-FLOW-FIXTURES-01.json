@@ -529,13 +529,12 @@
             "n": 2
           },
           {
-            "action": "Step 1: I's revocation of (OWNER, PAIR_J), reason 3 propagated as 0",
-            "case": "wire:flow.reconcile_revoke_pairing_in_x",
+            "action": "Step 1: no revoked pair of I is relevant in X: the consume of PAIR_J, a pairing device not bound in X, is not propagated (IDENTITY-PROFILE-01 §7.1 step 1)",
             "n": 3
           },
           {
             "action": "Step 2: DEV_A, bound only as an intermediate in X, is registered with I's chain; DEV_B has the same leaf certificate ID and needs nothing",
-            "case": "wire:flow.reconcile_register_dev_a",
+            "case": "wire:flow.reconcile_register_dev_a_in_x",
             "n": 4
           },
           {
@@ -550,7 +549,7 @@
             "action": "A second reconciler had proposed the same registration on the previous head: CONTROL_HEAD_MISMATCH; after synchronising its phase is",
             "phase_input": {
               "phase": "register",
-              "state": "wire:flow.reconcile_register_dev_a",
+              "state": "wire:flow.reconcile_register_dev_a_in_x",
               "root": "OWNER",
               "device": "DEV_A",
               "certificate": "CERT_A",
@@ -626,8 +625,11 @@
           },
           {
             "n": 3,
-            "outcome": "accept",
-            "exposing": false
+            "outcome": "nothing to propose",
+            "proposals": [],
+            "not_propagated": [
+              "PAIR_J"
+            ]
           },
           {
             "n": 4,
@@ -740,6 +742,248 @@
       },
       "assertions": [
         "Registration and key delivery are reconciled independently; an equal leaf certificate ID says nothing about packages."
+      ]
+    },
+    {
+      "id": "F05.sixty_five_sessions",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "65 sessions closed in I, then a personal device revoked in I before its first registration in X: reconciliation propagates that revocation alone",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §7.1 step 1; LFCP-WIRE-01 §17.5 rule 5",
+        "text": "Only revocations relevant in X are propagated; a pairing device is never bound outside I, so its revocation takes none of the 64 unbound pairs of its root in X. A refused propagation is reported and retried; once the device is bound in X its revocation is never limited."
+      },
+      "inputs": {
+        "mode": "sequence",
+        "steps": [
+          {
+            "action": "65 pairing devices created and cancelled in I, then a 66th session opened by PAIR_M",
+            "case": "wire:flow.p65_pairing_device",
+            "record_set": "sixty_five_cancelled_sessions_in_i",
+            "n": 1
+          },
+          {
+            "action": "Phase 1 of the 66th session, for DEV_P",
+            "case": "wire:flow.p65_consume",
+            "n": 2
+          },
+          {
+            "action": "Phase 2: DEV_P registered in I",
+            "case": "wire:flow.p65_register_dev_p",
+            "n": 3
+          },
+          {
+            "action": "DEV_P is lost and revoked in I before any reconciliation has registered it in X",
+            "case": "wire:flow.p65_revoke_dev_p_in_i",
+            "n": 4
+          },
+          {
+            "action": "Reconciliation of X, step 1: the 66 revoked pairing devices of I are not relevant in X",
+            "n": 5
+          },
+          {
+            "action": "Step 1: the revocation of DEV_P is propagated, an unbound tombstone of OWNER",
+            "case": "wire:flow.p65_x_revoke_dev_p",
+            "n": 6
+          },
+          {
+            "action": "DEV_P tries to register itself in X with its old chain [CERT_P, CERT_A]",
+            "case": "wire:flow.p65_x_dev_p_self_register",
+            "n": 7
+          },
+          {
+            "action": "Had the pairing devices been propagated, the 65th unbound tombstone of OWNER would be refused (shown on 64 tombstones)",
+            "case": "wire:device_revoke_tombstone_limit",
+            "aside": true,
+            "n": 8
+          },
+          {
+            "action": "X already holds 64 unbound revoked pairs of OWNER: the propagation of DEV_P is refused",
+            "case": "wire:flow.p65_x_limit_revoke_dev_p",
+            "branch": "limit reached",
+            "n": 9
+          },
+          {
+            "action": "The reconciler registers neither DEV_P nor a device whose chain passes through it, and seals nothing to them",
+            "branch": "limit reached",
+            "n": 10
+          },
+          {
+            "action": "DEV_P registers itself in X with its old chain",
+            "case": "wire:flow.p65_x_limit_dev_p_self_registers",
+            "branch": "limit reached",
+            "n": 11
+          },
+          {
+            "action": "The next reconciliation of X proposes the revocation again, DEV_P now bound in X: never limited, exposing",
+            "case": "wire:flow.p65_x_limit_revoke_bound_dev_p",
+            "branch": "limit reached",
+            "n": 12
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept"
+          },
+          {
+            "n": 2,
+            "outcome": "accept"
+          },
+          {
+            "n": 3,
+            "outcome": "accept"
+          },
+          {
+            "n": 4,
+            "outcome": "accept",
+            "revoked_pairing_devices_in_I": 66
+          },
+          {
+            "n": 5,
+            "outcome": "not propagated",
+            "not_propagated": [
+              "PAIR_M",
+              "PAIR_T_01",
+              "PAIR_T_02",
+              "PAIR_T_03",
+              "PAIR_T_04",
+              "PAIR_T_05",
+              "PAIR_T_06",
+              "PAIR_T_07",
+              "PAIR_T_08",
+              "PAIR_T_09",
+              "PAIR_T_10",
+              "PAIR_T_11",
+              "PAIR_T_12",
+              "PAIR_T_13",
+              "PAIR_T_14",
+              "PAIR_T_15",
+              "PAIR_T_16",
+              "PAIR_T_17",
+              "PAIR_T_18",
+              "PAIR_T_19",
+              "PAIR_T_20",
+              "PAIR_T_21",
+              "PAIR_T_22",
+              "PAIR_T_23",
+              "PAIR_T_24",
+              "PAIR_T_25",
+              "PAIR_T_26",
+              "PAIR_T_27",
+              "PAIR_T_28",
+              "PAIR_T_29",
+              "PAIR_T_30",
+              "PAIR_T_31",
+              "PAIR_T_32",
+              "PAIR_T_33",
+              "PAIR_T_34",
+              "PAIR_T_35",
+              "PAIR_T_36",
+              "PAIR_T_37",
+              "PAIR_T_38",
+              "PAIR_T_39",
+              "PAIR_T_40",
+              "PAIR_T_41",
+              "PAIR_T_42",
+              "PAIR_T_43",
+              "PAIR_T_44",
+              "PAIR_T_45",
+              "PAIR_T_46",
+              "PAIR_T_47",
+              "PAIR_T_48",
+              "PAIR_T_49",
+              "PAIR_T_50",
+              "PAIR_T_51",
+              "PAIR_T_52",
+              "PAIR_T_53",
+              "PAIR_T_54",
+              "PAIR_T_55",
+              "PAIR_T_56",
+              "PAIR_T_57",
+              "PAIR_T_58",
+              "PAIR_T_59",
+              "PAIR_T_60",
+              "PAIR_T_61",
+              "PAIR_T_62",
+              "PAIR_T_63",
+              "PAIR_T_64",
+              "PAIR_T_65"
+            ],
+            "proposals": [
+              "DEV_P"
+            ]
+          },
+          {
+            "n": 6,
+            "outcome": "accept",
+            "exposing": false,
+            "unbound_revoked_pairs_of_OWNER": 1
+          },
+          {
+            "n": 7,
+            "outcome": "AUTHORIZATION_FAILED"
+          },
+          {
+            "n": 8,
+            "outcome": "AUTHORIZATION_FAILED"
+          },
+          {
+            "n": 9,
+            "outcome": "AUTHORIZATION_FAILED",
+            "proposals": [
+              "DEV_P"
+            ],
+            "unbound_revoked_pairs_of_OWNER": 64,
+            "reported": true,
+            "pair_state": "unpropagated"
+          },
+          {
+            "n": 10,
+            "outcome": "DEV_P treated as revoked in X"
+          },
+          {
+            "n": 11,
+            "outcome": "accept",
+            "DEV_P": {
+              "root": "OWNER",
+              "kind": 0,
+              "mask": [
+                1,
+                2,
+                3
+              ],
+              "scope": [],
+              "registered": true,
+              "leaf": "CERT_P",
+              "issuers": [
+                "DEV_A"
+              ],
+              "active": true,
+              "suspended": false,
+              "reads": true
+            }
+          },
+          {
+            "n": 12,
+            "outcome": "accept",
+            "proposals": [
+              "DEV_P"
+            ],
+            "exposing": true,
+            "rotation": "the rotation policy of §8.4 closes the epoch"
+          }
+        ],
+        "final": {
+          "X_tombstones_from_pairing": 0,
+          "DEV_P_registered_in_X": false
+        }
+      },
+      "assertions": [
+        "The pairing sessions of I cost nothing in X; the revocation of a personal device that X never registered is recorded there and refuses its old chain.",
+        "At the limit a refused revocation is reported and retried; the device that registers itself meanwhile is revoked by the next reconciliation (an exposing revocation)."
       ]
     },
     {
@@ -1436,20 +1680,19 @@
             "n": 6
           },
           {
-            "action": "Candidate X where C0 was never accepted: reconciliation step 1 propagates the consume of PAIR_J",
-            "case": "wire:flow.f09a_revoke_pair_j",
+            "action": "Candidate X where C0 was never accepted: reconciliation step 1 does not propagate the consume of PAIR_J, a pairing device not bound in X",
             "branch": "X never C0",
             "n": 7
           },
           {
-            "action": "… and the revocation of DEV_A",
-            "case": "wire:flow.f09a_revoke_dev_a",
+            "action": "… it propagates the revocation of DEV_A",
+            "case": "wire:flow.f09a_reconcile_revoke_dev_a",
             "branch": "X never C0",
             "n": 8
           },
           {
             "action": "… then step 2 registers C1",
-            "case": "wire:flow.f09a_register_c1",
+            "case": "wire:flow.f09a_reconcile_register_c1",
             "branch": "X never C0",
             "n": 9
           },
@@ -1460,26 +1703,25 @@
             "n": 10
           },
           {
-            "action": "Reconciliation step 1: the consume of PAIR_J",
-            "case": "wire:flow.f09b_revoke_pair_j",
+            "action": "Reconciliation step 1 does not propagate the consume of PAIR_J, a pairing device not bound in X",
             "branch": "X with C0",
             "n": 11
           },
           {
-            "action": "… and the revocation of DEV_A, which suspends BRIDGE_O",
-            "case": "wire:flow.f09b_revoke_dev_a",
+            "action": "… it propagates the revocation of DEV_A, which suspends BRIDGE_O",
+            "case": "wire:flow.f09b_reconcile_revoke_dev_a",
             "branch": "X with C0",
             "n": 12
           },
           {
             "action": "Step 2 re-certifies BRIDGE_O as C1: B takes C0 from the history as its result and uses C1",
-            "case": "wire:flow.f09b_register_c1",
+            "case": "wire:flow.f09b_reconcile_register_c1",
             "branch": "X with C0",
             "n": 13
           },
           {
             "action": "The root seals the DEK of X to BRIDGE_O; with the certificate and the DEK it is ready",
-            "case": "wire:flow.f09b_kp_owner_to_bridge_o",
+            "case": "wire:flow.f09b_reconcile_kp_owner_to_bridge_o",
             "branch": "X with C0",
             "n": 14
           },
@@ -1559,11 +1801,17 @@
           },
           {
             "n": 7,
-            "outcome": "accept"
+            "outcome": "not propagated",
+            "not_propagated": [
+              "PAIR_J"
+            ]
           },
           {
             "n": 8,
-            "outcome": "accept"
+            "outcome": "accept",
+            "proposals": [
+              "DEV_A"
+            ]
           },
           {
             "n": 9,
@@ -1580,7 +1828,10 @@
           },
           {
             "n": 11,
-            "outcome": "accept"
+            "outcome": "not propagated",
+            "not_propagated": [
+              "PAIR_J"
+            ]
           },
           {
             "n": 12,
@@ -1603,7 +1854,10 @@
               "active": false,
               "suspended": true,
               "reads": false
-            }
+            },
+            "proposals": [
+              "DEV_A"
+            ]
           },
           {
             "n": 13,

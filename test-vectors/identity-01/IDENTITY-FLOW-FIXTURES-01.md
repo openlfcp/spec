@@ -67,13 +67,32 @@ Reconciliation of X against I's Control state: revocations first, then registrat
 |---|---|---|---|---|
 | 1 | I's state at P4: DEV_A and DEV_B registered, (OWNER, PAIR_J) consumed | `wire:P4_register_dev_b_approved` | accept |  |
 | 2 | X's state: DEV_B self-registered with [CERT_B, CERT_A], DEV_A bound only as an intermediate | `wire:flow.self_register_dev_b_on_j2` | accept |  |
-| 3 | Step 1: I's revocation of (OWNER, PAIR_J), reason 3 propagated as 0 | `wire:flow.reconcile_revoke_pairing_in_x` | accept |  |
-| 4 | Step 2: DEV_A, bound only as an intermediate in X, is registered with I's chain; DEV_B has the same leaf certificate ID and needs nothing | `wire:flow.reconcile_register_dev_a` | accept | committed-own |
+| 3 | Step 1: no revoked pair of I is relevant in X: the consume of PAIR_J, a pairing device not bound in X, is not propagated (IDENTITY-PROFILE-01 §7.1 step 1) |  | nothing to propose |  |
+| 4 | Step 2: DEV_A, bound only as an intermediate in X, is registered with I's chain; DEV_B has the same leaf certificate ID and needs nothing | `wire:flow.reconcile_register_dev_a_in_x` | accept | committed-own |
 | 5 | Step 3: the reconciler seals every epoch of X it holds to DEV_A and DEV_B unless its ledger records the package |  | packages sent |  |
 | 6 | A second reconciler had proposed the same registration on the previous head: CONTROL_HEAD_MISMATCH; after synchronising its phase is |  | done | complete |
 | 7 | A second run of the reconciler |  | nothing to propose |  |
 | 8 | The Identity Resource as its own target: steps 1 and 2 are vacuous, step 3 seals I's epochs to DEV_B | `wire:flow.kp_dev_a_to_dev_b_in_i` | accept |  |
 | 9 | A service device whose issuer I has revoked is never registered in X: the revocation reaches X first and X refuses the chain (shown at I9) (aside) | `wire:chain_through_revoked_issuer` | AUTHORIZATION_FAILED |  |
+
+## F05.sixty_five_sessions
+
+65 sessions closed in I, then a personal device revoked in I before its first registration in X: reconciliation propagates that revocation alone (IDENTITY-PROFILE-01 §7.1 step 1; LFCP-WIRE-01 §17.5 rule 5; mode sequence)
+
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | 65 pairing devices created and cancelled in I, then a 66th session opened by PAIR_M | `wire:flow.p65_pairing_device` | accept |  |
+| 2 | Phase 1 of the 66th session, for DEV_P | `wire:flow.p65_consume` | accept |  |
+| 3 | Phase 2: DEV_P registered in I | `wire:flow.p65_register_dev_p` | accept |  |
+| 4 | DEV_P is lost and revoked in I before any reconciliation has registered it in X | `wire:flow.p65_revoke_dev_p_in_i` | accept |  |
+| 5 | Reconciliation of X, step 1: the 66 revoked pairing devices of I are not relevant in X |  | not propagated |  |
+| 6 | Step 1: the revocation of DEV_P is propagated, an unbound tombstone of OWNER | `wire:flow.p65_x_revoke_dev_p` | accept |  |
+| 7 | DEV_P tries to register itself in X with its old chain [CERT_P, CERT_A] | `wire:flow.p65_x_dev_p_self_register` | AUTHORIZATION_FAILED |  |
+| 8 | Had the pairing devices been propagated, the 65th unbound tombstone of OWNER would be refused (shown on 64 tombstones) (aside) | `wire:device_revoke_tombstone_limit` | AUTHORIZATION_FAILED |  |
+| 9 | X already holds 64 unbound revoked pairs of OWNER: the propagation of DEV_P is refused (limit reached) | `wire:flow.p65_x_limit_revoke_dev_p` | AUTHORIZATION_FAILED |  |
+| 10 | The reconciler registers neither DEV_P nor a device whose chain passes through it, and seals nothing to them (limit reached) |  | DEV_P treated as revoked in X |  |
+| 11 | DEV_P registers itself in X with its old chain (limit reached) | `wire:flow.p65_x_limit_dev_p_self_registers` | accept |  |
+| 12 | The next reconciliation of X proposes the revocation again, DEV_P now bound in X: never limited, exposing (limit reached) | `wire:flow.p65_x_limit_revoke_bound_dev_p` | accept |  |
 
 ## F06_concurrent_revokes
 
@@ -172,14 +191,14 @@ Pairing the service device BRIDGE_O: approved with C0 = CERT_SO (digest d), boun
 | 4 | Every candidate is offline: B shows |  | approved, waiting for registration |  |
 | 5 | C0's issuer DEV_A is revoked in I | `wire:flow.f09_revoke_issuer_in_i` | accept |  |
 | 6 | The root re-certifies BRIDGE_O as C1 (same kind, mask and scope) | `wire:flow.f09_recertify_c1_in_i` | accept |  |
-| 7 | Candidate X where C0 was never accepted: reconciliation step 1 propagates the consume of PAIR_J (X never C0) | `wire:flow.f09a_revoke_pair_j` | accept |  |
-| 8 | … and the revocation of DEV_A (X never C0) | `wire:flow.f09a_revoke_dev_a` | accept |  |
-| 9 | … then step 2 registers C1 (X never C0) | `wire:flow.f09a_register_c1` | accept |  |
+| 7 | Candidate X where C0 was never accepted: reconciliation step 1 does not propagate the consume of PAIR_J, a pairing device not bound in X (X never C0) |  | not propagated |  |
+| 8 | … it propagates the revocation of DEV_A (X never C0) | `wire:flow.f09a_reconcile_revoke_dev_a` | accept |  |
+| 9 | … then step 2 registers C1 (X never C0) | `wire:flow.f09a_reconcile_register_c1` | accept |  |
 | 10 | Candidate X where C0 was registered first (before I revoked DEV_A) (X with C0) | `wire:flow.register_bridge_o_in_x` | accept |  |
-| 11 | Reconciliation step 1: the consume of PAIR_J (X with C0) | `wire:flow.f09b_revoke_pair_j` | accept |  |
-| 12 | … and the revocation of DEV_A, which suspends BRIDGE_O (X with C0) | `wire:flow.f09b_revoke_dev_a` | accept |  |
-| 13 | Step 2 re-certifies BRIDGE_O as C1: B takes C0 from the history as its result and uses C1 (X with C0) | `wire:flow.f09b_register_c1` | accept |  |
-| 14 | The root seals the DEK of X to BRIDGE_O; with the certificate and the DEK it is ready (X with C0) | `wire:flow.f09b_kp_owner_to_bridge_o` | accept |  |
+| 11 | Reconciliation step 1 does not propagate the consume of PAIR_J, a pairing device not bound in X (X with C0) |  | not propagated |  |
+| 12 | … it propagates the revocation of DEV_A, which suspends BRIDGE_O (X with C0) | `wire:flow.f09b_reconcile_revoke_dev_a` | accept |  |
+| 13 | Step 2 re-certifies BRIDGE_O as C1: B takes C0 from the history as its result and uses C1 (X with C0) | `wire:flow.f09b_reconcile_register_c1` | accept |  |
+| 14 | The root seals the DEK of X to BRIDGE_O; with the certificate and the DEK it is ready (X with C0) | `wire:flow.f09b_reconcile_kp_owner_to_bridge_o` | accept |  |
 | 15 | Candidate X where another issuer registered C* (scope [X, Y], another digest) (X with C*) | `wire:flow.f09_x_register_cstar` | accept |  |
 | 16 | B restarts: it resumes from its persisted candidates |  | candidates resumed |  |
 | 17 | A crashes after the bind-only DEVICE_GRANT was accepted, before its ACK was persisted |  | done | committed-own |

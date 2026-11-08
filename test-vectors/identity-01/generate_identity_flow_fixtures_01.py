@@ -137,6 +137,24 @@ def phase(kind: str, state_ref: str, **a) -> str:
     raise SystemExit(kind)
 
 
+def step1(i_ref: str, x_ref: str, x_name: str) -> dict:
+    """IDENTITY-PROFILE-01 §7.1 step 1: the pairs of I's revoked to propose on X (bound in X first), and those not relevant there."""
+    ips, xps = post(i_ref), post(x_ref)
+    bound, unbound, not_relevant = [], [], []
+    for key in sorted(ips['revoked']):
+        d = key.split('/', 1)[1]
+        if key in xps['revoked']:
+            continue
+        b = ips['devices'].get(d)
+        if d in xps['devices']:
+            bound.append(d)
+        elif b is None or b['kind'] == 0 or (b['kind'] == 1 and x_name in b['scope']):
+            unbound.append(d)
+        else:
+            not_relevant.append(d)
+    return {'propose': bound + unbound, 'not_relevant': not_relevant}
+
+
 # ---------------------------------------------------------------------------
 # Steps and fixtures.
 # ---------------------------------------------------------------------------
@@ -335,26 +353,61 @@ def build() -> None:
 
     # 5.
     i_state = post('wire:P4_register_dev_b_approved')
+    r05 = step1('wire:P4_register_dev_b_approved', 'wire:flow.self_register_dev_b_on_j2', 'X')
+    assert r05 == {'propose': [], 'not_relevant': ['PAIR_J']}, r05
     flow('F05_reconciliation', "Reconciliation of X against I's Control state: revocations first, then registrations, then keys; idempotent; two reconcilers race",
          ('IDENTITY-PROFILE-01 §7.1', 'Revocations first; registrations of personal devices active in I and not registered in X; keys by the ledger; a second run proposes nothing.'),
          [step("I's state at P4: DEV_A and DEV_B registered, (OWNER, PAIR_J) consumed", 'wire:P4_register_dev_b_approved', 'accept',
                revoked=i_state['revoked'], registered=sorted(d for d, f in i_state['devices'].items() if f['registered'])),
           step("X's state: DEV_B self-registered with [CERT_B, CERT_A], DEV_A bound only as an intermediate", 'wire:flow.self_register_dev_b_on_j2', 'accept',
                DEV_A=dev('wire:flow.self_register_dev_b_on_j2', 'DEV_A')),
-          step("Step 1: I's revocation of (OWNER, PAIR_J), reason 3 propagated as 0", 'wire:flow.reconcile_revoke_pairing_in_x', 'accept', exposing=False),
+          step("Step 1: no revoked pair of I is relevant in X: the consume of PAIR_J, a pairing device not bound in X, is not propagated (IDENTITY-PROFILE-01 §7.1 step 1)",
+               expect='nothing to propose', proposals=r05['propose'], not_propagated=r05['not_relevant']),
           step("Step 2: DEV_A, bound only as an intermediate in X, is registered with I's chain; DEV_B has the same leaf certificate ID and needs nothing",
-               'wire:flow.reconcile_register_dev_a', 'accept', DEV_A=dev('wire:flow.reconcile_register_dev_a', 'DEV_A'),
-               phase=phase('register', 'wire:flow.reconcile_register_dev_a', root='OWNER', device='DEV_A', certificate='CERT_A', chain=['CERT_A'], own=True)),
+               'wire:flow.reconcile_register_dev_a_in_x', 'accept', DEV_A=dev('wire:flow.reconcile_register_dev_a_in_x', 'DEV_A'),
+               phase=phase('register', 'wire:flow.reconcile_register_dev_a_in_x', root='OWNER', device='DEV_A', certificate='CERT_A', chain=['CERT_A'], own=True)),
           step('Step 3: the reconciler seals every epoch of X it holds to DEV_A and DEV_B unless its ledger records the package', expect='packages sent',
                in_ledger_before={'DEV_A': [], 'DEV_B': []}, ledger_after={'DEV_A': [0], 'DEV_B': [0]}),
           step('A second reconciler had proposed the same registration on the previous head: CONTROL_HEAD_MISMATCH; after synchronising its phase is',
-               phase_of=('register', 'wire:flow.reconcile_register_dev_a', {'root': 'OWNER', 'device': 'DEV_A', 'certificate': 'CERT_A', 'chain': ['CERT_A'], 'own': False}, 'complete')),
+               phase_of=('register', 'wire:flow.reconcile_register_dev_a_in_x', {'root': 'OWNER', 'device': 'DEV_A', 'certificate': 'CERT_A', 'chain': ['CERT_A'], 'own': False}, 'complete')),
           step('A second run of the reconciler', expect='nothing to propose', records=0, packages=0),
           step('The Identity Resource as its own target: steps 1 and 2 are vacuous, step 3 seals I\'s epochs to DEV_B', 'wire:flow.kp_dev_a_to_dev_b_in_i', 'accept'),
           step('A service device whose issuer I has revoked is never registered in X: the revocation reaches X first and X refuses the chain (shown at I9)',
                'wire:chain_through_revoked_issuer', 'AUTHORIZATION_FAILED', aside=True)],
-         {'X_devices': post('wire:flow.reconcile_register_dev_a')['devices'], 'idempotent': True},
+         {'X_devices': post('wire:flow.reconcile_register_dev_a_in_x')['devices'], 'idempotent': True},
          ['Registration and key delivery are reconciled independently; an equal leaf certificate ID says nothing about packages.'])
+    i65, x65, x64 = 'wire:flow.p65_revoke_dev_p_in_i', 'wire:I1_device_grant_dev_a', 'wire:device_revoke_tombstone_limit.64th'
+    r65, r64 = step1(i65, x65, 'X'), step1(i65, x64, 'X')
+    pairing_revoked = sorted(d for d in r65['not_relevant'] if dev(i65, d)['kind'] == 2)
+    assert r65['propose'] == r64['propose'] == ['DEV_P'] and pairing_revoked == r65['not_relevant'] and len(pairing_revoked) == 66, r65
+    unbound_x = lambda ref: sum(1 for k in post(ref)['revoked'] if k.split('/')[1] not in post(ref)['devices'])  # noqa: E731
+    flow('F05.sixty_five_sessions', '65 sessions closed in I, then a personal device revoked in I before its first registration in X: reconciliation propagates that revocation alone',
+         ('IDENTITY-PROFILE-01 §7.1 step 1; LFCP-WIRE-01 §17.5 rule 5', 'Only revocations relevant in X are propagated; a pairing device is never bound outside I, so its revocation takes none of the 64 unbound pairs of its root in X. A refused propagation is reported and retried; once the device is bound in X its revocation is never limited.'),
+         [step('65 pairing devices created and cancelled in I, then a 66th session opened by PAIR_M', 'wire:flow.p65_pairing_device', 'accept',
+               in_record_set='sixty_five_cancelled_sessions_in_i'),
+          step('Phase 1 of the 66th session, for DEV_P', 'wire:flow.p65_consume', 'accept'),
+          step('Phase 2: DEV_P registered in I', 'wire:flow.p65_register_dev_p', 'accept'),
+          step('DEV_P is lost and revoked in I before any reconciliation has registered it in X', 'wire:flow.p65_revoke_dev_p_in_i', 'accept',
+               revoked_pairing_devices_in_I=len(pairing_revoked)),
+          step("Reconciliation of X, step 1: the 66 revoked pairing devices of I are not relevant in X", expect='not propagated',
+               not_propagated=pairing_revoked, proposals=r65['propose']),
+          step("Step 1: the revocation of DEV_P is propagated, an unbound tombstone of OWNER", 'wire:flow.p65_x_revoke_dev_p', 'accept',
+               exposing=post('wire:flow.p65_x_revoke_dev_p')['exposing'], unbound_revoked_pairs_of_OWNER=unbound_x('wire:flow.p65_x_revoke_dev_p')),
+          step("DEV_P tries to register itself in X with its old chain [CERT_P, CERT_A]", 'wire:flow.p65_x_dev_p_self_register', 'AUTHORIZATION_FAILED'),
+          step('Had the pairing devices been propagated, the 65th unbound tombstone of OWNER would be refused (shown on 64 tombstones)',
+               'wire:device_revoke_tombstone_limit', 'AUTHORIZATION_FAILED', aside=True),
+          step('X already holds 64 unbound revoked pairs of OWNER: the propagation of DEV_P is refused', 'wire:flow.p65_x_limit_revoke_dev_p', 'AUTHORIZATION_FAILED',
+               branch='limit reached', proposals=r64['propose'], unbound_revoked_pairs_of_OWNER=unbound_x(x64), reported=True, pair_state='unpropagated'),
+          step('The reconciler registers neither DEV_P nor a device whose chain passes through it, and seals nothing to them', expect='DEV_P treated as revoked in X',
+               branch='limit reached'),
+          step('DEV_P registers itself in X with its old chain', 'wire:flow.p65_x_limit_dev_p_self_registers', 'accept', branch='limit reached',
+               DEV_P=dev('wire:flow.p65_x_limit_dev_p_self_registers', 'DEV_P')),
+          step('The next reconciliation of X proposes the revocation again, DEV_P now bound in X: never limited, exposing', 'wire:flow.p65_x_limit_revoke_bound_dev_p', 'accept',
+               branch='limit reached', proposals=step1(i65, 'wire:flow.p65_x_limit_dev_p_self_registers', 'X')['propose'],
+               exposing=post('wire:flow.p65_x_limit_revoke_bound_dev_p')['exposing'], rotation='the rotation policy of §8.4 closes the epoch')],
+         {'X_tombstones_from_pairing': 0, 'DEV_P_registered_in_X': False},
+         ['The pairing sessions of I cost nothing in X; the revocation of a personal device that X never registered is recorded there and refuses its old chain.',
+          'At the limit a refused revocation is reported and retried; the device that registers itself meanwhile is revoked by the next reconciliation (an exposing revocation).'])
 
     # 6.
     flow('F06_concurrent_revokes', 'OWNER and DEV_A revoke DEV_B on one head with different reasons: one record; the other phase is complete',
@@ -434,6 +487,8 @@ def build() -> None:
     d0 = post('wire:P3s_consume_for_bridge_o')['revoked']['OWNER/PAIR_J']['approval']['hex']
     assert d0 == digest('CERT_SO')
     proven = lambda ref: d0 in [digest(c) for c in leaves_registered_for('BRIDGE_O', ref)]  # noqa: E731
+    r09 = {br: step1('wire:flow.f09_recertify_c1_in_i', ref, 'X') for br, ref in (('a', 'wire:I1_device_grant_dev_a'), ('b', 'wire:flow.register_bridge_o_in_x'))}
+    assert r09['a'] == r09['b'] == {'propose': ['DEV_A'], 'not_relevant': ['PAIR_J']}, r09
     flow('F09_pairing_service', 'Pairing the service device BRIDGE_O: approved with C0 = CERT_SO (digest d), bound in I, C0\'s issuer revoked, re-certified as C1 = CERT_SO_R; the candidates',
          ('IDENTITY-PROFILE-01 §5.3 steps 6 and 8, §6', 'Only a certificate whose digest equals the approval proves the result; a candidate whose chain never carried that leaf is unproven; a timeout is never a decision.'),
          [step('Phase 1 with digest(CERT_SO)', 'wire:P3s_consume_for_bridge_o', 'accept', approval=d0),
@@ -442,18 +497,20 @@ def build() -> None:
           step('Every candidate is offline: B shows', expect='approved, waiting for registration'),
           step("C0's issuer DEV_A is revoked in I", 'wire:flow.f09_revoke_issuer_in_i', 'accept'),
           step('The root re-certifies BRIDGE_O as C1 (same kind, mask and scope)', 'wire:flow.f09_recertify_c1_in_i', 'accept'),
-          step('Candidate X where C0 was never accepted: reconciliation step 1 propagates the consume of PAIR_J', 'wire:flow.f09a_revoke_pair_j', 'accept', branch='X never C0'),
-          step('… and the revocation of DEV_A', 'wire:flow.f09a_revoke_dev_a', 'accept', branch='X never C0'),
-          step('… then step 2 registers C1', 'wire:flow.f09a_register_c1', 'accept', branch='X never C0',
-               leaves=leaves_registered_for('BRIDGE_O', 'wire:flow.f09a_register_c1'), proven=proven('wire:flow.f09a_register_c1'), status='approval not provable here'),
+          step('Candidate X where C0 was never accepted: reconciliation step 1 does not propagate the consume of PAIR_J, a pairing device not bound in X',
+               expect='not propagated', branch='X never C0', not_propagated=r09['a']['not_relevant']),
+          step('… it propagates the revocation of DEV_A', 'wire:flow.f09a_reconcile_revoke_dev_a', 'accept', branch='X never C0', proposals=r09['a']['propose']),
+          step('… then step 2 registers C1', 'wire:flow.f09a_reconcile_register_c1', 'accept', branch='X never C0',
+               leaves=leaves_registered_for('BRIDGE_O', 'wire:flow.f09a_reconcile_register_c1'), proven=proven('wire:flow.f09a_reconcile_register_c1'), status='approval not provable here'),
           step('Candidate X where C0 was registered first (before I revoked DEV_A)', 'wire:flow.register_bridge_o_in_x', 'accept', branch='X with C0'),
-          step('Reconciliation step 1: the consume of PAIR_J', 'wire:flow.f09b_revoke_pair_j', 'accept', branch='X with C0'),
-          step('… and the revocation of DEV_A, which suspends BRIDGE_O', 'wire:flow.f09b_revoke_dev_a', 'accept', branch='X with C0',
-               BRIDGE_O=dev('wire:flow.f09b_revoke_dev_a', 'BRIDGE_O')),
-          step('Step 2 re-certifies BRIDGE_O as C1: B takes C0 from the history as its result and uses C1', 'wire:flow.f09b_register_c1', 'accept', branch='X with C0',
-               leaves=leaves_registered_for('BRIDGE_O', 'wire:flow.f09b_register_c1'), proven=proven('wire:flow.f09b_register_c1'), uses='CERT_SO_R',
-               BRIDGE_O=dev('wire:flow.f09b_register_c1', 'BRIDGE_O')),
-          step('The root seals the DEK of X to BRIDGE_O; with the certificate and the DEK it is ready', 'wire:flow.f09b_kp_owner_to_bridge_o', 'accept', branch='X with C0', status='ready'),
+          step('Reconciliation step 1 does not propagate the consume of PAIR_J, a pairing device not bound in X', expect='not propagated', branch='X with C0',
+               not_propagated=r09['b']['not_relevant']),
+          step('… it propagates the revocation of DEV_A, which suspends BRIDGE_O', 'wire:flow.f09b_reconcile_revoke_dev_a', 'accept', branch='X with C0',
+               BRIDGE_O=dev('wire:flow.f09b_reconcile_revoke_dev_a', 'BRIDGE_O'), proposals=r09['b']['propose']),
+          step('Step 2 re-certifies BRIDGE_O as C1: B takes C0 from the history as its result and uses C1', 'wire:flow.f09b_reconcile_register_c1', 'accept', branch='X with C0',
+               leaves=leaves_registered_for('BRIDGE_O', 'wire:flow.f09b_reconcile_register_c1'), proven=proven('wire:flow.f09b_reconcile_register_c1'), uses='CERT_SO_R',
+               BRIDGE_O=dev('wire:flow.f09b_reconcile_register_c1', 'BRIDGE_O')),
+          step('The root seals the DEK of X to BRIDGE_O; with the certificate and the DEK it is ready', 'wire:flow.f09b_reconcile_kp_owner_to_bridge_o', 'accept', branch='X with C0', status='ready'),
           step('Candidate X where another issuer registered C* (scope [X, Y], another digest)', 'wire:flow.f09_x_register_cstar', 'accept', branch='X with C*',
                leaves=leaves_registered_for('BRIDGE_O', 'wire:flow.f09_x_register_cstar'), proven=proven('wire:flow.f09_x_register_cstar'), used=False, Y='never shown as granted'),
           step('B restarts: it resumes from its persisted candidates', expect='candidates resumed'),
