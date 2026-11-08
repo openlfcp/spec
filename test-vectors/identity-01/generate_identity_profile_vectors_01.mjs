@@ -635,6 +635,7 @@ const RULES = {
   AI5: ["IDENTITY-PROFILE-01 §2.1, §3 AI5", "devices[k].missing_keys, and anything inside it, is created, written or deleted only by the Principal whose PrincipalRef is k (the root for its own entry); deleting the entry devices[k], or replacing it with a map without missing_keys, is not a write of missing_keys."],
   AI2_HISTORY: ["IDENTITY-PROFILE-01 §3 AI2", "A change does not write a scalar over an entry map, or over a list or map field of one, whether or not the engine selects that value; the replaced objects are the operation's predecessors (SOP §11.4 R6)."],
   AI2_DEPTH: ["IDENTITY-PROFILE-01 §3 AI2", "AI2 protects an entry map of roster, devices or requests and a list or map held in a field of one, and nothing deeper: a scalar over a deeper list or map, or over a list held directly at an entry key, is admitted by AI2 and judged by §4."],
+  AI2_EXT: ["IDENTITY-PROFILE-01 §3 AI2, §2.1; SHARED-OBJECTS-PROFILE-01 §18", "AI2 protects the extensions container, not a namespace value under it: a namespace value is not an entry map, and replacing it, a map by a scalar included, is admitted."],
   RESERVED: ["IDENTITY-PROFILE-01 §2.4", "Admission has no rule for the reserved root keys: a later change that writes them is admitted when §3 otherwise admits it; the value is preserved uninterpreted."],
   OK: ["IDENTITY-PROFILE-01 §3", "The change passes the checks of its bytes, the sequence checks and AI0 to AI4."],
 };
@@ -687,6 +688,22 @@ const filled = change("C0f_initial_filled_roster", A.init({ actor: actorOf("OWNE
 changeCase("identity_doc_initial_filled_roster", filled.r, "INVALID_ROOT", "An initial change whose roster is not empty");
 const badRoot = change("C0b_initial_bad_root", A.init({ actor: actorOf("OWNER") }), "OWNER", 1, "P0_genesis_i", initialFn(pref("BOB")));
 changeCase("identity_doc_bad_root", badRoot.r, "INVALID_ROOT", "An initial change with identity.root = p:<BOB>, not the Genesis owner");
+// AI0 and §4: each of the four containers is an empty map, never an empty list (an Automerge list is a JS object too).
+for (const k of CONTAINERS) {
+  const lst = change(`C0l_initial_${k}_list`, A.init({ actor: actorOf("OWNER") }), "OWNER", 1, "P0_genesis_i", (d) => {
+    d.profile = S(PROFILE);
+    d.identity = { root: S(pref("OWNER")) };
+    for (const c of CONTAINERS) d[c] = c === k ? [] : {};
+  });
+  changeCase(`identity_doc_initial_${k}_list`, lst.r, "INVALID_ROOT", `An initial change that creates ${k} as an empty list instead of an empty map`);
+  const loaded = A.load(A.save(lst.doc));
+  check(`identity_doc_initial_${k}_list.snapshot`, [rootDiagnostic(lst.doc), rootDiagnostic(loaded)], ["INVALID_ROOT", "INVALID_ROOT"]);
+  scenario(`identity_doc_initial_${k}_list.snapshot`, `The state of identity_doc_initial_${k}_list loaded from a Snapshot: ${k} is a list`,
+    ["IDENTITY-PROFILE-01 §4", "INVALID_ROOT: a root container is missing or not a map; the document is unusable."],
+    { change: { case: `change.C0l_initial_${k}_list` }, snapshot: { b64url: b64u(A.save(lst.doc)) } },
+    { root_diagnostic: "INVALID_ROOT", document_usable: false },
+    [`The Snapshot's ${k} is an Automerge list: the root is INVALID_ROOT whether the state comes from the change or from the Snapshot.`]);
+}
 
 // A second root change without dependencies, carried by the root's unit 2.
 const second = change("C0s_second_initial", A.init({ actor: actorOf("OWNER") }), "OWNER", 2, "P0_genesis_i", initialFn(pref("OWNER"), {}));
@@ -789,6 +806,14 @@ function scenario(id, description, rule, inputs, expected, assertions) {
     { rule: "RESERVED" });
   const replaced = change("C2_container_replaced", BASE, "OWNER", 3, "P0_genesis_i", (d) => { d.roster = {}; });
   changeCase("identity_doc_container_replaced", replaced.r, "CONTAINER_REPLACED", "A change by the root replacing roster with a new map");
+  const extReplaced = change("C2_extensions_replaced", BASE, "OWNER", 3, "P0_genesis_i", (d) => { d.extensions = {}; });
+  changeCase("identity_doc_extensions_container_replaced", extReplaced.r, "CONTAINER_REPLACED", "A change by the root replacing the extensions container with a new map");
+  const extMap = change("C2_extension_namespace_map", BASE, "OWNER", 3, "P0_genesis_i", (d) => { d.extensions["org.example.review"] = { a: S("a") }; });
+  changeCase("identity_doc_extension_namespace_written", extMap.r, null, "The root writes extensions[\"org.example.review\"] = {a: \"a\"}", { rule: "AI2_EXT" });
+  const extScalar = change("C3_extension_namespace_map_to_scalar", extMap.doc, "OWNER", 4, "P0_genesis_i", (d) => { d.extensions["org.example.review"] = S("done"); });
+  if (!extScalar.r.decoded.ops.some((op) => op.action === "set" && (op.pred ?? []).length === 1)) throw new Error("the scalar does not name the map as its predecessor");
+  changeCase("identity_doc_extension_namespace_map_to_scalar", extScalar.r, null,
+    "Then the root replaces the value of extensions[\"org.example.review\"], a map, with the scalar \"done\": admitted (a namespace value is not an entry map)", { rule: "AI2_EXT" });
   const text = change("C2_text_label", BASE, "OWNER", 3, "P0_genesis_i", (d) => { d.devices[pref("OWNER")].label = "Desktop (text)"; });
   changeCase("identity_doc_text_field", text.r, "INVALID_FIELD_TYPE", "A change by the root writing devices[p:OWNER].label as collaborative Text");
   const intKind = change("C2_int_kind", BASE, "OWNER", 3, "P0_genesis_i", (d) => { d.devices[pref("OWNER")].kind = 1; });
@@ -916,6 +941,67 @@ stateCase("request_key_descriptor_mismatch", docWith("S_key_mismatch", (d) => { 
   "requests", pref("DEV_B"), "INVALID_DESCRIPTOR", "Key p:<DEV_B>, descriptor of DEV_X");
 stateCase("request_bad_descriptor", docWith("S_bad_descriptor", (d) => { put(d.requests, pref("DEV_B"), reqEntry("DEV_B", "PAIR_J", { descriptor: S(b64u(Buffer.from([0xa2, 0x00, 0x01, 0x01, 0x02]))) })); }),
   "requests", pref("DEV_B"), "INVALID_DESCRIPTOR", "A descriptor that is not the CBOR of a principal-descriptor");
+{
+  // W §7: the descriptor's Ed25519 key is a canonical encoding of a point not of small order. Each crafted descriptor
+  // has a correct ID for its keys and is stored under that ID, so only the key check can refuse it.
+  const xOf = (label) => principal(label).descriptor.subarray(74, 106);
+  const edOf = (label) => principal(label).descriptor.subarray(39, 71);
+  const craft = (ed, x) => {
+    const id = sha(Buffer.from("LFCP-PRINCIPAL-v1"), ed, x);
+    return { id, cbor: Buffer.concat([Buffer.from([0xa3, 0x00, 0x58, 0x20]), id, Buffer.from([0x01, 0x58, 0x20]), ed, Buffer.from([0x02, 0x58, 0x20]), x]) };
+  };
+  const control = craft(edOf("DEV_B"), xOf("DEV_B"));
+  check("request_descriptor_crafted.control", hex(control.cbor), hex(principal("DEV_B").descriptor));
+  const keys = {
+    small_order_identity: ["0100000000000000000000000000000000000000000000000000000000000000", "the identity point (order 1)"],
+    small_order_8: ["c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a", "a point of order 8"],
+    noncanonical_y: ["eeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f", "y = p + 1, a non-canonical encoding of y = 1"],
+    noncanonical_sign: ["0100000000000000000000000000000000000000000000000000000000000080", "y = 1 with the sign bit set (x = 0)"],
+    not_on_curve: ["0200000000000000000000000000000000000000000000000000000000000000", "y = 2, which is not the y of a curve point"],
+  };
+  const decoded = Object.fromEntries(Object.entries(keys).map(([k, [h]]) => {
+    const pt = edDecode(Buffer.from(h, "hex"));
+    return [k, pt === null ? "undecodable" : edSmallOrder(pt) ? "small order" : "valid"];
+  }));
+  check("request_descriptor_keys", decoded, { small_order_identity: "small order", small_order_8: "small order", noncanonical_y: "undecodable", noncanonical_sign: "undecodable", not_on_curve: "undecodable" });
+  check("request_descriptor_keys.control", validEd25519Key(edOf("DEV_B")), true);
+  for (const [k, [h, what]] of Object.entries(keys)) {
+    const c = craft(Buffer.from(h, "hex"), xOf("DEV_B"));
+    const key = "p:" + b64u(c.id);
+    stateCase(`request_descriptor_${k}`, docWith(`S_descriptor_${k}`, (d) => { put(d.requests, key, reqEntry("DEV_B", "PAIR_J", { descriptor: S(b64u(c.cbor)) })); }),
+      "requests", key, "INVALID_DESCRIPTOR", `A descriptor whose Ed25519 key is ${what}; its ID is recomputed from its keys and is the entry's key`,
+      { ed25519_key: { hex: h }, descriptor_id: { hex: hex(c.id) } });
+  }
+  stateCase("request_descriptor_crafted.control", docWith("S_descriptor_control", (d) => { put(d.requests, "p:" + b64u(control.id), reqEntry("DEV_B", "PAIR_J", { descriptor: S(b64u(control.cbor)) })); }),
+    "requests", "p:" + b64u(control.id), null, "Control: the same construction with DEV_B's own keys gives DEV_B's descriptor and key; valid");
+}
+// §2.1, §4: platform is a scalar string in a device entry and in a request, revoked a scalar bool in a device entry.
+stateCase("device_platform_and_revoked_valid", docWith("S_device_platform_revoked_ok", (d) => { put(d.devices, pref("DEV_B"), { label: S("Phone"), kind: 0, platform: S("mobile"), revoked: true }); }),
+  "devices", pref("DEV_B"), null, "devices[p:<DEV_B>] with platform \"mobile\" and revoked = true");
+stateCase("device_platform_wrong_type", docWith("S_device_platform_uint", (d) => { put(d.devices, pref("DEV_B"), { label: S("Phone"), kind: 0, platform: 7 }); }),
+  "devices", pref("DEV_B"), "INVALID_FIELD_TYPE", "devices[p:<DEV_B>] with platform the uint 7");
+stateCase("device_revoked_wrong_type", docWith("S_device_revoked_uint", (d) => { put(d.devices, pref("DEV_B"), { label: S("Phone"), kind: 0, revoked: 7 }); }),
+  "devices", pref("DEV_B"), "INVALID_FIELD_TYPE", "devices[p:<DEV_B>] with revoked the uint 7");
+stateCase("request_platform_wrong_type", docWith("S_request_platform_uint", (d) => { put(d.requests, pref("DEV_B"), reqEntry("DEV_B", "PAIR_J", { platform: 7 })); }),
+  "requests", pref("DEV_B"), "INVALID_FIELD_TYPE", "requests[p:<DEV_B>] with platform the uint 7");
+{
+  // Concurrent platform values of a device entry: OWNER and DEV_A, each from the entry devices[p:<DEV_A>] the root wrote.
+  const base = change("S_device_entry_dev_a", BASE, "OWNER", 3, "P1_device_grant_dev_a_i", (d) => { put(d.devices, pref("DEV_A"), { label: S("Laptop"), kind: 0 }); });
+  const okRoot = change("S_device_platform_root", base.doc, "OWNER", 4, "P1_device_grant_dev_a_i", (d) => { d.devices[pref("DEV_A")].platform = S("desktop"); });
+  const okDev = change("S_device_platform_dev_a", base.doc, "DEV_A", 1, "P1_device_grant_dev_a_i", (d) => { d.devices[pref("DEV_A")].platform = S("laptop"); });
+  const badDev = change("S_device_platform_dev_a_uint", base.doc, "DEV_A", 1, "P1_device_grant_dev_a_i", (d) => { d.devices[pref("DEV_A")].platform = new A.Uint(7); });
+  for (const r of [okRoot.r, okDev.r, badDev.r]) check(`device_conflicted_platform.${r.name}`, admit(r), null);
+  {
+    const [m] = A.applyChanges(A.clone(base.doc), [okRoot.r.bytes, okDev.r.bytes]);
+    stateCase("device_conflicted_platform", m, "devices", pref("DEV_A"), null,
+      "Concurrent platform values \"desktop\" (OWNER) and \"laptop\" (DEV_A) of devices[p:<DEV_A>]: valid, a reader may show either", { changes: "S_device_platform_root,S_device_platform_dev_a" });
+  }
+  for (const [suffix, order] of [["", [okRoot, badDev]], [".reverse", [badDev, okRoot]]]) {
+    const [m] = A.applyChanges(A.clone(base.doc), order.map((o) => o.r.bytes));
+    stateCase(`device_conflicted_platform_valid_invalid${suffix}`, m, "devices", pref("DEV_A"), "INVALID_FIELD_TYPE",
+      `Concurrent platform values \"desktop\" and the uint 7 of devices[p:<DEV_A>], delivered ${order.map((o) => o.r.name).join(" then ")}`, { changes: order.map((o) => o.r.name).join(",") });
+  }
+}
 stateCase("request_missing_label", docWith("S_missing_label", (d) => { const e = reqEntry("DEV_B", "PAIR_J"); delete e.label; put(d.requests, pref("DEV_B"), e); }),
   "requests", pref("DEV_B"), "MISSING_REQUIRED_FIELD", "A request without label");
 stateCase("request_kind_2", docWith("S_kind_2", (d) => { put(d.requests, pref("DEV_B"), reqEntry("DEV_B", "PAIR_J", { kind: 2 })); }),
@@ -946,6 +1032,12 @@ stateCase("request_bad_timestamp", docWith("S_bad_timestamp", (d) => { put(d.req
     const [m] = A.applyChanges(A.clone(own.doc), order.map((o) => o.r.bytes));
     stateCase(`request_conflicted_valid_invalid${suffix}`, m, "requests", pref("DEV_B"), "INVALID_FIELD_TYPE",
       `Concurrent label values 'Laptop' and the uint 7, delivered ${order.map((o) => o.r.name).join(" then ")}`, { changes: order.map((o) => o.r.name).join(",") });
+  }
+  const platformBad = change("S_platform_uint", own.doc, "OWNER", 3, "P2_pairing_device", (d) => { d.requests[pref("DEV_B")].platform = new A.Uint(7); });
+  for (const [suffix, order] of [["", [cont, platformBad]], [".reverse", [platformBad, cont]]]) {
+    const [m] = A.applyChanges(A.clone(own.doc), order.map((o) => o.r.bytes));
+    stateCase(`request_conflicted_platform_valid_invalid${suffix}`, m, "requests", pref("DEV_B"), "INVALID_FIELD_TYPE",
+      `Concurrent platform values 'laptop' and the uint 7, delivered ${order.map((o) => o.r.name).join(" then ")}`, { changes: order.map((o) => o.r.name).join(",") });
   }
   const merged = replay(["C0_initial", "C1_fill", "J1_own_request", "K1_same_key"]).doc;
   stateCase("request_conflicted_maps", merged, "requests", pref("DEV_B"), "INVALID_FIELD_TYPE", "Two concurrent maps under requests[p:<DEV_B>] (pairing_concurrent_same_key)");

@@ -268,6 +268,254 @@
       }
     },
     {
+      "id": "identity_doc_initial_roster_list",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "An initial change that creates roster as an empty list instead of an empty map",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §2.2, §3 AI0",
+        "text": "The initial change has no dependencies, is the root actor's Automerge sequence 1, is carried by the root's Data Unit with actor sequence 1, and creates exactly the six root keys with the four containers empty."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "6b21e28a9c3541ad7b8202bb9652edb1a681d67d5626111bcabb8beea819fcef",
+        "deps": [],
+        "automerge_change": {
+          "hex": "856f4a836b21e28a01d501002030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a01010000000801060206153a3401420756085745700200027f00000400027f020004790770726f66696c65086964656e7469747904726f6f7406726f7374657207646576696365730872657175657374730a657874656e73696f6e73077c0100010203007d860300d60504006f72672e6f70656e6c6663702e6964656e746974792e7631703a46793076776b30686b75315841796561536458626e335f6f6b3173424a516b3564766270427332414568300700"
+        },
+        "framed_plaintext": {
+          "hex": "820158e0856f4a836b21e28a01d501002030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a01010000000801060206153a3401420756085745700200027f00000400027f020004790770726f66696c65086964656e7469747904726f6f7406726f7374657207646576696365730872657175657374730a657874656e73696f6e73077c0100010203007d860300d60504006f72672e6f70656e6c6663702e6964656e746974792e7631703a46793076776b30686b75315841796561536458626e335f6f6b3173424a516b3564766270427332414568300700"
+        }
+      },
+      "context": {
+        "history": []
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_ROOT"
+        }
+      }
+    },
+    {
+      "id": "identity_doc_initial_roster_list.snapshot",
+      "type": "behavioral",
+      "kind": "identity_document",
+      "description": "The state of identity_doc_initial_roster_list loaded from a Snapshot: roster is a list",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §4",
+        "text": "INVALID_ROOT: a root container is missing or not a map; the document is unusable."
+      },
+      "inputs": {
+        "change": {
+          "case": "change.C0l_initial_roster_list"
+        },
+        "snapshot": {
+          "b64url": "hW9KgzQBmvMAmAIBIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKAWsh4oqcNUGte4ICu5ZS7bGmgdZ9ViYRG8q7i-6oGfzvBgECAwITAiMCQAJWAgoBBAIEFTohAiMINAFCB1YKV0WAAQJ_AH8Bfwd_AH8AfwcABn8AAAZ_AnkHZGV2aWNlcwpleHRlbnNpb25zCGlkZW50aXR5B3Byb2ZpbGUIcmVxdWVzdHMGcm9zdGVyBHJvb3QHAHkFAnt_BX5_BwMAfAEAAgEDAH-GAwIAf9YFb3JnLm9wZW5sZmNwLmlkZW50aXR5LnYxcDpGeTB2d2swaGt1MVhBeWVhU2RYYm4zX29rMXNCSlFrNWR2YnBCczJBRWgwBwAA"
+        }
+      },
+      "expected": {
+        "root_diagnostic": "INVALID_ROOT",
+        "document_usable": false
+      },
+      "assertions": [
+        "The Snapshot's roster is an Automerge list: the root is INVALID_ROOT whether the state comes from the change or from the Snapshot."
+      ]
+    },
+    {
+      "id": "identity_doc_initial_devices_list",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "An initial change that creates devices as an empty list instead of an empty map",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §2.2, §3 AI0",
+        "text": "The initial change has no dependencies, is the root actor's Automerge sequence 1, is carried by the root's Data Unit with actor sequence 1, and creates exactly the six root keys with the four containers empty."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "bdcdd5982e423b213396f148ab372d0e172a7961cfc8c7380975a87330c0e4eb",
+        "deps": [],
+        "automerge_change": {
+          "hex": "856f4a83bdcdd59801d601002030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a01010000000801060206153a3401420856085745700200027f00000400027f020004790770726f66696c65086964656e7469747904726f6f7406726f7374657207646576696365730872657175657374730a657874656e73696f6e73077b010001000202007d860300d60504006f72672e6f70656e6c6663702e6964656e746974792e7631703a46793076776b30686b75315841796561536458626e335f6f6b3173424a516b3564766270427332414568300700"
+        },
+        "framed_plaintext": {
+          "hex": "820158e1856f4a83bdcdd59801d601002030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a01010000000801060206153a3401420856085745700200027f00000400027f020004790770726f66696c65086964656e7469747904726f6f7406726f7374657207646576696365730872657175657374730a657874656e73696f6e73077b010001000202007d860300d60504006f72672e6f70656e6c6663702e6964656e746974792e7631703a46793076776b30686b75315841796561536458626e335f6f6b3173424a516b3564766270427332414568300700"
+        }
+      },
+      "context": {
+        "history": []
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_ROOT"
+        }
+      }
+    },
+    {
+      "id": "identity_doc_initial_devices_list.snapshot",
+      "type": "behavioral",
+      "kind": "identity_document",
+      "description": "The state of identity_doc_initial_devices_list loaded from a Snapshot: devices is a list",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §4",
+        "text": "INVALID_ROOT: a root container is missing or not a map; the document is unusable."
+      },
+      "inputs": {
+        "change": {
+          "case": "change.C0l_initial_devices_list"
+        },
+        "snapshot": {
+          "b64url": "hW9Kg6otHwoAmwIBIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKAb3N1ZguQjshM5bxSKs3LQ4XKnlhz8jHOAl1qHMwwOTrBgECAwITAiMCQAJWAgoBBAIEFTohAiMINAFCClYKV0WAAQJ_AH8Bfwd_AH8AfwcABn8AAAZ_AnkHZGV2aWNlcwpleHRlbnNpb25zCGlkZW50aXR5B3Byb2ZpbGUIcmVxdWVzdHMGcm9zdGVyBHJvb3QHAHkFAnt_BX5_B38CAgB_AQIAfwEDAH-GAwIAf9YFb3JnLm9wZW5sZmNwLmlkZW50aXR5LnYxcDpGeTB2d2swaGt1MVhBeWVhU2RYYm4zX29rMXNCSlFrNWR2YnBCczJBRWgwBwAA"
+        }
+      },
+      "expected": {
+        "root_diagnostic": "INVALID_ROOT",
+        "document_usable": false
+      },
+      "assertions": [
+        "The Snapshot's devices is an Automerge list: the root is INVALID_ROOT whether the state comes from the change or from the Snapshot."
+      ]
+    },
+    {
+      "id": "identity_doc_initial_requests_list",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "An initial change that creates requests as an empty list instead of an empty map",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §2.2, §3 AI0",
+        "text": "The initial change has no dependencies, is the root actor's Automerge sequence 1, is carried by the root's Data Unit with actor sequence 1, and creates exactly the six root keys with the four containers empty."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "d79af470eabe062bb3d0a9148d58383a2061f457841859d5e9169a0b0b51278d",
+        "deps": [],
+        "automerge_change": {
+          "hex": "856f4a83d79af47001d701002030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a01010000000801060206153a3401420956085745700200027f00000400027f020004790770726f66696c65086964656e7469747904726f6f7406726f7374657207646576696365730872657175657374730a657874656e73696f6e73077d01000102007e02007d860300d60504006f72672e6f70656e6c6663702e6964656e746974792e7631703a46793076776b30686b75315841796561536458626e335f6f6b3173424a516b3564766270427332414568300700"
+        },
+        "framed_plaintext": {
+          "hex": "820158e2856f4a83d79af47001d701002030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a01010000000801060206153a3401420956085745700200027f00000400027f020004790770726f66696c65086964656e7469747904726f6f7406726f7374657207646576696365730872657175657374730a657874656e73696f6e73077d01000102007e02007d860300d60504006f72672e6f70656e6c6663702e6964656e746974792e7631703a46793076776b30686b75315841796561536458626e335f6f6b3173424a516b3564766270427332414568300700"
+        }
+      },
+      "context": {
+        "history": []
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_ROOT"
+        }
+      }
+    },
+    {
+      "id": "identity_doc_initial_requests_list.snapshot",
+      "type": "behavioral",
+      "kind": "identity_document",
+      "description": "The state of identity_doc_initial_requests_list loaded from a Snapshot: requests is a list",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §4",
+        "text": "INVALID_ROOT: a root container is missing or not a map; the document is unusable."
+      },
+      "inputs": {
+        "change": {
+          "case": "change.C0l_initial_requests_list"
+        },
+        "snapshot": {
+          "b64url": "hW9Kg0DfrnYAmAIBIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKAdea9HDqvgYrs9CpFI1YODogYfRXhBhZ1ekWmgsLUSeNBgECAwITAiMCQAJWAgoBBAIEFTohAiMINAFCB1YKV0WAAQJ_AH8Bfwd_AH8AfwcABn8AAAZ_AnkHZGV2aWNlcwpleHRlbnNpb25zCGlkZW50aXR5B3Byb2ZpbGUIcmVxdWVzdHMGcm9zdGVyBHJvb3QHAHkFAnt_BX5_BwMAfAECAAEDAH-GAwIAf9YFb3JnLm9wZW5sZmNwLmlkZW50aXR5LnYxcDpGeTB2d2swaGt1MVhBeWVhU2RYYm4zX29rMXNCSlFrNWR2YnBCczJBRWgwBwAA"
+        }
+      },
+      "expected": {
+        "root_diagnostic": "INVALID_ROOT",
+        "document_usable": false
+      },
+      "assertions": [
+        "The Snapshot's requests is an Automerge list: the root is INVALID_ROOT whether the state comes from the change or from the Snapshot."
+      ]
+    },
+    {
+      "id": "identity_doc_initial_extensions_list",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "An initial change that creates extensions as an empty list instead of an empty map",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §2.2, §3 AI0",
+        "text": "The initial change has no dependencies, is the root actor's Automerge sequence 1, is carried by the root's Data Unit with actor sequence 1, and creates exactly the six root keys with the four containers empty."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "744d595087bd7d12a8ef2d3b5ab60f7bd28ec936178ba6bb34e580da8e71101c",
+        "deps": [],
+        "automerge_change": {
+          "hex": "856f4a83744d595001d601002030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a01010000000801060206153a3401420856085745700200027f00000400027f020004790770726f66696c65086964656e7469747904726f6f7406726f7374657207646576696365730872657175657374730a657874656e73696f6e73077d01000103007f027d860300d60504006f72672e6f70656e6c6663702e6964656e746974792e7631703a46793076776b30686b75315841796561536458626e335f6f6b3173424a516b3564766270427332414568300700"
+        },
+        "framed_plaintext": {
+          "hex": "820158e1856f4a83744d595001d601002030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a01010000000801060206153a3401420856085745700200027f00000400027f020004790770726f66696c65086964656e7469747904726f6f7406726f7374657207646576696365730872657175657374730a657874656e73696f6e73077d01000103007f027d860300d60504006f72672e6f70656e6c6663702e6964656e746974792e7631703a46793076776b30686b75315841796561536458626e335f6f6b3173424a516b3564766270427332414568300700"
+        }
+      },
+      "context": {
+        "history": []
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_ROOT"
+        }
+      }
+    },
+    {
+      "id": "identity_doc_initial_extensions_list.snapshot",
+      "type": "behavioral",
+      "kind": "identity_document",
+      "description": "The state of identity_doc_initial_extensions_list loaded from a Snapshot: extensions is a list",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §4",
+        "text": "INVALID_ROOT: a root container is missing or not a map; the document is unusable."
+      },
+      "inputs": {
+        "change": {
+          "case": "change.C0l_initial_extensions_list"
+        },
+        "snapshot": {
+          "b64url": "hW9KgyqybBEAmgIBIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKAXRNWVCHvX0SqO8tO1q2D3vSjsk2F4umuzTlgNqOcRAcBgECAwITAiMCQAJWAgoBBAIEFTohAiMINAFCCVYKV0WAAQJ_AH8Bfwd_AH8AfwcABn8AAAZ_AnkHZGV2aWNlcwpleHRlbnNpb25zCGlkZW50aXR5B3Byb2ZpbGUIcmVxdWVzdHMGcm9zdGVyBHJvb3QHAHkFAnt_BX5_B3wAAgABAgB_AQMAf4YDAgB_1gVvcmcub3BlbmxmY3AuaWRlbnRpdHkudjFwOkZ5MHZ3azBoa3UxWEF5ZWFTZFhibjNfb2sxc0JKUWs1ZHZicEJzMkFFaDAHAAA"
+        }
+      },
+      "expected": {
+        "root_diagnostic": "INVALID_ROOT",
+        "document_usable": false
+      },
+      "assertions": [
+        "The Snapshot's extensions is an Automerge list: the root is INVALID_ROOT whether the state comes from the change or from the Snapshot."
+      ]
+    },
+    {
       "id": "identity_doc_second_initial_other_unit",
       "type": "behavioral",
       "kind": "identity_document",
@@ -738,6 +986,153 @@
           "code": "PROFILE_INVALID",
           "diagnostic": "CONTAINER_REPLACED"
         }
+      }
+    },
+    {
+      "id": "identity_doc_extensions_container_replaced",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "A change by the root replacing the extensions container with a new map",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §3 AI2",
+        "text": "A change does not replace or delete roster, devices, requests or extensions."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "4947e76e05c7e0401e1fc69a4ec10fe3710a577de418f11ff9825feed05500b1",
+        "deps": [
+          "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+        ],
+        "automerge_change": {
+          "hex": "856f4a834947e76e016d019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a031700000007150c3401420256027002710273027f0a657874656e73696f6e73017f007f007f017f007f07"
+        },
+        "framed_plaintext": {
+          "hex": "82015877856f4a834947e76e016d019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a031700000007150c3401420256027002710273027f0a657874656e73696f6e73017f007f007f017f007f07"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "CONTAINER_REPLACED"
+        }
+      }
+    },
+    {
+      "id": "identity_doc_extension_namespace_written",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "The root writes extensions[\"org.example.review\"] = {a: \"a\"}",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §3 AI2, §2.1; SHARED-OBJECTS-PROFILE-01 §18",
+        "text": "AI2 protects the extensions container, not a namespace value under it: a namespace value is not an entry map, and replacing it, a map by a scalar included, is admitted."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "c3b52711f8d30fb6534310e84c0809f02222bbd05c081ed15786a8b984e5dec3",
+        "deps": [
+          "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+        ],
+        "automerge_change": {
+          "hex": "856f4a83c3b52711017d019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0317000000080102020315163401420356035701700202007e07177e126f72672e6578616d706c652e7265766965770161027e00017e0016610200"
+        },
+        "framed_plaintext": {
+          "hex": "82015887856f4a83c3b52711017d019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0317000000080102020315163401420356035701700202007e07177e126f72672e6578616d706c652e7265766965770161027e00017e0016610200"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "identity_doc_extension_namespace_map_to_scalar",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "Then the root replaces the value of extensions[\"org.example.review\"], a map, with the scalar \"done\": admitted (a namespace value is not an entry map)",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §3 AI2, §2.1; SHARED-OBJECTS-PROFILE-01 §18",
+        "text": "AI2 protects the extensions container, not a namespace value under it: a namespace value is not an entry map, and replacing it, a map by a scalar included, is admitted."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 4,
+        "unit_actor_seq": 4,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "5172078678eee498f73e0b81a7077477971701f071b00576ec9d8126c20daa30",
+        "deps": [
+          "c3b52711f8d30fb6534310e84c0809f02222bbd05c081ed15786a8b984e5dec3"
+        ],
+        "automerge_change": {
+          "hex": "856f4a835172078601830101c3b52711f8d30fb6534310e84c0809f02222bbd05c081ed15786a8b984e5dec32030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a04190000000a01020202151434014202560257047002710273027f007f077f126f72672e6578616d706c652e726576696577017f017f46646f6e657f017f007f17"
+        },
+        "framed_plaintext": {
+          "hex": "8201588e856f4a835172078601830101c3b52711f8d30fb6534310e84c0809f02222bbd05c081ed15786a8b984e5dec32030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a04190000000a01020202151434014202560257047002710273027f007f077f126f72672e6578616d706c652e726576696577017f017f46646f6e657f017f007f17"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C2_extension_namespace_map",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
       }
     },
     {
@@ -2207,6 +2602,428 @@
       }
     },
     {
+      "id": "request_descriptor_small_order_identity",
+      "type": "validation",
+      "kind": "profile_entry",
+      "description": "A descriptor whose Ed25519 key is the identity point (order 1); its ID is recomputed from its keys and is the entry's key",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §4",
+        "text": "Validation is per entry; the first diagnostic in table order is reported."
+      },
+      "inputs": {
+        "container": "requests",
+        "key": "p:QjIKkgYzCU2f2MFd4d-SwRH2X5hoRj32jW1hedyf4ng",
+        "entry": {
+          "descriptor": "owBYIEIyCpIGMwlNn9jBXeHfksER9l-YaEY99o1tYXncn-J4AVggAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACWCA4GSkGEqN7RK5QbG2RDlHGBM_OFoNE4qHQ1zfT3T18eg",
+          "kind": 0,
+          "label": "DEV_B laptop",
+          "pairing": "p:5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk",
+          "platform": "desktop"
+        },
+        "snapshot": {
+          "b64url": "hW9Kg7r-N3cArgYBIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKAUhtTjdWtPYLNGhaDlNefhtjV861mT-WDwuTSjHXbkgnBwECAwITBCMCQARDA1YCCwEEAhUTCh2YAiECIx00BUITVilfkQKAAQIDAAMBfQcPBgMAfwACAX4AAQMHAAYWAAAGfwICBH4FBgQIfwoEDn8QAhQFFwAPfwAABH8AAAeNz09vgjAYgPEtcdO5j2JIAP9EvYmROYwmSpjgZSn0BV7BtmsLWrMPv9OSHXd98rs8X10KLWag-nDTwBRypnpIgWnUpiskz7GGnoSvBpRWz5IrDbIjOdeD3A6ScF2NgmTJcDfV3ilJkJCJtd5GODw0q-gW0MjfHFk0uHJrWnw49uxCdCzjZU70LDy13jT1d01xv2UTJ4lOJnszC0vMfWO318ouq8aJFwZISOOUDT955Sgv2Fdj2qbCU-5iVdqWmO_P75uqSO7LyM3drU9H1Aqvh7Ubj0t-OA_d89EpgZp8xIrXjHNJkRHN5QswKjgyrTqMXOD39eHx-1_KdCpk9KkmKdR9CiqTKDSXf2pXEJTIip6oic65vPwAHAB4BQJ7fwV-fwUCBn4DcgQBfwIEAX4DfwIDAn9_Aw8BBAEHAwB_AQIAfwEEAH4BAgQBfwIKAQMAf4YDAgB_1gUEAHz2AwCWAcYCAvYDdQCWAcYC9gMTduYRE8YB1gV2nY9RcoIwAEQ9ihcgGMEq_gWNoFVb1FHy5SAExEASSQqmp--0PUCd7u-bfTsrmgIISXmVpxKUGeW61Aa0UE4XZtB2bHBlHzBGhib7LL5w5ywYVP4qYqOsvUhfDRG-DjqlpratDE-tBNBHUsuKAk2Vtltod-q9ETea6n4smgL8DH0z0CQdaOEf3SfV5B_q3pwqpoUUnU-WeGlmchlsumrLvZsf0zBnCu-8yiIJJp4noCYxT7m1ctGxKFCEns3sNENusGcBvm_Hu9dRdAmGu3kVBv7m_LYQW-zewwh-5gfnACe06M3x8ez3q0RqIeV0lIaua7AoD9zUQTz26nwtTs6GamQpXr7s6aQhpF44a5b93vkCHAAC"
+        },
+        "ed25519_key": {
+          "hex": "0100000000000000000000000000000000000000000000000000000000000000"
+        },
+        "descriptor_id": {
+          "hex": "42320a920633094d9fd8c15de1df92c111f65f9868463df68d6d6179dc9fe278"
+        }
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_DESCRIPTOR"
+        }
+      }
+    },
+    {
+      "id": "request_descriptor_small_order_8",
+      "type": "validation",
+      "kind": "profile_entry",
+      "description": "A descriptor whose Ed25519 key is a point of order 8; its ID is recomputed from its keys and is the entry's key",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §4",
+        "text": "Validation is per entry; the first diagnostic in table order is reported."
+      },
+      "inputs": {
+        "container": "requests",
+        "key": "p:jmK9Tc8wDrZTHhuW8nE1kbQRkcxdzipoo4zCGIhIIdM",
+        "entry": {
+          "descriptor": "owBYII5ivU3PMA62Ux4blvJxNZG0EZHMXc4qaKOMwhiISCHTAVggxxdqcD1N2E-6PAt2DRBnDyogU_osOczGTsf9d5KsA3oCWCA4GSkGEqN7RK5QbG2RDlHGBM_OFoNE4qHQ1zfT3T18eg",
+          "kind": 0,
+          "label": "DEV_B laptop",
+          "pairing": "p:5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk",
+          "platform": "desktop"
+        },
+        "snapshot": {
+          "b64url": "hW9KgzNM6pQAzAYBIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKAXRH3DIJJTOr7SNAUM1aZjFH9q2s_CnHEQpkIrD5ZWxZBwECAwITBCMCQARDA1YCCwEEAhUTCh2YAiECIx00BUITVilfrwKAAQIDAAMBfQcPBgMAfwACAX4AAQMHAAYWAAAGfwICBH4FBgQIfwoEDn8QAhQFFwAPfwAABH8AAAeNz8tugkAUgOE2sdXaRzEkUG2D7sR6w2jihQpsmoEZ9HRgzjgzIJg-fFdNuuz2z7f5L23KKkiZ7rLaMKEBhe4AZcKAadpSYQY56yh2KZk2-lGhNky1FKLpZbYf7Rd84EcTARvXeHEUASFv1mIdQH9XToPap8FsdRRB74qWe_pw7GFBTKjCSUbMcB9XnpvMNuXpVqdvThTETTpvxpYczRq7unL7zEsnHDeM7GmYiP4nckd7_pa_0iqRnn4ZT8-2JUdfxWp4SN3ru4oPi3N5dMXU4cl2x9Oa3kAiDm6T-fK8XNL1c4qoKAhiUD0xQSWCMLolSMF-X-_uv_-lmhYHQR9ykrC8S5lOFUiD6k9tSwIKxKkjc2IyVMUPHAB4BQJ7fwV-fwUCBn4DcgQBfwIEAX4DfwIDAn9_Aw8BBAEHAwB_AQIAfwEEAH4BAgQBfwIKAQMAf4YDAgB_1gUEAHz2AwCWAcYCAvYDdQCWAcYC9gMTduYRE8YB1gV2nY9HcoMwAEVzFF_AorvthMHgAi5gG7xhKAITigRSKD59JskBksn6zX9_Hm4zgAmqyzQmIE9QzXI2gk4gq83Id33BP4sPwYMjCp3Ei2opwIVA1d25UJIuIioVof7ke0pXHEfHOp6GAA1hRUoEGKKM6wSup6cWv6OYTTzcZuD76IuBNuxBJ_yy_aPa_4f6TUO0YJjgXvW3WyXvrtLJgjPxOshR2e0G-2Hw-sO0vFhuwv3R6p_51lmbLrxl2TAkTawJtqhPZyfIRO2i1tqIs2uA6TF-GS5Nl4myp1DC6_sayoZTGHpjzy975RwZ4kUrTUO1guMG27rcmGfhlbqSKyxQ9qbpt0CdlCFhmJCVEpuyPOo4d-uxMrz5skoP-C5ZiMEprfOZgxat71cb6VAkPzmfHAAC"
+        },
+        "ed25519_key": {
+          "hex": "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a"
+        },
+        "descriptor_id": {
+          "hex": "8e62bd4dcf300eb6531e1b96f2713591b41191cc5dce2a68a38cc218884821d3"
+        }
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_DESCRIPTOR"
+        }
+      }
+    },
+    {
+      "id": "request_descriptor_noncanonical_y",
+      "type": "validation",
+      "kind": "profile_entry",
+      "description": "A descriptor whose Ed25519 key is y = p + 1, a non-canonical encoding of y = 1; its ID is recomputed from its keys and is the entry's key",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §4",
+        "text": "Validation is per entry; the first diagnostic in table order is reported."
+      },
+      "inputs": {
+        "container": "requests",
+        "key": "p:2Sb4B0j9Ra-FI7xLaDrw3pU6B1VUQWtNYwCgMDhtNjc",
+        "entry": {
+          "descriptor": "owBYINkm-AdI_UWvhSO8S2g68N6VOgdVVEFrTWMAoDA4bTY3AVgg7v_______________________________________38CWCA4GSkGEqN7RK5QbG2RDlHGBM_OFoNE4qHQ1zfT3T18eg",
+          "kind": 0,
+          "label": "DEV_B laptop",
+          "pairing": "p:5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk",
+          "platform": "desktop"
+        },
+        "snapshot": {
+          "b64url": "hW9Kgwtgn10AsgYBIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKAZjxR97h_1A3vC8mqwx5t79UxDaZAYZvX_W3wnNTMCKkBwECAwITBCMCQARDA1YCCwEEAhUTCh2YAiECIx00BUITVilflQKAAQIDAAMBfQcPBgMAfwACAX4AAQMHAAYWAAAGfwICBH4FBgQIfwoEDn8QAhQFFwAPfwAABH8AAAeNz81OwkAUQGFNUBAfhTRpARHYUaBqlSbQFFo2ZtqZlkvLzDBz-2d8eFcmLt2efJtz7VJWQcJ0nzXIuAbBdQ8o4wjYdqUSKRSsp9i1ZBr1vRIameooIXCQmm7kv-ZjN1py8KZoH6MICJkYr5sARrtyHTQuDZz3Aw8GtTCm2d4yZxeCoQqXKcGZf6zsaex4ZfbVJBMrCo5t8tIuDDl3WrOqc_OUl1a4aBnxaRjz0afILW272_yJVrG09XCxPpmGnA_9eGyb59mOGM7bc_NBVqoeyWBiW_tge0AvqpfZZnVC75w8JkIoCpygUA-MUymAo-5wcmG_rze33_9SbScHTu8KErOiT5lOFEgU6k_tSgIKeNaTBcFUqMsPHAB4BQJ7fwV-fwUCBn4DcgQBfwIEAX4DfwIDAn9_Aw8BBAEHAwB_AQIAfwEEAH4BAgQBfwIKAQMAf4YDAgB_1gUEAHz2AwCWAcYCAvYDdQCWAcYC9gMTduYRE8YB1gV2nY9bcoIwAEW7FDdgMIJK_Qvy0FaxCuXxxfCIkQZIJGkoXX2n7QLq9P6euefOZT0BjOOuuZQc1BXuZC1HoCBfu-NMDXR2pe8wQSPOgyopOj1jFArr6UQXlSq4JebIuc4GIdaaJsaunOYAf-QtbzCQWEhNQW0QLz17w6WcJKwn4Gfom4E-H4CCf3TvVKf_UD_YWFDJOBusdOfTdoqqXfYaq2twNIM5WZr-MjqSKooctw_jA2I2Moow1VFEyEpl90U3N_EGGV5APefmr87Pi1Phzc92s_WsQ3Z0me8Yt-0Jfl5CPYQmJg-2E2XWpMm5ZJyvF-XWMEaH1WE3tl6yemwvexbrByzRVHT1MsBmn6atq-9p9XvnCxwAAg"
+        },
+        "ed25519_key": {
+          "hex": "eeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f"
+        },
+        "descriptor_id": {
+          "hex": "d926f80748fd45af8523bc4b683af0de953a075554416b4d6300a030386d3637"
+        }
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_DESCRIPTOR"
+        }
+      }
+    },
+    {
+      "id": "request_descriptor_noncanonical_sign",
+      "type": "validation",
+      "kind": "profile_entry",
+      "description": "A descriptor whose Ed25519 key is y = 1 with the sign bit set (x = 0); its ID is recomputed from its keys and is the entry's key",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §4",
+        "text": "Validation is per entry; the first diagnostic in table order is reported."
+      },
+      "inputs": {
+        "container": "requests",
+        "key": "p:CO5Dvier5j2sKna3scH1REn6bGCtr_NiQhtfqMiw7mM",
+        "entry": {
+          "descriptor": "owBYIAjuQ74nq-Y9rCp2t7HB9URJ-mxgra_zYkIbX6jIsO5jAVggAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIACWCA4GSkGEqN7RK5QbG2RDlHGBM_OFoNE4qHQ1zfT3T18eg",
+          "kind": 0,
+          "label": "DEV_B laptop",
+          "pairing": "p:5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk",
+          "platform": "desktop"
+        },
+        "snapshot": {
+          "b64url": "hW9Kg7oU9JYAsQYBIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKAQOgBE69VM7TLWLbF71PqnAXdFePGlh5N8ywOKYAalSEBwECAwITBCMCQARDA1YCCwEEAhUTCh2XAiECIx00BUITVilflQKAAQIDAAMBfQcPBgMAfwACAX4AAQMHAAYWAAAGfwICBH4FBgQIfwoEDn8QAhQFFwAPfwAABH8AAAeNz8tOwkAUgGFNUBAfhTRpuQnsaOWSEjBAqi0bMu2cwrHtzDBzWqjx4V2ZuHT759v8lyaHChMwbbgRCINSmBZyEIRUN5WWKebQ0nApwZB51NIQ6IaWkjqp7Uf7Zdb3I0_gZkTuIYqQsaG1XAfY25Wz4ObzYL76EEHnKq3R6d2xxwWjUIdeymi8P1TuKJ5vytPXLRk6UXCok0U9tdRkXtvVNbPPWemE0xrYnoex6B1l5hjX32YDXsXKNd3p7GxbauK9DV4rBD347JqVYD2TLJ3dTAzjhUf6uMHtmdLLGq8vxfo5kVJzFIykfgLBlURBpiFYAb-vd_ff_1J1I0PBH3IWQ97mYBKNiqT-U5uKoUZxaqmcUSp18QMcAHgFAnt_BX5_BQIGfgNyBAF_AgQBfgN_AgMCf38DDwEEAQcDAH8BAgB_AQQAfgECBAF_AgoBAwB_hgMCAH_WBQQAfPYDAJYBxgIC9gN1AJYBxgL2AxN25hETxgHWBXadj1tygjAARbsUN0AwAqL-BUXA-ihqFb4YHhEhkEQSQVx9p-0C6vT-nrnnzmVNDhjHtLqkHBQZprKQPWghny37YduR4ZXcYYB6HB-yIKFaxAgU1sonRtYm3BIjZF-HnRAzVRU9TZUY4Edc8woDiYVUW6h24qNhJU7lIGBNDn6Gvhlo4g608I_ui-rwH-q3BRZEMs46K_RQefdNnd6UcNrM-UiarjX93K-U-pE3cfQMiZcE49ITO6NEpzxHPnotHpqf50h3DsSxb1tz_274iTPaLyrXsTbRbsm2tn5zffi8HLUjnOD8bWGfImtQxVwyzmdG6up6b7PiSPvaCcxpfVmzs7bBEimCFuMDnjRhWC-1Ncl-73wBHAAC"
+        },
+        "ed25519_key": {
+          "hex": "0100000000000000000000000000000000000000000000000000000000000080"
+        },
+        "descriptor_id": {
+          "hex": "08ee43be27abe63dac2a76b7b1c1f54449fa6c60adaff362421b5fa8c8b0ee63"
+        }
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_DESCRIPTOR"
+        }
+      }
+    },
+    {
+      "id": "request_descriptor_not_on_curve",
+      "type": "validation",
+      "kind": "profile_entry",
+      "description": "A descriptor whose Ed25519 key is y = 2, which is not the y of a curve point; its ID is recomputed from its keys and is the entry's key",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §4",
+        "text": "Validation is per entry; the first diagnostic in table order is reported."
+      },
+      "inputs": {
+        "container": "requests",
+        "key": "p:8B3LqYz2Bab3hVzwLkeTehgW6AUJvvsPRghkvqIPvbc",
+        "entry": {
+          "descriptor": "owBYIPAdy6mM9gWm94Vc8C5Hk3oYFugFCb77D0YIZL6iD723AVggAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACWCA4GSkGEqN7RK5QbG2RDlHGBM_OFoNE4qHQ1zfT3T18eg",
+          "kind": 0,
+          "label": "DEV_B laptop",
+          "pairing": "p:5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk",
+          "platform": "desktop"
+        },
+        "snapshot": {
+          "b64url": "hW9Kg67hxFIArwYBIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKAb5xlo5p4EgPmlmJ4KrkR8zamefaETvZpor9B_5ui3ZzBwECAwITBCMCQARDA1YCCwEEAhUTCh2XAiECIx00BUITVilfkwKAAQIDAAMBfQcPBgMAfwACAX4AAQMHAAYWAAAGfwICBH4FBgQIfwoEDn8QAhQFFwAPfwAABH8AAAeNz0FvgjAYgOEtcdO5n2JIQDaD3sDoHHPG6VDwshT6AU2xLW0pYvbjd1qy465vnstb9zEYkoEawkUDU4QzNSAYmCa66wvJc1LBQELdgNLqXnKlQfYk53qU22GyX9GnMJkzsvF0cEoSgtDEWr1HxN01i-gS4mj5dmTRqOWWVxwce3pGOpbxPEd6uj-ZwEuXm6a4XrKJk0SnLnvpfEvMlp1tWmqXtHFivwO0x3HK3C9OHRWEH_QZm1QEauwvStsSMy9w13VyHQcodcvDtV1T-ISyOE78KDRGbXdFSU39ujVp9phxLjFhSHP5AAwLTphWPYbO8Pt6c_v9L9X1KGH4rkIpVEMMKpNEaC7_1L5ARBJWDESFdM7l-QccAHgFAnt_BX5_BQIGfgNyBAF_AgQBfgN_AgMCf38DDwEEAQcDAH8BAgB_AQQAfgECBAF_AgoBAwB_hgMCAH_WBQQAfPYDAJYBxgIC9gN1AJYBxgL2AxN25hETxgHWBXadj1tygjAARV2KGzAQAVH_wttWra9R6I_DI0YaIJFEMF19p-0C6vT-nrnnzmUtAYzjprrkHJQFbmQpFeggnwdK73qqX-kdxkjhdF_EWWOcGYXCedlSq-gy7ogx8q96L8Rc04Rq8lEK8COteYWBxEJqHdR6sWnZB87lMGYtAT9D3wy0aQ86-Ef3SXXyD_XAw4JKxlnvJIsNKtSkXs3IqZ6Zx3zqWhE1WBLcSeBmtu3pyeJ9OSk9e2ygIyGIoGfjnlxkhnsa-re1vXu1tlk43nlVFDqr81vA1r55i7bw83IwDnCKycDzj2dnWKVcMs7nVh6ZpvJZeWhUHcb2rL4s2clYYYlGoiknezxtk6QOjCUtfu98ARwAAg"
+        },
+        "ed25519_key": {
+          "hex": "0200000000000000000000000000000000000000000000000000000000000000"
+        },
+        "descriptor_id": {
+          "hex": "f01dcba98cf605a6f7855cf02e47937a1816e80509befb0f460864bea20fbdb7"
+        }
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_DESCRIPTOR"
+        }
+      }
+    },
+    {
+      "id": "request_descriptor_crafted.control",
+      "type": "validation",
+      "kind": "profile_entry",
+      "description": "Control: the same construction with DEV_B's own keys gives DEV_B's descriptor and key; valid",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §4",
+        "text": "Validation is per entry; the first diagnostic in table order is reported."
+      },
+      "inputs": {
+        "container": "requests",
+        "key": "p:3LcJU3p8ZrnXhcnemzHRzxki0J8iXhBHnCSzAs6z-fI",
+        "entry": {
+          "descriptor": "owBYINy3CVN6fGa514XJ3psx0c8ZItCfIl4QR5wkswLOs_nyAVggZS_uIgKgCbQ6HD0wc1NNF6EBHdbZJakJelfLOdYHSpACWCA4GSkGEqN7RK5QbG2RDlHGBM_OFoNE4qHQ1zfT3T18eg",
+          "kind": 0,
+          "label": "DEV_B laptop",
+          "pairing": "p:5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk",
+          "platform": "desktop"
+        },
+        "snapshot": {
+          "b64url": "hW9Kg1T-1b4AyQYBIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKAYwLxszRSBl_O-NoSRpdpfSNSBE0192FdZFgyK915aCjBwECAwITBCMCQARDA1YCCwEEAhUTCh2VAiECIx00BUITVilfrwKAAQIDAAMBfQcPBgMAfwACAX4AAQMHAAYWAAAGfwICBH4FBgQIfwoEDn8QAhQFFwAPfwAABH8AAAeNz0FPgzAYgGFNppvzpywkILqw3WDZRKZLHEGBiyn0Y3wB2q4tDIg_3pOJR69vnst7nlLoMAc1h14DU8iZmiEFplEPUyF5gTXMJJxbUFrdSq40yInkXC8KM0hCv3oMkg3Dg6O9NEmQkKXhv0VoH9tt1Ac02u0_WbS4cMM5fVjmqiE6lvGmIHoVpp3nZLtDexr7fGklUTrkz4NriPVuMLtLZZZVa8XuACSkccbsL15ZygveqyfaZcJTD-62NA2xtl_zILKFk0oWlzmDZvSPY1-hGTgYl57PNuHoquVoFC_3OeeSIiOayztgVHBkWk0YaeD39er6-19qmFTI6E1NMqjnFFQuUWgu_9SpICiRnWaiJrrgsvkBHAB4BQJ7fwV-fwUCBn4DcgQBfwIEAX4DfwIDAn9_Aw8BBAEHAwB_AQIAfwEEAH4BAgQBfwIKAQMAf4YDAgB_1gUEAHz2AwCWAcYCAvYDdQCWAcYC9gMTduYRE8YB1gV2nY9JcoJAAEU9ihcI0DJo3DEPIgaxFNxQDA2SBrqlW5CcPpXkAEll_eq_Xw8PNYcJ7NuqIFxTwp41bOZGQLbWLIwTEm7oAWJ1hllUxnkvphgBqnkhkssxJxpdqeZNmCjd8jyd--Il4-Az60gLOQYp40fAT_RtwO-wYMsYDzX3ffTFuCGbuBH8sv2jOvmHemFAihgmeNISN5hF_RwolZ3JQIo9kdCnUGyuLtMrt5XCozwhOvkHmvazeq7ra5Q-3HpX63moOIYwFSAILMXUnDK_ehnyYFv5hzJxIqLqF12V7AjZ5j1YH3dymNuro9E6trZPDxYOTOnuhOCjOoknsIH1wjDPqbZsM8IwIVu5cCRpNnFz6ufOjtevXeXji7iHTH2hfaNEcDMkSWeJPip_cj4BHAAC"
+        }
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "device_platform_and_revoked_valid",
+      "type": "validation",
+      "kind": "profile_entry",
+      "description": "devices[p:<DEV_B>] with platform \"mobile\" and revoked = true",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §4",
+        "text": "Validation is per entry; the first diagnostic in table order is reported."
+      },
+      "inputs": {
+        "container": "devices",
+        "key": "p:3LcJU3p8ZrnXhcnemzHRzxki0J8iXhBHnCSzAs6z-fI",
+        "entry": {
+          "kind": 0,
+          "label": "Phone",
+          "platform": "mobile",
+          "revoked": true
+        },
+        "snapshot": {
+          "b64url": "hW9Kg45HLVEAmgUBIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKAWzQ6RUMKuXQ1IMGrRJdZouZpaMgq3wySY0kQwbHau2rBwECAwITBCMCQARDA1YCCwEEAhQTCh2NAiECIxo0BUITViVfkAGAAQIDAAMBfQcPBQMAfwACAX4AAQMHAAYVAAAGfwICBAIFBAh_CgQOfxACFAQXAA9_AAAEfwAABo3PQU-DMBiAYU2mm_pTFhIQJWw3WDYRdYkjKHAxhX6MpvCVtYUB8cd7MvHo7T08l_c0p9CzAtQtDBpQMYFqwSigZnqct1KUrIaFhFMHSqtrKZQGOZNC6GVphmkU8Icw3SDbu9rP0pQR4hjBW8zsQ7eNh5DGu5dPjJdnYbjHD8tcNUQnMtmURK-irPfdfLfvjtNQOFYaZ2PxNHpGu7ZfizC2WzeTmFQFQjMFh2ngzAxdllR-gJto8pQzGeWz0a53o9mfuVnxzkq8EUhEkxztL8Et5Yfv_JH2eeure29bmXeFEJIyJFrIG0DaCoZazZA08Pt6cfn9LzXNOEN6VZMc6j-5aGuiSyGbuYRecKA_GwB0BQJ7fwV-fwUGCX11BAF_AgQBegN_BH8CAQ8BBAEGAwB_AQIAfwEEAH4BAgQBfwIJAQMAf4YDAgB_1gUEAHz2AwCWAcYCAvYDdgCWAcYC9gMTdhNWZgKdjUEOgjAQAHmKH3BLNV64QdSDJ4wXPJkCq2Ch23Rra39v9AMaz5OZIXcDsmima2dh7NH40ScI0hb7lIeo80E_ZFMmVKe-ac36QlpydTjqTR9aW_Gq3A15ZC6E4GS6pQJ8qtlOCB7ZiyBF5NrRHTu_aMjd4DN6M3AqQpBf3B_T5z_S2RZZe7JZPZDBmdpxwhcbAAI"
+        }
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "device_platform_wrong_type",
+      "type": "validation",
+      "kind": "profile_entry",
+      "description": "devices[p:<DEV_B>] with platform the uint 7",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §4",
+        "text": "Validation is per entry; the first diagnostic in table order is reported."
+      },
+      "inputs": {
+        "container": "devices",
+        "key": "p:3LcJU3p8ZrnXhcnemzHRzxki0J8iXhBHnCSzAs6z-fI",
+        "entry": {
+          "kind": 0,
+          "label": "Phone",
+          "platform": 7
+        },
+        "snapshot": {
+          "b64url": "hW9Kg-ofvCUAkgUBIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKAQCQZrF2F0sRYQN1H0_SAjvc_2Opc1qdp_YaazJXRErCBwECAwITBCMCQARDA1YCCwEEAhQTCh2JAiECIxk0BUITViRfjgGAAQIDAAMBfQcPBAMAfwACAX4AAQMHAAYUAAAGfwICBAIFBAh_CgQOfxACFAMXAA9_AAAEfwAABY3PQU-DMBiAYU2mm_pTFhIQXdhusGwi0yWOoMDFFPoxmsJX1hYG6I_3ZOLR23t4Lu9pSqFjOahb6DWgYgLVjFFAzfQwbaQoWAUzCacWlFbXUigNciKF0PPCDJLQ5w9Bska2d7SXJgkjZGH4rxGzD-0m6gMabXcfGM3PwnCO75a5rImOZbwuiF6Gaec52XbfHsc-X1hJlA750-Aazcp-yYPIbpxUYlzmCPXoH8aeMzNwWFx6Pq7D0VWL0SiejWa1HczuzM2St1bsDkBCGmdofwpuKS9444-0yxpP3bub0rzLhZCUIdFC3gDSRjDUaoKkht_Xi8vvf6mvCWdIryqSQfUnZ01FdCFk_QMaAHQFAnt_BX5_BQYJfXUEAX8CBAF7A38EfwIPAQQBBQMAfwECAH8BBAB-AQIEAX8CCAEDAH-GAwIAf9YFBAB89gMAlgHGAgL2A3cAlgHGAvYDE3YTVhOdjUEOgjAQAL35DT_glmq8cIOoB08YL3gyBVbAYrfp1tb-3ugHNJ4nM0OuB7JopmtrYezQ-NEnCNLm-5SFqLNBP2RdJFSnrm7M-kJacnk46k0XGlvyqtgNWWTOheBk2qUCfKq7nRA8shdBisiVoxu2flGT6-EzejNwKkKQX9wf0-c_0rMtsvZkZ9VABucvGgAC"
+        }
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_FIELD_TYPE"
+        }
+      }
+    },
+    {
+      "id": "device_revoked_wrong_type",
+      "type": "validation",
+      "kind": "profile_entry",
+      "description": "devices[p:<DEV_B>] with revoked the uint 7",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §4",
+        "text": "Validation is per entry; the first diagnostic in table order is reported."
+      },
+      "inputs": {
+        "container": "devices",
+        "key": "p:3LcJU3p8ZrnXhcnemzHRzxki0J8iXhBHnCSzAs6z-fI",
+        "entry": {
+          "kind": 0,
+          "label": "Phone",
+          "revoked": 7
+        },
+        "snapshot": {
+          "b64url": "hW9Kg3MeyY8AkQUBIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKAUeFUPZHP4SiUFqqc8F1W2BpODwzIi6Os8LxaiotgjaoBwECAwITBCMCQARDA1YCCwEEAhQTCh2IAiECIxk0BUITViRfjgGAAQIDAAMBfQcPBAMAfwACAX4AAQMHAAYUAAAGfwICBAIFBAh_CgQOfxACFAMXAA9_AAAEfwAABY3PQU-DMBiAYU2mm_pTFhIQXdhusGwi0yWOoMDFFPoxmsJX1hYG6I_3ZOLR23t4Lu9pSqFjOahb6DWgYgLVjFFAzfQwbaQoWAUzCacWlFbXUigNciKF0PPCDJLQ5w9Bska2d7SXJgkjZGH4rxGzD-0m6gMabXcfGM3PwnCO75a5rImOZbwuiF6Gaec52XbfHsc-X1hJlA750-Aazcp-yYPIbpxUYlzmCPXoH8aeMzNwWFx6Pq7D0VWL0SiejWa1HczuzM2St1bsDkBCGmdofwpuKS9444-0yxpP3bub0rzLhZCUIdFC3gDSRjDUaoKkht_Xi8vvf6mvCWdIryqSQfUnpxI6wYH-ABoAdAUCe38Ffn8FBgl9dQQBfwIEAXsDfwR_Ag8BBAEFAwB_AQIAfwEEAH4BAgQBfwIIAQMAf4YDAgB_1gUEAHz2AwCWAcYCAvYDdwCWAcYC9gMTdhNWE52NQQ6CMBAAvfkNP-CWarxwg6gHTxgveDIFVsBit-nW1v7e6Ac0niczQ64Hsmima2th7ND40ScI0ub7lIWos0E_ZF0kVKeubsz6QlpyeTjqTRcaW_Kq2A1ZZM6F4GTapQJ8qrudEDyyF0GKyJWjG7Z-UZPr4TN6M3AqQpBf3B_T5z_Ssy2y9mRn1UAG5y8aAAI"
+        }
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_FIELD_TYPE"
+        }
+      }
+    },
+    {
+      "id": "request_platform_wrong_type",
+      "type": "validation",
+      "kind": "profile_entry",
+      "description": "requests[p:<DEV_B>] with platform the uint 7",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §4",
+        "text": "Validation is per entry; the first diagnostic in table order is reported."
+      },
+      "inputs": {
+        "container": "requests",
+        "key": "p:3LcJU3p8ZrnXhcnemzHRzxki0J8iXhBHnCSzAs6z-fI",
+        "entry": {
+          "descriptor": "owBYINy3CVN6fGa514XJ3psx0c8ZItCfIl4QR5wkswLOs_nyAVggZS_uIgKgCbQ6HD0wc1NNF6EBHdbZJakJelfLOdYHSpACWCA4GSkGEqN7RK5QbG2RDlHGBM_OFoNE4qHQ1zfT3T18eg",
+          "kind": 0,
+          "label": "DEV_B laptop",
+          "pairing": "p:5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk",
+          "platform": 7
+        },
+        "snapshot": {
+          "b64url": "hW9Kg-fm1nsAxgYBIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKAQWWLrYye98Tu0_7W8wYOmrZ26tCVtR4WRdJquUKiJx4BwECAwITBCMCQARDA1YCCwEEAhUTCh2VAiECIx00BUITVilfrAKAAQIDAAMBfQcPBgMAfwACAX4AAQMHAAYWAAAGfwICBH4FBgQIfwoEDn8QAhQFFwAPfwAABH8AAAeNz0FPgzAYgGFNppvzpywkILqw3WDZRKZLHEGBiyn0Y3wB2q4tDIg_3pOJR69vnst7nlLoMAc1h14DU8iZmiEFplEPUyF5gTXMJJxbUFrdSq40yInkXC8KM0hCv3oMkg3Dg6O9NEmQkKXhv0VoH9tt1Ac02u0_WbS4cMM5fVjmqiE6lvGmIHoVpp3nZLtDexr7fGklUTrkz4NriPVuMLtLZZZVa8XuACSkccbsL15ZygveqyfaZcJTD-62NA2xtl_zILKFk0oWlzmDZvSPY1-hGTgYl57PNuHoquVoFC_3OeeSIiOayztgVHBkWk0YaeD39er6-19qmFTI6E1NMqjnFFQuUWgu_9SpICiRnWaiJrrgsvkBHAB4BQJ7fwV-fwUCBn4DcgQBfwIEAX4DfwIDAn9_Aw8BBAEHAwB_AQIAfwEEAH4BAgQBfwIKAQMAf4YDAgB_1gUEAHz2AwCWAcYCAvYDdQCWAcYC9gMTduYRE8YB1gUTnY1JcoJAAABzyzf8gMDIovHGvogYxFLwQrEMSAaYkRlB8vpU8oGkcu7qbjzUHCawb6uCcE0Je9awmRsB2VqzME5IuKEHiNUZZlEZ572YYgSo5oVILsecaHSlmjdhonTL83Tui2XGwWfWkRZyDFLGj4Cf6PuAP2DBFjEeau5n9M24IZu4Efzi_jGd_CP9YkCKGCZ40hI3mEX9HCiVnclAij2R0KdQbK4u0yu3lcKjPCE6-Qea9rN6rutrlD7celfreag4hjAVIAgsxdScMr96GfJgW_mHMnEiouoXXZXsCNnmPVgfd3KY26uj0Tq2tk8PFg5M6e6E4LM6iSewgfWLYZ5TbdFmhGFCtnLhSNJs4ubUz50dr9-6yscXcQ-ZuqR9o0RwMyRJZ4k-ev0CHAAC"
+        }
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_FIELD_TYPE"
+        }
+      }
+    },
+    {
+      "id": "device_conflicted_platform",
+      "type": "validation",
+      "kind": "profile_entry",
+      "description": "Concurrent platform values \"desktop\" (OWNER) and \"laptop\" (DEV_A) of devices[p:<DEV_A>]: valid, a reader may show either",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §4",
+        "text": "Validation is per entry; the first diagnostic in table order is reported."
+      },
+      "inputs": {
+        "container": "devices",
+        "key": "p:BJj_M0x8sMFxBep-osf2GpxULvYqcxCwV7GoQ4tdz58",
+        "entry": {
+          "kind": 0,
+          "label": "Laptop",
+          "platform_conflict_set": [
+            "desktop",
+            "laptop"
+          ]
+        },
+        "snapshot": {
+          "b64url": "hW9KgwA8zsoA6QUCIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKIPkpYL1R-0rr4jaEoPfm6OkqzAxOVVVFk_zJw9bnI8FsAla_ZUssJfWJCf6PAm8EVfQuOTRPRbwXXwvIzrAQXOiEvxnI5b6C1gGff6PRCSw_uRe5GIb52yr9aERg2OGFMtYHAQQDBBMGIwJABEMGVgILAQQCFBMKHYsCIQQjGjQFQhNWJV-UAYABAgQAfwEEAX99ewcPAwEABQB_AAQBfwACAX8ABQcABhUAAAZ_AgIEAgUECH8KBA5_EAIUBBcAD38AAAR_AAAGjc9Pb4IwGIDxbXGTbR_FkID_ht7EiAaniTM48GIKfdEO7FvbgsXsw--0ZMfdnsPv8lzaFGqWgXoBo4ErhlxZjALXTDdtITFnJVgSLhUorZ4kKg2yJRF1J3fCZLso-mEy5WztaX-fJIyQob1YRaz3Uc0iE9IoWH7yqHNF2zvuXGd0JjqW8TQnerTd176XBuvqeDPZ0E2ifZPNm4ktxn74dVg5xlOrwPggbFR5dy5M9F4nl8xMr7u3OW76mt4Gni3GQePU18I5FZUbTxogWxqnvHfAwlV-uCkGtE6Fr7qT2cl5zRAlZZxolM_AqUDGtWpxcobf17v77_-pVsE4fSxJCuWffLBESXSO8vwDGgB_AXQFAnt_BX5_BQYJfXUEAX8CBAF6A38EfwIADwEEAQYDAH8BAgB_AQQAfgECBAF_AgkBAwB_hgMCAH_WBQQAfPYDAJYBxgIC9gN2AJYBxgL2AxN2E2Z2Zp2NQQ7CIBBFexQv4FA0brproy6MC42bujK0YFupMGEQ5PbGegCNy5eX_751HVhUZry2CINUxg8-QeBYbFMeos57_eB1mZQ4yboxy4vVnKrdUa9kaLCiRbnp80hUMEbJtHMB6inuOCrwijwLnEU6OHtTrZ_V1nUwHb0dOBEh8C_bH9PnP9LZWpH2FrO9QG9Rfmic4AUbAAME"
+        },
+        "changes": "S_device_platform_root,S_device_platform_dev_a"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "device_conflicted_platform_valid_invalid",
+      "type": "validation",
+      "kind": "profile_entry",
+      "description": "Concurrent platform values \"desktop\" and the uint 7 of devices[p:<DEV_A>], delivered S_device_platform_root then S_device_platform_dev_a_uint",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §4",
+        "text": "Validation is per entry; the first diagnostic in table order is reported."
+      },
+      "inputs": {
+        "container": "devices",
+        "key": "p:BJj_M0x8sMFxBep-osf2GpxULvYqcxCwV7GoQ4tdz58",
+        "entry": {
+          "kind": 0,
+          "label": "Laptop",
+          "platform_conflict_set": [
+            "desktop",
+            7
+          ]
+        },
+        "snapshot": {
+          "b64url": "hW9Kg2v-FX0A6QUCIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKIPkpYL1R-0rr4jaEoPfm6OkqzAxOVVVFk_zJw9bnI8FsAiuxibR0hUp4_ha7739TnumrQftEFNKr-6Lb2YkUhs09Vr9lSywl9YkJ_o8CbwRV9C45NE9FvBdfC8jOsBBc6IQHAQQDBBMGIwJABEMGVgILAQQCFBMKHYsCIQQjGjQFQhNWJV-UAYABAgQAfwEEAX99ewcPAwEABQB_AAQBfwACAX8ABQcABhUAAAZ_AgIEAgUECH8KBA5_EAIUBBcAD38AAAR_AAAGjc9Pb4IwGIDxbXGTbR_FkID_ht7EiAaniTM48GIKfdEO7FvbgsXsw--0ZMfdnsPv8lzaFGqWgXoBo4ErhlxZjALXTDdtITFnJVgSLhUorZ4kKg2yJRF1J3fCZLso-mEy5WztaX-fJIyQob1YRaz3Uc0iE9IoWH7yqHNF2zvuXGd0JjqW8TQnerTd176XBuvqeDPZ0E2ifZPNm4ktxn74dVg5xlOrwPggbFR5dy5M9F4nl8xMr7u3OW76mt4Gni3GQePU18I5FZUbTxogWxqnvHfAwlV-uCkGtE6Fr7qT2cl5zRAlZZxolM_AqUDGtWpxcobf17v77_-pVsE4fSxJCuWffLBESXSO8vwDGgB_AXQFAnt_BX5_BQYJfXUEAX8CBAF6A38EfwIADwEEAQYDAH8BAgB_AQQAfgECBAF_AgkBAwB_hgMCAH_WBQQAfPYDAJYBxgIC9gN2AJYBxgL2AxN2E2Z2E52NsQ7CIBRFu_kb_oCPonHp1kYdjIPGpU6GlmdbqUB4CPL3Rv0AjePNyTnXuA6MRT1eWguDRO0HnyBwW2xSHqLKe3XndZlQHGXd6MXZKE7V9qCWMjS2onm57vNIVDBGSbczAfgQNzsieCTPAmeR9s5csfXT2rgO3kcvBk5ECPyL-2P69Ec6WyEpb2y2E9YbKz9r8gQbAAQD"
+        },
+        "changes": "S_device_platform_root,S_device_platform_dev_a_uint"
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_FIELD_TYPE"
+        }
+      }
+    },
+    {
+      "id": "device_conflicted_platform_valid_invalid.reverse",
+      "type": "validation",
+      "kind": "profile_entry",
+      "description": "Concurrent platform values \"desktop\" and the uint 7 of devices[p:<DEV_A>], delivered S_device_platform_dev_a_uint then S_device_platform_root",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §4",
+        "text": "Validation is per entry; the first diagnostic in table order is reported."
+      },
+      "inputs": {
+        "container": "devices",
+        "key": "p:BJj_M0x8sMFxBep-osf2GpxULvYqcxCwV7GoQ4tdz58",
+        "entry": {
+          "kind": 0,
+          "label": "Laptop",
+          "platform_conflict_set": [
+            "desktop",
+            7
+          ]
+        },
+        "snapshot": {
+          "b64url": "hW9Kg0kj0AEA6wUCIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKIPkpYL1R-0rr4jaEoPfm6OkqzAxOVVVFk_zJw9bnI8FsAiuxibR0hUp4_ha7739TnumrQftEFNKr-6Lb2YkUhs09Vr9lSywl9YkJ_o8CbwRV9C45NE9FvBdfC8jOsBBc6IQHAQUDBRMGIwJABEMGVgILAQQCFBMKHYsCIQQjGjQFQhNWJV-UAYABAgMAfgEAAwF-fgN7Bw8DAQAFAH8ABAF_AAIBfwAFBwAGFQAABn8CAgQCBQQIfwoEDn8QAhQEFwAPfwAABH8AAAaNz09vgjAYgPFtcZNtH8WQgP-G3sSIBqeJMzjwYgp90Q7sW9uCxezD77Rkx92ew-_yXNoUapaBegGjgSuGXFmMAtdMN20hMWclWBIuFSitniQqDbIlEXUnd8Jkuyj6YTLlbO1pf58kjJChvVhFrPdRzSIT0ihYfvKoc0XbO-5cZ3QmOpbxNCd6tN3XvpcG6-p4M9nQTaJ9k82biS3Gfvh1WDnGU6vA-CBsVHl3Lkz0XieXzEyvu7c5bvqa3gaeLcZB49TXwjkVlRtPGiBbGqe8d8DCVX64KQa0ToWvupPZyXnNECVlnGiUz8CpQMa1anFyht_Xu_vv_6lWwTh9LEkK5Z98sERJdI7y_AMaAH8BdAUCe38Ffn8FBgl9dQQBfwIEAXoDfwR_AgAPAQQBBgMAfwECAH8BBAB-AQIEAX8CCQEDAH-GAwIAf9YFBAB89gMAlgHGAgL2A3YAlgHGAvYDE3YTZnYTnY2xDsIgFEW7-Rv-gI-icenWRh2Mg8alToaWZ1upQHgI8vdG_QCN483JOde4DoxFPV5aC4NE7QefIHBbbFIeosp7ded1mVAcZd3oxdkoTtX2oJYyNLaiebnu80hUMEZJtzMB-BA3OyJ4JM8CZ5H2zlyx9dPauA7eRy8GTkQI_Iv7Y_r0RzpbISlvbLYT1hsrP2vyBBsAAwQ"
+        },
+        "changes": "S_device_platform_dev_a_uint,S_device_platform_root"
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_FIELD_TYPE"
+        }
+      }
+    },
+    {
       "id": "request_missing_label",
       "type": "validation",
       "kind": "profile_entry",
@@ -2470,6 +3287,78 @@
           "b64url": "hW9Kg6klsBwAxQcCIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKIMZ1H4fQkR-oYY-57aFeydjCCptNNe6GueqQkKWN2pvtAr6-MXuxXF8Sjih8gA93oEXAXK5bkOHRmOwjloZiy6SU8KLNmNTzz32zmdXt9drSd8UaPRj8Tuu4FYAcm9C6L7sHAQYDBhMGIwJAB0MHVgINAQYCFRMKHZgCIQwjHzQFQhNWK1-1AoABBoEBA4MBAwIAfQEAAQIBfX8Cf3sHDwYBAAUAfwACAX4CAX8AAgF-fwEFBwAGEQAHAQAGfwICBH4FBgQIfwoEDn8QAhQHFwAPfwAABH8AAAmNz0FPgzAYgGGN0835UxYSJrqw3WDZRNQljqDAxRT6Mb4AbdcWBsT420003r0-eS_vcUyhxQzUFDoNTCFnaoIUmEbdj4XkOVYwkXBsQGl1JbnSIEeScz3LTT8OvPLOj9cMd7Z2kzhGQhaG9xKitW82YefTcPv0zsLZiRv24W1uLmuiIxmtc6KXQdK6drrdNYehyxbzOEz67KF3DLHa9mZ7Ks2ibOaR0wMJaJQy64OXc-X6r-U9bVPhqltnU5iGWFnPmR9awk4ki4qMQT14-6Er0fRtjArXY-tgcNRiMPLHm4xzSZERzeU1MCo4Mq1GjNTw93p2_vm_alQio5cVSaGaUlCZRKG5_NGLX_4aC4IS2WEiKqJzLutvCgB_AQwAAwF_AAMBeAUCe38Ffn8FAgZ-A3IEAX8CBAF-A38CA3t_AwB8Aw8BBAEJAwB_AQIAfwEEAH4BAgQBfwIMAQMAf4YDAgB_1gUEAHz2AwCWAcYCAvYDcwCWAcYC9gMTduYRE8YBE2bWBXadj0lygkAARbPLNbyAQMugccc8iBjEUnBDMTRIGumWbkFy-lTMAZLK6i9e_ffr477mMIFdWxWEa0rYsYZN3ADI2pqEYUTCBd1BrE4wi8o478QUI0A1L0RyOeREowvVvAgjpWuep1NXzDMOPrIraSHHIGX8APiRvvf4AxZsFuO-5p5D34zrs5EbwC_dP6qTf6hfDEgRwwSPWuIGk6gfA6WyMxlIsScS-hCK1dlleuW2UriXR0RHf0fTblKPdX2O0rtbb2o9DxXHEMYCBIGlmJpT5mcvQx5sK39XJk5EVP2kq5IdIdu8Bcv9Rg5ze7E3WsfWtunOwoEp3ZwQfFYH8QBWsH4xzGOqzdqMMExe_WeQtVw4kjSZuDl009WOl2_XyscncQuZOqddo0Rw1SfJ1RJ9VP68-gIZAH8CBAB-AAF-HQAEAw"
         },
         "changes": "S_label_uint,J2_label_ok"
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_FIELD_TYPE",
+          "detail": "conflicted entry (§4 rule 2)"
+        }
+      }
+    },
+    {
+      "id": "request_conflicted_platform_valid_invalid",
+      "type": "validation",
+      "kind": "profile_entry",
+      "description": "Concurrent platform values 'laptop' and the uint 7, delivered J2_continues_own then S_platform_uint",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §4",
+        "text": "Rule 2: a field with concurrent values is valid only if every value is valid; for requests a conflicted field (an unknown one included) or two concurrent maps make the entry invalid; a kind conflict makes any entry invalid; the entry reports the diagnostic of its first invalid value, else INVALID_FIELD_TYPE."
+      },
+      "inputs": {
+        "container": "requests",
+        "key": "p:3LcJU3p8ZrnXhcnemzHRzxki0J8iXhBHnCSzAs6z-fI",
+        "entry": {
+          "descriptor": "owBYINy3CVN6fGa514XJ3psx0c8ZItCfIl4QR5wkswLOs_nyAVggZS_uIgKgCbQ6HD0wc1NNF6EBHdbZJakJelfLOdYHSpACWCA4GSkGEqN7RK5QbG2RDlHGBM_OFoNE4qHQ1zfT3T18eg",
+          "kind": 0,
+          "label": "DEV_B laptop",
+          "pairing": "p:5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk",
+          "platform_conflict_set": [
+            "laptop",
+            7
+          ]
+        },
+        "snapshot": {
+          "b64url": "hW9Kg_S0zHkAvwcCIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKIMZ1H4fQkR-oYY-57aFeydjCCptNNe6GueqQkKWN2pvtAoBw8rgSd8LwAd7T5KAEmyTyPeoD3Nv4mrfvxB329XOmlJzyKr1AwP-diaRVSrgG8dKBnVMCD8DAr9uereeJMCQHAQYDBhMGIwJABkMHVgINAQYCFRMKHZYCIQsjHzQFQhNWK1-zAoABBoEBA4MBAwIAAgF_AAIBf38CAXsHDwYBAAUAfwADAX8CfwACAX4AfwUHAAYRAAcBAAZ_AgIEfgUGBAh_CgQOfxACFAcXAA9_AAAEfwAACY3PQU-DMBiAYY3TzflTFhIQXdhusGwi6hJHUOBiCi3jC_C1awsD4o_3ZOLR65vn8p6mlHWQMzVnvWaogKOaAWWoQQ9TIXkBNZtJdmqZ0upGcqWZnEjO9aIwgyT0q4cg2SDsHe2lSQKELA3_LQL70G6jPqDR7uUTo8WZG87xwzJXDdGxjDcF0asw7Twn2-3b49jnSyuJ0iF_GlxDrHeD2Z0rs6xaK3YHRkIaZ2h_8cpSXvBePdIuE566d7elaYi1_ZoHkS2cVGJc5sia0T-MfQVm4EBcej5uwtFVy9Eonu9yziUFJJrLW4ZUcECtJkga9vt6cfn9LzVOKkB6XZOM1XPKVC5BaC7_1KkgIAGPVzNRE11w2fwACgB_AQwABQF-AAF4BQJ7fwV-fwUCBn4DcgQBfwIEAX4DfwIDAn99AwEADwEEAQkDAH8BAgB_AQQAfgECBAF_AgwBAwB_hgMCAH_WBQQAfPYDAJYBxgIC9gNzAJYBxgL2AxN25hETxgHWBXYTZp2PSXKCQABFs8s1vIBAy6BxxzyoGMRScEMxNEga6JZuQXL6VOIBksr613uvPu4rDhPYNWVOuLqAHavZxA2ArK1JGEYkXNEdROoE07CIsk5MMAJU8wIkF0NGNLpQzaswUrrmeTp1-Tzl4CNtSQM5BinjB8CP9L3HHzBnswj3FfcT-t64Ph25AfzC_lEd_0P9YkCKGCZ41GLXn0T95CulncpAijyR0IeQry4u00u3kYKDPCI6bvc06Sb1VFWXMLm71abSs0BxDGHMge9biqk5RXbxUuTBptzui9gJiaqfdVWyQ2SbN3952MhBZi8ORuPY2i7ZW9g3pZsTgM_yKB7BClYvhnlKtFmTEoYJWcu5I0mTietjN7V2tHxryy0-izvI1DntaiWEqz6OW0vcouJ55_WJfgEbAH8CAgB-AAF-HQAEAw"
+        },
+        "changes": "J2_continues_own,S_platform_uint"
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_FIELD_TYPE",
+          "detail": "conflicted entry (§4 rule 2)"
+        }
+      }
+    },
+    {
+      "id": "request_conflicted_platform_valid_invalid.reverse",
+      "type": "validation",
+      "kind": "profile_entry",
+      "description": "Concurrent platform values 'laptop' and the uint 7, delivered S_platform_uint then J2_continues_own",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §4",
+        "text": "Rule 2: a field with concurrent values is valid only if every value is valid; for requests a conflicted field (an unknown one included) or two concurrent maps make the entry invalid; a kind conflict makes any entry invalid; the entry reports the diagnostic of its first invalid value, else INVALID_FIELD_TYPE."
+      },
+      "inputs": {
+        "container": "requests",
+        "key": "p:3LcJU3p8ZrnXhcnemzHRzxki0J8iXhBHnCSzAs6z-fI",
+        "entry": {
+          "descriptor": "owBYINy3CVN6fGa514XJ3psx0c8ZItCfIl4QR5wkswLOs_nyAVggZS_uIgKgCbQ6HD0wc1NNF6EBHdbZJakJelfLOdYHSpACWCA4GSkGEqN7RK5QbG2RDlHGBM_OFoNE4qHQ1zfT3T18eg",
+          "kind": 0,
+          "label": "DEV_B laptop",
+          "pairing": "p:5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk",
+          "platform_conflict_set": [
+            "laptop",
+            7
+          ]
+        },
+        "snapshot": {
+          "b64url": "hW9Kg7RL8skAwAcCIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKIMZ1H4fQkR-oYY-57aFeydjCCptNNe6GueqQkKWN2pvtAoBw8rgSd8LwAd7T5KAEmyTyPeoD3Nv4mrfvxB329XOmlJzyKr1AwP-diaRVSrgG8dKBnVMCD8DAr9uereeJMCQHAQYDBhMGIwJAB0MHVgINAQYCFRMKHZYCIQsjHzQFQhNWK1-zAoABBoEBA4MBAwIAfQEAAQIBfX8Cf3sHDwYBAAUAfwACAX4CAX8AAgF-fwEFBwAGEQAHAQAGfwICBH4FBgQIfwoEDn8QAhQHFwAPfwAABH8AAAmNz0FPgzAYgGGN0835UxYSEF3YbrBsIuoSR1DgYgot4wvwtWsLA-KP92Ti0eub5_KeppR1kDM1Z71mqICjmgFlqEEPUyF5ATWbSXZqmdLqRnKlmZxIzvWiMIMk9KuHINkg7B3tpUkChCwN_y0C-9Buoz6g0e7lE6PFmRvO8cMyVw3RsYw3BdGrMO08J9vt2-PY50sridIhfxpcQ6x3g9mdK7OsWit2B0ZCGmdof_HKUl7wXj3SLhOeune3pWmItf2aB5EtnFRiXObImtE_jH0FZuBAXHo-bsLRVcvRKJ7vcs4lBSSay1uGVHBArSZIGvb7enH5_S81TipAel2TjNVzylQuQWgu_9SpICABj1czURNdcNn8AAoAfwEMAAUBfgABeAUCe38Ffn8FAgZ-A3IEAX8CBAF-A38CAwJ_fQMBAA8BBAEJAwB_AQIAfwEEAH4BAgQBfwIMAQMAf4YDAgB_1gUEAHz2AwCWAcYCAvYDcwCWAcYC9gMTduYRE8YB1gV2E2adj0lygkAARbPLNbyAQMugccc8qBjEUnBDMTRIGuiWbkFy-lTiAZLK-td7rz7uKw4T2DVlTri6gB2r2cQNgKytSRhGJFzRHUTqBNOwiLJOTDACVPMCJBdDRjS6UM2rMFK65nk6dfk85eAjbUkDOQYp4wfAj_S9xx8wZ7MI9xX3E_reuD4duQH8wv5RHf9D_WJAihgmeNRi159E_eQrpZ3KQIo8kdCHkK8uLtNLt5GCgzwiOm73NOkm9VRVlzC5u9Wm0rNAcQxhzIHvW4qpOUV28VLkwabc7ovYCYmqn3VVskNkmzd_edjIQWYvDkbj2Nou2VvYN6WbE4DP8igewQpWL4Z5SrRZkxKGCVnLuSNJk4nrYze1drR8a8stPos7yNQ57WolhKs-jltL3KLieef1iX4BGwB_AgIAfgABfh0AAwQ"
+        },
+        "changes": "S_platform_uint,J2_continues_own"
       },
       "expected": {
         "valid": false,
@@ -6100,6 +6989,118 @@
       }
     },
     {
+      "id": "change.C0l_initial_roster_list",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change C0l_initial_roster_list by OWNER (unit actor sequence 1, control_ref P0_genesis_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a836b21e28a01d501002030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a01010000000801060206153a3401420756085745700200027f00000400027f020004790770726f66696c65086964656e7469747904726f6f7406726f7374657207646576696365730872657175657374730a657874656e73696f6e73077c0100010203007d860300d60504006f72672e6f70656e6c6663702e6964656e746974792e7631703a46793076776b30686b75315841796561536458626e335f6f6b3173424a516b3564766270427332414568300700"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "6b21e28a9c3541ad7b8202bb9652edb1a681d67d5626111bcabb8beea819fcef",
+        "deps": ""
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "820158e0856f4a836b21e28a01d501002030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a01010000000801060206153a3401420756085745700200027f00000400027f020004790770726f66696c65086964656e7469747904726f6f7406726f7374657207646576696365730872657175657374730a657874656e73696f6e73077c0100010203007d860300d60504006f72672e6f70656e6c6663702e6964656e746974792e7631703a46793076776b30686b75315841796561536458626e335f6f6b3173424a516b3564766270427332414568300700"
+        },
+        "sha256": {
+          "hex": "7fc629d6524c24ed27ea88952324b8fb44f8ee2e2db9f769abfe047a81130a88"
+        }
+      }
+    },
+    {
+      "id": "change.C0l_initial_devices_list",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change C0l_initial_devices_list by OWNER (unit actor sequence 1, control_ref P0_genesis_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83bdcdd59801d601002030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a01010000000801060206153a3401420856085745700200027f00000400027f020004790770726f66696c65086964656e7469747904726f6f7406726f7374657207646576696365730872657175657374730a657874656e73696f6e73077b010001000202007d860300d60504006f72672e6f70656e6c6663702e6964656e746974792e7631703a46793076776b30686b75315841796561536458626e335f6f6b3173424a516b3564766270427332414568300700"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "bdcdd5982e423b213396f148ab372d0e172a7961cfc8c7380975a87330c0e4eb",
+        "deps": ""
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "820158e1856f4a83bdcdd59801d601002030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a01010000000801060206153a3401420856085745700200027f00000400027f020004790770726f66696c65086964656e7469747904726f6f7406726f7374657207646576696365730872657175657374730a657874656e73696f6e73077b010001000202007d860300d60504006f72672e6f70656e6c6663702e6964656e746974792e7631703a46793076776b30686b75315841796561536458626e335f6f6b3173424a516b3564766270427332414568300700"
+        },
+        "sha256": {
+          "hex": "786920bbc902a9ac233262a4f2fed40fdfaf9e6c0011e5fa982dc2ab6dca9b19"
+        }
+      }
+    },
+    {
+      "id": "change.C0l_initial_requests_list",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change C0l_initial_requests_list by OWNER (unit actor sequence 1, control_ref P0_genesis_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83d79af47001d701002030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a01010000000801060206153a3401420956085745700200027f00000400027f020004790770726f66696c65086964656e7469747904726f6f7406726f7374657207646576696365730872657175657374730a657874656e73696f6e73077d01000102007e02007d860300d60504006f72672e6f70656e6c6663702e6964656e746974792e7631703a46793076776b30686b75315841796561536458626e335f6f6b3173424a516b3564766270427332414568300700"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "d79af470eabe062bb3d0a9148d58383a2061f457841859d5e9169a0b0b51278d",
+        "deps": ""
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "820158e2856f4a83d79af47001d701002030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a01010000000801060206153a3401420956085745700200027f00000400027f020004790770726f66696c65086964656e7469747904726f6f7406726f7374657207646576696365730872657175657374730a657874656e73696f6e73077d01000102007e02007d860300d60504006f72672e6f70656e6c6663702e6964656e746974792e7631703a46793076776b30686b75315841796561536458626e335f6f6b3173424a516b3564766270427332414568300700"
+        },
+        "sha256": {
+          "hex": "eab9ef5926f29d4aa744b620b18b3a5cd172d97632af7bf8bf611c7180674920"
+        }
+      }
+    },
+    {
+      "id": "change.C0l_initial_extensions_list",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change C0l_initial_extensions_list by OWNER (unit actor sequence 1, control_ref P0_genesis_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83744d595001d601002030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a01010000000801060206153a3401420856085745700200027f00000400027f020004790770726f66696c65086964656e7469747904726f6f7406726f7374657207646576696365730872657175657374730a657874656e73696f6e73077d01000103007f027d860300d60504006f72672e6f70656e6c6663702e6964656e746974792e7631703a46793076776b30686b75315841796561536458626e335f6f6b3173424a516b3564766270427332414568300700"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "744d595087bd7d12a8ef2d3b5ab60f7bd28ec936178ba6bb34e580da8e71101c",
+        "deps": ""
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "820158e1856f4a83744d595001d601002030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a01010000000801060206153a3401420856085745700200027f00000400027f020004790770726f66696c65086964656e7469747904726f6f7406726f7374657207646576696365730872657175657374730a657874656e73696f6e73077d01000103007f027d860300d60504006f72672e6f70656e6c6663702e6964656e746974792e7631703a46793076776b30686b75315841796561536458626e335f6f6b3173424a516b3564766270427332414568300700"
+        },
+        "sha256": {
+          "hex": "dafc4671cc034cd2594ad4ccc21ecd70a1a3553da5fa85441d4228cb8bbc1b84"
+        }
+      }
+    },
+    {
       "id": "change.C0s_second_initial",
       "type": "bytes",
       "kind": "profile_change_framing",
@@ -6320,6 +7321,90 @@
         },
         "sha256": {
           "hex": "dfe3c86b3f434de506313c787ecbc97b3a0c8cb066179cff1a2f3ab4e9c7ceaa"
+        }
+      }
+    },
+    {
+      "id": "change.C2_extensions_replaced",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change C2_extensions_replaced by OWNER (unit actor sequence 3, control_ref P0_genesis_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a834947e76e016d019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a031700000007150c3401420256027002710273027f0a657874656e73696f6e73017f007f007f017f007f07"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "4947e76e05c7e0401e1fc69a4ec10fe3710a577de418f11ff9825feed05500b1",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015877856f4a834947e76e016d019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a031700000007150c3401420256027002710273027f0a657874656e73696f6e73017f007f007f017f007f07"
+        },
+        "sha256": {
+          "hex": "94bdf8e99aab6920fab689c991ca472a2a0ac1b28183f5e60146e444cde71356"
+        }
+      }
+    },
+    {
+      "id": "change.C2_extension_namespace_map",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change C2_extension_namespace_map by OWNER (unit actor sequence 3, control_ref P0_genesis_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83c3b52711017d019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0317000000080102020315163401420356035701700202007e07177e126f72672e6578616d706c652e7265766965770161027e00017e0016610200"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "c3b52711f8d30fb6534310e84c0809f02222bbd05c081ed15786a8b984e5dec3",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015887856f4a83c3b52711017d019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0317000000080102020315163401420356035701700202007e07177e126f72672e6578616d706c652e7265766965770161027e00017e0016610200"
+        },
+        "sha256": {
+          "hex": "543aeb97afa32b4ee76d6802523d63bbe5ff0d99f9887d8194358a157bd7cca2"
+        }
+      }
+    },
+    {
+      "id": "change.C3_extension_namespace_map_to_scalar",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change C3_extension_namespace_map_to_scalar by OWNER (unit actor sequence 4, control_ref P0_genesis_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a835172078601830101c3b52711f8d30fb6534310e84c0809f02222bbd05c081ed15786a8b984e5dec32030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a04190000000a01020202151434014202560257047002710273027f007f077f126f72672e6578616d706c652e726576696577017f017f46646f6e657f017f007f17"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 4,
+        "unit_actor_seq": 4,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "5172078678eee498f73e0b81a7077477971701f071b00576ec9d8126c20daa30",
+        "deps": "c3b52711f8d30fb6534310e84c0809f02222bbd05c081ed15786a8b984e5dec3"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "8201588e856f4a835172078601830101c3b52711f8d30fb6534310e84c0809f02222bbd05c081ed15786a8b984e5dec32030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a04190000000a01020202151434014202560257047002710273027f007f077f126f72672e6578616d706c652e726576696577017f017f46646f6e657f017f007f17"
+        },
+        "sha256": {
+          "hex": "41e9a5f95d97a93c63169252b574959f3ca6e65443706d485e43b333908fc960"
         }
       }
     },
@@ -7136,6 +8221,398 @@
       }
     },
     {
+      "id": "change.S_descriptor_small_order_identity",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change S_descriptor_small_order_identity by OWNER (unit actor sequence 3, control_ref P0_genesis_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83486d4e37019503019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020204155634014204560a57cf01700206007f0605177a2d703a516a494b6b67597a43553266324d466434642d53775248325835686f526a33326a57316865647966346e670a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f77425949454979437049474d776c4e6e396a42586548666b734552396c2d5961455939396f317459586e636e2d4a344156676741514141414141414141414141414141414141414141414141414141414141414141414141414141414141435743413447536b4745714e37524b355162473252446c4847424d5f4f466f4e4534714851317a6654335431386567703a356348343479456f69546e796d475837396d664c6f57334d6574412d736e69365365387259596d46334c6b4445565f42206c6170746f70006465736b746f700600"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "486d4e3756b4f60b34685a0e535e7e1b6357ceb5993f960f0b934a31d76e4827",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015901a0856f4a83486d4e37019503019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020204155634014204560a57cf01700206007f0605177a2d703a516a494b6b67597a43553266324d466434642d53775248325835686f526a33326a57316865647966346e670a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f77425949454979437049474d776c4e6e396a42586548666b734552396c2d5961455939396f317459586e636e2d4a344156676741514141414141414141414141414141414141414141414141414141414141414141414141414141414141435743413447536b4745714e37524b355162473252446c4847424d5f4f466f4e4534714851317a6654335431386567703a356348343479456f69546e796d475837396d664c6f57334d6574412d736e69365365387259596d46334c6b4445565f42206c6170746f70006465736b746f700600"
+        },
+        "sha256": {
+          "hex": "95115b2c3b445db6e26e17800cacb74a8c1c6e969b5b8a6a9404e88afc37cc31"
+        }
+      }
+    },
+    {
+      "id": "change.S_descriptor_small_order_8",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change S_descriptor_small_order_8 by OWNER (unit actor sequence 3, control_ref P0_genesis_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a837447dc32019503019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020204155634014204560a57cf01700206007f0605177a2d703a6a6d4b395463387744725a5448687557386e45316b6251526b6378647a69706f6f347a434749684949644d0a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f77425949493569765533504d413632557834626c764a784e5a4730455a484d58633471614b4f4d776869495343485441566767787864716344314e32452d36504174324452426e44796f67555f6f734f637a475473663964354b7341336f435743413447536b4745714e37524b355162473252446c4847424d5f4f466f4e4534714851317a6654335431386567703a356348343479456f69546e796d475837396d664c6f57334d6574412d736e69365365387259596d46334c6b4445565f42206c6170746f70006465736b746f700600"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "7447dc32092533abed234050cd5a663147f6adacfc29c7110a6422b0f9656c59",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015901a0856f4a837447dc32019503019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020204155634014204560a57cf01700206007f0605177a2d703a6a6d4b395463387744725a5448687557386e45316b6251526b6378647a69706f6f347a434749684949644d0a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f77425949493569765533504d413632557834626c764a784e5a4730455a484d58633471614b4f4d776869495343485441566767787864716344314e32452d36504174324452426e44796f67555f6f734f637a475473663964354b7341336f435743413447536b4745714e37524b355162473252446c4847424d5f4f466f4e4534714851317a6654335431386567703a356348343479456f69546e796d475837396d664c6f57334d6574412d736e69365365387259596d46334c6b4445565f42206c6170746f70006465736b746f700600"
+        },
+        "sha256": {
+          "hex": "4636d0558cb9be893574e98d9165ef3a0bdf705d00c8c2c5034bbb3d6d36daf3"
+        }
+      }
+    },
+    {
+      "id": "change.S_descriptor_noncanonical_y",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change S_descriptor_noncanonical_y by OWNER (unit actor sequence 3, control_ref P0_genesis_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a8398f147de019503019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020204155634014204560a57cf01700206007f0605177a2d703a3253623442306a3952612d464937784c6144727733705536423156555157744e597743674d4468744e6a630a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f774259494e6b6d2d4164495f55577668534f3853326736384e36564f6764565645467254574d416f444134625459334156676737765f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f3338435743413447536b4745714e37524b355162473252446c4847424d5f4f466f4e4534714851317a6654335431386567703a356348343479456f69546e796d475837396d664c6f57334d6574412d736e69365365387259596d46334c6b4445565f42206c6170746f70006465736b746f700600"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "98f147dee1ff5037bc2f26ab0c79b7bf54c4369901866f5ff5b7c273533022a4",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015901a0856f4a8398f147de019503019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020204155634014204560a57cf01700206007f0605177a2d703a3253623442306a3952612d464937784c6144727733705536423156555157744e597743674d4468744e6a630a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f774259494e6b6d2d4164495f55577668534f3853326736384e36564f6764565645467254574d416f444134625459334156676737765f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f3338435743413447536b4745714e37524b355162473252446c4847424d5f4f466f4e4534714851317a6654335431386567703a356348343479456f69546e796d475837396d664c6f57334d6574412d736e69365365387259596d46334c6b4445565f42206c6170746f70006465736b746f700600"
+        },
+        "sha256": {
+          "hex": "08cd67d5415f0180b8123273d686aaa023d13fa602c02c9da6ced8eb87611d63"
+        }
+      }
+    },
+    {
+      "id": "change.S_descriptor_noncanonical_sign",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change S_descriptor_noncanonical_sign by OWNER (unit actor sequence 3, control_ref P0_genesis_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a8303a0044e019503019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020204155634014204560a57cf01700206007f0605177a2d703a434f354476696572356a32734b6e61337363483152456e3662474374725f4e6951687466714d6977376d4d0a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f77425949416a755137346e712d593972437032743748423955524a2d6d786772615f7a596b496258366a49734f356a4156676741514141414141414141414141414141414141414141414141414141414141414141414141414141414941435743413447536b4745714e37524b355162473252446c4847424d5f4f466f4e4534714851317a6654335431386567703a356348343479456f69546e796d475837396d664c6f57334d6574412d736e69365365387259596d46334c6b4445565f42206c6170746f70006465736b746f700600"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "03a0044ebd54ced32d62db17bd4faa701774578f1a587937ccb038a6006a5484",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015901a0856f4a8303a0044e019503019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020204155634014204560a57cf01700206007f0605177a2d703a434f354476696572356a32734b6e61337363483152456e3662474374725f4e6951687466714d6977376d4d0a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f77425949416a755137346e712d593972437032743748423955524a2d6d786772615f7a596b496258366a49734f356a4156676741514141414141414141414141414141414141414141414141414141414141414141414141414141414941435743413447536b4745714e37524b355162473252446c4847424d5f4f466f4e4534714851317a6654335431386567703a356348343479456f69546e796d475837396d664c6f57334d6574412d736e69365365387259596d46334c6b4445565f42206c6170746f70006465736b746f700600"
+        },
+        "sha256": {
+          "hex": "b2bc4e9e1949e5198c4b69c58d20161b03761cbe30b019a013b56472631b64fb"
+        }
+      }
+    },
+    {
+      "id": "change.S_descriptor_not_on_curve",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change S_descriptor_not_on_curve by OWNER (unit actor sequence 3, control_ref P0_genesis_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83be71968e019503019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020204155634014204560a57cf01700206007f0605177a2d703a3842334c71597a324261623368567a774c6b6554656867573641554a767673505267686b767149507662630a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f7742594950416479366d4d3967576d39345663384335486b336f594675674643623737443059495a4c3669443732334156676741674141414141414141414141414141414141414141414141414141414141414141414141414141414141435743413447536b4745714e37524b355162473252446c4847424d5f4f466f4e4534714851317a6654335431386567703a356348343479456f69546e796d475837396d664c6f57334d6574412d736e69365365387259596d46334c6b4445565f42206c6170746f70006465736b746f700600"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "be71968e69e0480f9a5989e0aae447ccda99e7da113bd9a68afd07fe6e8b7673",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015901a0856f4a83be71968e019503019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020204155634014204560a57cf01700206007f0605177a2d703a3842334c71597a324261623368567a774c6b6554656867573641554a767673505267686b767149507662630a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f7742594950416479366d4d3967576d39345663384335486b336f594675674643623737443059495a4c3669443732334156676741674141414141414141414141414141414141414141414141414141414141414141414141414141414141435743413447536b4745714e37524b355162473252446c4847424d5f4f466f4e4534714851317a6654335431386567703a356348343479456f69546e796d475837396d664c6f57334d6574412d736e69365365387259596d46334c6b4445565f42206c6170746f70006465736b746f700600"
+        },
+        "sha256": {
+          "hex": "02b5852adce50e8d2fc21c9c817fa0ab36cf06104c35c39b679170c63374b689"
+        }
+      }
+    },
+    {
+      "id": "change.S_descriptor_control",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change S_descriptor_control by OWNER (unit actor sequence 3, control_ref P0_genesis_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a838c0bc6cc019503019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020204155634014204560a57cf01700206007f0605177a2d703a334c634a553370385a726e5868636e656d7a48527a786b69304a3869586842486e43537a4173367a2d66490a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f774259494e793343564e36664761353134584a337073783063385a49744366496c34515235776b73774c4f735f6e79415667675a535f7549674b67436251364844307763314e4e463645424864625a4a616b4a656c664c4f645948537041435743413447536b4745714e37524b355162473252446c4847424d5f4f466f4e4534714851317a6654335431386567703a356348343479456f69546e796d475837396d664c6f57334d6574412d736e69365365387259596d46334c6b4445565f42206c6170746f70006465736b746f700600"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "8c0bc6ccd148197f3be368491a5da5f48d481134d7dd85759160c8af75e5a0a3",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015901a0856f4a838c0bc6cc019503019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020204155634014204560a57cf01700206007f0605177a2d703a334c634a553370385a726e5868636e656d7a48527a786b69304a3869586842486e43537a4173367a2d66490a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017a00e611d605c60113766f774259494e793343564e36664761353134584a337073783063385a49744366496c34515235776b73774c4f735f6e79415667675a535f7549674b67436251364844307763314e4e463645424864625a4a616b4a656c664c4f645948537041435743413447536b4745714e37524b355162473252446c4847424d5f4f466f4e4534714851317a6654335431386567703a356348343479456f69546e796d475837396d664c6f57334d6574412d736e69365365387259596d46334c6b4445565f42206c6170746f70006465736b746f700600"
+        },
+        "sha256": {
+          "hex": "65763bbb8200b51ab2afc6a200debc1c9a9c90934d68d6c1b2d8490ad67083bc"
+        }
+      }
+    },
+    {
+      "id": "change.S_device_platform_revoked_ok",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change S_device_platform_revoked_ok by OWNER (unit actor sequence 3, control_ref P0_genesis_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a836cd0e91501c201019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020204154b340142045606570c700205007f0504177b2d703a334c634a553370385a726e5868636e656d7a48527a786b69304a3869586842486e43537a4173367a2d6649056c6162656c046b696e6408706c6174666f726d077265766f6b6564057f0004017b005613660250686f6e65006d6f62696c650500"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "6cd0e9150c2ae5d0d48306ad125d668b99a5a320ab7c32498d244306c76aedab",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "820158cd856f4a836cd0e91501c201019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020204154b340142045606570c700205007f0504177b2d703a334c634a553370385a726e5868636e656d7a48527a786b69304a3869586842486e43537a4173367a2d6649056c6162656c046b696e6408706c6174666f726d077265766f6b6564057f0004017b005613660250686f6e65006d6f62696c650500"
+        },
+        "sha256": {
+          "hex": "9d906906a82806e29f703ddc49dde2ffd2836aac8b014c3db52526e0b7cad16c"
+        }
+      }
+    },
+    {
+      "id": "change.S_device_platform_uint",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change S_device_platform_uint by OWNER (unit actor sequence 3, control_ref P0_genesis_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83009066b101b401019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0317000000080102020415433401420456055707700204007f0503177c2d703a334c634a553370385a726e5868636e656d7a48527a786b69304a3869586842486e43537a4173367a2d6649056c6162656c046b696e6408706c6174666f726d047f0003017e0056021350686f6e6500070400"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "009066b176174b116103751f4fd2023bdcff63a9735a9da7f61a6b3257444ac2",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "820158bf856f4a83009066b101b401019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0317000000080102020415433401420456055707700204007f0503177c2d703a334c634a553370385a726e5868636e656d7a48527a786b69304a3869586842486e43537a4173367a2d6649056c6162656c046b696e6408706c6174666f726d047f0003017e0056021350686f6e6500070400"
+        },
+        "sha256": {
+          "hex": "d82b74bd7227468ad903c87a499417156e57fa0d3cec0d91770ff879e4d2ec3a"
+        }
+      }
+    },
+    {
+      "id": "change.S_device_revoked_uint",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change S_device_revoked_uint by OWNER (unit actor sequence 3, control_ref P0_genesis_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83478550f601b301019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0317000000080102020415423401420456055707700204007f0503177c2d703a334c634a553370385a726e5868636e656d7a48527a786b69304a3869586842486e43537a4173367a2d6649056c6162656c046b696e64077265766f6b6564047f0003017e0056021350686f6e6500070400"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "478550f6473f84a2505aaa73c1755b6069383c33222e8eb3c2f16a2a2d8236a8",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "820158be856f4a83478550f601b301019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0317000000080102020415423401420456055707700204007f0503177c2d703a334c634a553370385a726e5868636e656d7a48527a786b69304a3869586842486e43537a4173367a2d6649056c6162656c046b696e64077265766f6b6564047f0003017e0056021350686f6e6500070400"
+        },
+        "sha256": {
+          "hex": "c93de7960d4d920b3b3aaa9e6e64d289f516e6c97cd91b5a3c0308ce52832a0e"
+        }
+      }
+    },
+    {
+      "id": "change.S_request_platform_uint",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change S_request_platform_uint by OWNER (unit actor sequence 3, control_ref P0_genesis_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a8305962eb6018f03019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020204155634014204560a57c901700206007f0605177a2d703a334c634a553370385a726e5868636e656d7a48527a786b69304a3869586842486e43537a4173367a2d66490a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017c00e611d605c60102136f774259494e793343564e36664761353134584a337073783063385a49744366496c34515235776b73774c4f735f6e79415667675a535f7549674b67436251364844307763314e4e463645424864625a4a616b4a656c664c4f645948537041435743413447536b4745714e37524b355162473252446c4847424d5f4f466f4e4534714851317a6654335431386567703a356348343479456f69546e796d475837396d664c6f57334d6574412d736e69365365387259596d46334c6b4445565f42206c6170746f7000070600"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P0_genesis_i",
+        "change_hash": "05962eb6327bdf13bb4ffb5bcc183a6ad9dbab4256d478591749aae50a889c78",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "820159019a856f4a8305962eb6018f03019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020204155634014204560a57c901700206007f0605177a2d703a334c634a553370385a726e5868636e656d7a48527a786b69304a3869586842486e43537a4173367a2d66490a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d067f0005017c00e611d605c60102136f774259494e793343564e36664761353134584a337073783063385a49744366496c34515235776b73774c4f735f6e79415667675a535f7549674b67436251364844307763314e4e463645424864625a4a616b4a656c664c4f645948537041435743413447536b4745714e37524b355162473252446c4847424d5f4f466f4e4534714851317a6654335431386567703a356348343479456f69546e796d475837396d664c6f57334d6574412d736e69365365387259596d46334c6b4445565f42206c6170746f7000070600"
+        },
+        "sha256": {
+          "hex": "5c8ef5c21646efe165f6733a5083918e58352f7a0cc4954708194db8384c4a65"
+        }
+      }
+    },
+    {
+      "id": "change.S_device_entry_dev_a",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change S_device_entry_dev_a by OWNER (unit actor sequence 3, control_ref P1_device_grant_dev_a_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a837b7a39fc01aa01019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020204153a3401420456045707700203007f0502177d2d703a424a6a5f4d307838734d46784265702d6f736632477078554c765971637843775637476f513474647a3538056c6162656c046b696e64037f0002017d0066134c6170746f70000300"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P1_device_grant_dev_a_i",
+        "change_hash": "7b7a39fc2d839dfd7b56b5dac842a72e6de7c0d64b8b9f50e20908fac12d3795",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "820158b5856f4a837b7a39fc01aa01019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020204153a3401420456045707700203007f0502177d2d703a424a6a5f4d307838734d46784265702d6f736632477078554c765971637843775637476f513474647a3538056c6162656c046b696e64037f0002017d0066134c6170746f70000300"
+        },
+        "sha256": {
+          "hex": "c9f5e325a7d125087ecdf053091ecca4b3180783466b6dfaf7d887f469258f9d"
+        }
+      }
+    },
+    {
+      "id": "change.S_device_platform_root",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change S_device_platform_root by OWNER (unit actor sequence 4, control_ref P1_device_grant_dev_a_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a8356bf654b0174017b7a39fc2d839dfd7b56b5dac842a72e6de7c0d64b8b9f50e20908fac12d37952030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041a0000000801020202150a340142025602570770027f007f177f08706c6174666f726d017f017f766465736b746f707f00"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 4,
+        "unit_actor_seq": 4,
+        "control_ref": "P1_device_grant_dev_a_i",
+        "change_hash": "56bf654b2c25f58909fe8f026f0455f42e39344f45bc175f0bc8ceb0105ce884",
+        "deps": "7b7a39fc2d839dfd7b56b5dac842a72e6de7c0d64b8b9f50e20908fac12d3795"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "8201587e856f4a8356bf654b0174017b7a39fc2d839dfd7b56b5dac842a72e6de7c0d64b8b9f50e20908fac12d37952030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a041a0000000801020202150a340142025602570770027f007f177f08706c6174666f726d017f017f766465736b746f707f00"
+        },
+        "sha256": {
+          "hex": "9fa56e463a72fb8d69ed6cbae1abf1572721e06085bf8d48a54ab46e9200eeaf"
+        }
+      }
+    },
+    {
+      "id": "change.S_device_platform_dev_a",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change S_device_platform_dev_a by DEV_A (unit actor sequence 1, control_ref P1_device_grant_dev_a_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83bf19c8e5019401017b7a39fc2d839dfd7b56b5dac842a72e6de7c0d64b8b9f50e20908fac12d379520f92960bd51fb4aebe23684a0f7e6e8e92acc0c4e55554593fcc9c3d6e723c16c011a0000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0801020202150a340142025602570670027f017f177f08706c6174666f726d017f017f666c6170746f707f00"
+        },
+        "writer": "DEV_A",
+        "writer_class": "personal",
+        "writer_ref": "p:BJj_M0x8sMFxBep-osf2GpxULvYqcxCwV7GoQ4tdz58",
+        "automerge_actor": "f92960bd51fb4aebe23684a0f7e6e8e92acc0c4e55554593fcc9c3d6e723c16c",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "control_ref": "P1_device_grant_dev_a_i",
+        "change_hash": "bf19c8e5be82d6019f7fa3d1092c3fb917b91886f9db2afd684460d8e18532d6",
+        "deps": "7b7a39fc2d839dfd7b56b5dac842a72e6de7c0d64b8b9f50e20908fac12d3795"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "8201589f856f4a83bf19c8e5019401017b7a39fc2d839dfd7b56b5dac842a72e6de7c0d64b8b9f50e20908fac12d379520f92960bd51fb4aebe23684a0f7e6e8e92acc0c4e55554593fcc9c3d6e723c16c011a0000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0801020202150a340142025602570670027f017f177f08706c6174666f726d017f017f666c6170746f707f00"
+        },
+        "sha256": {
+          "hex": "108b8f3a8996b3d318b2039082209824cce98f1d19a3b557bce823c973f024e8"
+        }
+      }
+    },
+    {
+      "id": "change.S_device_platform_dev_a_uint",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change S_device_platform_dev_a_uint by DEV_A (unit actor sequence 1, control_ref P1_device_grant_dev_a_i)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a832bb189b4018f01017b7a39fc2d839dfd7b56b5dac842a72e6de7c0d64b8b9f50e20908fac12d379520f92960bd51fb4aebe23684a0f7e6e8e92acc0c4e55554593fcc9c3d6e723c16c011a0000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0801020202150a340142025602570170027f017f177f08706c6174666f726d017f017f13077f00"
+        },
+        "writer": "DEV_A",
+        "writer_class": "personal",
+        "writer_ref": "p:BJj_M0x8sMFxBep-osf2GpxULvYqcxCwV7GoQ4tdz58",
+        "automerge_actor": "f92960bd51fb4aebe23684a0f7e6e8e92acc0c4e55554593fcc9c3d6e723c16c",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "control_ref": "P1_device_grant_dev_a_i",
+        "change_hash": "2bb189b474854a78fe16bbef7f539ee9ab41fb4414d2abfba2dbd9891486cd3d",
+        "deps": "7b7a39fc2d839dfd7b56b5dac842a72e6de7c0d64b8b9f50e20908fac12d3795"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "8201589a856f4a832bb189b4018f01017b7a39fc2d839dfd7b56b5dac842a72e6de7c0d64b8b9f50e20908fac12d379520f92960bd51fb4aebe23684a0f7e6e8e92acc0c4e55554593fcc9c3d6e723c16c011a0000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0801020202150a340142025602570170027f017f177f08706c6174666f726d017f017f13077f00"
+        },
+        "sha256": {
+          "hex": "f26f5d40ba0d474f960b7b51566a05015989a6f417e6593c7c241d8ee8ff608b"
+        }
+      }
+    },
+    {
       "id": "change.S_missing_label",
       "type": "bytes",
       "kind": "profile_change_framing",
@@ -7412,6 +8889,34 @@
         },
         "sha256": {
           "hex": "99fb555da46a350520d8c8a52b7ecb0cefafcf4bf36d36d031a05b3253290f08"
+        }
+      }
+    },
+    {
+      "id": "change.S_platform_uint",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change S_platform_uint by OWNER (unit actor sequence 3, control_ref P2_pairing_device)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a838070f2b801b7010206bbd835e6191451b657ac2dddbb51699afc76bb8d88d0c01684186cb057e80e9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a031d00000120c6751f87d0911fa8618fb9eda15ec9d8c20a9b4d35ee86b9ea9090a58dda9bed0a01020202150a34014202560257017002710273027f017f177f08706c6174666f726d017f017f13077f017f017f1c"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P2_pairing_device",
+        "change_hash": "8070f2b81277c2f001ded3e4a0049b24f23dea03dcdbf89ab7efc41df6f573a6",
+        "deps": "06bbd835e6191451b657ac2dddbb51699afc76bb8d88d0c01684186cb057e80e,9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "820158c2856f4a838070f2b801b7010206bbd835e6191451b657ac2dddbb51699afc76bb8d88d0c01684186cb057e80e9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a031d00000120c6751f87d0911fa8618fb9eda15ec9d8c20a9b4d35ee86b9ea9090a58dda9bed0a01020202150a34014202560257017002710273027f017f177f08706c6174666f726d017f017f13077f017f017f1c"
+        },
+        "sha256": {
+          "hex": "13311c13238f507eb3d67c8c6a24220939b2b29c2168ba340aa8ced889c6d38d"
         }
       }
     },

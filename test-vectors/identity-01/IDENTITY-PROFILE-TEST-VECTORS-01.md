@@ -11,6 +11,14 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `identity_doc_initial_extra_key` | validation | `INVALID_ROOT` | IDENTITY-PROFILE-01 §2.2, §3 AI0 | An initial change that also creates the reserved key recovery |
 | `identity_doc_initial_filled_roster` | validation | `INVALID_ROOT` | IDENTITY-PROFILE-01 §2.2, §3 AI0 | An initial change whose roster is not empty |
 | `identity_doc_bad_root` | validation | `INVALID_ROOT` | IDENTITY-PROFILE-01 §2.2, §3 AI0 | An initial change with identity.root = p:<BOB>, not the Genesis owner |
+| `identity_doc_initial_roster_list` | validation | `INVALID_ROOT` | IDENTITY-PROFILE-01 §2.2, §3 AI0 | An initial change that creates roster as an empty list instead of an empty map |
+| `identity_doc_initial_roster_list.snapshot` | behavioral | state | IDENTITY-PROFILE-01 §4 | The state of identity_doc_initial_roster_list loaded from a Snapshot: roster is a list |
+| `identity_doc_initial_devices_list` | validation | `INVALID_ROOT` | IDENTITY-PROFILE-01 §2.2, §3 AI0 | An initial change that creates devices as an empty list instead of an empty map |
+| `identity_doc_initial_devices_list.snapshot` | behavioral | state | IDENTITY-PROFILE-01 §4 | The state of identity_doc_initial_devices_list loaded from a Snapshot: devices is a list |
+| `identity_doc_initial_requests_list` | validation | `INVALID_ROOT` | IDENTITY-PROFILE-01 §2.2, §3 AI0 | An initial change that creates requests as an empty list instead of an empty map |
+| `identity_doc_initial_requests_list.snapshot` | behavioral | state | IDENTITY-PROFILE-01 §4 | The state of identity_doc_initial_requests_list loaded from a Snapshot: requests is a list |
+| `identity_doc_initial_extensions_list` | validation | `INVALID_ROOT` | IDENTITY-PROFILE-01 §2.2, §3 AI0 | An initial change that creates extensions as an empty list instead of an empty map |
+| `identity_doc_initial_extensions_list.snapshot` | behavioral | state | IDENTITY-PROFILE-01 §4 | The state of identity_doc_initial_extensions_list loaded from a Snapshot: extensions is a list |
 | `identity_doc_second_initial_other_unit` | behavioral | state | IDENTITY-PROFILE-01 §2.2, §3 AI0 | Two different root changes without dependencies, Automerge sequence 1, in the root's Data Units with actor sequences 1 and 2, and a fill change depending on the second |
 | `identity_doc_initial_without_unit_1` | behavioral | state | IDENTITY-PROFILE-01 §2.2 | A Snapshot whose change without dependencies is not the change of the root's Data Unit with actor sequence 1 (C0_initial) |
 | `identity_doc_initial_seq_2` | validation | `INVALID_AUTOMERGE_BYTES` | SHARED-OBJECTS-PROFILE-01 §11.4 R1; IDENTITY-PROFILE-01 §2.2 | A change without dependencies with Automerge sequence 2 (C1_fill with its dependency removed), in the root's unit 1 |
@@ -20,6 +28,9 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `identity_doc_container_and_profile` | validation | `CONTAINER_REPLACED` | IDENTITY-PROFILE-01 §3 AI2 | A change by the root replacing roster and writing profile: AI2 is reported before AI1 |
 | `identity_doc_reserved_key_later` | validation | valid | IDENTITY-PROFILE-01 §2.4 | A later change by the root that creates the reserved key recovery: admitted, preserved, never interpreted |
 | `identity_doc_container_replaced` | validation | `CONTAINER_REPLACED` | IDENTITY-PROFILE-01 §3 AI2 | A change by the root replacing roster with a new map |
+| `identity_doc_extensions_container_replaced` | validation | `CONTAINER_REPLACED` | IDENTITY-PROFILE-01 §3 AI2 | A change by the root replacing the extensions container with a new map |
+| `identity_doc_extension_namespace_written` | validation | valid | IDENTITY-PROFILE-01 §3 AI2, §2.1; SHARED-OBJECTS-PROFILE-01 §18 | The root writes extensions["org.example.review"] = {a: "a"} |
+| `identity_doc_extension_namespace_map_to_scalar` | validation | valid | IDENTITY-PROFILE-01 §3 AI2, §2.1; SHARED-OBJECTS-PROFILE-01 §18 | Then the root replaces the value of extensions["org.example.review"], a map, with the scalar "done": admitted (a namespace value is not an entry map) |
 | `identity_doc_text_field` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §3 AI3 | A change by the root writing devices[p:OWNER].label as collaborative Text |
 | `identity_doc_int_value` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §3 AI3 | A change by the root writing devices[p:OWNER].kind as an Automerge int, not a uint (§2.1) |
 | `pairing_writes_own_request` | validation | valid | IDENTITY-PROFILE-01 §3 | PAIR_J (control_ref P2) creates requests[p:<DEV_B>] with pairing = p:<PAIR_J> |
@@ -51,6 +62,19 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `request_scope_bad_ref` | validation | `INVALID_RESOURCE_REF` | IDENTITY-PROFILE-01 §4 | A kind-1 request whose scope element has 42 characters |
 | `request_key_descriptor_mismatch` | validation | `INVALID_DESCRIPTOR` | IDENTITY-PROFILE-01 §4 | Key p:<DEV_B>, descriptor of DEV_X |
 | `request_bad_descriptor` | validation | `INVALID_DESCRIPTOR` | IDENTITY-PROFILE-01 §4 | A descriptor that is not the CBOR of a principal-descriptor |
+| `request_descriptor_small_order_identity` | validation | `INVALID_DESCRIPTOR` | IDENTITY-PROFILE-01 §4 | A descriptor whose Ed25519 key is the identity point (order 1); its ID is recomputed from its keys and is the entry's key |
+| `request_descriptor_small_order_8` | validation | `INVALID_DESCRIPTOR` | IDENTITY-PROFILE-01 §4 | A descriptor whose Ed25519 key is a point of order 8; its ID is recomputed from its keys and is the entry's key |
+| `request_descriptor_noncanonical_y` | validation | `INVALID_DESCRIPTOR` | IDENTITY-PROFILE-01 §4 | A descriptor whose Ed25519 key is y = p + 1, a non-canonical encoding of y = 1; its ID is recomputed from its keys and is the entry's key |
+| `request_descriptor_noncanonical_sign` | validation | `INVALID_DESCRIPTOR` | IDENTITY-PROFILE-01 §4 | A descriptor whose Ed25519 key is y = 1 with the sign bit set (x = 0); its ID is recomputed from its keys and is the entry's key |
+| `request_descriptor_not_on_curve` | validation | `INVALID_DESCRIPTOR` | IDENTITY-PROFILE-01 §4 | A descriptor whose Ed25519 key is y = 2, which is not the y of a curve point; its ID is recomputed from its keys and is the entry's key |
+| `request_descriptor_crafted.control` | validation | valid | IDENTITY-PROFILE-01 §4 | Control: the same construction with DEV_B's own keys gives DEV_B's descriptor and key; valid |
+| `device_platform_and_revoked_valid` | validation | valid | IDENTITY-PROFILE-01 §4 | devices[p:<DEV_B>] with platform "mobile" and revoked = true |
+| `device_platform_wrong_type` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | devices[p:<DEV_B>] with platform the uint 7 |
+| `device_revoked_wrong_type` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | devices[p:<DEV_B>] with revoked the uint 7 |
+| `request_platform_wrong_type` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | requests[p:<DEV_B>] with platform the uint 7 |
+| `device_conflicted_platform` | validation | valid | IDENTITY-PROFILE-01 §4 | Concurrent platform values "desktop" (OWNER) and "laptop" (DEV_A) of devices[p:<DEV_A>]: valid, a reader may show either |
+| `device_conflicted_platform_valid_invalid` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | Concurrent platform values "desktop" and the uint 7 of devices[p:<DEV_A>], delivered S_device_platform_root then S_device_platform_dev_a_uint |
+| `device_conflicted_platform_valid_invalid.reverse` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | Concurrent platform values "desktop" and the uint 7 of devices[p:<DEV_A>], delivered S_device_platform_dev_a_uint then S_device_platform_root |
 | `request_missing_label` | validation | `MISSING_REQUIRED_FIELD` | IDENTITY-PROFILE-01 §4 | A request without label |
 | `request_kind_2` | validation | `INVALID_ENUM_VALUE` | IDENTITY-PROFILE-01 §4 | A request with kind 2 |
 | `request_bad_timestamp` | validation | `INVALID_TIMESTAMP` | IDENTITY-PROFILE-01 §4 | requested_at '2026-11-03 10:00:00' (not RFC 3339 UTC) |
@@ -59,6 +83,8 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `request_conflicted_unknown_field` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | Concurrent values of the unknown field note of requests[p:<DEV_B>] (by PAIR_J and by the root) |
 | `request_conflicted_valid_invalid` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | Concurrent label values 'Laptop' and the uint 7, delivered J2_label_ok then S_label_uint |
 | `request_conflicted_valid_invalid.reverse` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | Concurrent label values 'Laptop' and the uint 7, delivered S_label_uint then J2_label_ok |
+| `request_conflicted_platform_valid_invalid` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | Concurrent platform values 'laptop' and the uint 7, delivered J2_continues_own then S_platform_uint |
+| `request_conflicted_platform_valid_invalid.reverse` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | Concurrent platform values 'laptop' and the uint 7, delivered S_platform_uint then J2_continues_own |
 | `request_conflicted_maps` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | Two concurrent maps under requests[p:<DEV_B>] (pairing_concurrent_same_key) |
 | `roster_bad_ref` | validation | `INVALID_RESOURCE_REF` | IDENTITY-PROFILE-01 §4 | A roster key of 42 characters |
 | `roster_conflicted_name` | validation | valid | IDENTITY-PROFILE-01 §4 | Concurrent names of roster[X] by OWNER and DEV_A: valid, a reader may show any value |
@@ -128,6 +154,10 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `C0x_initial_extra_key` | OWNER | 1 | P0_genesis_i | `8f6ca9bf5c51f260…` |
 | `C0f_initial_filled_roster` | OWNER | 1 | P0_genesis_i | `02a82925751ed675…` |
 | `C0b_initial_bad_root` | OWNER | 1 | P0_genesis_i | `e081991ddfe26c82…` |
+| `C0l_initial_roster_list` | OWNER | 1 | P0_genesis_i | `6b21e28a9c3541ad…` |
+| `C0l_initial_devices_list` | OWNER | 1 | P0_genesis_i | `bdcdd5982e423b21…` |
+| `C0l_initial_requests_list` | OWNER | 1 | P0_genesis_i | `d79af470eabe062b…` |
+| `C0l_initial_extensions_list` | OWNER | 1 | P0_genesis_i | `744d595087bd7d12…` |
 | `C0s_second_initial` | OWNER | 2 | P0_genesis_i | `7699f7b3852164ed…` |
 | `F_fill_on_second` | OWNER | 3 | P0_genesis_i | `680c57deb90d34e1…` |
 | `C1x_seq_2_without_deps` | OWNER | 1 | P0_genesis_i | `41f3388f422ff6df…` |
@@ -136,6 +166,9 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `C2_container_and_profile` | OWNER | 3 | P0_genesis_i | `36f8c533f12170af…` |
 | `C2_reserved_key_later` | OWNER | 3 | P0_genesis_i | `a602855e696b4e93…` |
 | `C2_container_replaced` | OWNER | 3 | P0_genesis_i | `90b9d1af634b97ba…` |
+| `C2_extensions_replaced` | OWNER | 3 | P0_genesis_i | `4947e76e05c7e040…` |
+| `C2_extension_namespace_map` | OWNER | 3 | P0_genesis_i | `c3b52711f8d30fb6…` |
+| `C3_extension_namespace_map_to_scalar` | OWNER | 4 | P0_genesis_i | `5172078678eee498…` |
 | `C2_text_label` | OWNER | 3 | P0_genesis_i | `0936dc3136437e97…` |
 | `C2_int_kind` | OWNER | 3 | P0_genesis_i | `09ec6878dc4b1a95…` |
 | `J1_own_request` | PAIR_J | 1 | P2_pairing_device | `06bbd835e6191451…` |
@@ -165,6 +198,20 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `S_scope_bad_ref` | OWNER | 3 | P0_genesis_i | `c04ad7b42b4d05e7…` |
 | `S_key_mismatch` | OWNER | 3 | P0_genesis_i | `32f585134a7f3ea9…` |
 | `S_bad_descriptor` | OWNER | 3 | P0_genesis_i | `2ebc2b85249b7fde…` |
+| `S_descriptor_small_order_identity` | OWNER | 3 | P0_genesis_i | `486d4e3756b4f60b…` |
+| `S_descriptor_small_order_8` | OWNER | 3 | P0_genesis_i | `7447dc32092533ab…` |
+| `S_descriptor_noncanonical_y` | OWNER | 3 | P0_genesis_i | `98f147dee1ff5037…` |
+| `S_descriptor_noncanonical_sign` | OWNER | 3 | P0_genesis_i | `03a0044ebd54ced3…` |
+| `S_descriptor_not_on_curve` | OWNER | 3 | P0_genesis_i | `be71968e69e0480f…` |
+| `S_descriptor_control` | OWNER | 3 | P0_genesis_i | `8c0bc6ccd148197f…` |
+| `S_device_platform_revoked_ok` | OWNER | 3 | P0_genesis_i | `6cd0e9150c2ae5d0…` |
+| `S_device_platform_uint` | OWNER | 3 | P0_genesis_i | `009066b176174b11…` |
+| `S_device_revoked_uint` | OWNER | 3 | P0_genesis_i | `478550f6473f84a2…` |
+| `S_request_platform_uint` | OWNER | 3 | P0_genesis_i | `05962eb6327bdf13…` |
+| `S_device_entry_dev_a` | OWNER | 3 | P1_device_grant_dev_a_i | `7b7a39fc2d839dfd…` |
+| `S_device_platform_root` | OWNER | 4 | P1_device_grant_dev_a_i | `56bf654b2c25f589…` |
+| `S_device_platform_dev_a` | DEV_A | 1 | P1_device_grant_dev_a_i | `bf19c8e5be82d601…` |
+| `S_device_platform_dev_a_uint` | DEV_A | 1 | P1_device_grant_dev_a_i | `2bb189b474854a78…` |
 | `S_missing_label` | OWNER | 3 | P0_genesis_i | `e5b99f10a43e802d…` |
 | `S_kind_2` | OWNER | 3 | P0_genesis_i | `4e8478e76b2cb5a8…` |
 | `S_bad_timestamp` | OWNER | 3 | P0_genesis_i | `2339f0f1f47bb643…` |
@@ -175,6 +222,7 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `S_note_unknown_root` | OWNER | 3 | P2_pairing_device | `3f5087472910c4ce…` |
 | `J2_label_ok` | PAIR_J | 2 | P2_pairing_device | `bebe317bb15c5f12…` |
 | `S_label_uint` | OWNER | 3 | P2_pairing_device | `f0a2cd98d4f3cf7d…` |
+| `S_platform_uint` | OWNER | 3 | P2_pairing_device | `8070f2b81277c2f0…` |
 | `S_roster_bad_ref` | OWNER | 3 | P0_genesis_i | `da186d84c0125a67…` |
 | `S_name_root` | OWNER | 3 | P1_device_grant_dev_a_i | `381a45664f901809…` |
 | `S_name_dev_a` | DEV_A | 1 | P1_device_grant_dev_a_i | `62b1a887a76a7db5…` |
