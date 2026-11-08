@@ -94,6 +94,23 @@ Reconciliation of X against I's Control state: revocations first, then registrat
 | 11 | DEV_P registers itself in X with its old chain (limit reached) | `wire:flow.p65_x_limit_dev_p_self_registers` | accept |  |
 | 12 | The next reconciliation of X proposes the revocation again, DEV_P now bound in X: never limited, exposing (limit reached) | `wire:flow.p65_x_limit_revoke_bound_dev_p` | accept |  |
 
+## F05.display_data
+
+Reconciliation step 4 on I with a pairing session open and closed: entries for personal and service devices only, retired entries, no change on a second run (IDENTITY-PROFILE-01 §7.1 step 4, §2.1; mode sequence)
+
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | I at P2, PAIR_J's session open; the document holds the root's entry only: DEV_A's entry is written, none for PAIR_J | `wire:P2_pairing_device` | accept |  |
+| 2 | A second run at P2, the session still open |  | nothing to write |  |
+| 3 | I at P3, PAIR_J's session consumed (closed) | `wire:P3_consume_for_dev_b` | accept |  |
+| 4 | I at P4: DEV_B registered, its entry never written (the approver crashed before §5.3 step 6 wrote it) | `wire:P4_register_dev_b_approved` | accept |  |
+| 5 | A second run at P4 |  | nothing to write |  |
+| 6 | Service variant: I at P3s, PAIR_J consumed for BRIDGE_O (the document as after the run at P2) (service) | `wire:P3s_consume_for_bridge_o` | accept |  |
+| 7 | I at P4s: BRIDGE_O bound in I with kind 1, not registered (service) | `wire:P4s_bind_bridge_o` | accept |  |
+| 8 | DEV_A revoked in I: its entry is retired and gets revoked = true; BRIDGE_O, suspended, keeps its entry (service) | `wire:flow.f09_revoke_issuer_in_i` | accept |  |
+| 9 | A second run after the revocation (service) |  | nothing to write |  |
+| 10 | BRIDGE_O re-certified by the root: its entry stays (service) | `wire:flow.f09_recertify_c1_in_i` | accept |  |
+
 ## F06_concurrent_revokes
 
 OWNER and DEV_A revoke DEV_B on one head with different reasons: one record; the other phase is complete (IDENTITY-PROFILE-01 §9.2 (Revoke); mode sequence)

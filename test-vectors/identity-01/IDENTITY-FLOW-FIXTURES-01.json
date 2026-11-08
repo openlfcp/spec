@@ -987,6 +987,210 @@
       ]
     },
     {
+      "id": "F05.display_data",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "Reconciliation step 4 on I with a pairing session open and closed: entries for personal and service devices only, retired entries, no change on a second run",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §7.1 step 4, §2.1",
+        "text": "Display entries are restored for devices of kind 0 and 1 bound in I and not revoked; a retired entry only gets revoked = true; nothing is written for a pairing device; a second run writes nothing."
+      },
+      "inputs": {
+        "mode": "sequence",
+        "steps": [
+          {
+            "action": "I at P2, PAIR_J's session open; the document holds the root's entry only: DEV_A's entry is written, none for PAIR_J",
+            "case": "wire:P2_pairing_device",
+            "n": 1
+          },
+          {
+            "action": "A second run at P2, the session still open",
+            "n": 2
+          },
+          {
+            "action": "I at P3, PAIR_J's session consumed (closed)",
+            "case": "wire:P3_consume_for_dev_b",
+            "n": 3
+          },
+          {
+            "action": "I at P4: DEV_B registered, its entry never written (the approver crashed before §5.3 step 6 wrote it)",
+            "case": "wire:P4_register_dev_b_approved",
+            "n": 4
+          },
+          {
+            "action": "A second run at P4",
+            "n": 5
+          },
+          {
+            "action": "Service variant: I at P3s, PAIR_J consumed for BRIDGE_O (the document as after the run at P2)",
+            "case": "wire:P3s_consume_for_bridge_o",
+            "branch": "service",
+            "n": 6
+          },
+          {
+            "action": "I at P4s: BRIDGE_O bound in I with kind 1, not registered",
+            "case": "wire:P4s_bind_bridge_o",
+            "branch": "service",
+            "n": 7
+          },
+          {
+            "action": "DEV_A revoked in I: its entry is retired and gets revoked = true; BRIDGE_O, suspended, keeps its entry",
+            "case": "wire:flow.f09_revoke_issuer_in_i",
+            "branch": "service",
+            "n": 8
+          },
+          {
+            "action": "A second run after the revocation",
+            "branch": "service",
+            "n": 9
+          },
+          {
+            "action": "BRIDGE_O re-certified by the root: its entry stays",
+            "case": "wire:flow.f09_recertify_c1_in_i",
+            "branch": "service",
+            "n": 10
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept",
+            "pairing_devices_bound": [
+              "PAIR_J"
+            ],
+            "writes": [
+              {
+                "entry": "DEV_A",
+                "write": {
+                  "label": "3fiu-3wcp-fo3s-cit3",
+                  "kind": 0
+                }
+              }
+            ],
+            "metadata_changes": 1
+          },
+          {
+            "n": 2,
+            "outcome": "nothing to write",
+            "writes": [],
+            "metadata_changes": 0
+          },
+          {
+            "n": 3,
+            "outcome": "accept",
+            "pairing_devices_bound": [
+              "PAIR_J"
+            ],
+            "writes": [],
+            "metadata_changes": 0
+          },
+          {
+            "n": 4,
+            "outcome": "accept",
+            "writes": [
+              {
+                "entry": "DEV_B",
+                "write": {
+                  "label": "bicr-ikmc-oec2-llzz",
+                  "kind": 0
+                }
+              }
+            ],
+            "metadata_changes": 1
+          },
+          {
+            "n": 5,
+            "outcome": "nothing to write",
+            "writes": [],
+            "metadata_changes": 0
+          },
+          {
+            "n": 6,
+            "outcome": "accept",
+            "writes": [],
+            "metadata_changes": 0
+          },
+          {
+            "n": 7,
+            "outcome": "accept",
+            "writes": [
+              {
+                "entry": "BRIDGE_O",
+                "write": {
+                  "label": "kbay-bfej-5suj-l5oq",
+                  "kind": 1
+                }
+              }
+            ],
+            "metadata_changes": 1
+          },
+          {
+            "n": 8,
+            "outcome": "accept",
+            "writes": [
+              {
+                "entry": "DEV_A",
+                "write": {
+                  "revoked": true
+                }
+              }
+            ],
+            "metadata_changes": 1
+          },
+          {
+            "n": 9,
+            "outcome": "nothing to write",
+            "writes": [],
+            "metadata_changes": 0
+          },
+          {
+            "n": 10,
+            "outcome": "accept",
+            "writes": [],
+            "metadata_changes": 0
+          }
+        ],
+        "final": {
+          "entries_main": {
+            "OWNER": {
+              "label": "Desktop",
+              "kind": 0
+            },
+            "DEV_A": {
+              "label": "3fiu-3wcp-fo3s-cit3",
+              "kind": 0
+            },
+            "DEV_B": {
+              "label": "bicr-ikmc-oec2-llzz",
+              "kind": 0
+            }
+          },
+          "entries_service": {
+            "OWNER": {
+              "label": "Desktop",
+              "kind": 0
+            },
+            "DEV_A": {
+              "label": "3fiu-3wcp-fo3s-cit3",
+              "kind": 0,
+              "revoked": true
+            },
+            "BRIDGE_O": {
+              "label": "kbay-bfej-5suj-l5oq",
+              "kind": 1
+            }
+          },
+          "entries_for_pairing_devices": 0
+        }
+      },
+      "assertions": [
+        "A pairing device has no entry (§2.1): a step 4 that wrote one would write a kind-2 entry that §4 marks invalid, and write it again on every run.",
+        "Every second run writes no metadata change, with the session open or closed."
+      ]
+    },
+    {
       "id": "F06_concurrent_revokes",
       "type": "behavioral",
       "kind": "identity_flow",

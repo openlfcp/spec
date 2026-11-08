@@ -28,6 +28,8 @@ Run after both corpora are generated:
 from __future__ import annotations
 
 import argparse
+import base64
+import copy
 import hashlib
 import json
 from pathlib import Path
@@ -153,6 +155,34 @@ def step1(i_ref: str, x_ref: str, x_name: str) -> dict:
         else:
             not_relevant.append(d)
     return {'propose': bound + unbound, 'not_relevant': not_relevant}
+
+
+def fingerprint(label: str) -> str:
+    """IDENTITY-PROFILE-01 §5.2."""
+    pid = bytes.fromhex(SUITES['wire'][f'principal_{label.lower()}']['expected']['principal_id']['hex'])
+    b = base64.b32encode(hashlib.sha256(b'LFCP-DEVICE-FP-v1' + pid).digest()[:10]).decode().lower().rstrip('=')
+    return '-'.join(b[i:i + 4] for i in range(0, 16, 4))
+
+
+assert fingerprint('DEV_B') == SUITES['profile']['fingerprint_dev_b']['expected']['fingerprint']
+
+
+def step4(i_ref: str, entries: dict) -> list[dict]:
+    """IDENTITY-PROFILE-01 §7.1 step 4 on I's Control state and the valid entries of `devices` (label -> entry); applies its writes."""
+    ps = post(i_ref)
+    writes = []
+    for d, b in sorted(ps['devices'].items()):
+        if b['kind'] not in (0, 1):
+            continue
+        revoked = f"{b['root']}/{d}" in ps['revoked']
+        e = entries.get(d)
+        if not revoked and e is None:
+            writes.append({'entry': d, 'write': {'label': fingerprint(d), 'kind': b['kind']}})
+        elif revoked and e is not None and e.get('revoked') is not True:
+            writes.append({'entry': d, 'write': {'revoked': True}})
+    for w in writes:
+        entries.setdefault(w['entry'], {}).update(w['write'])
+    return writes
 
 
 # ---------------------------------------------------------------------------
@@ -408,6 +438,45 @@ def build() -> None:
          {'X_tombstones_from_pairing': 0, 'DEV_P_registered_in_X': False},
          ['The pairing sessions of I cost nothing in X; the revocation of a personal device that X never registered is recorded there and refuses its old chain.',
           'At the limit a refused revocation is reported and retried; the device that registers itself meanwhile is revoked by the next reconciliation (an exposing revocation).'])
+
+    doc = {'OWNER': {'label': 'Desktop', 'kind': 0}}  # devices of the document of §5.1 (IDENTITY-PROFILE-TEST-VECTORS-01 change.C1_fill)
+    runs = []
+
+    def run(ref: str, entries: dict) -> dict:
+        w = step4(ref, entries)
+        runs.append(len(w))
+        return {'writes': w, 'metadata_changes': len(w)}
+    pairing_bound = lambda ref: sorted(d for d, b in post(ref)['devices'].items() if b['kind'] == 2)  # noqa: E731
+    main = run('wire:P2_pairing_device', doc)
+    again_open = run('wire:P2_pairing_device', doc)
+    service = copy.deepcopy(doc)
+    closed = run('wire:P3_consume_for_dev_b', doc)
+    dev_b = run('wire:P4_register_dev_b_approved', doc)
+    again_b = run('wire:P4_register_dev_b_approved', doc)
+    s1 = run('wire:P3s_consume_for_bridge_o', service)
+    bridge = run('wire:P4s_bind_bridge_o', service)
+    retired = run('wire:flow.f09_revoke_issuer_in_i', service)
+    again_retired = run('wire:flow.f09_revoke_issuer_in_i', service)
+    recert = run('wire:flow.f09_recertify_c1_in_i', service)
+    assert [len(main['writes']), again_open['metadata_changes'], closed['metadata_changes'], len(dev_b['writes']), again_b['metadata_changes'],
+            s1['metadata_changes'], len(bridge['writes']), len(retired['writes']), again_retired['metadata_changes'], recert['metadata_changes']] == [1, 0, 0, 1, 0, 0, 1, 1, 0, 0], runs
+    flow('F05.display_data', "Reconciliation step 4 on I with a pairing session open and closed: entries for personal and service devices only, retired entries, no change on a second run",
+         ('IDENTITY-PROFILE-01 §7.1 step 4, §2.1', 'Display entries are restored for devices of kind 0 and 1 bound in I and not revoked; a retired entry only gets revoked = true; nothing is written for a pairing device; a second run writes nothing.'),
+         [step("I at P2, PAIR_J's session open; the document holds the root's entry only: DEV_A's entry is written, none for PAIR_J", 'wire:P2_pairing_device', 'accept',
+               pairing_devices_bound=pairing_bound('wire:P2_pairing_device'), **main),
+          step('A second run at P2, the session still open', expect='nothing to write', **again_open),
+          step("I at P3, PAIR_J's session consumed (closed)", 'wire:P3_consume_for_dev_b', 'accept', pairing_devices_bound=pairing_bound('wire:P3_consume_for_dev_b'), **closed),
+          step('I at P4: DEV_B registered, its entry never written (the approver crashed before §5.3 step 6 wrote it)', 'wire:P4_register_dev_b_approved', 'accept', **dev_b),
+          step('A second run at P4', expect='nothing to write', **again_b),
+          step("Service variant: I at P3s, PAIR_J consumed for BRIDGE_O (the document as after the run at P2)", 'wire:P3s_consume_for_bridge_o', 'accept', branch='service', **s1),
+          step('I at P4s: BRIDGE_O bound in I with kind 1, not registered', 'wire:P4s_bind_bridge_o', 'accept', branch='service', **bridge),
+          step("DEV_A revoked in I: its entry is retired and gets revoked = true; BRIDGE_O, suspended, keeps its entry", 'wire:flow.f09_revoke_issuer_in_i', 'accept',
+               branch='service', **retired),
+          step('A second run after the revocation', expect='nothing to write', branch='service', **again_retired),
+          step('BRIDGE_O re-certified by the root: its entry stays', 'wire:flow.f09_recertify_c1_in_i', 'accept', branch='service', **recert)],
+         {'entries_main': doc, 'entries_service': service, 'entries_for_pairing_devices': 0},
+         ['A pairing device has no entry (§2.1): a step 4 that wrote one would write a kind-2 entry that §4 marks invalid, and write it again on every run.',
+          'Every second run writes no metadata change, with the session open or closed.'])
 
     # 6.
     flow('F06_concurrent_revokes', 'OWNER and DEV_A revoke DEV_B on one head with different reasons: one record; the other phase is complete',
