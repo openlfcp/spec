@@ -268,7 +268,7 @@ A proposal `X` refuses (the limit of W §17.5 rule 5, the reconciler's authority
 
 **4. Display data.** In `I`'s document, for devices of kind `0` and `1` only (a pairing device has no entry, §2.1):
 
-- for every device `D` bound in `I` (W §17.4 rule 9) with kind `0` or `1` and not in `I`'s `revoked`, without a valid entry `devices[p:<D>]` (§4): write `devices[p:<D>] = {label: <the fingerprint of D, §5.2>, kind: <D's kind in I>}`;
+- for every device `D` of kind `0` or `1` bound in `I` as the leaf of an accepted chain (it has a `chain`, W §17.4 rule 9; a device bound only as an intermediate issues and does not act in `I`) and not in `I`'s `revoked`, without a valid entry `devices[p:<D>]` (§4): write `devices[p:<D>] = {label: <the fingerprint of D, §5.2>, kind: <D's kind in I>}`;
 - a **retired entry** is the entry `devices[p:<D>]` of such a device whose pair is in `I`'s `revoked`. When some value of its `revoked` is not `true`, or the field is absent, the reconciler writes `revoked = true` (§8.2); it writes nothing else into a retired entry, and creates no entry for a revoked device that has none (§10 then shows its fingerprint).
 
 The reconciler writes nothing for a pairing device, relabels nothing, and deletes no entry, valid or not (§4 rule 1: an invalid entry stays ignored). A second run on the same states therefore writes no change.

@@ -172,7 +172,7 @@ def step4(i_ref: str, entries: dict) -> list[dict]:
     ps = post(i_ref)
     writes = []
     for d, b in sorted(ps['devices'].items()):
-        if b['kind'] not in (0, 1):
+        if b['kind'] not in (0, 1) or not b.get('leaf'):
             continue
         revoked = f"{b['root']}/{d}" in ps['revoked']
         e = entries.get(d)
@@ -461,7 +461,7 @@ def build() -> None:
     assert [len(main['writes']), again_open['metadata_changes'], closed['metadata_changes'], len(dev_b['writes']), again_b['metadata_changes'],
             s1['metadata_changes'], len(bridge['writes']), len(retired['writes']), again_retired['metadata_changes'], recert['metadata_changes']] == [1, 0, 0, 1, 0, 0, 1, 1, 0, 0], runs
     flow('F05.display_data', "Reconciliation step 4 on I with a pairing session open and closed: entries for personal and service devices only, retired entries, no change on a second run",
-         ('IDENTITY-PROFILE-01 §7.1 step 4, §2.1', 'Display entries are restored for devices of kind 0 and 1 bound in I and not revoked; a retired entry only gets revoked = true; nothing is written for a pairing device; a second run writes nothing.'),
+         ('IDENTITY-PROFILE-01 §7.1 step 4, §2.1', 'Display entries are restored for devices of kind 0 and 1 bound in I as the leaf of a chain and not revoked; a retired entry only gets revoked = true; nothing is written for a pairing device; a second run writes nothing.'),
          [step("I at P2, PAIR_J's session open; the document holds the root's entry only: DEV_A's entry is written, none for PAIR_J", 'wire:P2_pairing_device', 'accept',
                pairing_devices_bound=pairing_bound('wire:P2_pairing_device'), **main),
           step('A second run at P2, the session still open', expect='nothing to write', **again_open),

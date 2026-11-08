@@ -993,7 +993,7 @@
       "description": "Reconciliation step 4 on I with a pairing session open and closed: entries for personal and service devices only, retired entries, no change on a second run",
       "rule": {
         "section": "IDENTITY-PROFILE-01 §7.1 step 4, §2.1",
-        "text": "Display entries are restored for devices of kind 0 and 1 bound in I and not revoked; a retired entry only gets revoked = true; nothing is written for a pairing device; a second run writes nothing."
+        "text": "Display entries are restored for devices of kind 0 and 1 bound in I as the leaf of a chain and not revoked; a retired entry only gets revoked = true; nothing is written for a pairing device; a second run writes nothing."
       },
       "inputs": {
         "mode": "sequence",
