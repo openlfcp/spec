@@ -5,8 +5,9 @@
   details by the orchestrator, after three independent reviews of the
   specification draft. Applied in this text
   (LFCP-WIRE-01 §7.2, §7.3, §17.4, §17.5, §80.1, §100.1 and
-  IDENTITY-PROFILE-01); in no implementation baseline yet (the baseline
-  `mvp-0.4-baseline.1` follows with the identity corpora, LFCP-04-403).
+  IDENTITY-PROFILE-01); part of the implementation baselines since
+  `mvp-0.4-baseline.1`, with the three identity corpora and their
+  generators (LFCP-04-403); MVP-0.4-BASELINE.md names the tag to pin.
 - **Proposed by:** the orchestrator for MVP 0.4 (task LFCP-04-401).
 - **Supersedes:** nothing. **Resolves:** LFCP-WIRE-01 §108.1 (multi-device
   root identity, deferred since WIRE-01). **Reworded:** ADR 0009 and
@@ -131,8 +132,10 @@ the decision. The identity corpora are new suites.
 
 ## Open items
 
-- The three corpora of IP §12 with their generators (LFCP-04-403) and the
-  third independent review of text and corpus before implementation
-  starts.
+- The independent review of text and corpora before implementation
+  starts. The corpora themselves are done (LFCP-04-403, since
+  `mvp-0.4-baseline.1`). The final review (LFCP-04-415, of
+  `mvp-0.4-baseline.3`) found ten defects, which `mvp-0.4-baseline.4`
+  corrects; a re-review of those corrections is open.
 - Whether `IDENTITY_SUCCESSION` (type `11`) and the cold root (W §108.1)
   come together in one later MVP.
