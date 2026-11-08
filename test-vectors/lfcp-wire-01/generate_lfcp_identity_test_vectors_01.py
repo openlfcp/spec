@@ -85,6 +85,7 @@ PRINCIPAL_ROLES = {
     'DEV_R7': 'personal device of BOB with mask {1,2,7} (CERT_R7), for the rotator test',
     'DEV_R6': 'personal device of BOB with mask {1,2,6} (CERT_R6), for the rotator test',
     'DEV_R7O': 'personal device of OWNER with mask {1,2,7} (CERT_R7O), for the rotator test in I',
+    'DEV_P': 'personal device of OWNER revoked in I before its first registration in X (CERT_P, Edit, by DEV_A), for flow F05',
 }
 P = {label: principal(label) for label in PRINCIPAL_ROLES}
 LIMIT = [f'LIMIT_BOB_{k:02d}' for k in range(1, 31)]
@@ -92,7 +93,8 @@ TOMB_X = [f'TOMB_X_{k:03d}' for k in range(1, 66)]
 TOMB_I = [f'TOMB_I_{k:03d}' for k in range(1, 65)]
 LIMIT_OWNER = [f'LIMIT_OWNER_{k:02d}' for k in range(1, 31)]
 PAIR_S = [f'PAIR_S_{k:02d}' for k in range(1, 41)]
-for label in LIMIT + TOMB_X + TOMB_I + LIMIT_OWNER + PAIR_S:
+PAIR_T = [f'PAIR_T_{k:02d}' for k in range(1, 66)]
+for label in LIMIT + TOMB_X + TOMB_I + LIMIT_OWNER + PAIR_S + PAIR_T:
     P[label] = principal(label)
 
 RES = {name: h(f'LFCP-TV-IDENTITY-RESOURCE-{name}') for name in ('X', 'Y', 'I', 'U', 'Z')}
@@ -220,6 +222,9 @@ cert('CERT_SO_XY', 'OWNER', 'BRIDGE_O', 1, [1, 2], ['X', 'Y'], 'OWNER')
 cert('CERT_R7', 'BOB', 'DEV_R7', 0, [1, 2, 7], [], 'BOB')
 cert('CERT_R6', 'BOB', 'DEV_R6', 0, [1, 2, 6], [], 'BOB')
 cert('CERT_R7O', 'OWNER', 'DEV_R7O', 0, [1, 2, 7], [], 'OWNER')
+cert('CERT_P', 'OWNER', 'DEV_P', 0, EDIT, [], 'DEV_A')
+for label in PAIR_T:
+    cert(f'CERT_{label}', 'OWNER', label, 2, [1, 2], ['I'], 'DEV_A')
 
 # -----------------------------------------------------------------------------
 # Corpus: heads, cases and the checks against the expectations.
@@ -1400,6 +1405,9 @@ def read_case(cid: str, latest: str, session: str, request: str, expect, descrip
     add_case(case)
 
 
+NOT_PROPOSED = 'IDENTITY-PROFILE-01 §7.1 step 1 does not propose it (mvp-0.4-baseline.4): a pairing device is never bound outside I'
+
+
 def build_flow_support() -> None:
     """Records, objects and reads that the flow fixtures (IDENTITY-FLOW-FIXTURES-01) step through."""
     group('flow support')
@@ -1408,12 +1416,18 @@ def build_flow_support() -> None:
             readable=dg_readable('OWNER', ['CERT_B', 'CERT_A']),
             rule=('LFCP-WIRE-01 §17.4 rules 6 and 9', 'Kind-0 self-registration; the issuer DEV_A is bound with registered = false.'))
     control('flow.reconcile_revoke_pairing_in_x', 'flow.self_register_dev_b_on_j2', 10, 'OWNER', dr('OWNER', 'PAIR_J', 0), 'accept',
-            "Reconciliation step 1: I's revocation of (OWNER, PAIR_J), reason 3 propagated as 0", readable=dr_readable('OWNER', 'PAIR_J', 0),
-            rule=('IDENTITY-PROFILE-01 §7.1 step 1; LFCP-WIRE-01 §17.5', 'Revocations first; an unbound tombstone, not exposing.'))
+            f"DEVICE_REVOKE {{OWNER, PAIR_J, 0}} in X, where the pairing device PAIR_J is not bound: accepted, an unbound tombstone of OWNER; {NOT_PROPOSED}",
+            readable=dr_readable('OWNER', 'PAIR_J', 0),
+            rule=('LFCP-WIRE-01 §17.5 rule 5', 'A revocation of a Principal not bound in the Resource is accepted within the limit of 64 such pairs of its root; not exposing.'))
     control('flow.reconcile_register_dev_a', 'flow.reconcile_revoke_pairing_in_x', 9, 'OWNER', dg('OWNER', C('CERT_A')), 'accept',
             "Reconciliation step 2: DEV_A, active in I, bound but not registered in X, registered with I's chain [CERT_A]",
             readable=dg_readable('OWNER', ['CERT_A']),
-            rule=('IDENTITY-PROFILE-01 §7.1 step 2', 'An intermediate-only binding is not a completed registration.'))
+            rule=('IDENTITY-PROFILE-01 §7.1 step 2', 'An intermediate-only binding is not a completed registration.'),
+            note='Flow F05 uses flow.reconcile_register_dev_a_in_x since mvp-0.4-baseline.4: this history carries the tombstone of PAIR_J that IDENTITY-PROFILE-01 §7.1 step 1 no longer proposes.')
+    control('flow.reconcile_register_dev_a_in_x', 'flow.self_register_dev_b_on_j2', 9, 'OWNER', dg('OWNER', C('CERT_A')), 'accept',
+            "Reconciliation step 2: DEV_A, active in I, bound but not registered in X, registered with I's chain [CERT_A]; step 1 proposed nothing, the only pair I revoked being the pairing device PAIR_J",
+            readable=dg_readable('OWNER', ['CERT_A']),
+            rule=('IDENTITY-PROFILE-01 §7.1 steps 1 and 2', 'A pairing device revoked in I is not propagated; an intermediate-only binding is not a completed registration.'))
     control('flow.claim_for_root_dave', 'N1_invite_grant', 3, 'INVITE', {0: rid('N1_invite_grant'), 1: P['DAVE'].descriptor(), 2: [1, 2]}, 'accept',
             'A device of DAVE accepts the invitation N1: CAPABILITY_CLAIM naming the root DAVE, signed by INVITE',
             readable={'grant': 'N1_invite_grant', 'claimant': 'DAVE', 'abilities': [1, 2]},
@@ -1592,6 +1606,36 @@ def build_review_flows() -> None:
             'Phase 1 of the 41st session', readable=dr_readable('OWNER', 'PAIR_M', 3, 'CERT_B'), rule=ACC_DR)
     control('flow.p40_register_dev_b', 'flow.p40_consume', 9, 'DEV_A', dg('OWNER', C('CERT_B', 'CERT_A'), 'PAIR_M'), 'accept',
             'Phase 2 of the 41st session completes', readable=dg_readable('OWNER', ['CERT_B', 'CERT_A'], 'PAIR_M'), rule=ACC_DG)
+    # F05.sixty_five_sessions: 65 closed sessions in I, then a personal device revoked in I before its first registration
+    # in X. Reconciliation (IDENTITY-PROFILE-01 §7.1 step 1) propagates the personal device and none of the pairing devices.
+    items = []
+    for lab in PAIR_T:
+        items += [(9, 'DEV_A', dg('OWNER', C(f'CERT_{lab}', 'CERT_A'))), (10, 'DEV_A', dr('OWNER', lab, 0))]
+    fill = record_set('sixty_five_cancelled_sessions_in_i', 'P1_device_grant_dev_a_i', items,
+                      'For k = 01..65, on P1 in I: DEVICE_GRANT {OWNER, [CERT_PAIR_T_k, CERT_A]} by DEV_A, then DEVICE_REVOKE {OWNER, PAIR_T_k, 0} by DEV_A')
+    control('flow.p65_pairing_device', fill, 9, 'DEV_A', dg('OWNER', C('CERT_JM', 'CERT_A')), 'accept',
+            'After 65 cancelled sessions a 66th session is created', readable=dg_readable('OWNER', ['CERT_JM', 'CERT_A']),
+            rule=('LFCP-WIRE-01 §17.4 rule 8', 'Revoked pairing devices free their places.'))
+    control('flow.p65_consume', 'flow.p65_pairing_device', 10, 'DEV_A', dr('OWNER', 'PAIR_M', 3, CERTS['CERT_P']['digest']), 'accept',
+            'Phase 1 of the 66th session, for DEV_P', readable=dr_readable('OWNER', 'PAIR_M', 3, 'CERT_P'), rule=ACC_DR)
+    control('flow.p65_register_dev_p', 'flow.p65_consume', 9, 'DEV_A', dg('OWNER', C('CERT_P', 'CERT_A'), 'PAIR_M'), 'accept',
+            'Phase 2: DEV_P registered in I', readable=dg_readable('OWNER', ['CERT_P', 'CERT_A'], 'PAIR_M'), rule=ACC_DG)
+    control('flow.p65_revoke_dev_p_in_i', 'flow.p65_register_dev_p', 10, 'DEV_A', dr('OWNER', 'DEV_P', 1), 'accept',
+            'DEV_P is lost and revoked in I before any reconciliation has registered it in X', readable=dr_readable('OWNER', 'DEV_P', 1), rule=ACC_DR)
+    control('flow.p65_x_revoke_dev_p', 'I1_device_grant_dev_a', 10, 'DEV_A', dr('OWNER', 'DEV_P', 1), 'accept',
+            "Reconciliation step 1 in X: I's revocation of the personal device DEV_P, not bound in X, is propagated; none of I's 66 revoked pairing devices is",
+            readable=dr_readable('OWNER', 'DEV_P', 1),
+            rule=('IDENTITY-PROFILE-01 §7.1 step 1; LFCP-WIRE-01 §17.5 rule 5', 'A personal device revoked in I can register in X, so its revocation is propagated: one unbound tombstone, not exposing.'))
+    control('flow.p65_x_dev_p_self_register', 'flow.p65_x_revoke_dev_p', 9, 'DEV_P', dg('OWNER', C('CERT_P', 'CERT_A')), (M.DENIED, 'step 4.4'),
+            'DEV_P tries to register itself in X with its old chain [CERT_P, CERT_A]', readable=dg_readable('OWNER', ['CERT_P', 'CERT_A']))
+    control('flow.p65_x_limit_revoke_dev_p', 'device_revoke_tombstone_limit.64th', 10, 'DEV_A', dr('OWNER', 'DEV_P', 1), (M.DENIED, '§17.5 rule 5'),
+            'X already holds 64 unbound tombstones of OWNER: the propagation of DEV_P is refused', readable=dr_readable('OWNER', 'DEV_P', 1))
+    control('flow.p65_x_limit_dev_p_self_registers', 'device_revoke_tombstone_limit.64th', 9, 'DEV_P', dg('OWNER', C('CERT_P', 'CERT_A')), 'accept',
+            'With the propagation refused, DEV_P registers itself in X with its old chain', readable=dg_readable('OWNER', ['CERT_P', 'CERT_A']),
+            rule=('LFCP-WIRE-01 §17.4 rule 6', 'Kind-0 self-registration; X has no revocation of DEV_P.'))
+    control('flow.p65_x_limit_revoke_bound_dev_p', 'flow.p65_x_limit_dev_p_self_registers', 10, 'DEV_A', dr('OWNER', 'DEV_P', 1), 'accept',
+            'The next reconciliation of X revokes DEV_P, now bound there', readable=dr_readable('OWNER', 'DEV_P', 1),
+            rule=('IDENTITY-PROFILE-01 §7.1 step 1; LFCP-WIRE-01 §17.5 rule 5', 'The revocation of a bound device is never limited; it removes a reader, so it is exposing.'))
     # F09: a service device bound in I with C0 = CERT_SO (digest d, P3s), its issuer revoked, re-certified as C1 = CERT_SO_R.
     control('flow.f09_revoke_issuer_in_i', 'P4s_bind_bridge_o', 10, 'OWNER', dr('OWNER', 'DEV_A', 1), 'accept',
             "C0's issuer DEV_A revoked in I", readable=dr_readable('OWNER', 'DEV_A', 1), rule=ACC_DR)
@@ -1599,19 +1643,35 @@ def build_review_flows() -> None:
             'The root re-certifies BRIDGE_O as C1 = CERT_SO_R (same kind, mask and scope): bound in I, not registered',
             readable=dg_readable('OWNER', ['CERT_SO_R']), rule=ACC_DG)
     # Reconciliation in two candidates X: revocations first (§7.1 step 1), then C1.
+    SUPERSEDED = ('Flow F09 uses flow.f09{br}_reconcile_* since mvp-0.4-baseline.4: this history carries the tombstone of PAIR_J that '
+                  'IDENTITY-PROFILE-01 §7.1 step 1 no longer proposes.')
     for br, base_head, what in (('a', 'I1_device_grant_dev_a', 'where C0 was never accepted'),
                                 ('b', 'flow.register_bridge_o_in_x', 'where C0 was registered first')):
+        note = SUPERSEDED.format(br=br)
         control(f'flow.f09{br}_revoke_pair_j', base_head, 10, 'OWNER', dr('OWNER', 'PAIR_J', 0), 'accept',
-                f"Reconciliation step 1 in candidate X {what}: I's consume of PAIR_J propagated with reason 0",
-                readable=dr_readable('OWNER', 'PAIR_J', 0), rule=('IDENTITY-PROFILE-01 §7.1 step 1', 'Revocations first; reason 3 is propagated as 0.'))
+                f"DEVICE_REVOKE {{OWNER, PAIR_J, 0}} in candidate X {what}, where the pairing device PAIR_J is not bound: accepted, an unbound tombstone of OWNER; {NOT_PROPOSED}",
+                readable=dr_readable('OWNER', 'PAIR_J', 0),
+                rule=('LFCP-WIRE-01 §17.5 rule 5', 'A revocation of a Principal not bound in the Resource is accepted within the limit of 64 such pairs of its root; not exposing.'))
         control(f'flow.f09{br}_revoke_dev_a', f'flow.f09{br}_revoke_pair_j', 10, 'OWNER', dr('OWNER', 'DEV_A', 1), 'accept',
                 f"Reconciliation step 1 in candidate X {what}: I's revocation of DEV_A", readable=dr_readable('OWNER', 'DEV_A', 1),
-                rule=('IDENTITY-PROFILE-01 §7.1 step 1', 'Every pair revoked in I and not in X is revoked first.'))
+                rule=('IDENTITY-PROFILE-01 §7.1 step 1', 'Every pair revoked in I and not in X is revoked first.'), note=note)
         control(f'flow.f09{br}_register_c1', f'flow.f09{br}_revoke_dev_a', 9, 'OWNER', dg('OWNER', C('CERT_SO_R')), 'accept',
+                f"Reconciliation step 2 in candidate X {what}: C1 = CERT_SO_R, I's current chain for BRIDGE_O",
+                readable=dg_readable('OWNER', ['CERT_SO_R']),
+                rule=('IDENTITY-PROFILE-01 §7.1 step 2; LFCP-WIRE-01 §17.4 rule 5', "A kind-1 device bound in I with a chain whose issuers I has not revoked; in a candidate where C0 was registered, a re-certification with a new leaf certificate ID."),
+                note=note)
+        control(f'flow.f09{br}_reconcile_revoke_dev_a', base_head, 10, 'OWNER', dr('OWNER', 'DEV_A', 1), 'accept',
+                f"Reconciliation step 1 in candidate X {what}: I's revocation of DEV_A; the consume of the pairing device PAIR_J is not propagated",
+                readable=dr_readable('OWNER', 'DEV_A', 1),
+                rule=('IDENTITY-PROFILE-01 §7.1 step 1', 'A device revoked in I that is bound in X, or that can be registered or issue there, is revoked in X first; a pairing device is not.'))
+        control(f'flow.f09{br}_reconcile_register_c1', f'flow.f09{br}_reconcile_revoke_dev_a', 9, 'OWNER', dg('OWNER', C('CERT_SO_R')), 'accept',
                 f"Reconciliation step 2 in candidate X {what}: C1 = CERT_SO_R, I's current chain for BRIDGE_O",
                 readable=dg_readable('OWNER', ['CERT_SO_R']),
                 rule=('IDENTITY-PROFILE-01 §7.1 step 2; LFCP-WIRE-01 §17.4 rule 5', "A kind-1 device bound in I with a chain whose issuers I has not revoked; in a candidate where C0 was registered, a re-certification with a new leaf certificate ID."))
     package_case('flow.f09b_kp_owner_to_bridge_o', 'flow.f09b_register_c1', 'OWNER', 'BRIDGE_O', 'flow.f09b_register_c1', 'accept',
+                 'The root seals the DEK of X to BRIDGE_O: with the certificate it is ready', KP)
+    CASE_BY_ID['flow.f09b_kp_owner_to_bridge_o']['note'] = SUPERSEDED.format(br='b')
+    package_case('flow.f09b_reconcile_kp_owner_to_bridge_o', 'flow.f09b_reconcile_register_c1', 'OWNER', 'BRIDGE_O', 'flow.f09b_reconcile_register_c1', 'accept',
                  'The root seals the DEK of X to BRIDGE_O: with the certificate it is ready', KP)
     control('flow.f09_x_register_cstar', 'I1_device_grant_dev_a', 9, 'OWNER', dg('OWNER', C('CERT_SO_XY')), 'accept',
             'Another issuer registers C* = CERT_SO_XY (scope [X, Y], another digest) in a candidate where BRIDGE_O was unbound',
@@ -1872,10 +1932,11 @@ def fixtures() -> dict:
             'transfer_nonce': "first 16 bytes of SHA-256('LFCP-TV-IDENTITY-OFFER-NONCE-' || transfer name)",
             'hpke_ephemeral': "RFC 9180 DeriveKeyPair(SHA-256('LFCP-TV-IDENTITY-KP-EPHEMERAL-' || case id))",
             'limit_principals': 'LIMIT_BOB_01..30, LIMIT_OWNER_01..30, PAIR_S_01..40, TOMB_X_001..065 and TOMB_I_001..064 are Principals derived from these labels',
+            'session_principals': 'PAIR_T_01..65 (the closed sessions of flow F05.sixty_five_sessions) are Principals derived from these labels',
         },
         'endpoint': {'url': ENDPOINT_A[0], 'priority': ENDPOINT_A[1], 'flags': ENDPOINT_A[2], 'coordinator': COORD_A},
         'fill_principals': {label: {'principal_id': hx(P[label].pid), 'descriptor_cbor': hx(cbor(P[label].descriptor()))}
-                            for label in LIMIT + TOMB_X + TOMB_I + LIMIT_OWNER + PAIR_S},
+                            for label in LIMIT + TOMB_X + TOMB_I + LIMIT_OWNER + PAIR_S + PAIR_T},
         'certificates': certs,
         'record_sets': RECORD_SETS,
     }
@@ -1954,7 +2015,7 @@ def markdown(doc: dict) -> str:
              '## Fixture Principals', '', '| Label | Role | Principal ID |', '|---|---|---|']
     for label, role in PRINCIPAL_ROLES.items():
         lines.append(f'| `{label}` | {role} | `{P[label].pid.hex()}` |')
-    lines += ['', 'Fill Principals `LIMIT_BOB_01..30`, `TOMB_X_001..065`, `TOMB_I_001..064` use the same derivation.', '',
+    lines += ['', 'Fill Principals `LIMIT_BOB_01..30`, `LIMIT_OWNER_01..30`, `PAIR_S_01..40`, `PAIR_T_01..65`, `TOMB_X_001..065`, `TOMB_I_001..064` use the same derivation.', '',
               '## Resources', '', '| Name | Profile | Resource ID |', '|---|---|---|']
     for name, r in RES.items():
         lines.append(f'| `{name}` | `{RES_PROFILE[name]}` | `{r.hex()}` |')
