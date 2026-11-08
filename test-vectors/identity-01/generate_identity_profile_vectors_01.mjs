@@ -79,7 +79,47 @@ function head(major, n) {
 const bstr = (b) => Buffer.concat([head(2, b.length), Buffer.from(b)]);
 const frame = (b) => Buffer.concat([Buffer.from([0x82, 0x01]), bstr(b)]);
 
-/** Decodes a principal-descriptor (W §7): a closed map {0, 1, 2} of 32-byte strings; null if not one. */
+// Ed25519 point decoding (RFC 8032 §5.1.3) and the small-order test, as W §7 and §10.5.1 require of a descriptor's
+// key; the same arithmetic as ed_decode and ed_small_order of ../lfcp-wire-01/generate_lfcp_test_vectors_01.py.
+const ED_P = 2n ** 255n - 19n;
+const modp = (a) => ((a % ED_P) + ED_P) % ED_P;
+const powp = (b, e) => {
+  let r = 1n;
+  for (b = modp(b); e > 0n; e >>= 1n, b = (b * b) % ED_P) if (e & 1n) r = (r * b) % ED_P;
+  return r;
+};
+const ED_D = modp(-121665n * powp(121666n, ED_P - 2n));
+const ED_SQRT_M1 = powp(2n, (ED_P - 1n) / 4n);
+function edDecode(bytes) {
+  let y = 0n;
+  for (let i = 31; i >= 0; i--) y = (y << 8n) | BigInt(bytes[i]);
+  const sign = y >> 255n;
+  y &= (1n << 255n) - 1n;
+  if (y >= ED_P) return null; // non-canonical y
+  const u = modp(y * y - 1n), v = modp(ED_D * y * y + 1n);
+  let x = modp(u * powp(v, 3n) * powp(u * powp(v, 7n), (ED_P - 5n) / 8n));
+  if (modp(v * x * x) !== u) x = modp(x * ED_SQRT_M1);
+  if (modp(v * x * x) !== u) return null; // not a curve point
+  if (x === 0n && sign === 1n) return null; // x = 0 with the sign bit set
+  if ((x & 1n) !== sign) x = ED_P - x;
+  return [x, y];
+}
+function edAdd([x1, y1], [x2, y2]) {
+  const t = modp(ED_D * x1 * x2 * y1 * y2);
+  return [modp((x1 * y2 + y1 * x2) * powp(1n + t, ED_P - 2n)), modp((y1 * y2 + x1 * x2) * powp(1n - t, ED_P - 2n))];
+}
+const edSmallOrder = (pt) => {
+  let q = pt;
+  for (let k = 0; k < 3; k++) q = edAdd(q, q); // 8 * pt
+  return q[0] === 0n && q[1] === 1n;
+};
+/** W §7 and §10.5.1: a canonical encoding of a curve point that is not of small order. */
+const validEd25519Key = (bytes) => {
+  const pt = edDecode(bytes);
+  return pt !== null && !edSmallOrder(pt);
+};
+
+/** Decodes a principal-descriptor (W §7): a closed map {0, 1, 2} of 32-byte strings, its ID recomputed, its Ed25519 key valid; null if not one. */
 function decodeDescriptor(bytes) {
   let i = 0;
   const b = Buffer.from(bytes);
@@ -93,6 +133,7 @@ function decodeDescriptor(bytes) {
   }
   if (i !== b.length) return null;
   if (!sha(Buffer.from("LFCP-PRINCIPAL-v1"), out[1], out[2]).equals(out[0])) return null;
+  if (!validEd25519Key(out[1])) return null;
   return out;
 }
 
@@ -151,15 +192,25 @@ const values = (obj, key) => {
   return c ? Object.values(c) : obj[key] === undefined ? [] : [obj[key]];
 };
 const str = (v) => (v === undefined || v === null ? v : A.isImmutableString(v) ? v.toString() : v);
+/**
+ * Whether `parent[key]` is an Automerge map object. A list is a JS array and typeof "object" too, and a timestamp or
+ * counter scalar is an object without keys: the object's own ID tells a map apart (§2.1, §2.2, §4).
+ */
+const isMapAt = (parent, key) => {
+  const v = parent?.[key];
+  if (!v || typeof v !== "object" || Array.isArray(v) || A.isImmutableString(v)) return false;
+  const id = A.getObjectId(parent, key);
+  return typeof id === "string" && /^\d+@[0-9a-f]+$/.test(id);
+};
 
 /** AI0's content rule: exactly the six root keys, profile and identity.root set, four empty containers. */
 function initialContent(doc, rootLabel) {
   const keys = Object.keys(doc).sort();
   if (JSON.stringify(keys) !== JSON.stringify(["devices", "extensions", "identity", "profile", "requests", "roster"])) return false;
   if (!A.isImmutableString(doc.profile) || str(doc.profile) !== PROFILE) return false;
-  if (!doc.identity || JSON.stringify(Object.keys(doc.identity)) !== '["root"]' || !A.isImmutableString(doc.identity.root)) return false;
+  if (!isMapAt(doc, "identity") || JSON.stringify(Object.keys(doc.identity)) !== '["root"]' || !A.isImmutableString(doc.identity.root)) return false;
   if (str(doc.identity.root) !== pref(rootLabel)) return false;
-  return CONTAINERS.every((k) => doc[k] && typeof doc[k] === "object" && !A.isImmutableString(doc[k]) && Object.keys(doc[k]).length === 0);
+  return CONTAINERS.every((k) => isMapAt(doc, k) && Object.keys(doc[k]).length === 0);
 }
 
 /**
@@ -214,11 +265,12 @@ function admit(r, root = "OWNER") {
   // AI2 protects two levels, never deeper: an entry map, and a list or map held in a field of an entry map. An entry
   // key that holds a list holds no entry map, so a scalar over that list replaces nothing AI2 protects.
   const replacesEntryMap = (op) => op.action === "set" && (op.pred ?? []).some((p) => entryMaps.has(p));
-  const extensionsOid = oid(prev, "extensions");
+  // The extensions container itself is protected by the first test; a namespace value under it is not an entry map
+  // (§2.1, SOP §18), so writing a scalar over a map held there replaces nothing AI2 protects.
   ops.forEach((op, i) => {
     if (op.obj === "_root" && CONTAINERS.includes(op.key)) found.add("CONTAINER_REPLACED");
     if (entryContainers.includes(op.obj) && replacesEntryMap(op)) found.add("CONTAINER_REPLACED");
-    if ((op.obj === extensionsOid || entryMaps.has(op.obj)) && replacesObject(op)) found.add("CONTAINER_REPLACED");
+    if (entryMaps.has(op.obj) && replacesObject(op)) found.add("CONTAINER_REPLACED");
     if ((op.obj === "_root" && (op.key === "profile" || op.key === "identity")) || (identityOid && op.obj === identityOid)) found.add("IMMUTABLE_FIELD_MUTATED");
     if (op.action === "makeText") found.add("INVALID_FIELD_TYPE");
     // §2.1: the profile's scalars are ImmutableString, boolean and uint; an int, float, counter or timestamp is not one (AI3).
@@ -378,8 +430,8 @@ function put(target, key, value) {
 
 function rootDiagnostic(doc, owner = "OWNER") {
   if (!isStr(doc.profile) || str(doc.profile) !== PROFILE) return "INVALID_ROOT";
-  for (const k of CONTAINERS) if (!doc[k] || typeof doc[k] !== "object" || isStr(doc[k])) return "INVALID_ROOT";
-  if (!doc.identity || !isStr(doc.identity.root) || str(doc.identity.root) !== pref(owner)) return "INVALID_ROOT";
+  for (const k of CONTAINERS) if (!isMapAt(doc, k)) return "INVALID_ROOT";
+  if (!isMapAt(doc, "identity") || !isStr(doc.identity.root) || str(doc.identity.root) !== pref(owner)) return "INVALID_ROOT";
   return null;
 }
 
@@ -402,6 +454,8 @@ function entryDiagnostic(container, key, entry) {
     if (field("label") !== undefined && !isStr(field("label"))) found.add("INVALID_FIELD_TYPE");
     if (field("kind") !== undefined && !isUint(field("kind"))) found.add("INVALID_FIELD_TYPE");
     else if (field("kind") !== undefined && field("kind") > 1n) found.add("INVALID_ENUM_VALUE");
+    if (field("platform") !== undefined && !isStr(field("platform"))) found.add("INVALID_FIELD_TYPE");
+    if (field("revoked") !== undefined && typeof field("revoked") !== "boolean") found.add("INVALID_FIELD_TYPE");
     if (field("added_at") !== undefined && !(isStr(field("added_at")) && isTimestamp(str(field("added_at"))))) found.add("INVALID_TIMESTAMP");
     const mk = field("missing_keys");
     if (mk !== undefined) {
@@ -423,7 +477,7 @@ function entryDiagnostic(container, key, entry) {
       if (kind === 0n || !Array.isArray(scope) || scope.length === 0 || scope.length > 64 || !scope.every(isStr) || new Set(scope.map(str)).size !== scope.length) found.add("INVALID_FIELD_TYPE");
       else if (!scope.every((s) => isResourceRef(str(s)))) found.add("INVALID_RESOURCE_REF");
     }
-    for (const f of ["descriptor", "pairing", "label"]) if (field(f) !== undefined && !isStr(field(f))) found.add("INVALID_FIELD_TYPE");
+    for (const f of ["descriptor", "pairing", "label", "platform"]) if (field(f) !== undefined && !isStr(field(f))) found.add("INVALID_FIELD_TYPE");
     if (isStr(field("pairing")) && !isPrincipalRef(str(field("pairing")))) found.add("INVALID_PRINCIPAL_REF");
     if (isStr(field("descriptor"))) {
       const raw = str(field("descriptor"));
