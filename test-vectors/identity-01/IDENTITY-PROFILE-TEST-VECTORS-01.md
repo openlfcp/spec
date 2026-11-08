@@ -139,6 +139,13 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `pair_uri_rejected_by_join_parser` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2 | An invitation parser receives the pairing link |
 | `join_uri_rejected_by_pair_parser` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2 | A pairing parser receives the invite_uri of LFCP-TEST-VECTORS-01 |
 | `pair_uri_device_mismatch` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2 | A pairing link whose device parameter is DEV_B while the secret is PAIR_J's |
+| `pair_uri_checks_pass` | validation | valid | IDENTITY-PROFILE-01 §5.2 | Control: the link of PAIR_J against I at P2: every check passes |
+| `pair_uri_genesis_not_identity` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2 | The link of PAIR_Z, a registered, active kind-2 device of OWNER in Z, whose Genesis profile is org.lfcp.test.raw.v1 |
+| `pair_uri_device_kind_0` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2 | A link carrying the keys of DEV_A, a registered, active kind-0 device of OWNER in I, with device = DEV_A |
+| `pair_uri_device_of_other_root` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2 | The link of PAIR_B, a registered, active kind-2 device of BOB in I, which OWNER owns |
+| `pair_uri_device_consumed` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2 | The link of PAIR_J against I at P3, its session consumed: J opens through the revoked-reader prefix and is not active |
+| `pair_uri_device_suspended` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2 | The link of PAIR_J against I after its issuer DEV_A was revoked: J is suspended and cannot open I |
+| `pair_uri_device_not_registered` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2 | The link of PAIR_M, a pairing device not bound in I at P2 |
 | `fingerprint_dev_b` | bytes | exact bytes | IDENTITY-PROFILE-01 §5.2 | The device fingerprint of DEV_B |
 | `approval_digest_cert_b` | bytes | exact bytes | LFCP-WIRE-01 §7.3 rule 6, §17.5 | The certificate payload digest of CERT_B, equal to P3's field 4 |
 | `root_of_corpus` | behavioral | state | LFCP-WIRE-01 §80.1; IDENTITY-PROFILE-01 §10 | rootOf, actsFor, bound and active of every fixture Principal in X at I2, I9, I11 and I13 |

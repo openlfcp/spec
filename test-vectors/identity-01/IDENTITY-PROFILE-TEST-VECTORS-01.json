@@ -6295,6 +6295,170 @@
       }
     },
     {
+      "id": "pair_uri_checks_pass",
+      "type": "validation",
+      "kind": "pair_uri",
+      "description": "Control: the link of PAIR_J against I at P2: every check passes",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §5.2",
+        "text": "Before using the secret for anything else the client recomputes J's descriptor and checks it against device, opens the Resource as J, verifies that its Genesis profile is org.openlfcp.identity.v1 and that J is a registered, active kind-2 device of its owner; a link that fails is rejected, with no request and nothing more sent as J."
+      },
+      "inputs": {
+        "uri": "lfcp://pair/s0mpI-CvMOY8lAmqfXBOyuKnSY9ZNiiaxj-SiybjLP0?endpoint=wss%3A%2F%2Fsync-a.example.test%2Fv1%2Fws&device=5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk#secret=owABAVggFPnMsdNuhnfMO8rhbUQUw1WOCLYA1Vb04p3mc_2NSdECWCB2AOH63_ga8G9L8FA3LNr7Tyct4h5B4qp77imkoEJslA",
+        "parser": "pair",
+        "device": "PAIR_J",
+        "binding_head": "P2_pairing_device",
+        "genesis": "P0_genesis_i"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "pair_uri_genesis_not_identity",
+      "type": "validation",
+      "kind": "pair_uri",
+      "description": "The link of PAIR_Z, a registered, active kind-2 device of OWNER in Z, whose Genesis profile is org.lfcp.test.raw.v1",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §5.2",
+        "text": "Before using the secret for anything else the client recomputes J's descriptor and checks it against device, opens the Resource as J, verifies that its Genesis profile is org.openlfcp.identity.v1 and that J is a registered, active kind-2 device of its owner; a link that fails is rejected, with no request and nothing more sent as J."
+      },
+      "inputs": {
+        "uri": "lfcp://pair/fJPg_pwp77QmUluTlwhyX9QzEOy00V19MIV4VuyW0t8?endpoint=wss%3A%2F%2Fsync-a.example.test%2Fv1%2Fws&device=xQ83sXbLqIH9n8ohyDhqlG9Ha76-U4UJZeBeMsu7gkw#secret=owABAVggwnknEIcx00GYZBkNeSrQllbVrzD8GYmIB6bW64FXZdkCWCB7KDEUnMiy9kswW-ctgXp0fcjw3plun74k4WyllwUnww",
+        "parser": "pair",
+        "device": "PAIR_Z",
+        "binding_head": "link.z_pairing_device",
+        "genesis": "link.z_genesis"
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PAIRING_LINK_REJECTED",
+          "detail": "check 3: the Genesis profile is org.lfcp.test.raw.v1"
+        }
+      }
+    },
+    {
+      "id": "pair_uri_device_kind_0",
+      "type": "validation",
+      "kind": "pair_uri",
+      "description": "A link carrying the keys of DEV_A, a registered, active kind-0 device of OWNER in I, with device = DEV_A",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §5.2",
+        "text": "Before using the secret for anything else the client recomputes J's descriptor and checks it against device, opens the Resource as J, verifies that its Genesis profile is org.openlfcp.identity.v1 and that J is a registered, active kind-2 device of its owner; a link that fails is rejected, with no request and nothing more sent as J."
+      },
+      "inputs": {
+        "uri": "lfcp://pair/s0mpI-CvMOY8lAmqfXBOyuKnSY9ZNiiaxj-SiybjLP0?endpoint=wss%3A%2F%2Fsync-a.example.test%2Fv1%2Fws&device=BJj_M0x8sMFxBep-osf2GpxULvYqcxCwV7GoQ4tdz58#secret=owABAVggcoZ4ucArXV7Tfsi1KFlarmm7a4XqwY9LGOWZe_VUuPMCWCDB9ZoHAS8K7xdYkiYo-jHf5nROjzawAlerkfSWRmBdpw",
+        "parser": "pair",
+        "device": "DEV_A",
+        "binding_head": "P2_pairing_device",
+        "genesis": "P0_genesis_i"
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PAIRING_LINK_REJECTED",
+          "detail": "check 4: J is not a registered, active kind-2 device of the owner (kind 0, active true, root OWNER, owner OWNER)"
+        }
+      }
+    },
+    {
+      "id": "pair_uri_device_of_other_root",
+      "type": "validation",
+      "kind": "pair_uri",
+      "description": "The link of PAIR_B, a registered, active kind-2 device of BOB in I, which OWNER owns",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §5.2",
+        "text": "Before using the secret for anything else the client recomputes J's descriptor and checks it against device, opens the Resource as J, verifies that its Genesis profile is org.openlfcp.identity.v1 and that J is a registered, active kind-2 device of its owner; a link that fails is rejected, with no request and nothing more sent as J."
+      },
+      "inputs": {
+        "uri": "lfcp://pair/s0mpI-CvMOY8lAmqfXBOyuKnSY9ZNiiaxj-SiybjLP0?endpoint=wss%3A%2F%2Fsync-a.example.test%2Fv1%2Fws&device=VWtcT533K_spwiI2nX7oepRGbVEjUbd7pMuT6-LV-XU#secret=owABAVggq7J1_bmO1A-q0N1MLPh5FXt1kAS0BNHt1yqDAPhCqsQCWCCe-4Gu7Vdk1BsE09naEByrl60_GMGN_c0nDehwZHX3QQ",
+        "parser": "pair",
+        "device": "PAIR_B",
+        "binding_head": "link.pairing_device_of_bob",
+        "genesis": "P0_genesis_i"
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PAIRING_LINK_REJECTED",
+          "detail": "check 4: J is not a registered, active kind-2 device of the owner (kind 2, active true, root BOB, owner OWNER)"
+        }
+      }
+    },
+    {
+      "id": "pair_uri_device_consumed",
+      "type": "validation",
+      "kind": "pair_uri",
+      "description": "The link of PAIR_J against I at P3, its session consumed: J opens through the revoked-reader prefix and is not active",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §5.2",
+        "text": "Before using the secret for anything else the client recomputes J's descriptor and checks it against device, opens the Resource as J, verifies that its Genesis profile is org.openlfcp.identity.v1 and that J is a registered, active kind-2 device of its owner; a link that fails is rejected, with no request and nothing more sent as J."
+      },
+      "inputs": {
+        "uri": "lfcp://pair/s0mpI-CvMOY8lAmqfXBOyuKnSY9ZNiiaxj-SiybjLP0?endpoint=wss%3A%2F%2Fsync-a.example.test%2Fv1%2Fws&device=5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk#secret=owABAVggFPnMsdNuhnfMO8rhbUQUw1WOCLYA1Vb04p3mc_2NSdECWCB2AOH63_ga8G9L8FA3LNr7Tyct4h5B4qp77imkoEJslA",
+        "parser": "pair",
+        "device": "PAIR_J",
+        "binding_head": "P3_consume_for_dev_b",
+        "genesis": "P0_genesis_i"
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PAIRING_LINK_REJECTED",
+          "detail": "check 4: J is not a registered, active kind-2 device of the owner (kind 2, active false, root OWNER, owner OWNER)"
+        }
+      }
+    },
+    {
+      "id": "pair_uri_device_suspended",
+      "type": "validation",
+      "kind": "pair_uri",
+      "description": "The link of PAIR_J against I after its issuer DEV_A was revoked: J is suspended and cannot open I",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §5.2",
+        "text": "Before using the secret for anything else the client recomputes J's descriptor and checks it against device, opens the Resource as J, verifies that its Genesis profile is org.openlfcp.identity.v1 and that J is a registered, active kind-2 device of its owner; a link that fails is rejected, with no request and nothing more sent as J."
+      },
+      "inputs": {
+        "uri": "lfcp://pair/s0mpI-CvMOY8lAmqfXBOyuKnSY9ZNiiaxj-SiybjLP0?endpoint=wss%3A%2F%2Fsync-a.example.test%2Fv1%2Fws&device=5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk#secret=owABAVggFPnMsdNuhnfMO8rhbUQUw1WOCLYA1Vb04p3mc_2NSdECWCB2AOH63_ga8G9L8FA3LNr7Tyct4h5B4qp77imkoEJslA",
+        "parser": "pair",
+        "device": "PAIR_J",
+        "binding_head": "device_revoke_bound_after_tombstone_limit",
+        "genesis": "P0_genesis_i"
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PAIRING_LINK_REJECTED",
+          "detail": "check 2: the session as J is refused (W §41): J is not a reader"
+        }
+      }
+    },
+    {
+      "id": "pair_uri_device_not_registered",
+      "type": "validation",
+      "kind": "pair_uri",
+      "description": "The link of PAIR_M, a pairing device not bound in I at P2",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §5.2",
+        "text": "Before using the secret for anything else the client recomputes J's descriptor and checks it against device, opens the Resource as J, verifies that its Genesis profile is org.openlfcp.identity.v1 and that J is a registered, active kind-2 device of its owner; a link that fails is rejected, with no request and nothing more sent as J."
+      },
+      "inputs": {
+        "uri": "lfcp://pair/s0mpI-CvMOY8lAmqfXBOyuKnSY9ZNiiaxj-SiybjLP0?endpoint=wss%3A%2F%2Fsync-a.example.test%2Fv1%2Fws&device=JQHiva2F94i_RY_ViObqNCGLcD9ZqPXTaGQ_KqTw-ys#secret=owABAVggra_W_tKMhDSam7v9ui1r3CiRUzcGo43k4Hl4JPIV3jMCWCBd_GxA4DyajTs_e2xzj2-e2McWthF0x4tQ23JhbyJatA",
+        "parser": "pair",
+        "device": "PAIR_M",
+        "binding_head": "P2_pairing_device",
+        "genesis": "P0_genesis_i"
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PAIRING_LINK_REJECTED",
+          "detail": "check 2: the session as J is refused (W §41): J is not a reader"
+        }
+      }
+    },
+    {
       "id": "fingerprint_dev_b",
       "type": "bytes",
       "kind": "device_fingerprint",

@@ -21,7 +21,7 @@
 //   node generate_identity_profile_vectors_01.mjs [--out-dir DIR]
 
 import * as A from "@automerge/automerge";
-import { createHash } from "node:crypto";
+import { createHash, createPrivateKey, createPublicKey } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -1408,6 +1408,63 @@ const linkCase = (id, uri, parser, description, rule) => {
 linkCase("pair_uri_rejected_by_join_parser", pairUri(), "join", "An invitation parser receives the pairing link", ["IDENTITY-PROFILE-01 §5.2", "A receiver of invitation URIs that does not implement pairing rejects the link as not starting with lfcp://join/."]);
 linkCase("join_uri_rejected_by_pair_parser", joinUri, "pair", "A pairing parser receives the invite_uri of LFCP-TEST-VECTORS-01", ["IDENTITY-PROFILE-01 §5.2", "A pairing parser rejects a lfcp://join/ link."]);
 linkCase("pair_uri_device_mismatch", pairUri(principal("DEV_B").id), "pair", "A pairing link whose device parameter is DEV_B while the secret is PAIR_J's", ["IDENTITY-PROFILE-01 §5.2", "The receiving client recomputes J's descriptor from the secret and verifies that its ID equals device before using the secret."]);
+{
+  // §5.2: the receiving client recomputes J's descriptor from the secret and checks it against device, opens the Resource
+  // as J, verifies its Genesis profile and that J is a registered, active kind-2 device of its owner, before any other use.
+  const GENESIS = { I: "P0_genesis_i", Z: "link.z_genesis" };
+  const secretOf = (label) => {
+    const c = principal(label).c;
+    return Buffer.concat([Buffer.from([0xa3, 0x00, 0x01, 0x01]), bstr(Buffer.from(c.inputs.ed25519_seed.hex, "hex")), Buffer.from([0x02]), bstr(Buffer.from(c.inputs.x25519_private.hex, "hex"))]);
+  };
+  const linkOf = (label, res) => `lfcp://pair/${b64u(RES[res])}?endpoint=${RFC3986(wire.fixtures.endpoint.url)}&device=${b64u(principal(label).id)}#secret=${b64u(secretOf(label))}`;
+  const rawPublic = (pkcs8Prefix, key) =>
+    Buffer.from(createPublicKey(createPrivateKey({ key: Buffer.concat([Buffer.from(pkcs8Prefix, "hex"), key]), format: "der", type: "pkcs8" })).export({ format: "jwk" }).x, "base64url");
+  function checkLink(uri, head) {
+    const m = /^lfcp:\/\/pair\/([A-Za-z0-9_-]{43})\?([^#]*)#secret=([A-Za-z0-9_-]+)$/.exec(uri);
+    if (!m) return { detail: "not a pairing link" };
+    const sec = Buffer.from(m[3], "base64url");
+    if (sec.length !== 73 || sec[0] !== 0xa3 || sec[4] !== 0x58 || sec[38] !== 0x02 || sec[39] !== 0x58) return { detail: "the secret is not an invite-secret" };
+    const ed = rawPublic("302e020100300506032b657004220420", sec.subarray(6, 38));
+    const x = rawPublic("302e020100300506032b656e04220420", sec.subarray(41, 73));
+    const id = sha(Buffer.from("LFCP-PRINCIPAL-v1"), ed, x);
+    const device = new URLSearchParams(m[2]).get("device");
+    if (device !== b64u(id)) return { detail: "check 1: the secret's Principal is not device" };
+    const label = wire.cases.filter((c) => c.kind === "principal").map((c) => c.inputs.label).find((l) => principal(l).id.equals(id)) ?? null;
+    const res = Object.keys(RES).find((k) => b64u(RES[k]) === m[1]);
+    const ps = W.get(head).expected.post_state;
+    const b = ps.devices[label];
+    const revokedReader = b && b.registered && ps.revoked[`${b.root}/${label}`] !== undefined && !b.reads;
+    if (!(b && b.reads) && !revokedReader) return { detail: "check 2: the session as J is refused (W §41): J is not a reader" };
+    const profile = W.get(GENESIS[res]).inputs.body.data_profile;
+    if (profile !== PROFILE) return { detail: `check 3: the Genesis profile is ${profile}` };
+    if (!(b.kind === 2 && b.registered && b.active && b.root === ps.owner)) {
+      return { detail: `check 4: J is not a registered, active kind-2 device of the owner (kind ${b.kind}, active ${b.active}, root ${b.root}, owner ${ps.owner})` };
+    }
+    return null;
+  }
+  const LINK_RULE = ["IDENTITY-PROFILE-01 §5.2", "Before using the secret for anything else the client recomputes J's descriptor and checks it against device, opens the Resource as J, verifies that its Genesis profile is org.openlfcp.identity.v1 and that J is a registered, active kind-2 device of its owner; a link that fails is rejected, with no request and nothing more sent as J."];
+  const linkCheckCase = (id, label, res, head, want, description) => {
+    const uri = linkOf(label, res);
+    const got = checkLink(uri, head);
+    check(id, got === null ? null : got.detail.slice(0, 7), want);
+    add({ id, type: "validation", kind: "pair_uri", description, rule: { section: LINK_RULE[0], text: LINK_RULE[1] },
+      inputs: { uri, parser: "pair", device: label, binding_head: head, genesis: GENESIS[res] },
+      expected: got === null ? { valid: true } : { valid: false, error: { code: "PAIRING_LINK_REJECTED", detail: got.detail } } });
+  };
+  linkCheckCase("pair_uri_checks_pass", "PAIR_J", "I", "P2_pairing_device", null, "Control: the link of PAIR_J against I at P2: every check passes");
+  linkCheckCase("pair_uri_genesis_not_identity", "PAIR_Z", "Z", "link.z_pairing_device", "check 3",
+    "The link of PAIR_Z, a registered, active kind-2 device of OWNER in Z, whose Genesis profile is org.lfcp.test.raw.v1");
+  linkCheckCase("pair_uri_device_kind_0", "DEV_A", "I", "P2_pairing_device", "check 4",
+    "A link carrying the keys of DEV_A, a registered, active kind-0 device of OWNER in I, with device = DEV_A");
+  linkCheckCase("pair_uri_device_of_other_root", "PAIR_B", "I", "link.pairing_device_of_bob", "check 4",
+    "The link of PAIR_B, a registered, active kind-2 device of BOB in I, which OWNER owns");
+  linkCheckCase("pair_uri_device_consumed", "PAIR_J", "I", "P3_consume_for_dev_b", "check 4",
+    "The link of PAIR_J against I at P3, its session consumed: J opens through the revoked-reader prefix and is not active");
+  linkCheckCase("pair_uri_device_suspended", "PAIR_J", "I", "device_revoke_bound_after_tombstone_limit", "check 2",
+    "The link of PAIR_J against I after its issuer DEV_A was revoked: J is suspended and cannot open I");
+  linkCheckCase("pair_uri_device_not_registered", "PAIR_M", "I", "P2_pairing_device", "check 2",
+    "The link of PAIR_M, a pairing device not bound in I at P2");
+}
 add({
   id: "fingerprint_dev_b", type: "bytes", kind: "device_fingerprint", description: "The device fingerprint of DEV_B",
   rule: { section: "IDENTITY-PROFILE-01 §5.2", text: "fp = base32-lower-nopad(SHA-256(ASCII('LFCP-DEVICE-FP-v1') || principal_id)[0..10]) in four groups of four characters." },
