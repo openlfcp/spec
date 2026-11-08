@@ -1,0 +1,208 @@
+{
+ "description": "Published vector values that changed between mvp-0.4-baseline.3 and mvp-0.4-baseline.4, each with the decision that approved it. Checked by scripts/check-baseline-changes.mjs; any other changed or removed value fails validation.",
+ "previous_baseline": "mvp-0.4-baseline.3",
+ "suites": [
+  {
+   "suite_file": "test-vectors/lfcp-wire-01/LFCP-TEST-VECTORS-01.json",
+   "changed": []
+  },
+  {
+   "suite_file": "test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.json",
+   "changed": []
+  },
+  {
+   "suite_file": "test-vectors/shared-objects-01/SHARED-OBJECTS-AUTOMERGE-REFERENCE-01.json",
+   "changed": []
+  },
+  {
+   "suite_file": "test-vectors/shared-sections-01/SHARED-SECTIONS-TEST-VECTORS-01.json",
+   "changed": []
+  },
+  {
+   "suite_file": "test-vectors/shared-sections-01/MARKDOWN-SECTIONS-FIXTURES-01.json",
+   "changed": []
+  },
+  {
+   "suite_file": "test-vectors/lfcp-wire-01/LFCP-IDENTITY-TEST-VECTORS-01.json",
+   "changed": [
+    {
+     "path": "cases[id=flow.reconcile_revoke_pairing_in_x].description",
+     "from": "Reconciliation step 1: I's revocation of (OWNER, PAIR_J), reason 3 propagated as 0",
+     "to": "DEVICE_REVOKE {OWNER, PAIR_J, 0} in X, where the pairing device PAIR_J is not bound: accepted, an unbound tombstone of OWNER; IDENTITY-PROFILE-01 §7.1 step 1 does not propose it (mvp-0.4-baseline.4): a pairing device is never bound outside I",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. The cases that revoked PAIR_J in X keep their bytes and verdicts; their description and rule now state the wire decision and that IP §7.1 no longer proposes them."
+    },
+    {
+     "path": "cases[id=flow.reconcile_revoke_pairing_in_x].rule.section",
+     "from": "IDENTITY-PROFILE-01 §7.1 step 1; LFCP-WIRE-01 §17.5",
+     "to": "LFCP-WIRE-01 §17.5 rule 5",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. The cases that revoked PAIR_J in X keep their bytes and verdicts; their description and rule now state the wire decision and that IP §7.1 no longer proposes them."
+    },
+    {
+     "path": "cases[id=flow.reconcile_revoke_pairing_in_x].rule.text",
+     "from": "Revocations first; an unbound tombstone, not exposing.",
+     "to": "A revocation of a Principal not bound in the Resource is accepted within the limit of 64 such pairs of its root; not exposing.",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. The cases that revoked PAIR_J in X keep their bytes and verdicts; their description and rule now state the wire decision and that IP §7.1 no longer proposes them."
+    },
+    {
+     "path": "cases[id=flow.f09a_revoke_pair_j].description",
+     "from": "Reconciliation step 1 in candidate X where C0 was never accepted: I's consume of PAIR_J propagated with reason 0",
+     "to": "DEVICE_REVOKE {OWNER, PAIR_J, 0} in candidate X where C0 was never accepted, where the pairing device PAIR_J is not bound: accepted, an unbound tombstone of OWNER; IDENTITY-PROFILE-01 §7.1 step 1 does not propose it (mvp-0.4-baseline.4): a pairing device is never bound outside I",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. The cases that revoked PAIR_J in X keep their bytes and verdicts; their description and rule now state the wire decision and that IP §7.1 no longer proposes them."
+    },
+    {
+     "path": "cases[id=flow.f09a_revoke_pair_j].rule.section",
+     "from": "IDENTITY-PROFILE-01 §7.1 step 1",
+     "to": "LFCP-WIRE-01 §17.5 rule 5",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. The cases that revoked PAIR_J in X keep their bytes and verdicts; their description and rule now state the wire decision and that IP §7.1 no longer proposes them."
+    },
+    {
+     "path": "cases[id=flow.f09a_revoke_pair_j].rule.text",
+     "from": "Revocations first; reason 3 is propagated as 0.",
+     "to": "A revocation of a Principal not bound in the Resource is accepted within the limit of 64 such pairs of its root; not exposing.",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. The cases that revoked PAIR_J in X keep their bytes and verdicts; their description and rule now state the wire decision and that IP §7.1 no longer proposes them."
+    },
+    {
+     "path": "cases[id=flow.f09b_revoke_pair_j].description",
+     "from": "Reconciliation step 1 in candidate X where C0 was registered first: I's consume of PAIR_J propagated with reason 0",
+     "to": "DEVICE_REVOKE {OWNER, PAIR_J, 0} in candidate X where C0 was registered first, where the pairing device PAIR_J is not bound: accepted, an unbound tombstone of OWNER; IDENTITY-PROFILE-01 §7.1 step 1 does not propose it (mvp-0.4-baseline.4): a pairing device is never bound outside I",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. The cases that revoked PAIR_J in X keep their bytes and verdicts; their description and rule now state the wire decision and that IP §7.1 no longer proposes them."
+    },
+    {
+     "path": "cases[id=flow.f09b_revoke_pair_j].rule.section",
+     "from": "IDENTITY-PROFILE-01 §7.1 step 1",
+     "to": "LFCP-WIRE-01 §17.5 rule 5",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. The cases that revoked PAIR_J in X keep their bytes and verdicts; their description and rule now state the wire decision and that IP §7.1 no longer proposes them."
+    },
+    {
+     "path": "cases[id=flow.f09b_revoke_pair_j].rule.text",
+     "from": "Revocations first; reason 3 is propagated as 0.",
+     "to": "A revocation of a Principal not bound in the Resource is accepted within the limit of 64 such pairs of its root; not exposing.",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. The cases that revoked PAIR_J in X keep their bytes and verdicts; their description and rule now state the wire decision and that IP §7.1 no longer proposes them."
+    }
+   ]
+  },
+  {
+   "suite_file": "test-vectors/identity-01/IDENTITY-PROFILE-TEST-VECTORS-01.json",
+   "changed": []
+  },
+  {
+   "suite_file": "test-vectors/identity-01/IDENTITY-FLOW-FIXTURES-01.json",
+   "changed": [
+    {
+     "path": "cases[id=F05_reconciliation].inputs.steps[2].action",
+     "from": "Step 1: I's revocation of (OWNER, PAIR_J), reason 3 propagated as 0",
+     "to": "Step 1: no revoked pair of I is relevant in X: the consume of PAIR_J, a pairing device not bound in X, is not propagated (IDENTITY-PROFILE-01 §7.1 step 1)",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. F05 and F09 no longer revoke PAIR_J in X: that step is the client step \"not propagated\", and the following steps name the histories without the tombstone (flow.reconcile_register_dev_a_in_x, flow.f09{a,b}_reconcile_*), with the same facts."
+    },
+    {
+     "path": "cases[id=F05_reconciliation].inputs.steps[2].case",
+     "from": "wire:flow.reconcile_revoke_pairing_in_x",
+     "to": null,
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. F05 and F09 no longer revoke PAIR_J in X: that step is the client step \"not propagated\", and the following steps name the histories without the tombstone (flow.reconcile_register_dev_a_in_x, flow.f09{a,b}_reconcile_*), with the same facts."
+    },
+    {
+     "path": "cases[id=F05_reconciliation].inputs.steps[3].case",
+     "from": "wire:flow.reconcile_register_dev_a",
+     "to": "wire:flow.reconcile_register_dev_a_in_x",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. F05 and F09 no longer revoke PAIR_J in X: that step is the client step \"not propagated\", and the following steps name the histories without the tombstone (flow.reconcile_register_dev_a_in_x, flow.f09{a,b}_reconcile_*), with the same facts."
+    },
+    {
+     "path": "cases[id=F05_reconciliation].inputs.steps[5].phase_input.state",
+     "from": "wire:flow.reconcile_register_dev_a",
+     "to": "wire:flow.reconcile_register_dev_a_in_x",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. F05 and F09 no longer revoke PAIR_J in X: that step is the client step \"not propagated\", and the following steps name the histories without the tombstone (flow.reconcile_register_dev_a_in_x, flow.f09{a,b}_reconcile_*), with the same facts."
+    },
+    {
+     "path": "cases[id=F05_reconciliation].expected.steps[2].outcome",
+     "from": "accept",
+     "to": "nothing to propose",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. F05 and F09 no longer revoke PAIR_J in X: that step is the client step \"not propagated\", and the following steps name the histories without the tombstone (flow.reconcile_register_dev_a_in_x, flow.f09{a,b}_reconcile_*), with the same facts."
+    },
+    {
+     "path": "cases[id=F05_reconciliation].expected.steps[2].exposing",
+     "from": false,
+     "to": null,
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. F05 and F09 no longer revoke PAIR_J in X: that step is the client step \"not propagated\", and the following steps name the histories without the tombstone (flow.reconcile_register_dev_a_in_x, flow.f09{a,b}_reconcile_*), with the same facts."
+    },
+    {
+     "path": "cases[id=F09_pairing_service].inputs.steps[6].action",
+     "from": "Candidate X where C0 was never accepted: reconciliation step 1 propagates the consume of PAIR_J",
+     "to": "Candidate X where C0 was never accepted: reconciliation step 1 does not propagate the consume of PAIR_J, a pairing device not bound in X",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. F05 and F09 no longer revoke PAIR_J in X: that step is the client step \"not propagated\", and the following steps name the histories without the tombstone (flow.reconcile_register_dev_a_in_x, flow.f09{a,b}_reconcile_*), with the same facts."
+    },
+    {
+     "path": "cases[id=F09_pairing_service].inputs.steps[6].case",
+     "from": "wire:flow.f09a_revoke_pair_j",
+     "to": null,
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. F05 and F09 no longer revoke PAIR_J in X: that step is the client step \"not propagated\", and the following steps name the histories without the tombstone (flow.reconcile_register_dev_a_in_x, flow.f09{a,b}_reconcile_*), with the same facts."
+    },
+    {
+     "path": "cases[id=F09_pairing_service].inputs.steps[7].action",
+     "from": "… and the revocation of DEV_A",
+     "to": "… it propagates the revocation of DEV_A",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. F05 and F09 no longer revoke PAIR_J in X: that step is the client step \"not propagated\", and the following steps name the histories without the tombstone (flow.reconcile_register_dev_a_in_x, flow.f09{a,b}_reconcile_*), with the same facts."
+    },
+    {
+     "path": "cases[id=F09_pairing_service].inputs.steps[7].case",
+     "from": "wire:flow.f09a_revoke_dev_a",
+     "to": "wire:flow.f09a_reconcile_revoke_dev_a",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. F05 and F09 no longer revoke PAIR_J in X: that step is the client step \"not propagated\", and the following steps name the histories without the tombstone (flow.reconcile_register_dev_a_in_x, flow.f09{a,b}_reconcile_*), with the same facts."
+    },
+    {
+     "path": "cases[id=F09_pairing_service].inputs.steps[8].case",
+     "from": "wire:flow.f09a_register_c1",
+     "to": "wire:flow.f09a_reconcile_register_c1",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. F05 and F09 no longer revoke PAIR_J in X: that step is the client step \"not propagated\", and the following steps name the histories without the tombstone (flow.reconcile_register_dev_a_in_x, flow.f09{a,b}_reconcile_*), with the same facts."
+    },
+    {
+     "path": "cases[id=F09_pairing_service].inputs.steps[10].action",
+     "from": "Reconciliation step 1: the consume of PAIR_J",
+     "to": "Reconciliation step 1 does not propagate the consume of PAIR_J, a pairing device not bound in X",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. F05 and F09 no longer revoke PAIR_J in X: that step is the client step \"not propagated\", and the following steps name the histories without the tombstone (flow.reconcile_register_dev_a_in_x, flow.f09{a,b}_reconcile_*), with the same facts."
+    },
+    {
+     "path": "cases[id=F09_pairing_service].inputs.steps[10].case",
+     "from": "wire:flow.f09b_revoke_pair_j",
+     "to": null,
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. F05 and F09 no longer revoke PAIR_J in X: that step is the client step \"not propagated\", and the following steps name the histories without the tombstone (flow.reconcile_register_dev_a_in_x, flow.f09{a,b}_reconcile_*), with the same facts."
+    },
+    {
+     "path": "cases[id=F09_pairing_service].inputs.steps[11].action",
+     "from": "… and the revocation of DEV_A, which suspends BRIDGE_O",
+     "to": "… it propagates the revocation of DEV_A, which suspends BRIDGE_O",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. F05 and F09 no longer revoke PAIR_J in X: that step is the client step \"not propagated\", and the following steps name the histories without the tombstone (flow.reconcile_register_dev_a_in_x, flow.f09{a,b}_reconcile_*), with the same facts."
+    },
+    {
+     "path": "cases[id=F09_pairing_service].inputs.steps[11].case",
+     "from": "wire:flow.f09b_revoke_dev_a",
+     "to": "wire:flow.f09b_reconcile_revoke_dev_a",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. F05 and F09 no longer revoke PAIR_J in X: that step is the client step \"not propagated\", and the following steps name the histories without the tombstone (flow.reconcile_register_dev_a_in_x, flow.f09{a,b}_reconcile_*), with the same facts."
+    },
+    {
+     "path": "cases[id=F09_pairing_service].inputs.steps[12].case",
+     "from": "wire:flow.f09b_register_c1",
+     "to": "wire:flow.f09b_reconcile_register_c1",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. F05 and F09 no longer revoke PAIR_J in X: that step is the client step \"not propagated\", and the following steps name the histories without the tombstone (flow.reconcile_register_dev_a_in_x, flow.f09{a,b}_reconcile_*), with the same facts."
+    },
+    {
+     "path": "cases[id=F09_pairing_service].inputs.steps[13].case",
+     "from": "wire:flow.f09b_kp_owner_to_bridge_o",
+     "to": "wire:flow.f09b_reconcile_kp_owner_to_bridge_o",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. F05 and F09 no longer revoke PAIR_J in X: that step is the client step \"not propagated\", and the following steps name the histories without the tombstone (flow.reconcile_register_dev_a_in_x, flow.f09{a,b}_reconcile_*), with the same facts."
+    },
+    {
+     "path": "cases[id=F09_pairing_service].expected.steps[6].outcome",
+     "from": "accept",
+     "to": "not propagated",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. F05 and F09 no longer revoke PAIR_J in X: that step is the client step \"not propagated\", and the following steps name the histories without the tombstone (flow.reconcile_register_dev_a_in_x, flow.f09{a,b}_reconcile_*), with the same facts."
+    },
+    {
+     "path": "cases[id=F09_pairing_service].expected.steps[10].outcome",
+     "from": "accept",
+     "to": "not propagated",
+     "rule": "LFCP-04-415, finding 1 (P1), IDENTITY-PROFILE-01 §7.1 step 1 (mvp-0.4-baseline.4): reconciliation propagates a revoked pair of I into X only when it is relevant there. A pairing device is never bound outside I (W §7.3 c3, c6; N8), so the consume or cancellation of a pairing session is no longer propagated; it used to take one of the 64 unbound revoked pairs of W §17.5 rule 5 in every X, after which the revocation of a personal device not yet registered in X could no longer be recorded. F05 and F09 no longer revoke PAIR_J in X: that step is the client step \"not propagated\", and the following steps name the histories without the tombstone (flow.reconcile_register_dev_a_in_x, flow.f09{a,b}_reconcile_*), with the same facts."
+    }
+   ]
+  }
+ ]
+}

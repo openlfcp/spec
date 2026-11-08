@@ -5,11 +5,12 @@ full WIRE-01 conformance, documents remain Working Drafts.**
 
 This file answers one question: *what exactly do I implement against for
 MVP 0.4?* The answer is every file listed below, at the Git tag
-`mvp-0.4-baseline.3` of this repository.
+`mvp-0.4-baseline.4` of this repository.
 
 | Tag | Status |
 | --- | --- |
-| mvp-0.4-baseline.3 | **To be tagged.** `mvp-0.4-baseline.2` with the depth of admission rule AI2 clarified and vectors added (task LFCP-04-403d, from the SDK reviews sdk-rs#5 P2-1 and sdk-ts#16 P1). IDENTITY-PROFILE-01 §3: AI2 protects an entry map, and a list or map held in a field of an entry map, and nothing deeper. A list at an entry key is not an entry map. The rule is that of `mvp-0.4-baseline.2`. The profile corpus gains the cases of the depth boundary and of a change made beside an entry that is not a map. The generator's reference admission no longer refuses a scalar over a list held directly at an entry key, and no longer fails beside such an entry. No published value changes (`migrations/mvp-0.4-baseline.3/value-changes.json`). |
+| mvp-0.4-baseline.4 | **To be tagged.** `mvp-0.4-baseline.3` with the ten findings of its final review applied (task LFCP-04-415). IDENTITY-PROFILE-01 §7.1: reconciliation step 1 propagates a revoked pair of `I` only when it is relevant in the target (the device is bound there, or is of kind `0`, or of kind `1` with the target in its scope, or of unknown kind), so a pairing session no longer takes one of the `64` unbound revoked pairs of W §17.5 rule 5 in every Resource; a refused propagation is reported, kept unpropagated and proposed again, and step 3 seals nothing to such a device; step 4 restores display entries for kind `0` and `1` only and defines retired entries; §8.4 follows step 1. §3: AI2 does not protect an extension namespace value. Status texts and two references to W §17.4 rule 9 corrected. No wire rule changes. The reference checks of the profile and flow generators are corrected (map types, descriptor keys, field types, extension values, the issuers of a planned chain), and the three identity corpora gain the cases the review asked for. 28 published values change, all from finding 1 (`migrations/mvp-0.4-baseline.4/value-changes.json`). |
+| mvp-0.4-baseline.3 | Superseded by `mvp-0.4-baseline.4`, which applies the final review of this tag (task LFCP-04-415). Never moved. `mvp-0.4-baseline.2` with the depth of admission rule AI2 clarified and vectors added (task LFCP-04-403d, from the SDK reviews sdk-rs#5 P2-1 and sdk-ts#16 P1). IDENTITY-PROFILE-01 §3: AI2 protects an entry map, and a list or map held in a field of an entry map, and nothing deeper. A list at an entry key is not an entry map. The rule is that of `mvp-0.4-baseline.2`. The profile corpus gains the cases of the depth boundary and of a change made beside an entry that is not a map. The generator's reference admission no longer refuses a scalar over a list held directly at an entry key, and no longer fails beside such an entry. No published value changes (`migrations/mvp-0.4-baseline.3/value-changes.json`). |
 | mvp-0.4-baseline.2 | Superseded by `mvp-0.4-baseline.3`, which clarifies AI2 and adds the depth vectors that two SDKs lacked. The rules are unchanged. Never moved. `mvp-0.4-baseline.1` with clarified identity rules and added vectors (tasks LFCP-04-403b and LFCP-04-403c): LFCP-WIRE-01 §19 and §62 (the new epoch number of a `KEY_EPOCH` is a chain placement check, class 2; decision I9), §39 and §41.1 (every new hosting row is keyed by the Genesis owner, with or without field `5`; rows recorded before keep their host; decision I12), §41 (the revoked-reader replies to `RESOURCE_OPEN`, `CONTROL_GET` and presence) and §62 (a rejected pairing link is client-local); IDENTITY-PROFILE-01 §3 (admission rule AI5: `missing_keys` is written only by its device, decision I8; AI2 and AI5 decided on the causal history, hidden values included) and §5.2. Three published values change: the description of IDENTITY-PROFILE-TEST-VECTORS-01, and `READY_identity_01`, which was not a `READY` message (`migrations/mvp-0.4-baseline.2/value-changes.json`). |
 | mvp-0.4-baseline.1 | Superseded by `mvp-0.4-baseline.2`, because the clarifications of LFCP-WIRE-01 §19, §39, §41 and IDENTITY-PROFILE-01 §3 change normative rules and `READY_identity_01` was not a `READY` message. Never moved. `mvp-0.2-baseline.12` plus multi-device root identity (ADR 0011, decisions I1 to I6): LFCP-WIRE-01 §7.1 to §7.3 (Root Identity, Device Principals, Device Certificates and certificate chains), §14 (Control Record types `9` `DEVICE_GRANT` and `10` `DEVICE_REVOKE`), §15 (Genesis field `5`), §17.1, §17.4 and §17.5, §23.3 (transfer commit field `2`), §25.2 (the same-root Key Package rule), §37 (the server extension `identity-01`), §41 (the Control read for a revoked reader), §62 (the ordering of the validation classes, normative for every Control Record), §79, §80.1 and §100.1; the profile IDENTITY-PROFILE-01 (`org.openlfcp.identity.v1`); and the three identity corpora of IDENTITY-PROFILE-01 §12 (task LFCP-04-403). One published value moves: `unknown_core_type_C1` uses the reserved type `31` instead of `9` (`migrations/mvp-0.4-baseline.1/value-changes.json`). |
 
@@ -29,13 +30,13 @@ MVP 0.4?* The answer is every file listed below, at the Git tag
 
 ## Pinning
 
-Implementations pin the tag `mvp-0.4-baseline.3` of `openlfcp/spec`, never
-a branch, in their `spec.lock`, and move to it from `mvp-0.4-baseline.2`,
-`mvp-0.4-baseline.1` or `mvp-0.2-baseline.12` deliberately
+Implementations pin the tag `mvp-0.4-baseline.4` of `openlfcp/spec`, never
+a branch, in their `spec.lock`, and move to it from `mvp-0.4-baseline.3`,
+`mvp-0.4-baseline.2`, `mvp-0.4-baseline.1` or `mvp-0.2-baseline.12` deliberately
 (IDENTITY-PROFILE-01 §11). An implementation pinned to an earlier tag answers the codes recorded there.
 
 A later approved Working Draft correction does not move the tag. It
-produces a new tag, such as `mvp-0.4-baseline.4`, with an updated copy of
+produces a new tag, such as `mvp-0.4-baseline.5`, with an updated copy of
 this file and a `migrations/mvp-0.4-baseline.N/` entry. Implementations
 move to it deliberately.
 
@@ -72,7 +73,7 @@ directory).
 | `test-vectors/identity-01/IDENTITY-PROFILE-TEST-VECTORS-01.json` | Identity profile corpus (§12.2 ID-05), machine-readable: exact Automerge changes of the Identity Resource, admission AI0 to AI5, per-entry validation, pairing links, fingerprint, approval digest, rootOf tables |
 | `test-vectors/identity-01/IDENTITY-PROFILE-TEST-VECTORS-01.md` | Identity profile corpus, human-readable |
 | `test-vectors/identity-01/generate_identity_profile_vectors_01.mjs` | Corpus generator with its reference admission and validation; with the pinned `@automerge/automerge` 3.5.0 it reproduces both files byte for byte |
-| `test-vectors/identity-01/IDENTITY-FLOW-FIXTURES-01.json` | Flow fixtures (§12.3; LFCP-WIRE-01 §107 style), machine-readable: 22 state-machine and durable-operation fixtures (the 19 of §12.3, F08 in three parts) whose steps name the cases of the two identity suites and form one Control history per Resource and branch |
+| `test-vectors/identity-01/IDENTITY-FLOW-FIXTURES-01.json` | Flow fixtures (§12.3; LFCP-WIRE-01 §107 style), machine-readable: 28 state-machine and durable-operation fixtures (the 19 of §12.3; F05 in three parts, F07 in two, F08 in six, F13 in two) whose steps name the cases of the two identity suites and form one Control history per Resource and branch |
 | `test-vectors/identity-01/IDENTITY-FLOW-FIXTURES-01.md` | Flow fixtures, human-readable |
 | `test-vectors/identity-01/generate_identity_flow_fixtures_01.py` | Fixture generator (Python standard library); reproduces both files byte for byte and checks every step outcome against the case it names |
 | `test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.json` | Shared Objects vectors, machine-readable: deterministic, validation and behavioral cases |
@@ -139,8 +140,9 @@ The checks are those of MVP-0.2-BASELINE.md, plus:
 
 - vector values against the previous baseline tag, from the newest
   `migrations/mvp-0.M-baseline.N/value-changes.json`: for this baseline,
-  `migrations/mvp-0.4-baseline.3/`, against `mvp-0.4-baseline.2`, every
-  suite listed (for `mvp-0.4-baseline.2`, against `mvp-0.4-baseline.1`; for
+  `migrations/mvp-0.4-baseline.4/`, against `mvp-0.4-baseline.3`, every
+  suite listed (for `mvp-0.4-baseline.3`, against `mvp-0.4-baseline.2`; for
+  `mvp-0.4-baseline.2`, against `mvp-0.4-baseline.1`; for
   `mvp-0.4-baseline.1`, against `mvp-0.2-baseline.12`, with the three
   identity suites new);
 - the identity suites, including `IDENTITY-FLOW-FIXTURES-01.json`:
@@ -150,6 +152,16 @@ The checks are those of MVP-0.2-BASELINE.md, plus:
   for the generator of LFCP-TEST-VECTORS-01; CI installs it and sets
   `LFCP_REQUIRE_ALL_CORPORA`, so the suite is never skipped there);
 - this manifest's file list, as for MVP-0.1-BASELINE.md.
+
+## Changes from `mvp-0.4-baseline.3` (`mvp-0.4-baseline.4`)
+
+| Kind | Files |
+| --- | --- |
+| Changed, normative | `profiles/IDENTITY-PROFILE-01.md` §7.1 step 1 (finding 1): only revocations relevant in the target are propagated, bound devices first; a pairing device, or a service device out of the target's scope, unbound there, is not; a refused proposal is reported, stays unpropagated and is proposed again once the target no longer refuses it, at the latest when the device is bound there; meanwhile the reconciler registers neither the device nor a device whose chain passes through it, seals nothing to them (step 3) and never binds the device to lift the limit. §7.1 step 4 (finding 7): display entries are restored only for devices of kind `0` and `1` bound in `I` and not revoked; a retired entry only gets `revoked = true`. §8.4 revokes on a roster Resource where step 1 would |
+| Changed, normative (clarification) | `profiles/IDENTITY-PROFILE-01.md` §3 (finding 5): AI2 protects the `extensions` container, not a namespace value under it |
+| Changed, editorial | `profiles/IDENTITY-PROFILE-01.md` and `adr/0011-human-root-identity.md` (finding 9): their status names the published baselines and the corpora; ADR 0011's open item separates the done corpora from the review. IDENTITY-PROFILE-01 §1 and §12.1 (finding 10): a bind-only service device is W §17.4 rule 9 and §7.3 c6, not rule 8. §12.2 and §12.3 name the new cases |
+| Changed, vectors | `test-vectors/identity-01/generate_identity_profile_vectors_01.mjs` (findings 2 to 5): the reference admission and validation check Automerge map types of the initial and root containers, the Ed25519 key of a request descriptor, the types of `platform` and `revoked`, and no longer protect an extension namespace value; `generate_identity_flow_fixtures_01.py` (finding 6): a Register phase takes its issuers from the planned chain. `test-vectors/lfcp-wire-01/identity_model.py`: a Key Package upload to a server without `identity-01` is decided without the same-root rule. The three identity corpora gain the cases of findings 1 to 8; F05 and F09 no longer revoke the pairing device in `X` (28 values change, all from finding 1) |
+| Added, migration | `migrations/mvp-0.4-baseline.4/` |
 
 ## Changes from `mvp-0.4-baseline.2` (`mvp-0.4-baseline.3`)
 
