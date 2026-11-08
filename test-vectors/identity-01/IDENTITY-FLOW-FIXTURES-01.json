@@ -1388,6 +1388,62 @@
       ]
     },
     {
+      "id": "F07.read_device_cannot_claim",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "A Read device receives an invitation: it cannot write the roster entry in I, so it does not claim (independent cases)",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §7.2",
+        "text": "Before submitting the claim, B MUST verify that it can write the roster entry in I (holds(D_B, 2) in I); otherwise it leaves the invitation unclaimed and asks the human to complete it on a personal installation that can write I."
+      },
+      "inputs": {
+        "mode": "independent",
+        "steps": [
+          {
+            "action": "I with DEV_R, a Read device {1} of OWNER, registered",
+            "case": "wire:flow.f07_dev_r_in_i",
+            "n": 1
+          },
+          {
+            "action": "DEV_R receives the invitation link of N1",
+            "n": 2
+          },
+          {
+            "action": "Control: DEV_B (Edit) registered in I at P4 can write the roster entry, so it may claim",
+            "case": "wire:P4_register_dev_b_approved",
+            "n": 3
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept",
+            "DEV_R_holds_2_in_I": false
+          },
+          {
+            "n": 2,
+            "outcome": "claim not sent",
+            "claim_sent": false,
+            "invitation": "unclaimed",
+            "offered": "complete the invitation on a personal installation that can write I; the link is handed over as received"
+          },
+          {
+            "n": 3,
+            "outcome": "accept",
+            "DEV_B_holds_2_in_I": true
+          }
+        ],
+        "final": {
+          "claims_sent_by_read_device": 0
+        }
+      },
+      "assertions": [
+        "No accepted Resource is ever absent from the roster: the claim waits for an installation that can write I."
+      ]
+    },
+    {
       "id": "F08_pairing_personal",
       "type": "behavioral",
       "kind": "identity_flow",
@@ -1840,6 +1896,226 @@
         }
       },
       "assertions": []
+    },
+    {
+      "id": "F08.link_rejected",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "A link that fails one check of §5.2 is rejected: no request is written and nothing more is sent as J (independent cases)",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §5.2",
+        "text": "A link that fails any of the checks is rejected, a client-local outcome reported to the human, after which the client makes no further use of the link: it writes no request and sends nothing more as J."
+      },
+      "inputs": {
+        "mode": "independent",
+        "steps": [
+          {
+            "action": "Control: every check passes for PAIR_J at P2",
+            "case": "profile:pair_uri_checks_pass",
+            "n": 1
+          },
+          {
+            "action": "… and the request is written as PAIR_J",
+            "case": "profile:pairing_writes_own_request",
+            "n": 2
+          },
+          {
+            "action": "The link fails one check: I's Genesis profile is not org.openlfcp.identity.v1",
+            "case": "profile:pair_uri_genesis_not_identity",
+            "n": 3
+          },
+          {
+            "action": "The link fails one check: device names a kind-0 device",
+            "case": "profile:pair_uri_device_kind_0",
+            "n": 4
+          },
+          {
+            "action": "The link fails one check: device names a pairing device of another root than I's owner",
+            "case": "profile:pair_uri_device_of_other_root",
+            "n": 5
+          },
+          {
+            "action": "The link fails one check: device names a pairing device whose session is consumed",
+            "case": "profile:pair_uri_device_consumed",
+            "n": 6
+          },
+          {
+            "action": "The link fails one check: device names a suspended pairing device",
+            "case": "profile:pair_uri_device_suspended",
+            "n": 7
+          },
+          {
+            "action": "The link fails one check: device names a pairing device not registered in I",
+            "case": "profile:pair_uri_device_not_registered",
+            "n": 8
+          },
+          {
+            "action": "The link fails one check: the secret's Principal is not device",
+            "case": "profile:pair_uri_device_mismatch",
+            "n": 9
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept"
+          },
+          {
+            "n": 2,
+            "outcome": "accept"
+          },
+          {
+            "n": 3,
+            "outcome": "PAIRING_LINK_REJECTED",
+            "request_written": false,
+            "sent_as_pairing_device_after_rejection": "nothing",
+            "reported": true
+          },
+          {
+            "n": 4,
+            "outcome": "PAIRING_LINK_REJECTED",
+            "request_written": false,
+            "sent_as_pairing_device_after_rejection": "nothing",
+            "reported": true
+          },
+          {
+            "n": 5,
+            "outcome": "PAIRING_LINK_REJECTED",
+            "request_written": false,
+            "sent_as_pairing_device_after_rejection": "nothing",
+            "reported": true
+          },
+          {
+            "n": 6,
+            "outcome": "PAIRING_LINK_REJECTED",
+            "request_written": false,
+            "sent_as_pairing_device_after_rejection": "nothing",
+            "reported": true
+          },
+          {
+            "n": 7,
+            "outcome": "PAIRING_LINK_REJECTED",
+            "request_written": false,
+            "sent_as_pairing_device_after_rejection": "nothing",
+            "reported": true
+          },
+          {
+            "n": 8,
+            "outcome": "PAIRING_LINK_REJECTED",
+            "request_written": false,
+            "sent_as_pairing_device_after_rejection": "nothing",
+            "reported": true
+          },
+          {
+            "n": 9,
+            "outcome": "PAIRING_LINK_REJECTED",
+            "request_written": false,
+            "sent_as_pairing_device_after_rejection": "nothing",
+            "reported": true
+          }
+        ],
+        "final": {
+          "requests_written_after_rejection": 0
+        }
+      },
+      "assertions": [
+        "Each case fails exactly one check; the others pass for its link and state."
+      ]
+    },
+    {
+      "id": "F08.missing_material",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "A managing installation that lacks the root's unit 1, or the DEK of a closed epoch of I, creates no session and offers no link",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §5.3 step 1",
+        "text": "Before creating the session A MUST hold, verified, the root's Data Unit with actor sequence 1 and the DEK of every epoch of I; otherwise it offers no link and reports the missing material."
+      },
+      "inputs": {
+        "mode": "sequence",
+        "steps": [
+          {
+            "action": "I has epochs 0 and 1 (rotated at flow.pl_key_epoch_1)",
+            "case": "wire:flow.pl_key_epoch_1",
+            "n": 1
+          },
+          {
+            "action": "DEV_A holds both DEKs but not the root's unit 1",
+            "held": {
+              "root_unit_1": false,
+              "epochs": [
+                0,
+                1
+              ]
+            },
+            "n": 2
+          },
+          {
+            "action": "DEV_A holds the unit and the DEK of epoch 1, not that of the closed epoch 0",
+            "held": {
+              "root_unit_1": true,
+              "epochs": [
+                1
+              ]
+            },
+            "n": 3
+          },
+          {
+            "action": "Control: with both it creates PAIR_L",
+            "case": "wire:flow.pl_pairing_device_l",
+            "held": {
+              "root_unit_1": true,
+              "epochs": [
+                0,
+                1
+              ]
+            },
+            "n": 4
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept",
+            "epochs": [
+              0,
+              1
+            ]
+          },
+          {
+            "n": 2,
+            "outcome": "no link",
+            "offers_link": false,
+            "missing": [
+              "the root's Data Unit with actor sequence 1"
+            ],
+            "records_proposed": 0
+          },
+          {
+            "n": 3,
+            "outcome": "no link",
+            "offers_link": false,
+            "missing": [
+              "the DEK of epoch 0"
+            ],
+            "records_proposed": 0
+          },
+          {
+            "n": 4,
+            "outcome": "accept"
+          }
+        ],
+        "final": {
+          "sessions_without_material": 0
+        }
+      },
+      "assertions": [
+        "No DEVICE_GRANT of a pairing device is proposed and no link is shown while material is missing."
+      ]
     },
     {
       "id": "F09_pairing_service",
@@ -3392,6 +3668,41 @@
           {
             "action": "Online: pushes stop before the revoking record is pushed (W §69)",
             "n": 5
+          },
+          {
+            "action": "DEV_A opens X: RESOURCE_OPENED names I9 as the only head, with no fields 3, 4 and 5 and no subscription",
+            "case": "wire:RESOURCE_OPENED_for_revoked_reader",
+            "n": 6
+          },
+          {
+            "action": "CONTROL_GET of a range inside the prefix",
+            "case": "wire:CONTROL_GET_by_revoked_reader.range_within",
+            "n": 7
+          },
+          {
+            "action": "CONTROL_GET of a range that reaches past I9: trimmed at I9",
+            "case": "wire:CONTROL_GET_by_revoked_reader.range_through",
+            "n": 8
+          },
+          {
+            "action": "CONTROL_GET of a range that starts after I9",
+            "case": "wire:CONTROL_GET_by_revoked_reader.range_after",
+            "n": 9
+          },
+          {
+            "action": "CONTROL_GET of a range where the server also holds competing records: the accepted chain only",
+            "case": "wire:CONTROL_GET_by_revoked_reader.forked_range",
+            "n": 10
+          },
+          {
+            "action": "Presence on a server with the presence extension",
+            "case": "wire:PRESENCE_by_revoked_reader.supported",
+            "n": 11
+          },
+          {
+            "action": "Presence on a server without it: the answer every session gets",
+            "case": "wire:PRESENCE_by_revoked_reader.unsupported",
+            "n": 12
           }
         ]
       },
@@ -3419,6 +3730,46 @@
           {
             "n": 5,
             "outcome": "unsubscribed before push"
+          },
+          {
+            "n": 6,
+            "outcome": "accept",
+            "absent_fields": [
+              3,
+              4,
+              5
+            ]
+          },
+          {
+            "n": 7,
+            "outcome": "accept",
+            "records": [
+              "J0_genesis",
+              "J1_grant_bob",
+              "J2_grant_carol"
+            ]
+          },
+          {
+            "n": 8,
+            "outcome": "accept",
+            "trimmed_at": "I9_device_revoke_dev_a"
+          },
+          {
+            "n": 9,
+            "outcome": "AUTHORIZATION_FAILED"
+          },
+          {
+            "n": 10,
+            "outcome": "accept",
+            "competing_returned": []
+          },
+          {
+            "n": 11,
+            "outcome": "AUTHORIZATION_FAILED"
+          },
+          {
+            "n": 12,
+            "outcome": "PROTOCOL_UNSUPPORTED"
           }
         ],
         "final": {}
@@ -3462,6 +3813,25 @@
           {
             "action": "A blocked client writes on its last validated head",
             "n": 5
+          },
+          {
+            "action": "A client does not upload a Key Package authorized only by the same-root rule to a server whose READY lacks identity-01",
+            "n": 6
+          },
+          {
+            "action": "Sent anyway, the server refuses it",
+            "case": "wire:KEY_PACKAGE_PUT_same_root_without_identity_01",
+            "n": 7
+          },
+          {
+            "action": "Control: a package authorized by key/distribute is accepted by that server",
+            "case": "wire:KEY_PACKAGE_PUT_key_distribute_without_identity_01",
+            "n": 8
+          },
+          {
+            "action": "Control: the same-root package is accepted by a server whose READY lists identity-01",
+            "case": "wire:KEY_PACKAGE_PUT_same_root_with_identity_01",
+            "n": 9
           }
         ]
       },
@@ -3498,6 +3868,23 @@
           {
             "n": 5,
             "outcome": "accepted until the epoch closes"
+          },
+          {
+            "n": 6,
+            "outcome": "not sent",
+            "reported": "hosted on a server without identity support"
+          },
+          {
+            "n": 7,
+            "outcome": "AUTHORIZATION_FAILED"
+          },
+          {
+            "n": 8,
+            "outcome": "accept"
+          },
+          {
+            "n": 9,
+            "outcome": "accept"
           }
         ],
         "final": {

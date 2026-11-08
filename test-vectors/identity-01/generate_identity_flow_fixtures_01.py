@@ -501,6 +501,16 @@ def build() -> None:
           step('DEV_D adds X to the roster of I', expect='roster entry written'),
           step('A device named as claimant would be refused (shown on I2)', 'wire:claim_by_bound_claimant', 'AUTHORIZATION_FAILED', aside=True)],
          {'claimant_role': post('wire:flow.claim_for_root_dave')['roles']['DAVE']}, ['The root is the member; its devices act for it.'])
+    writes_i = lambda ref, label: dev(ref, label)['active'] and 2 in dev(ref, label)['mask'] and post(ref)['owner'] == dev(ref, label)['root']  # noqa: E731
+    assert not writes_i('wire:flow.f07_dev_r_in_i', 'DEV_R') and writes_i('wire:P4_register_dev_b_approved', 'DEV_B')
+    flow('F07.read_device_cannot_claim', 'A Read device receives an invitation: it cannot write the roster entry in I, so it does not claim (independent cases)',
+         ('IDENTITY-PROFILE-01 §7.2', 'Before submitting the claim, B MUST verify that it can write the roster entry in I (holds(D_B, 2) in I); otherwise it leaves the invitation unclaimed and asks the human to complete it on a personal installation that can write I.'),
+         [step('I with DEV_R, a Read device {1} of OWNER, registered', 'wire:flow.f07_dev_r_in_i', 'accept', DEV_R_holds_2_in_I=writes_i('wire:flow.f07_dev_r_in_i', 'DEV_R')),
+          step('DEV_R receives the invitation link of N1', expect='claim not sent', claim_sent=False, invitation='unclaimed',
+               offered='complete the invitation on a personal installation that can write I; the link is handed over as received'),
+          step('Control: DEV_B (Edit) registered in I at P4 can write the roster entry, so it may claim', 'wire:P4_register_dev_b_approved', 'accept',
+               DEV_B_holds_2_in_I=writes_i('wire:P4_register_dev_b_approved', 'DEV_B'))],
+         {'claims_sent_by_read_device': 0}, ['No accepted Resource is ever absent from the roster: the claim waits for an installation that can write I.'], mode='independent')
 
     # 8.
     d_jl = 'flow.pl_consume_l'
@@ -551,6 +561,34 @@ def build() -> None:
          [step('40 pairing devices created and cancelled in I', 'wire:flow.p40_pairing_device', 'accept', in_record_set='forty_cancelled_sessions_in_i'),
           step('Phase 1 of the 41st session', 'wire:flow.p40_consume', 'accept'),
           step('Phase 2 completes', 'wire:flow.p40_register_dev_b', 'accept')], {'cancelled_sessions': 40, 'completed': True}, [])
+    rejected = [('pair_uri_genesis_not_identity', "I's Genesis profile is not org.openlfcp.identity.v1"),
+                ('pair_uri_device_kind_0', 'device names a kind-0 device'),
+                ('pair_uri_device_of_other_root', "device names a pairing device of another root than I's owner"),
+                ('pair_uri_device_consumed', "device names a pairing device whose session is consumed"),
+                ('pair_uri_device_suspended', 'device names a suspended pairing device'),
+                ('pair_uri_device_not_registered', 'device names a pairing device not registered in I'),
+                ('pair_uri_device_mismatch', "the secret's Principal is not device")]
+    flow('F08.link_rejected', 'A link that fails one check of §5.2 is rejected: no request is written and nothing more is sent as J (independent cases)',
+         ('IDENTITY-PROFILE-01 §5.2', 'A link that fails any of the checks is rejected, a client-local outcome reported to the human, after which the client makes no further use of the link: it writes no request and sends nothing more as J.'),
+         [step('Control: every check passes for PAIR_J at P2', 'profile:pair_uri_checks_pass', 'accept'),
+          step('… and the request is written as PAIR_J', 'profile:pairing_writes_own_request', 'accept')]
+         + [step(f'The link fails one check: {what}', f'profile:{cid}', 'PAIRING_LINK_REJECTED', request_written=False, sent_as_pairing_device_after_rejection='nothing',
+                 reported=True) for cid, what in rejected],
+         {'requests_written_after_rejection': 0}, ['Each case fails exactly one check; the others pass for its link and state.'], mode='independent')
+    epochs_of = lambda ref: list(range(post(ref)['epoch'] + 1))  # noqa: E731
+
+    def offers_link(ref: str, held_unit_1: bool, held_epochs: list[int]) -> dict:
+        missing = ([] if held_unit_1 else ["the root's Data Unit with actor sequence 1"]) + [f'the DEK of epoch {e}' for e in epochs_of(ref) if e not in held_epochs]
+        return {'offers_link': not missing, 'missing': missing, 'records_proposed': 0 if missing else 1}
+    no_unit, no_old_dek = offers_link('wire:flow.pl_key_epoch_1', False, [0, 1]), offers_link('wire:flow.pl_key_epoch_1', True, [1])
+    assert not no_unit['offers_link'] and not no_old_dek['offers_link'] and offers_link('wire:flow.pl_key_epoch_1', True, [0, 1])['offers_link']
+    flow('F08.missing_material', "A managing installation that lacks the root's unit 1, or the DEK of a closed epoch of I, creates no session and offers no link",
+         ('IDENTITY-PROFILE-01 §5.3 step 1', "Before creating the session A MUST hold, verified, the root's Data Unit with actor sequence 1 and the DEK of every epoch of I; otherwise it offers no link and reports the missing material."),
+         [step('I has epochs 0 and 1 (rotated at flow.pl_key_epoch_1)', 'wire:flow.pl_key_epoch_1', 'accept', epochs=epochs_of('wire:flow.pl_key_epoch_1')),
+          step("DEV_A holds both DEKs but not the root's unit 1", expect='no link', in_held={'root_unit_1': False, 'epochs': [0, 1]}, **no_unit),
+          step('DEV_A holds the unit and the DEK of epoch 1, not that of the closed epoch 0', expect='no link', in_held={'root_unit_1': True, 'epochs': [1]}, **no_old_dek),
+          step('Control: with both it creates PAIR_L', 'wire:flow.pl_pairing_device_l', 'accept', in_held={'root_unit_1': True, 'epochs': [0, 1]})],
+         {'sessions_without_material': 0}, ['No DEVICE_GRANT of a pairing device is proposed and no link is shown while material is missing.'])
 
     # 9.
     d0 = post('wire:P3s_consume_for_bridge_o')['revoked']['OWNER/PAIR_J']['approval']['hex']
@@ -744,7 +782,18 @@ def build() -> None:
           step('DEV_A requests data', 'wire:DATA_GET_by_revoked_session', 'AUTHORIZATION_FAILED'),
           step('DEV_A re-supplies a valid foreign Key Package the server lost', 'wire:KEY_PACKAGE_PUT_by_revoked_session_foreign_package', 'accept'),
           step('A device that never read (DEV_W at W2)', 'wire:CONTROL_GET_by_never_reader', 'AUTHORIZATION_FAILED', branch='never reader', status='access refused'),
-          step('Online: pushes stop before the revoking record is pushed (W §69)', expect='unsubscribed before push')],
+          step('Online: pushes stop before the revoking record is pushed (W §69)', expect='unsubscribed before push'),
+          step('DEV_A opens X: RESOURCE_OPENED names I9 as the only head, with no fields 3, 4 and 5 and no subscription', 'wire:RESOURCE_OPENED_for_revoked_reader', 'accept',
+               absent_fields=post('wire:RESOURCE_OPENED_for_revoked_reader')['absent_fields']),
+          step('CONTROL_GET of a range inside the prefix', 'wire:CONTROL_GET_by_revoked_reader.range_within', 'accept',
+               records=post('wire:CONTROL_GET_by_revoked_reader.range_within')['records']),
+          step('CONTROL_GET of a range that reaches past I9: trimmed at I9', 'wire:CONTROL_GET_by_revoked_reader.range_through', 'accept',
+               trimmed_at=post('wire:CONTROL_GET_by_revoked_reader.range_through')['trimmed_at']),
+          step('CONTROL_GET of a range that starts after I9', 'wire:CONTROL_GET_by_revoked_reader.range_after', 'AUTHORIZATION_FAILED'),
+          step('CONTROL_GET of a range where the server also holds competing records: the accepted chain only', 'wire:CONTROL_GET_by_revoked_reader.forked_range', 'accept',
+               competing_returned=post('wire:CONTROL_GET_by_revoked_reader.forked_range')['competing_returned']),
+          step('Presence on a server with the presence extension', 'wire:PRESENCE_by_revoked_reader.supported', 'AUTHORIZATION_FAILED'),
+          step('Presence on a server without it: the answer every session gets', 'wire:PRESENCE_by_revoked_reader.unsupported', 'PROTOCOL_UNSUPPORTED')],
          {}, ['The device never creates Data Units for the Resource again and is never re-paired under the same Principal.'])
 
     # 18.
@@ -753,7 +802,12 @@ def build() -> None:
     flow('F18_barrier', 'The four barrier entries against a pre-identity validator, a herald and an identity-aware one (independent cases)',
          ('LFCP-WIRE-01 §100.1, §37', 'A pre-identity client rejects the barrier and blocks the Resource; a herald persists the blocked state with the update message; an identity-aware client accepts.'),
          [step(f'{name}', ref, 'accept', pre_identity=pre[name], herald='blocked at this head (persisted)', identity_aware='accept') for name, ref in barrier.items()]
-         + [step('A blocked client writes on its last validated head', expect='accepted until the epoch closes')],
+         + [step('A blocked client writes on its last validated head', expect='accepted until the epoch closes'),
+            step('A client does not upload a Key Package authorized only by the same-root rule to a server whose READY lacks identity-01', expect='not sent',
+                 reported='hosted on a server without identity support'),
+            step('Sent anyway, the server refuses it', 'wire:KEY_PACKAGE_PUT_same_root_without_identity_01', 'AUTHORIZATION_FAILED'),
+            step('Control: a package authorized by key/distribute is accepted by that server', 'wire:KEY_PACKAGE_PUT_key_distribute_without_identity_01', 'accept'),
+            step('Control: the same-root package is accepted by a server whose READY lists identity-01', 'wire:KEY_PACKAGE_PUT_same_root_with_identity_01', 'accept')],
          {'server_without_identity_01': {name: pre[name] for name in barrier}}, ['A server whose READY lacks identity-01 rejects these records as a pre-identity receiver does.'],
          mode='independent')
 

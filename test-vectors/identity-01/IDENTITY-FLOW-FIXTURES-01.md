@@ -138,6 +138,16 @@ An invitation accepted by a device of DAVE: the claim names the root, the device
 | 6 | DEV_D adds X to the roster of I |  | roster entry written |  |
 | 7 | A device named as claimant would be refused (shown on I2) (aside) | `wire:claim_by_bound_claimant` | AUTHORIZATION_FAILED |  |
 
+## F07.read_device_cannot_claim
+
+A Read device receives an invitation: it cannot write the roster entry in I, so it does not claim (independent cases) (IDENTITY-PROFILE-01 §7.2; mode independent)
+
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | I with DEV_R, a Read device {1} of OWNER, registered | `wire:flow.f07_dev_r_in_i` | accept |  |
+| 2 | DEV_R receives the invitation link of N1 |  | claim not sent |  |
+| 3 | Control: DEV_B (Edit) registered in I at P4 can write the roster entry, so it may claim | `wire:P4_register_dev_b_approved` | accept |  |
+
 ## F08_pairing_personal
 
 Pairing DEV_B through PAIR_L in an Identity Resource already rotated to epoch 1: keys of both epochs, request, phases 1 and 2, reuse and equivocation (IDENTITY-PROFILE-01 §5.3, §9; mode sequence)
@@ -195,6 +205,33 @@ OWNER at 31 live devices in I: the pairing device takes the 32nd place, the cons
 | 1 | 40 pairing devices created and cancelled in I | `wire:flow.p40_pairing_device` | accept |  |
 | 2 | Phase 1 of the 41st session | `wire:flow.p40_consume` | accept |  |
 | 3 | Phase 2 completes | `wire:flow.p40_register_dev_b` | accept |  |
+
+## F08.link_rejected
+
+A link that fails one check of §5.2 is rejected: no request is written and nothing more is sent as J (independent cases) (IDENTITY-PROFILE-01 §5.2; mode independent)
+
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | Control: every check passes for PAIR_J at P2 | `profile:pair_uri_checks_pass` | accept |  |
+| 2 | … and the request is written as PAIR_J | `profile:pairing_writes_own_request` | accept |  |
+| 3 | The link fails one check: I's Genesis profile is not org.openlfcp.identity.v1 | `profile:pair_uri_genesis_not_identity` | PAIRING_LINK_REJECTED |  |
+| 4 | The link fails one check: device names a kind-0 device | `profile:pair_uri_device_kind_0` | PAIRING_LINK_REJECTED |  |
+| 5 | The link fails one check: device names a pairing device of another root than I's owner | `profile:pair_uri_device_of_other_root` | PAIRING_LINK_REJECTED |  |
+| 6 | The link fails one check: device names a pairing device whose session is consumed | `profile:pair_uri_device_consumed` | PAIRING_LINK_REJECTED |  |
+| 7 | The link fails one check: device names a suspended pairing device | `profile:pair_uri_device_suspended` | PAIRING_LINK_REJECTED |  |
+| 8 | The link fails one check: device names a pairing device not registered in I | `profile:pair_uri_device_not_registered` | PAIRING_LINK_REJECTED |  |
+| 9 | The link fails one check: the secret's Principal is not device | `profile:pair_uri_device_mismatch` | PAIRING_LINK_REJECTED |  |
+
+## F08.missing_material
+
+A managing installation that lacks the root's unit 1, or the DEK of a closed epoch of I, creates no session and offers no link (IDENTITY-PROFILE-01 §5.3 step 1; mode sequence)
+
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | I has epochs 0 and 1 (rotated at flow.pl_key_epoch_1) | `wire:flow.pl_key_epoch_1` | accept |  |
+| 2 | DEV_A holds both DEKs but not the root's unit 1 |  | no link |  |
+| 3 | DEV_A holds the unit and the DEK of epoch 1, not that of the closed epoch 0 |  | no link |  |
+| 4 | Control: with both it creates PAIR_L | `wire:flow.pl_pairing_device_l` | accept |  |
 
 ## F09_pairing_service
 
@@ -356,6 +393,13 @@ A revoked device reconnects (IDENTITY-PROFILE-01 §8.6; LFCP-WIRE-01 §41; mode 
 | 3 | DEV_A re-supplies a valid foreign Key Package the server lost | `wire:KEY_PACKAGE_PUT_by_revoked_session_foreign_package` | accept |  |
 | 4 | A device that never read (DEV_W at W2) (never reader) | `wire:CONTROL_GET_by_never_reader` | AUTHORIZATION_FAILED |  |
 | 5 | Online: pushes stop before the revoking record is pushed (W §69) |  | unsubscribed before push |  |
+| 6 | DEV_A opens X: RESOURCE_OPENED names I9 as the only head, with no fields 3, 4 and 5 and no subscription | `wire:RESOURCE_OPENED_for_revoked_reader` | accept |  |
+| 7 | CONTROL_GET of a range inside the prefix | `wire:CONTROL_GET_by_revoked_reader.range_within` | accept |  |
+| 8 | CONTROL_GET of a range that reaches past I9: trimmed at I9 | `wire:CONTROL_GET_by_revoked_reader.range_through` | accept |  |
+| 9 | CONTROL_GET of a range that starts after I9 | `wire:CONTROL_GET_by_revoked_reader.range_after` | AUTHORIZATION_FAILED |  |
+| 10 | CONTROL_GET of a range where the server also holds competing records: the accepted chain only | `wire:CONTROL_GET_by_revoked_reader.forked_range` | accept |  |
+| 11 | Presence on a server with the presence extension | `wire:PRESENCE_by_revoked_reader.supported` | AUTHORIZATION_FAILED |  |
+| 12 | Presence on a server without it: the answer every session gets | `wire:PRESENCE_by_revoked_reader.unsupported` | PROTOCOL_UNSUPPORTED |  |
 
 ## F18_barrier
 
@@ -368,6 +412,10 @@ The four barrier entries against a pre-identity validator, a herald and an ident
 | 3 | Genesis field 5 | `wire:G1_genesis_by_dev_a` | accept |  |
 | 4 | commit field 2 | `wire:T1_commit` | accept |  |
 | 5 | A blocked client writes on its last validated head |  | accepted until the epoch closes |  |
+| 6 | A client does not upload a Key Package authorized only by the same-root rule to a server whose READY lacks identity-01 |  | not sent |  |
+| 7 | Sent anyway, the server refuses it | `wire:KEY_PACKAGE_PUT_same_root_without_identity_01` | AUTHORIZATION_FAILED |  |
+| 8 | Control: a package authorized by key/distribute is accepted by that server | `wire:KEY_PACKAGE_PUT_key_distribute_without_identity_01` | accept |  |
+| 9 | Control: the same-root package is accepted by a server whose READY lists identity-01 | `wire:KEY_PACKAGE_PUT_same_root_with_identity_01` | accept |  |
 
 ## F19_key_bootstrap
 
