@@ -86,6 +86,8 @@ PRINCIPAL_ROLES = {
     'DEV_R6': 'personal device of BOB with mask {1,2,6} (CERT_R6), for the rotator test',
     'DEV_R7O': 'personal device of OWNER with mask {1,2,7} (CERT_R7O), for the rotator test in I',
     'DEV_P': 'personal device of OWNER revoked in I before its first registration in X (CERT_P, Edit, by DEV_A), for flow F05',
+    'PAIR_Z': 'a pairing device of OWNER registered in Z, whose profile is not the identity profile (CERT_JZ), for the link cases of IDENTITY-PROFILE-TEST-VECTORS-01',
+    'PAIR_B': 'a pairing device of BOB registered in I (CERT_JB), for the link cases of IDENTITY-PROFILE-TEST-VECTORS-01',
 }
 P = {label: principal(label) for label in PRINCIPAL_ROLES}
 LIMIT = [f'LIMIT_BOB_{k:02d}' for k in range(1, 31)]
@@ -223,6 +225,8 @@ cert('CERT_R7', 'BOB', 'DEV_R7', 0, [1, 2, 7], [], 'BOB')
 cert('CERT_R6', 'BOB', 'DEV_R6', 0, [1, 2, 6], [], 'BOB')
 cert('CERT_R7O', 'OWNER', 'DEV_R7O', 0, [1, 2, 7], [], 'OWNER')
 cert('CERT_P', 'OWNER', 'DEV_P', 0, EDIT, [], 'DEV_A')
+cert('CERT_JZ', 'OWNER', 'PAIR_Z', 2, [1, 2], ['Z'], 'OWNER')
+cert('CERT_JB', 'BOB', 'PAIR_B', 2, [1, 2], ['I'], 'BOB')
 for label in PAIR_T:
     cert(f'CERT_{label}', 'OWNER', label, 2, [1, 2], ['I'], 'DEV_A')
 
@@ -1343,16 +1347,18 @@ def package_bytes(res: str, sender: str, recipient: str, epoch: int, head: bytes
 
 
 def package_case(cid: str, latest: str, sender: str, recipient: str, head_case: str, expect, description: str, rule=None,
-                 epoch: int = 0) -> None:
+                 epoch: int = 0, server_extensions: list[str] | None = None) -> None:
     res = NODES[latest].resource
     s = package_bytes(res, sender, recipient, epoch, rid(head_case), cid)
+    same_root = server_extensions is None or 'identity-01' in server_extensions
 
     def check(node):
-        M.check_package(s['cose'], heads_of(node))
+        M.check_package(s['cose'], heads_of(node), same_root)
 
+    extra = {} if server_extensions is None else {'request': 'KEY_PACKAGE_PUT', 'server_extensions': server_extensions}
     obj_case(cid, 'key_package', latest, s, expect, description,
              {'resource': res, 'signer': sender, 'sender': sender, 'recipient': recipient, 'epoch': epoch,
-              'control_head': head_case, 'hpke_ikm_for_ephemeral': hx(s['ephemeral_seed']), 'dek': None} | {}, check, rule,
+              'control_head': head_case, 'hpke_ikm_for_ephemeral': hx(s['ephemeral_seed']), 'dek': None} | extra, check, rule,
              head_case=head_case)
     CASE_BY_ID[cid]['inputs'].pop('dek')
 
@@ -1402,6 +1408,54 @@ def read_case(cid: str, latest: str, session: str, request: str, expect, descrip
         else:
             ps['control_head'] = node.prefix[-1]
         case['expected'] = {'valid': True, 'post_state': ps}
+    add_case(case)
+
+
+def prefix_read_case(cid: str, latest: str, session: str, request: str, expect, description: str, *, rng: tuple[int, int] | None = None,
+                     extensions: tuple[str, ...] = ('identity-01',), held_competing: list[str] | None = None, rule=None) -> None:
+    """W §41 (Control read for a revoked reader), §42, §45, §58: the exact answer to one request of a session at `latest`."""
+    node = NODES[latest]
+    seq = lambda c: CASE_BY_ID[c]['inputs']['control_seq']  # noqa: E731
+    out: dict[str, Any] = {}
+    try:
+        if request == 'PRESENCE' and 'presence' not in extensions:
+            raise Reject('PROTOCOL_UNSUPPORTED', 'W §41, §58: a server without the presence extension answers presence from every session with PROTOCOL_UNSUPPORTED')
+        if request == 'CONTROL_GET' and rng[1] < rng[0]:
+            raise Reject(M.MALFORMED, 'W §45: a range whose end is below its start')
+        scope, idx = M.read_access(node.state, node.history, P[session].pid)
+        if scope == 'prefix':
+            last = node.prefix[idx]
+            if request == 'PRESENCE':
+                raise Reject(M.DENIED, 'W §41: a revoked reader is refused presence')
+            if request == 'RESOURCE_OPEN':
+                body = {0: RES[node.resource], 1: [{0: seq(last), 1: rid(last)}], 2: []}
+                out = {'read': 'prefix', 'control_head': last, 'answer': 'RESOURCE_OPENED', 'body': {'control_heads': [last], 'have_vector': []},
+                       'body_cbor': hx(cbor(body)), 'absent_fields': [3, 4, 5], 'live_subscription': False}
+            elif request == 'CONTROL_GET':
+                if rng[0] > seq(last):
+                    raise Reject(M.DENIED, 'W §41: a range that starts after the revoking record is refused')
+                out = {'read': 'prefix', 'control_head': last, 'answer': 'CONTROL_BATCH', 'records': [c for c in node.prefix[:idx + 1] if rng[0] <= seq(c) <= rng[1]],
+                       'trimmed_at': last if rng[1] > seq(last) else None, 'competing_returned': []}
+                out = {k: v for k, v in out.items() if v is not None}
+        else:
+            if request == 'CONTROL_GET':
+                recs = [c for c in node.prefix if rng[0] <= seq(c) <= rng[1]]
+                out = {'read': 'full', 'answer': 'CONTROL_BATCH', 'records': recs, 'competing_returned': sorted(held_competing or [])}
+            else:
+                out = {'read': 'full'}
+        got, why = None, ''
+    except Reject as e:
+        got, why = e.code, e.rule
+    check_expectation(cid, expect, got, why)
+    inputs: dict[str, Any] = {'resource': node.resource, 'session': session, 'request': request, 'server_extensions': list(extensions)}
+    if rng is not None:
+        inputs['range'] = {'start': rng[0], 'end': rng[1]}
+    if held_competing:
+        inputs['server_also_holds'] = [{'case': c, 'field': 'cose_sign1', 'in': 'inputs'} for c in held_competing]
+    case = {'id': cid, 'type': 'validation', 'kind': 'session_read', 'description': description,
+            'rule': rule_of(why) if got else {'section': rule[0], 'text': rule[1]}, 'inputs': inputs,
+            'context': {'resource_id': hx(RES[node.resource]), **context_of(node), 'latest': {'case': node.prefix[-1], 'field': 'record_id', 'in': 'inputs'}},
+            'expected': {'valid': True, 'post_state': out} if got is None else {'valid': False, 'error': {'code': got}}}
     add_case(case)
 
 
@@ -1606,6 +1660,59 @@ def build_review_flows() -> None:
             'Phase 1 of the 41st session', readable=dr_readable('OWNER', 'PAIR_M', 3, 'CERT_B'), rule=ACC_DR)
     control('flow.p40_register_dev_b', 'flow.p40_consume', 9, 'DEV_A', dg('OWNER', C('CERT_B', 'CERT_A'), 'PAIR_M'), 'accept',
             'Phase 2 of the 41st session completes', readable=dg_readable('OWNER', ['CERT_B', 'CERT_A'], 'PAIR_M'), rule=ACC_DG)
+    # Review LFCP-04-415, finding 8: the inputs of the negative coverage of IDENTITY-PROFILE-01 §5.2, §7.2 and LFCP-WIRE-01 §37, §41.
+    control('link.z_genesis', None, 0, 'OWNER', genesis_body('Z', 'OWNER'), 'accept',
+            'Genesis of Z, owner OWNER, profile org.lfcp.test.raw.v1 (not the identity profile)', resource='Z',
+            readable={'data_profile': RAW_PROFILE, 'owner': 'OWNER'}, rule=('LFCP-WIRE-01 §15', 'An ordinary Resource owned by OWNER.'))
+    control('link.z_pairing_device', 'link.z_genesis', 9, 'OWNER', dg('OWNER', C('CERT_JZ')), 'accept',
+            'DEVICE_GRANT {OWNER, [CERT_JZ]} by OWNER in Z: PAIR_Z, kind 2, scope [Z], registered and active', readable=dg_readable('OWNER', ['CERT_JZ']),
+            rule=('LFCP-WIRE-01 §17.4', 'A kind-2 leaf that lists Z; the wire does not know which Resource is an Identity Resource.'))
+    control('link.grant_bob_in_i', 'P2_pairing_device', 1, 'OWNER', grant_body('BOB', [1, 2], []), 'accept',
+            'CAPABILITY_GRANT to BOB {1,2} in I, by OWNER', readable={'subject': 'BOB', 'abilities': [1, 2], 'delegable': []},
+            rule=('LFCP-WIRE-01 §17.2', 'The owner MAY grant any abilities without a parent grant.'))
+    control('link.pairing_device_of_bob', 'link.grant_bob_in_i', 9, 'BOB', dg('BOB', C('CERT_JB')), 'accept',
+            'DEVICE_GRANT {BOB, [CERT_JB]} by BOB in I: PAIR_B, a kind-2 device of BOB, registered and active in I', readable=dg_readable('BOB', ['CERT_JB']),
+            rule=('LFCP-WIRE-01 §17.4 rule 6', 'The root with standing registers its own device.'))
+    control('flow.f07_dev_r_in_i', 'P1_device_grant_dev_a_i', 9, 'OWNER', dg('OWNER', C('CERT_R')), 'accept',
+            'DEVICE_GRANT {OWNER, [CERT_R]} by OWNER in I: DEV_R, a Read device {1}, registered in I', readable=dg_readable('OWNER', ['CERT_R']),
+            rule=('LFCP-WIRE-01 §17.4', 'The root registers a kind-0 Read device.'))
+    NO_ID = ('LFCP-WIRE-01 §37, §100.1', 'A server without identity-01 decides a Key Package without the same-root rule; holds(sender, 6) authorizes it.')
+    package_case('KEY_PACKAGE_PUT_same_root_without_identity_01', 'I8_bridge_grant', 'DEV_B', 'OWNER', 'I8_bridge_grant', (M.DENIED, '§100.1'),
+                 'DEV_B uploads its package to OWNER at I8 (authorized only by the same-root rule) to a server whose READY does not list identity-01',
+                 server_extensions=[])
+    package_case('KEY_PACKAGE_PUT_key_distribute_without_identity_01', 'I8_bridge_grant', 'BOB', 'CAROL', 'I8_bridge_grant', 'accept',
+                 'Control: BOB uploads a package to CAROL at I8 (key/distribute through J1) to the same server', NO_ID, server_extensions=[])
+    package_case('KEY_PACKAGE_PUT_same_root_with_identity_01', 'I8_bridge_grant', 'DEV_B', 'OWNER', 'I8_bridge_grant', 'accept',
+                 'Control: the same package of DEV_B to OWNER uploaded to a server whose READY lists identity-01', ('LFCP-WIRE-01 §25.2', 'sameRoot(DEV_B, OWNER); OWNER reads.'),
+                 server_extensions=['identity-01'])
+    REV = ('LFCP-WIRE-01 §41', 'The Control read for a revoked reader: the accepted chain through the first record that revoked the session Principal.')
+    seq = lambda c: CASE_BY_ID[c]['inputs']['control_seq']  # noqa: E731
+    s9, s10 = seq('I9_device_revoke_dev_a'), seq('I10_recertify_dev_b')
+    prefix_read_case('RESOURCE_OPENED_for_revoked_reader', 'I10_recertify_dev_b', 'DEV_A', 'RESOURCE_OPEN', 'accept',
+                     'Session DEV_A, latest I10: RESOURCE_OPENED names I9 as the only Control Head, an empty Have Vector, no fields 3, 4 and 5, no subscription', rule=REV)
+    prefix_read_case('CONTROL_GET_by_revoked_reader.range_within', 'I10_recertify_dev_b', 'DEV_A', 'CONTROL_GET', 'accept',
+                     'Session DEV_A, latest I10: CONTROL_GET 0..2, inside the prefix', rng=(0, 2), rule=REV)
+    prefix_read_case('CONTROL_GET_by_revoked_reader.range_through', 'I10_recertify_dev_b', 'DEV_A', 'CONTROL_GET', 'accept',
+                     f'Session DEV_A, latest I10: CONTROL_GET 5..{s10}, which reaches past I9 (sequence {s9}): trimmed to end at I9', rng=(5, s10), rule=REV)
+    prefix_read_case('CONTROL_GET_by_revoked_reader.range_after', 'I10_recertify_dev_b', 'DEV_A', 'CONTROL_GET', (M.DENIED, '§41'),
+                     f'Session DEV_A, latest I10: CONTROL_GET {s9 + 1}..{s10}, which starts after I9', rng=(s9 + 1, s10))
+    prefix_read_case('CONTROL_GET_by_revoked_reader.range_inverted', 'I10_recertify_dev_b', 'DEV_A', 'CONTROL_GET', (M.MALFORMED, '§45'),
+                     'Session DEV_A, latest I10: CONTROL_GET 5..2, end below start', rng=(5, 2))
+    prefix_read_case('CONTROL_GET_by_revoked_reader.forked_range', 'I10_recertify_dev_b', 'DEV_A', 'CONTROL_GET', 'accept',
+                     f'Session DEV_A, latest I10, the server also holding Rd1 and W1 (records competing with I2 on I1): CONTROL_GET 0..{s9} returns the accepted chain only',
+                     rng=(0, s9), held_competing=['Rd1', 'W1'], rule=REV)
+    prefix_read_case('CONTROL_GET_by_reader.forked_range', 'I10_recertify_dev_b', 'DEV_B', 'CONTROL_GET', 'accept',
+                     f'Control: session DEV_B (a reader), the same server and range: every record the server holds in the range, the competing ones included',
+                     rng=(0, s9), held_competing=['Rd1', 'W1'], rule=('LFCP-WIRE-01 §45', 'A peer returns every Control Record it possesses in the range, including all competing records if the chain is forked.'))
+    prefix_read_case('PRESENCE_by_revoked_reader.supported', 'I10_recertify_dev_b', 'DEV_A', 'PRESENCE', (M.DENIED, '§41'),
+                     'Session DEV_A, latest I10, a server with the presence extension: presence refused', extensions=('identity-01', 'presence'))
+    prefix_read_case('PRESENCE_by_revoked_reader.unsupported', 'I10_recertify_dev_b', 'DEV_A', 'PRESENCE', ('PROTOCOL_UNSUPPORTED', '§58'),
+                     'Session DEV_A, latest I10, a server without the presence extension')
+    prefix_read_case('PRESENCE_by_reader.unsupported', 'I10_recertify_dev_b', 'DEV_B', 'PRESENCE', ('PROTOCOL_UNSUPPORTED', '§58'),
+                     'Control: session DEV_B (a reader), a server without the presence extension: the same answer as to any session')
+    prefix_read_case('PRESENCE_by_reader.supported', 'I10_recertify_dev_b', 'DEV_B', 'PRESENCE', 'accept',
+                     'Control: session DEV_B (a reader), a server with the presence extension', extensions=('identity-01', 'presence'),
+                     rule=('LFCP-WIRE-01 §41, §58', 'A reader may use presence where the server supports it.'))
     # F05.sixty_five_sessions: 65 closed sessions in I, then a personal device revoked in I before its first registration
     # in X. Reconciliation (IDENTITY-PROFILE-01 §7.1 step 1) propagates the personal device and none of the pairing devices.
     items = []

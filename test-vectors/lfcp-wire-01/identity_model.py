@@ -871,7 +871,8 @@ def within_frontier(fr: dict, actor: bytes, seq: int) -> bool:
     return seq <= contiguous or any(a <= seq <= b for a, b in extras)
 
 
-def check_package(cose: bytes, known_heads: dict) -> None:
+def check_package(cose: bytes, known_heads: dict, same_root: bool = True) -> None:
+    """W §25.2; `same_root` False for a server whose READY does not list identity-01 (W §37, §100.1)."""
     k = parse_signed(cose, 'Key Package')
     q = k.obj
     if not (isinstance(q, dict) and set(q) == {0, 1, 2, 3, 4, 5, 6}):
@@ -886,10 +887,12 @@ def check_package(cose: bytes, known_heads: dict) -> None:
         raise Reject(MISSING, 'W §25: the sender resolves to a Principal Descriptor')
     if k.kid != q[4] or not k.verifies(desc[1]):
         raise Reject(BAD_SIG, 'W §25: the package is signed by its sender')
-    decide_package(at, q[4], q[2])
+    decide_package(at, q[4], q[2], same_root)
 
 
-def decide_package(at: State, sender: bytes, recipient: bytes) -> None:
+def decide_package(at: State, sender: bytes, recipient: bytes, same_root: bool = True) -> None:
+    if not same_root and not at.holds(sender, 6):
+        raise Reject(DENIED, 'W §37, §100.1: a server without identity-01 refuses a Key Package authorized only by the same-root rule')
     if not (at.holds(sender, 6) or at.same_root(sender, recipient)):
         raise Reject(DENIED, 'W §25.2: holds(sender, 6) or sameRoot(sender, recipient)')
     if not (at.holds(recipient, 1) or at.invitation_subject(recipient)):

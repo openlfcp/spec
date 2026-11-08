@@ -7005,6 +7005,62 @@
           "hex": "53f59b15beba72b8df572f28b1ca7523ccee9e1fb7a37e7d5a113944c8465e4d"
         }
       },
+      "CERT_JZ": {
+        "root": "OWNER",
+        "device": "PAIR_Z",
+        "kind": 2,
+        "mask": [
+          1,
+          2
+        ],
+        "scope": [
+          "Z"
+        ],
+        "issuer": "OWNER",
+        "serial": {
+          "hex": "3fed7754e6f96944e20069f3b8bc68a6"
+        },
+        "payload_cbor": {
+          "hex": "87734c4643502d4445564943452d434552542d76315820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da3005820c50f37b176cba881fd9fca21c8386a946f476bbebe53850965e05e32cbbb824c0158207d17be5c70c0e5e215587e2931615c4aad9ab67a9e5fb5b5f3594a1df9be709e025820d66f90c74ac6298f58d33f3e8787c83cf15e1ac0a4dce0944996d0b043a5b37c028201028158207c93e0fe9c29efb426525b939708725fd43310ecb4d15d7d30857856ec96d2df503fed7754e6f96944e20069f3b8bc68a6"
+        },
+        "cose_sign1": {
+          "hex": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058d987734c4643502d4445564943452d434552542d76315820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da3005820c50f37b176cba881fd9fca21c8386a946f476bbebe53850965e05e32cbbb824c0158207d17be5c70c0e5e215587e2931615c4aad9ab67a9e5fb5b5f3594a1df9be709e025820d66f90c74ac6298f58d33f3e8787c83cf15e1ac0a4dce0944996d0b043a5b37c028201028158207c93e0fe9c29efb426525b939708725fd43310ecb4d15d7d30857856ec96d2df503fed7754e6f96944e20069f3b8bc68a658400e4b1f7e534550c505f94919c41a4b426f82adc03532d70e81526b44375b022265dfe73b260de88a06eefc2beec67af1df36dc6f5a2f1096d3997af6ae11a609"
+        },
+        "certificate_id": {
+          "hex": "48fdc6619ae2e5c679134d79de1b3bcdad9f83d6c15ca6b70437db1348dc1a35"
+        },
+        "payload_digest": {
+          "hex": "bfc96384ad85e9e3b88aa317b6cf2a7e4ec85281eaa9d90186d8ab29a9945d6e"
+        }
+      },
+      "CERT_JB": {
+        "root": "BOB",
+        "device": "PAIR_B",
+        "kind": 2,
+        "mask": [
+          1,
+          2
+        ],
+        "scope": [
+          "I"
+        ],
+        "issuer": "BOB",
+        "serial": {
+          "hex": "aa0628235f2f36a41e8acee2a8e44b91"
+        },
+        "payload_cbor": {
+          "hex": "87734c4643502d4445564943452d434552542d763158203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a3005820556b5c4f9df72bfb29c222369d7ee87a94466d512351b77ba4cb93ebe2d5f9750158209144540ca2a6428ef00732cc4a6e75f224b4b0621236c5e125181e690b679fd30258203dacbabb45e40022507254819f523ca90b62347342f773e9884038acd9e2083d02820102815820b349a923e0af30e63c9409aa7d704ecae2a7498f5936289ac63f928b26e32cfd50aa0628235f2f36a41e8acee2a8e44b91"
+        },
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058d987734c4643502d4445564943452d434552542d763158203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a3005820556b5c4f9df72bfb29c222369d7ee87a94466d512351b77ba4cb93ebe2d5f9750158209144540ca2a6428ef00732cc4a6e75f224b4b0621236c5e125181e690b679fd30258203dacbabb45e40022507254819f523ca90b62347342f773e9884038acd9e2083d02820102815820b349a923e0af30e63c9409aa7d704ecae2a7498f5936289ac63f928b26e32cfd50aa0628235f2f36a41e8acee2a8e44b9158408d636536785be4c8d3a408eeb3c07542ae39582a37acf08a02e90f566a935810d6d989ef05f03b144b322d8364b0f30d44c2280f034776108c3d13ab1220480a"
+        },
+        "certificate_id": {
+          "hex": "e969932979661308c0c245457be75763a69139788d8e3e49c5f47c105a952b37"
+        },
+        "payload_digest": {
+          "hex": "d7f56edf6fe250a41867002a38837d8ade45f0e1bc888f51bebedb333c4a1b40"
+        }
+      },
       "CERT_PAIR_T_01": {
         "root": "OWNER",
         "device": "PAIR_T_01",
@@ -11181,6 +11237,64 @@
         },
         "descriptor_cbor": {
           "hex": "a30058204dfa3db053d928d1f50ac18b67f7f0ba3cd7f776942ec22505ee6da08288c1620158203e9aca6f21680c023747b7ed884793a5281fe180a082da41e0f98d110b1e9949025820eceacb700c0ebcccbb4a8bc817fb576a29a278164a58ced4e17f43d5f791ae40"
+        }
+      }
+    },
+    {
+      "id": "principal_pair_z",
+      "type": "bytes",
+      "kind": "principal",
+      "description": "a pairing device of OWNER registered in Z, whose profile is not the identity profile (CERT_JZ), for the link cases of IDENTITY-PROFILE-TEST-VECTORS-01",
+      "inputs": {
+        "label": "PAIR_Z",
+        "ed25519_seed": {
+          "hex": "c27927108731d3419864190d792ad09656d5af30fc19898807a6d6eb815765d9"
+        },
+        "x25519_private": {
+          "hex": "7b2831149cc8b2f64b305be72d817a747dc8f0de996e9fbe24e16ca5970527c3"
+        }
+      },
+      "expected": {
+        "ed25519_public": {
+          "hex": "7d17be5c70c0e5e215587e2931615c4aad9ab67a9e5fb5b5f3594a1df9be709e"
+        },
+        "x25519_public": {
+          "hex": "d66f90c74ac6298f58d33f3e8787c83cf15e1ac0a4dce0944996d0b043a5b37c"
+        },
+        "principal_id": {
+          "hex": "c50f37b176cba881fd9fca21c8386a946f476bbebe53850965e05e32cbbb824c"
+        },
+        "descriptor_cbor": {
+          "hex": "a3005820c50f37b176cba881fd9fca21c8386a946f476bbebe53850965e05e32cbbb824c0158207d17be5c70c0e5e215587e2931615c4aad9ab67a9e5fb5b5f3594a1df9be709e025820d66f90c74ac6298f58d33f3e8787c83cf15e1ac0a4dce0944996d0b043a5b37c"
+        }
+      }
+    },
+    {
+      "id": "principal_pair_b",
+      "type": "bytes",
+      "kind": "principal",
+      "description": "a pairing device of BOB registered in I (CERT_JB), for the link cases of IDENTITY-PROFILE-TEST-VECTORS-01",
+      "inputs": {
+        "label": "PAIR_B",
+        "ed25519_seed": {
+          "hex": "abb275fdb98ed40faad0dd4c2cf879157b759004b404d1edd72a8300f842aac4"
+        },
+        "x25519_private": {
+          "hex": "9efb81aeed5764d41b04d3d9da101cab97ad3f18c18dfdcd270de8706475f741"
+        }
+      },
+      "expected": {
+        "ed25519_public": {
+          "hex": "9144540ca2a6428ef00732cc4a6e75f224b4b0621236c5e125181e690b679fd3"
+        },
+        "x25519_public": {
+          "hex": "3dacbabb45e40022507254819f523ca90b62347342f773e9884038acd9e2083d"
+        },
+        "principal_id": {
+          "hex": "556b5c4f9df72bfb29c222369d7ee87a94466d512351b77ba4cb93ebe2d5f975"
+        },
+        "descriptor_cbor": {
+          "hex": "a3005820556b5c4f9df72bfb29c222369d7ee87a94466d512351b77ba4cb93ebe2d5f9750158209144540ca2a6428ef00732cc4a6e75f224b4b0621236c5e125181e690b679fd30258203dacbabb45e40022507254819f523ca90b62347342f773e9884038acd9e2083d"
         }
       }
     },
@@ -54959,6 +55073,2157 @@
             "OWNER"
           ],
           "in_scope": true
+        }
+      }
+    },
+    {
+      "id": "link.z_genesis",
+      "type": "validation",
+      "kind": "control_record",
+      "description": "Genesis of Z, owner OWNER, profile org.lfcp.test.raw.v1 (not the identity profile)",
+      "rule": {
+        "section": "LFCP-WIRE-01 §15",
+        "text": "An ordinary Resource owned by OWNER."
+      },
+      "inputs": {
+        "resource": "Z",
+        "signer": "OWNER",
+        "issuer": "OWNER",
+        "control_seq": 0,
+        "control_type": 0,
+        "control_type_name": "GENESIS",
+        "body": {
+          "data_profile": "org.lfcp.test.raw.v1",
+          "owner": "OWNER"
+        },
+        "payload_cbor": {
+          "hex": "a60058207c93e0fe9c29efb426525b939708725fd43310ecb4d15d7d30857856ec96d2df010002f60300045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a500746f72672e6c6663702e746573742e7261772e763101a3005820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d015820f6fb6b8184ca17efdf2ca12486d3ba89fd4253efe9e1ae746fe0f93817c8851a02582053e766cd910b4dbc67f0d850bdcf235402f5e708e85b5223a307f65cb92e4f0a0258202b85224bbcf3e5992e2798436c822655aae2887831154af7628eefdcd1f9db130381a300781f7773733a2f2f73796e632d612e6578616d706c652e746573742f76312f7773010002183f04781f7773733a2f2f73796e632d612e6578616d706c652e746573742f76312f7773"
+        },
+        "protected_header_cbor": {
+          "hex": "a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d"
+        },
+        "signature": {
+          "hex": "0748e3f07f18ef1b7010aa041b91fa259da36f476f7fbdc3e75410bee1e61598a98a2b7c96735f3e9d7d809f95ff958ab45b97d7c1d8afad47a8e2da14727a04"
+        },
+        "cose_sign1": {
+          "hex": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da059013fa60058207c93e0fe9c29efb426525b939708725fd43310ecb4d15d7d30857856ec96d2df010002f60300045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a500746f72672e6c6663702e746573742e7261772e763101a3005820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d015820f6fb6b8184ca17efdf2ca12486d3ba89fd4253efe9e1ae746fe0f93817c8851a02582053e766cd910b4dbc67f0d850bdcf235402f5e708e85b5223a307f65cb92e4f0a0258202b85224bbcf3e5992e2798436c822655aae2887831154af7628eefdcd1f9db130381a300781f7773733a2f2f73796e632d612e6578616d706c652e746573742f76312f7773010002183f04781f7773733a2f2f73796e632d612e6578616d706c652e746573742f76312f777358400748e3f07f18ef1b7010aa041b91fa259da36f476f7fbdc3e75410bee1e61598a98a2b7c96735f3e9d7d809f95ff958ab45b97d7c1d8afad47a8e2da14727a04"
+        },
+        "record_id": {
+          "hex": "3bf611933eca494476b3d10d7deac34dbc36ef46b3145f49e8d806e3c11f2a15"
+        }
+      },
+      "context": {
+        "resource_id": {
+          "hex": "7c93e0fe9c29efb426525b939708725fd43310ecb4d15d7d30857856ec96d2df"
+        }
+      },
+      "expected": {
+        "valid": true,
+        "post_state": {
+          "owner": "OWNER",
+          "control_seq": 0,
+          "epoch": 0,
+          "roles": {
+            "OWNER": "non-device"
+          },
+          "devices": {},
+          "revoked": {},
+          "standing": [
+            "OWNER"
+          ]
+        }
+      }
+    },
+    {
+      "id": "link.z_pairing_device",
+      "type": "validation",
+      "kind": "control_record",
+      "description": "DEVICE_GRANT {OWNER, [CERT_JZ]} by OWNER in Z: PAIR_Z, kind 2, scope [Z], registered and active",
+      "rule": {
+        "section": "LFCP-WIRE-01 §17.4",
+        "text": "A kind-2 leaf that lists Z; the wire does not know which Resource is an Identity Resource."
+      },
+      "inputs": {
+        "resource": "Z",
+        "signer": "OWNER",
+        "issuer": "OWNER",
+        "control_seq": 1,
+        "control_type": 9,
+        "control_type_name": "DEVICE_GRANT",
+        "body": {
+          "root": "OWNER",
+          "chain": [
+            "CERT_JZ"
+          ]
+        },
+        "payload_cbor": {
+          "hex": "a60058207c93e0fe9c29efb426525b939708725fd43310ecb4d15d7d30857856ec96d2df01010258203bf611933eca494476b3d10d7deac34dbc36ef46b3145f49e8d806e3c11f2a150309045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a2005820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d0181590147845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058d987734c4643502d4445564943452d434552542d76315820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da3005820c50f37b176cba881fd9fca21c8386a946f476bbebe53850965e05e32cbbb824c0158207d17be5c70c0e5e215587e2931615c4aad9ab67a9e5fb5b5f3594a1df9be709e025820d66f90c74ac6298f58d33f3e8787c83cf15e1ac0a4dce0944996d0b043a5b37c028201028158207c93e0fe9c29efb426525b939708725fd43310ecb4d15d7d30857856ec96d2df503fed7754e6f96944e20069f3b8bc68a658400e4b1f7e534550c505f94919c41a4b426f82adc03532d70e81526b44375b022265dfe73b260de88a06eefc2beec67af1df36dc6f5a2f1096d3997af6ae11a609"
+        },
+        "protected_header_cbor": {
+          "hex": "a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d"
+        },
+        "signature": {
+          "hex": "6afb4bef68c1dbd4c3fee8ef6f24ba12e7b6dadaf3d45cf1ffe40076d693b6956ddcd32ebbf7d26efd6f7ffd015120d14576656a2433aedefc0332083078cb0a"
+        },
+        "cose_sign1": {
+          "hex": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da05901dfa60058207c93e0fe9c29efb426525b939708725fd43310ecb4d15d7d30857856ec96d2df01010258203bf611933eca494476b3d10d7deac34dbc36ef46b3145f49e8d806e3c11f2a150309045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a2005820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d0181590147845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058d987734c4643502d4445564943452d434552542d76315820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da3005820c50f37b176cba881fd9fca21c8386a946f476bbebe53850965e05e32cbbb824c0158207d17be5c70c0e5e215587e2931615c4aad9ab67a9e5fb5b5f3594a1df9be709e025820d66f90c74ac6298f58d33f3e8787c83cf15e1ac0a4dce0944996d0b043a5b37c028201028158207c93e0fe9c29efb426525b939708725fd43310ecb4d15d7d30857856ec96d2df503fed7754e6f96944e20069f3b8bc68a658400e4b1f7e534550c505f94919c41a4b426f82adc03532d70e81526b44375b022265dfe73b260de88a06eefc2beec67af1df36dc6f5a2f1096d3997af6ae11a60958406afb4bef68c1dbd4c3fee8ef6f24ba12e7b6dadaf3d45cf1ffe40076d693b6956ddcd32ebbf7d26efd6f7ffd015120d14576656a2433aedefc0332083078cb0a"
+        },
+        "record_id": {
+          "hex": "9f2f6bbd66e9370e3442f99b2f15ed3a788a1542e43a394c526a83d4958d5b1e"
+        }
+      },
+      "context": {
+        "resource_id": {
+          "hex": "7c93e0fe9c29efb426525b939708725fd43310ecb4d15d7d30857856ec96d2df"
+        },
+        "records": [
+          {
+            "case": "link.z_genesis",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "head": {
+          "case": "link.z_genesis",
+          "field": "record_id",
+          "in": "inputs"
+        },
+        "head_record_id": {
+          "hex": "3bf611933eca494476b3d10d7deac34dbc36ef46b3145f49e8d806e3c11f2a15"
+        },
+        "head_control_seq": 0
+      },
+      "expected": {
+        "valid": true,
+        "post_state": {
+          "owner": "OWNER",
+          "control_seq": 1,
+          "epoch": 0,
+          "roles": {
+            "OWNER": "non-device",
+            "PAIR_Z": "device"
+          },
+          "devices": {
+            "PAIR_Z": {
+              "root": "OWNER",
+              "kind": 2,
+              "mask": [
+                1,
+                2
+              ],
+              "scope": [
+                "Z"
+              ],
+              "registered": true,
+              "leaf": "CERT_JZ",
+              "issuers": [],
+              "active": true,
+              "suspended": false,
+              "reads": true
+            }
+          },
+          "revoked": {},
+          "standing": [
+            "OWNER"
+          ],
+          "in_scope": true
+        }
+      }
+    },
+    {
+      "id": "link.grant_bob_in_i",
+      "type": "validation",
+      "kind": "control_record",
+      "description": "CAPABILITY_GRANT to BOB {1,2} in I, by OWNER",
+      "rule": {
+        "section": "LFCP-WIRE-01 §17.2",
+        "text": "The owner MAY grant any abilities without a parent grant."
+      },
+      "inputs": {
+        "resource": "I",
+        "signer": "OWNER",
+        "issuer": "OWNER",
+        "control_seq": 3,
+        "control_type": 1,
+        "control_type_name": "CAPABILITY_GRANT",
+        "body": {
+          "subject": "BOB",
+          "abilities": [
+            1,
+            2
+          ],
+          "delegable": []
+        },
+        "payload_cbor": {
+          "hex": "a6005820b349a923e0af30e63c9409aa7d704ecae2a7498f5936289ac63f928b26e32cfd01030258202df86d6440b69e0b9546ce3a6a74b118544eaab58db66eaad6ba46c607f5c0c90301045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a300a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50158201953f4ada1cb4e0f8662108152c82e7e074cbf4859c487461cbe41e5d623e3c2025820b5a22f5f5cbdc3a6f8742ec8b2bc9665d0170478bf5aca7528fdd5eefb94f26c018201020280"
+        },
+        "protected_header_cbor": {
+          "hex": "a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d"
+        },
+        "signature": {
+          "hex": "4707ef7d53a1f56b973b06d2e16a4dc54f71fa7909bc6381ba913de28e0a09aa4d6b6c05979908499ee8925454ea06dce2a2daba7218e7d1f6736635db84570e"
+        },
+        "cose_sign1": {
+          "hex": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058e1a6005820b349a923e0af30e63c9409aa7d704ecae2a7498f5936289ac63f928b26e32cfd01030258202df86d6440b69e0b9546ce3a6a74b118544eaab58db66eaad6ba46c607f5c0c90301045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a300a30058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50158201953f4ada1cb4e0f8662108152c82e7e074cbf4859c487461cbe41e5d623e3c2025820b5a22f5f5cbdc3a6f8742ec8b2bc9665d0170478bf5aca7528fdd5eefb94f26c01820102028058404707ef7d53a1f56b973b06d2e16a4dc54f71fa7909bc6381ba913de28e0a09aa4d6b6c05979908499ee8925454ea06dce2a2daba7218e7d1f6736635db84570e"
+        },
+        "record_id": {
+          "hex": "f5485eda2a09890cfbd8ad6b7ced9c4e86c34a6aacb111ef1a79e8e5b2b16719"
+        }
+      },
+      "context": {
+        "resource_id": {
+          "hex": "b349a923e0af30e63c9409aa7d704ecae2a7498f5936289ac63f928b26e32cfd"
+        },
+        "records": [
+          {
+            "case": "P0_genesis_i",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "P1_device_grant_dev_a_i",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "P2_pairing_device",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "head": {
+          "case": "P2_pairing_device",
+          "field": "record_id",
+          "in": "inputs"
+        },
+        "head_record_id": {
+          "hex": "2df86d6440b69e0b9546ce3a6a74b118544eaab58db66eaad6ba46c607f5c0c9"
+        },
+        "head_control_seq": 2
+      },
+      "expected": {
+        "valid": true,
+        "post_state": {
+          "owner": "OWNER",
+          "control_seq": 3,
+          "epoch": 0,
+          "roles": {
+            "BOB": "non-device",
+            "DEV_A": "device",
+            "OWNER": "non-device",
+            "PAIR_J": "device"
+          },
+          "devices": {
+            "DEV_A": {
+              "root": "OWNER",
+              "kind": 0,
+              "mask": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                10,
+                12,
+                13
+              ],
+              "scope": [],
+              "registered": true,
+              "leaf": "CERT_A",
+              "issuers": [],
+              "active": true,
+              "suspended": false,
+              "reads": true
+            },
+            "PAIR_J": {
+              "root": "OWNER",
+              "kind": 2,
+              "mask": [
+                1,
+                2
+              ],
+              "scope": [
+                "I"
+              ],
+              "registered": true,
+              "leaf": "CERT_J",
+              "issuers": [
+                "DEV_A"
+              ],
+              "active": true,
+              "suspended": false,
+              "reads": true
+            }
+          },
+          "revoked": {},
+          "standing": [
+            "BOB",
+            "OWNER"
+          ],
+          "issuer_root": "OWNER"
+        }
+      }
+    },
+    {
+      "id": "link.pairing_device_of_bob",
+      "type": "validation",
+      "kind": "control_record",
+      "description": "DEVICE_GRANT {BOB, [CERT_JB]} by BOB in I: PAIR_B, a kind-2 device of BOB, registered and active in I",
+      "rule": {
+        "section": "LFCP-WIRE-01 §17.4 rule 6",
+        "text": "The root with standing registers its own device."
+      },
+      "inputs": {
+        "resource": "I",
+        "signer": "BOB",
+        "issuer": "BOB",
+        "control_seq": 4,
+        "control_type": 9,
+        "control_type_name": "DEVICE_GRANT",
+        "body": {
+          "root": "BOB",
+          "chain": [
+            "CERT_JB"
+          ]
+        },
+        "payload_cbor": {
+          "hex": "a6005820b349a923e0af30e63c9409aa7d704ecae2a7498f5936289ac63f928b26e32cfd0104025820f5485eda2a09890cfbd8ad6b7ced9c4e86c34a6aacb111ef1a79e8e5b2b1671903090458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c505a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50181590147845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058d987734c4643502d4445564943452d434552542d763158203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a3005820556b5c4f9df72bfb29c222369d7ee87a94466d512351b77ba4cb93ebe2d5f9750158209144540ca2a6428ef00732cc4a6e75f224b4b0621236c5e125181e690b679fd30258203dacbabb45e40022507254819f523ca90b62347342f773e9884038acd9e2083d02820102815820b349a923e0af30e63c9409aa7d704ecae2a7498f5936289ac63f928b26e32cfd50aa0628235f2f36a41e8acee2a8e44b9158408d636536785be4c8d3a408eeb3c07542ae39582a37acf08a02e90f566a935810d6d989ef05f03b144b322d8364b0f30d44c2280f034776108c3d13ab1220480a"
+        },
+        "protected_header_cbor": {
+          "hex": "a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5"
+        },
+        "signature": {
+          "hex": "4889a31f2ee5fddd6e7451ec39de9050a605b0cdf35c3a85341d1c108d25fb254a81238c7ec879fb2775d92d844e5c4e64444bd84abf1be11694311fcfc17c0e"
+        },
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a05901dfa6005820b349a923e0af30e63c9409aa7d704ecae2a7498f5936289ac63f928b26e32cfd0104025820f5485eda2a09890cfbd8ad6b7ced9c4e86c34a6aacb111ef1a79e8e5b2b1671903090458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c505a20058203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c50181590147845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058d987734c4643502d4445564943452d434552542d763158203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a3005820556b5c4f9df72bfb29c222369d7ee87a94466d512351b77ba4cb93ebe2d5f9750158209144540ca2a6428ef00732cc4a6e75f224b4b0621236c5e125181e690b679fd30258203dacbabb45e40022507254819f523ca90b62347342f773e9884038acd9e2083d02820102815820b349a923e0af30e63c9409aa7d704ecae2a7498f5936289ac63f928b26e32cfd50aa0628235f2f36a41e8acee2a8e44b9158408d636536785be4c8d3a408eeb3c07542ae39582a37acf08a02e90f566a935810d6d989ef05f03b144b322d8364b0f30d44c2280f034776108c3d13ab1220480a58404889a31f2ee5fddd6e7451ec39de9050a605b0cdf35c3a85341d1c108d25fb254a81238c7ec879fb2775d92d844e5c4e64444bd84abf1be11694311fcfc17c0e"
+        },
+        "record_id": {
+          "hex": "8697dbcb0dbe460bd88393c6cea67095f4c4696f43964fbe2a796efa7626b81c"
+        }
+      },
+      "context": {
+        "resource_id": {
+          "hex": "b349a923e0af30e63c9409aa7d704ecae2a7498f5936289ac63f928b26e32cfd"
+        },
+        "records": [
+          {
+            "case": "P0_genesis_i",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "P1_device_grant_dev_a_i",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "P2_pairing_device",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "link.grant_bob_in_i",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "head": {
+          "case": "link.grant_bob_in_i",
+          "field": "record_id",
+          "in": "inputs"
+        },
+        "head_record_id": {
+          "hex": "f5485eda2a09890cfbd8ad6b7ced9c4e86c34a6aacb111ef1a79e8e5b2b16719"
+        },
+        "head_control_seq": 3
+      },
+      "expected": {
+        "valid": true,
+        "post_state": {
+          "owner": "OWNER",
+          "control_seq": 4,
+          "epoch": 0,
+          "roles": {
+            "BOB": "non-device",
+            "DEV_A": "device",
+            "OWNER": "non-device",
+            "PAIR_B": "device",
+            "PAIR_J": "device"
+          },
+          "devices": {
+            "DEV_A": {
+              "root": "OWNER",
+              "kind": 0,
+              "mask": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                10,
+                12,
+                13
+              ],
+              "scope": [],
+              "registered": true,
+              "leaf": "CERT_A",
+              "issuers": [],
+              "active": true,
+              "suspended": false,
+              "reads": true
+            },
+            "PAIR_B": {
+              "root": "BOB",
+              "kind": 2,
+              "mask": [
+                1,
+                2
+              ],
+              "scope": [
+                "I"
+              ],
+              "registered": true,
+              "leaf": "CERT_JB",
+              "issuers": [],
+              "active": true,
+              "suspended": false,
+              "reads": true
+            },
+            "PAIR_J": {
+              "root": "OWNER",
+              "kind": 2,
+              "mask": [
+                1,
+                2
+              ],
+              "scope": [
+                "I"
+              ],
+              "registered": true,
+              "leaf": "CERT_J",
+              "issuers": [
+                "DEV_A"
+              ],
+              "active": true,
+              "suspended": false,
+              "reads": true
+            }
+          },
+          "revoked": {},
+          "standing": [
+            "BOB",
+            "OWNER"
+          ],
+          "in_scope": true
+        }
+      }
+    },
+    {
+      "id": "flow.f07_dev_r_in_i",
+      "type": "validation",
+      "kind": "control_record",
+      "description": "DEVICE_GRANT {OWNER, [CERT_R]} by OWNER in I: DEV_R, a Read device {1}, registered in I",
+      "rule": {
+        "section": "LFCP-WIRE-01 §17.4",
+        "text": "The root registers a kind-0 Read device."
+      },
+      "inputs": {
+        "resource": "I",
+        "signer": "OWNER",
+        "issuer": "OWNER",
+        "control_seq": 2,
+        "control_type": 9,
+        "control_type_name": "DEVICE_GRANT",
+        "body": {
+          "root": "OWNER",
+          "chain": [
+            "CERT_R"
+          ]
+        },
+        "payload_cbor": {
+          "hex": "a6005820b349a923e0af30e63c9409aa7d704ecae2a7498f5936289ac63f928b26e32cfd0102025820203a4c5c171e1ec60ebe4c02c333680bf2b656a3e647f7549c54a67a2212220b0309045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a2005820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d0181590124845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058b687734c4643502d4445564943452d434552542d76315820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da300582073fd10bd7bf5c67759433daf6c60d5c3d76d04b1c655b859f50a92df645d1b74015820040b3ef292627805c9591f3b496270e48d7292a34a16e89ee86d7dec1527e2e20258201f702b31eb7b74af9febde3e8a5b32f3ca1de0ea5cc3c2c55cb94c6d3e5926320081018050ecc76d0c6f2b36b99ced54c4bfcb2cd55840fed5e9415821aa00b020229cac126eaf230146e27cc5a32017c56340b350d098e6616fb87dbb30fbaacb886226f036a7ed9f3b5f9716cd527d1e9d1ac76cf303"
+        },
+        "protected_header_cbor": {
+          "hex": "a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d"
+        },
+        "signature": {
+          "hex": "94c56e8e173aca85d07e55ad75cbda3a5f003a58afeb5c2c83fc41fef04ed4f7dae40e3ccae2679453f2aa54f6f89963c496162957d125b72cd74c388093cb0f"
+        },
+        "cose_sign1": {
+          "hex": "845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da05901bca6005820b349a923e0af30e63c9409aa7d704ecae2a7498f5936289ac63f928b26e32cfd0102025820203a4c5c171e1ec60ebe4c02c333680bf2b656a3e647f7549c54a67a2212220b0309045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d05a2005820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d0181590124845826a20127045820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da058b687734c4643502d4445564943452d434552542d76315820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121da300582073fd10bd7bf5c67759433daf6c60d5c3d76d04b1c655b859f50a92df645d1b74015820040b3ef292627805c9591f3b496270e48d7292a34a16e89ee86d7dec1527e2e20258201f702b31eb7b74af9febde3e8a5b32f3ca1de0ea5cc3c2c55cb94c6d3e5926320081018050ecc76d0c6f2b36b99ced54c4bfcb2cd55840fed5e9415821aa00b020229cac126eaf230146e27cc5a32017c56340b350d098e6616fb87dbb30fbaacb886226f036a7ed9f3b5f9716cd527d1e9d1ac76cf303584094c56e8e173aca85d07e55ad75cbda3a5f003a58afeb5c2c83fc41fef04ed4f7dae40e3ccae2679453f2aa54f6f89963c496162957d125b72cd74c388093cb0f"
+        },
+        "record_id": {
+          "hex": "2f5fecf0d200ac5a29361ca2146ef7d24fc9ffc3788ce8dd5019fe7263275ae4"
+        }
+      },
+      "context": {
+        "resource_id": {
+          "hex": "b349a923e0af30e63c9409aa7d704ecae2a7498f5936289ac63f928b26e32cfd"
+        },
+        "records": [
+          {
+            "case": "P0_genesis_i",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "P1_device_grant_dev_a_i",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "head": {
+          "case": "P1_device_grant_dev_a_i",
+          "field": "record_id",
+          "in": "inputs"
+        },
+        "head_record_id": {
+          "hex": "203a4c5c171e1ec60ebe4c02c333680bf2b656a3e647f7549c54a67a2212220b"
+        },
+        "head_control_seq": 1
+      },
+      "expected": {
+        "valid": true,
+        "post_state": {
+          "owner": "OWNER",
+          "control_seq": 2,
+          "epoch": 0,
+          "roles": {
+            "DEV_A": "device",
+            "DEV_R": "device",
+            "OWNER": "non-device"
+          },
+          "devices": {
+            "DEV_A": {
+              "root": "OWNER",
+              "kind": 0,
+              "mask": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                10,
+                12,
+                13
+              ],
+              "scope": [],
+              "registered": true,
+              "leaf": "CERT_A",
+              "issuers": [],
+              "active": true,
+              "suspended": false,
+              "reads": true
+            },
+            "DEV_R": {
+              "root": "OWNER",
+              "kind": 0,
+              "mask": [
+                1
+              ],
+              "scope": [],
+              "registered": true,
+              "leaf": "CERT_R",
+              "issuers": [],
+              "active": true,
+              "suspended": false,
+              "reads": true
+            }
+          },
+          "revoked": {},
+          "standing": [
+            "OWNER"
+          ],
+          "in_scope": true
+        }
+      }
+    },
+    {
+      "id": "KEY_PACKAGE_PUT_same_root_without_identity_01",
+      "type": "validation",
+      "kind": "key_package",
+      "description": "DEV_B uploads its package to OWNER at I8 (authorized only by the same-root rule) to a server whose READY does not list identity-01",
+      "rule": {
+        "section": "LFCP-WIRE-01 §37, §100.1",
+        "text": "a server without identity-01 refuses a Key Package authorized only by the same-root rule"
+      },
+      "inputs": {
+        "resource": "X",
+        "signer": "DEV_B",
+        "sender": "DEV_B",
+        "recipient": "OWNER",
+        "epoch": 0,
+        "control_head": "I8_bridge_grant",
+        "hpke_ikm_for_ephemeral": {
+          "hex": "4450c85c7bd57c2ae2cd261dd67e0d63f5e7c96dc36c261e6ff20b5dd1e45aaa"
+        },
+        "request": "KEY_PACKAGE_PUT",
+        "server_extensions": [],
+        "payload_cbor": {
+          "hex": "a70058207f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a750100025820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d0358205011ba59696a6c99c2439bacd429067e5d184832238ccf1f7e798c60e368da38045820dcb709537a7c66b9d785c9de9b31d1cf1922d09f225e10479c24b302ceb3f9f2055820432ce88c06815c5dc81928b51aafae2389f86a41271d14b1eb3d5949c44f1727065830fb8973db7f6f6555ba907690721a5b91e4babe18279d22edf1d78e02e0902fb9de2d3034ee7137747eff0a8023c6d51e"
+        },
+        "protected_header_cbor": {
+          "hex": "a20127045820dcb709537a7c66b9d785c9de9b31d1cf1922d09f225e10479c24b302ceb3f9f2"
+        },
+        "signature": {
+          "hex": "0ca94084324e090fef22a1121b2d9e07ab40edaf10c0fc2fb42fcbb9f836d3246c04fd056c156b935b52dd5977a69dee581a5e70eff36dfa6a536c63b8200d07"
+        },
+        "cose_sign1": {
+          "hex": "845826a20127045820dcb709537a7c66b9d785c9de9b31d1cf1922d09f225e10479c24b302ceb3f9f2a058e5a70058207f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a750100025820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d0358205011ba59696a6c99c2439bacd429067e5d184832238ccf1f7e798c60e368da38045820dcb709537a7c66b9d785c9de9b31d1cf1922d09f225e10479c24b302ceb3f9f2055820432ce88c06815c5dc81928b51aafae2389f86a41271d14b1eb3d5949c44f1727065830fb8973db7f6f6555ba907690721a5b91e4babe18279d22edf1d78e02e0902fb9de2d3034ee7137747eff0a8023c6d51e58400ca94084324e090fef22a1121b2d9e07ab40edaf10c0fc2fb42fcbb9f836d3246c04fd056c156b935b52dd5977a69dee581a5e70eff36dfa6a536c63b8200d07"
+        },
+        "object_id": {
+          "hex": "d513283804f4d02b6e8b49ffdfb7761db5d10dae0f4db3533e82f149cfb08d67"
+        }
+      },
+      "context": {
+        "resource_id": {
+          "hex": "7f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75"
+        },
+        "records": [
+          {
+            "case": "J0_genesis",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J1_grant_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J2_grant_carol",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I1_device_grant_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I2_device_grant_self_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I3_owner_action_by_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I4_device_grant_dev_c_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I5_device_grant_dev_e_by_dev_c",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I6_grant_by_member_device",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I7_revoke_covered_by_sibling",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I8_bridge_grant",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "latest": {
+          "case": "I8_bridge_grant",
+          "field": "record_id",
+          "in": "inputs"
+        },
+        "head": {
+          "case": "I8_bridge_grant",
+          "field": "record_id",
+          "in": "inputs"
+        }
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "AUTHORIZATION_FAILED"
+        }
+      }
+    },
+    {
+      "id": "KEY_PACKAGE_PUT_key_distribute_without_identity_01",
+      "type": "validation",
+      "kind": "key_package",
+      "description": "Control: BOB uploads a package to CAROL at I8 (key/distribute through J1) to the same server",
+      "rule": {
+        "section": "LFCP-WIRE-01 §37, §100.1",
+        "text": "A server without identity-01 decides a Key Package without the same-root rule; holds(sender, 6) authorizes it."
+      },
+      "inputs": {
+        "resource": "X",
+        "signer": "BOB",
+        "sender": "BOB",
+        "recipient": "CAROL",
+        "epoch": 0,
+        "control_head": "I8_bridge_grant",
+        "hpke_ikm_for_ephemeral": {
+          "hex": "fe8f937fb3abf32d00ed857f299dc96a6aea8dc7b70090fb1333b1cd0f51cf21"
+        },
+        "request": "KEY_PACKAGE_PUT",
+        "server_extensions": [],
+        "payload_cbor": {
+          "hex": "a70058207f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a750100025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480358205011ba59696a6c99c2439bacd429067e5d184832238ccf1f7e798c60e368da380458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c505582012d8d3d7379455052f14a91e69ebcfccd1c52d6fd942a3eaa05bbc72c94be0190658305733e1b02d9ee06f5c7b8e43b2368908efbbd0b5031f7093add932487b68a684f953e8555747c67aff50b84f286d7cd1"
+        },
+        "protected_header_cbor": {
+          "hex": "a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5"
+        },
+        "signature": {
+          "hex": "73cc11227ef8df929b7208efb585a587d2ce05d1490a4eec65b5802af640b0d316f7f1c45f4f8a232ca02d126247fd5f8a511f104a040aa41624335465cc0f03"
+        },
+        "cose_sign1": {
+          "hex": "845826a201270458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c5a058e5a70058207f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a750100025820a6e402657a505a183a2c2685ecc3a0457fef86d4e251abd48efe943c1282da480358205011ba59696a6c99c2439bacd429067e5d184832238ccf1f7e798c60e368da380458203ddf22ff145274bcc59c56ffddaab8c123ffea4ac95ff8e9cedbeb788bf0a9c505582012d8d3d7379455052f14a91e69ebcfccd1c52d6fd942a3eaa05bbc72c94be0190658305733e1b02d9ee06f5c7b8e43b2368908efbbd0b5031f7093add932487b68a684f953e8555747c67aff50b84f286d7cd1584073cc11227ef8df929b7208efb585a587d2ce05d1490a4eec65b5802af640b0d316f7f1c45f4f8a232ca02d126247fd5f8a511f104a040aa41624335465cc0f03"
+        },
+        "object_id": {
+          "hex": "0555d27489cd5cdd86c433873a4e37181338f6478306341e6522eabf7ede2e7d"
+        }
+      },
+      "context": {
+        "resource_id": {
+          "hex": "7f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75"
+        },
+        "records": [
+          {
+            "case": "J0_genesis",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J1_grant_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J2_grant_carol",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I1_device_grant_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I2_device_grant_self_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I3_owner_action_by_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I4_device_grant_dev_c_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I5_device_grant_dev_e_by_dev_c",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I6_grant_by_member_device",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I7_revoke_covered_by_sibling",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I8_bridge_grant",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "latest": {
+          "case": "I8_bridge_grant",
+          "field": "record_id",
+          "in": "inputs"
+        },
+        "head": {
+          "case": "I8_bridge_grant",
+          "field": "record_id",
+          "in": "inputs"
+        }
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "KEY_PACKAGE_PUT_same_root_with_identity_01",
+      "type": "validation",
+      "kind": "key_package",
+      "description": "Control: the same package of DEV_B to OWNER uploaded to a server whose READY lists identity-01",
+      "rule": {
+        "section": "LFCP-WIRE-01 §25.2",
+        "text": "sameRoot(DEV_B, OWNER); OWNER reads."
+      },
+      "inputs": {
+        "resource": "X",
+        "signer": "DEV_B",
+        "sender": "DEV_B",
+        "recipient": "OWNER",
+        "epoch": 0,
+        "control_head": "I8_bridge_grant",
+        "hpke_ikm_for_ephemeral": {
+          "hex": "6623b4d96f0a4355ff03489c00235fdd55e47652e55cccee525444b6efe94dfc"
+        },
+        "request": "KEY_PACKAGE_PUT",
+        "server_extensions": [
+          "identity-01"
+        ],
+        "payload_cbor": {
+          "hex": "a70058207f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a750100025820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d0358205011ba59696a6c99c2439bacd429067e5d184832238ccf1f7e798c60e368da38045820dcb709537a7c66b9d785c9de9b31d1cf1922d09f225e10479c24b302ceb3f9f20558203c9431ab4fb94ae43584c6d1d5a3fbdb7f8925c400afcaff3d3527d615d1501d065830b40581199c75a2ce02cd79998b3e0918222bdccca0a9af2814db3c878e397fcc305ef1e8c49f4a00fc96417b1b71cf19"
+        },
+        "protected_header_cbor": {
+          "hex": "a20127045820dcb709537a7c66b9d785c9de9b31d1cf1922d09f225e10479c24b302ceb3f9f2"
+        },
+        "signature": {
+          "hex": "99de9fa73163d5d964a96072bfebefc4a1d4598041ac4468ab3d8cfbbcf8130df2dec7c6084a6bec22699e57078c449bc133ab73134cd291e98c4ed07a584a0a"
+        },
+        "cose_sign1": {
+          "hex": "845826a20127045820dcb709537a7c66b9d785c9de9b31d1cf1922d09f225e10479c24b302ceb3f9f2a058e5a70058207f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a750100025820172d2fc24d2192ed5703279a49d5db9f7fe8935b0125093976f6e906cd80121d0358205011ba59696a6c99c2439bacd429067e5d184832238ccf1f7e798c60e368da38045820dcb709537a7c66b9d785c9de9b31d1cf1922d09f225e10479c24b302ceb3f9f20558203c9431ab4fb94ae43584c6d1d5a3fbdb7f8925c400afcaff3d3527d615d1501d065830b40581199c75a2ce02cd79998b3e0918222bdccca0a9af2814db3c878e397fcc305ef1e8c49f4a00fc96417b1b71cf19584099de9fa73163d5d964a96072bfebefc4a1d4598041ac4468ab3d8cfbbcf8130df2dec7c6084a6bec22699e57078c449bc133ab73134cd291e98c4ed07a584a0a"
+        },
+        "object_id": {
+          "hex": "4a1fcb83967d7f55772e645ab35a5ed833a5bbae290e2ce8907c15b2c3d03c97"
+        }
+      },
+      "context": {
+        "resource_id": {
+          "hex": "7f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75"
+        },
+        "records": [
+          {
+            "case": "J0_genesis",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J1_grant_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J2_grant_carol",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I1_device_grant_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I2_device_grant_self_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I3_owner_action_by_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I4_device_grant_dev_c_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I5_device_grant_dev_e_by_dev_c",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I6_grant_by_member_device",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I7_revoke_covered_by_sibling",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I8_bridge_grant",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "latest": {
+          "case": "I8_bridge_grant",
+          "field": "record_id",
+          "in": "inputs"
+        },
+        "head": {
+          "case": "I8_bridge_grant",
+          "field": "record_id",
+          "in": "inputs"
+        }
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "RESOURCE_OPENED_for_revoked_reader",
+      "type": "validation",
+      "kind": "session_read",
+      "description": "Session DEV_A, latest I10: RESOURCE_OPENED names I9 as the only Control Head, an empty Have Vector, no fields 3, 4 and 5, no subscription",
+      "rule": {
+        "section": "LFCP-WIRE-01 §41",
+        "text": "The Control read for a revoked reader: the accepted chain through the first record that revoked the session Principal."
+      },
+      "inputs": {
+        "resource": "X",
+        "session": "DEV_A",
+        "request": "RESOURCE_OPEN",
+        "server_extensions": [
+          "identity-01"
+        ]
+      },
+      "context": {
+        "resource_id": {
+          "hex": "7f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75"
+        },
+        "records": [
+          {
+            "case": "J0_genesis",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J1_grant_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J2_grant_carol",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I1_device_grant_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I2_device_grant_self_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I3_owner_action_by_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I4_device_grant_dev_c_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I5_device_grant_dev_e_by_dev_c",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I6_grant_by_member_device",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I7_revoke_covered_by_sibling",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I8_bridge_grant",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I9_device_revoke_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I10_recertify_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "latest": {
+          "case": "I10_recertify_dev_b",
+          "field": "record_id",
+          "in": "inputs"
+        }
+      },
+      "expected": {
+        "valid": true,
+        "post_state": {
+          "read": "prefix",
+          "control_head": "I9_device_revoke_dev_a",
+          "answer": "RESOURCE_OPENED",
+          "body": {
+            "control_heads": [
+              "I9_device_revoke_dev_a"
+            ],
+            "have_vector": []
+          },
+          "body_cbor": {
+            "hex": "a30058207f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a750181a2000b015820ff6bfdd988cb1a862d2c0c30e858c80c397d9b9184d0b986409dee7f64f07d8f0280"
+          },
+          "absent_fields": [
+            3,
+            4,
+            5
+          ],
+          "live_subscription": false
+        }
+      }
+    },
+    {
+      "id": "CONTROL_GET_by_revoked_reader.range_within",
+      "type": "validation",
+      "kind": "session_read",
+      "description": "Session DEV_A, latest I10: CONTROL_GET 0..2, inside the prefix",
+      "rule": {
+        "section": "LFCP-WIRE-01 §41",
+        "text": "The Control read for a revoked reader: the accepted chain through the first record that revoked the session Principal."
+      },
+      "inputs": {
+        "resource": "X",
+        "session": "DEV_A",
+        "request": "CONTROL_GET",
+        "server_extensions": [
+          "identity-01"
+        ],
+        "range": {
+          "start": 0,
+          "end": 2
+        }
+      },
+      "context": {
+        "resource_id": {
+          "hex": "7f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75"
+        },
+        "records": [
+          {
+            "case": "J0_genesis",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J1_grant_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J2_grant_carol",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I1_device_grant_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I2_device_grant_self_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I3_owner_action_by_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I4_device_grant_dev_c_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I5_device_grant_dev_e_by_dev_c",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I6_grant_by_member_device",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I7_revoke_covered_by_sibling",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I8_bridge_grant",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I9_device_revoke_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I10_recertify_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "latest": {
+          "case": "I10_recertify_dev_b",
+          "field": "record_id",
+          "in": "inputs"
+        }
+      },
+      "expected": {
+        "valid": true,
+        "post_state": {
+          "read": "prefix",
+          "control_head": "I9_device_revoke_dev_a",
+          "answer": "CONTROL_BATCH",
+          "records": [
+            "J0_genesis",
+            "J1_grant_bob",
+            "J2_grant_carol"
+          ],
+          "competing_returned": []
+        }
+      }
+    },
+    {
+      "id": "CONTROL_GET_by_revoked_reader.range_through",
+      "type": "validation",
+      "kind": "session_read",
+      "description": "Session DEV_A, latest I10: CONTROL_GET 5..12, which reaches past I9 (sequence 11): trimmed to end at I9",
+      "rule": {
+        "section": "LFCP-WIRE-01 §41",
+        "text": "The Control read for a revoked reader: the accepted chain through the first record that revoked the session Principal."
+      },
+      "inputs": {
+        "resource": "X",
+        "session": "DEV_A",
+        "request": "CONTROL_GET",
+        "server_extensions": [
+          "identity-01"
+        ],
+        "range": {
+          "start": 5,
+          "end": 12
+        }
+      },
+      "context": {
+        "resource_id": {
+          "hex": "7f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75"
+        },
+        "records": [
+          {
+            "case": "J0_genesis",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J1_grant_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J2_grant_carol",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I1_device_grant_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I2_device_grant_self_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I3_owner_action_by_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I4_device_grant_dev_c_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I5_device_grant_dev_e_by_dev_c",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I6_grant_by_member_device",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I7_revoke_covered_by_sibling",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I8_bridge_grant",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I9_device_revoke_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I10_recertify_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "latest": {
+          "case": "I10_recertify_dev_b",
+          "field": "record_id",
+          "in": "inputs"
+        }
+      },
+      "expected": {
+        "valid": true,
+        "post_state": {
+          "read": "prefix",
+          "control_head": "I9_device_revoke_dev_a",
+          "answer": "CONTROL_BATCH",
+          "records": [
+            "I3_owner_action_by_dev_a",
+            "I4_device_grant_dev_c_bob",
+            "I5_device_grant_dev_e_by_dev_c",
+            "I6_grant_by_member_device",
+            "I7_revoke_covered_by_sibling",
+            "I8_bridge_grant",
+            "I9_device_revoke_dev_a"
+          ],
+          "trimmed_at": "I9_device_revoke_dev_a",
+          "competing_returned": []
+        }
+      }
+    },
+    {
+      "id": "CONTROL_GET_by_revoked_reader.range_after",
+      "type": "validation",
+      "kind": "session_read",
+      "description": "Session DEV_A, latest I10: CONTROL_GET 12..12, which starts after I9",
+      "rule": {
+        "section": "LFCP-WIRE-01 §41",
+        "text": "a range that starts after the revoking record is refused"
+      },
+      "inputs": {
+        "resource": "X",
+        "session": "DEV_A",
+        "request": "CONTROL_GET",
+        "server_extensions": [
+          "identity-01"
+        ],
+        "range": {
+          "start": 12,
+          "end": 12
+        }
+      },
+      "context": {
+        "resource_id": {
+          "hex": "7f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75"
+        },
+        "records": [
+          {
+            "case": "J0_genesis",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J1_grant_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J2_grant_carol",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I1_device_grant_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I2_device_grant_self_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I3_owner_action_by_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I4_device_grant_dev_c_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I5_device_grant_dev_e_by_dev_c",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I6_grant_by_member_device",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I7_revoke_covered_by_sibling",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I8_bridge_grant",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I9_device_revoke_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I10_recertify_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "latest": {
+          "case": "I10_recertify_dev_b",
+          "field": "record_id",
+          "in": "inputs"
+        }
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "AUTHORIZATION_FAILED"
+        }
+      }
+    },
+    {
+      "id": "CONTROL_GET_by_revoked_reader.range_inverted",
+      "type": "validation",
+      "kind": "session_read",
+      "description": "Session DEV_A, latest I10: CONTROL_GET 5..2, end below start",
+      "rule": {
+        "section": "LFCP-WIRE-01 §45",
+        "text": "a range whose end is below its start"
+      },
+      "inputs": {
+        "resource": "X",
+        "session": "DEV_A",
+        "request": "CONTROL_GET",
+        "server_extensions": [
+          "identity-01"
+        ],
+        "range": {
+          "start": 5,
+          "end": 2
+        }
+      },
+      "context": {
+        "resource_id": {
+          "hex": "7f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75"
+        },
+        "records": [
+          {
+            "case": "J0_genesis",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J1_grant_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J2_grant_carol",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I1_device_grant_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I2_device_grant_self_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I3_owner_action_by_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I4_device_grant_dev_c_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I5_device_grant_dev_e_by_dev_c",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I6_grant_by_member_device",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I7_revoke_covered_by_sibling",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I8_bridge_grant",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I9_device_revoke_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I10_recertify_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "latest": {
+          "case": "I10_recertify_dev_b",
+          "field": "record_id",
+          "in": "inputs"
+        }
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "MALFORMED_MESSAGE"
+        }
+      }
+    },
+    {
+      "id": "CONTROL_GET_by_revoked_reader.forked_range",
+      "type": "validation",
+      "kind": "session_read",
+      "description": "Session DEV_A, latest I10, the server also holding Rd1 and W1 (records competing with I2 on I1): CONTROL_GET 0..11 returns the accepted chain only",
+      "rule": {
+        "section": "LFCP-WIRE-01 §41",
+        "text": "The Control read for a revoked reader: the accepted chain through the first record that revoked the session Principal."
+      },
+      "inputs": {
+        "resource": "X",
+        "session": "DEV_A",
+        "request": "CONTROL_GET",
+        "server_extensions": [
+          "identity-01"
+        ],
+        "range": {
+          "start": 0,
+          "end": 11
+        },
+        "server_also_holds": [
+          {
+            "case": "Rd1",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "W1",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ]
+      },
+      "context": {
+        "resource_id": {
+          "hex": "7f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75"
+        },
+        "records": [
+          {
+            "case": "J0_genesis",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J1_grant_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J2_grant_carol",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I1_device_grant_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I2_device_grant_self_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I3_owner_action_by_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I4_device_grant_dev_c_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I5_device_grant_dev_e_by_dev_c",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I6_grant_by_member_device",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I7_revoke_covered_by_sibling",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I8_bridge_grant",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I9_device_revoke_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I10_recertify_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "latest": {
+          "case": "I10_recertify_dev_b",
+          "field": "record_id",
+          "in": "inputs"
+        }
+      },
+      "expected": {
+        "valid": true,
+        "post_state": {
+          "read": "prefix",
+          "control_head": "I9_device_revoke_dev_a",
+          "answer": "CONTROL_BATCH",
+          "records": [
+            "J0_genesis",
+            "J1_grant_bob",
+            "J2_grant_carol",
+            "I1_device_grant_dev_a",
+            "I2_device_grant_self_dev_b",
+            "I3_owner_action_by_dev_a",
+            "I4_device_grant_dev_c_bob",
+            "I5_device_grant_dev_e_by_dev_c",
+            "I6_grant_by_member_device",
+            "I7_revoke_covered_by_sibling",
+            "I8_bridge_grant",
+            "I9_device_revoke_dev_a"
+          ],
+          "competing_returned": []
+        }
+      }
+    },
+    {
+      "id": "CONTROL_GET_by_reader.forked_range",
+      "type": "validation",
+      "kind": "session_read",
+      "description": "Control: session DEV_B (a reader), the same server and range: every record the server holds in the range, the competing ones included",
+      "rule": {
+        "section": "LFCP-WIRE-01 §45",
+        "text": "A peer returns every Control Record it possesses in the range, including all competing records if the chain is forked."
+      },
+      "inputs": {
+        "resource": "X",
+        "session": "DEV_B",
+        "request": "CONTROL_GET",
+        "server_extensions": [
+          "identity-01"
+        ],
+        "range": {
+          "start": 0,
+          "end": 11
+        },
+        "server_also_holds": [
+          {
+            "case": "Rd1",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "W1",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ]
+      },
+      "context": {
+        "resource_id": {
+          "hex": "7f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75"
+        },
+        "records": [
+          {
+            "case": "J0_genesis",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J1_grant_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J2_grant_carol",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I1_device_grant_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I2_device_grant_self_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I3_owner_action_by_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I4_device_grant_dev_c_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I5_device_grant_dev_e_by_dev_c",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I6_grant_by_member_device",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I7_revoke_covered_by_sibling",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I8_bridge_grant",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I9_device_revoke_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I10_recertify_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "latest": {
+          "case": "I10_recertify_dev_b",
+          "field": "record_id",
+          "in": "inputs"
+        }
+      },
+      "expected": {
+        "valid": true,
+        "post_state": {
+          "read": "full",
+          "answer": "CONTROL_BATCH",
+          "records": [
+            "J0_genesis",
+            "J1_grant_bob",
+            "J2_grant_carol",
+            "I1_device_grant_dev_a",
+            "I2_device_grant_self_dev_b",
+            "I3_owner_action_by_dev_a",
+            "I4_device_grant_dev_c_bob",
+            "I5_device_grant_dev_e_by_dev_c",
+            "I6_grant_by_member_device",
+            "I7_revoke_covered_by_sibling",
+            "I8_bridge_grant",
+            "I9_device_revoke_dev_a"
+          ],
+          "competing_returned": [
+            "Rd1",
+            "W1"
+          ]
+        }
+      }
+    },
+    {
+      "id": "PRESENCE_by_revoked_reader.supported",
+      "type": "validation",
+      "kind": "session_read",
+      "description": "Session DEV_A, latest I10, a server with the presence extension: presence refused",
+      "rule": {
+        "section": "LFCP-WIRE-01 §41",
+        "text": "a revoked reader is refused presence"
+      },
+      "inputs": {
+        "resource": "X",
+        "session": "DEV_A",
+        "request": "PRESENCE",
+        "server_extensions": [
+          "identity-01",
+          "presence"
+        ]
+      },
+      "context": {
+        "resource_id": {
+          "hex": "7f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75"
+        },
+        "records": [
+          {
+            "case": "J0_genesis",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J1_grant_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J2_grant_carol",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I1_device_grant_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I2_device_grant_self_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I3_owner_action_by_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I4_device_grant_dev_c_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I5_device_grant_dev_e_by_dev_c",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I6_grant_by_member_device",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I7_revoke_covered_by_sibling",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I8_bridge_grant",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I9_device_revoke_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I10_recertify_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "latest": {
+          "case": "I10_recertify_dev_b",
+          "field": "record_id",
+          "in": "inputs"
+        }
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "AUTHORIZATION_FAILED"
+        }
+      }
+    },
+    {
+      "id": "PRESENCE_by_revoked_reader.unsupported",
+      "type": "validation",
+      "kind": "session_read",
+      "description": "Session DEV_A, latest I10, a server without the presence extension",
+      "rule": {
+        "section": "LFCP-WIRE-01 §41, §58",
+        "text": "a server without the presence extension answers presence from every session with PROTOCOL_UNSUPPORTED"
+      },
+      "inputs": {
+        "resource": "X",
+        "session": "DEV_A",
+        "request": "PRESENCE",
+        "server_extensions": [
+          "identity-01"
+        ]
+      },
+      "context": {
+        "resource_id": {
+          "hex": "7f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75"
+        },
+        "records": [
+          {
+            "case": "J0_genesis",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J1_grant_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J2_grant_carol",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I1_device_grant_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I2_device_grant_self_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I3_owner_action_by_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I4_device_grant_dev_c_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I5_device_grant_dev_e_by_dev_c",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I6_grant_by_member_device",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I7_revoke_covered_by_sibling",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I8_bridge_grant",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I9_device_revoke_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I10_recertify_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "latest": {
+          "case": "I10_recertify_dev_b",
+          "field": "record_id",
+          "in": "inputs"
+        }
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROTOCOL_UNSUPPORTED"
+        }
+      }
+    },
+    {
+      "id": "PRESENCE_by_reader.unsupported",
+      "type": "validation",
+      "kind": "session_read",
+      "description": "Control: session DEV_B (a reader), a server without the presence extension: the same answer as to any session",
+      "rule": {
+        "section": "LFCP-WIRE-01 §41, §58",
+        "text": "a server without the presence extension answers presence from every session with PROTOCOL_UNSUPPORTED"
+      },
+      "inputs": {
+        "resource": "X",
+        "session": "DEV_B",
+        "request": "PRESENCE",
+        "server_extensions": [
+          "identity-01"
+        ]
+      },
+      "context": {
+        "resource_id": {
+          "hex": "7f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75"
+        },
+        "records": [
+          {
+            "case": "J0_genesis",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J1_grant_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J2_grant_carol",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I1_device_grant_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I2_device_grant_self_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I3_owner_action_by_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I4_device_grant_dev_c_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I5_device_grant_dev_e_by_dev_c",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I6_grant_by_member_device",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I7_revoke_covered_by_sibling",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I8_bridge_grant",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I9_device_revoke_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I10_recertify_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "latest": {
+          "case": "I10_recertify_dev_b",
+          "field": "record_id",
+          "in": "inputs"
+        }
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROTOCOL_UNSUPPORTED"
+        }
+      }
+    },
+    {
+      "id": "PRESENCE_by_reader.supported",
+      "type": "validation",
+      "kind": "session_read",
+      "description": "Control: session DEV_B (a reader), a server with the presence extension",
+      "rule": {
+        "section": "LFCP-WIRE-01 §41, §58",
+        "text": "A reader may use presence where the server supports it."
+      },
+      "inputs": {
+        "resource": "X",
+        "session": "DEV_B",
+        "request": "PRESENCE",
+        "server_extensions": [
+          "identity-01",
+          "presence"
+        ]
+      },
+      "context": {
+        "resource_id": {
+          "hex": "7f42584879382580a788df2d05961889a6baf873148b746e114c4975414a5a75"
+        },
+        "records": [
+          {
+            "case": "J0_genesis",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J1_grant_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "J2_grant_carol",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I1_device_grant_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I2_device_grant_self_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I3_owner_action_by_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I4_device_grant_dev_c_bob",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I5_device_grant_dev_e_by_dev_c",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I6_grant_by_member_device",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I7_revoke_covered_by_sibling",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I8_bridge_grant",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I9_device_revoke_dev_a",
+            "field": "cose_sign1",
+            "in": "inputs"
+          },
+          {
+            "case": "I10_recertify_dev_b",
+            "field": "cose_sign1",
+            "in": "inputs"
+          }
+        ],
+        "latest": {
+          "case": "I10_recertify_dev_b",
+          "field": "record_id",
+          "in": "inputs"
+        }
+      },
+      "expected": {
+        "valid": true,
+        "post_state": {
+          "read": "full"
         }
       }
     },
