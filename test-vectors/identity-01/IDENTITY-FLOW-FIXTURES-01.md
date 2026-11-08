@@ -251,6 +251,20 @@ Crash and concurrency around every ACK of a pairing approval (I) and of revoke p
 | 15 | Alternative: the rotator of K1 crashed before any package; readers hold epoch 1 in KEY_BLOCKED (no package) |  | awaiting key holder |  |
 | 16 | After a bounded wait a second rotator commits epoch 2 with a fresh DEK (no package) | `wire:flow.f13_second_rotator_epoch_2` | accept |  |
 
+## F13.issuer_revoked_before_resume
+
+An issuer of the planned chain is revoked between planning and resuming: a first registration and a re-certification are superseded (IDENTITY-PROFILE-01 §9.2 (Register or re-certify); mode sequence)
+
+| # | Step | Case | Outcome | Phase |
+|---|---|---|---|---|
+| 1 | X at I8: a first registration of DEV_M2 with [CERT_M2, CERT_A] is planned (DEV_M2 is not bound in X) | `wire:I8_bridge_grant` | accept | pending |
+| 2 | … and a re-certification of DEV_B with [CERT_B', CERT_A] (DEV_B's current leaf is CERT_B) |  | done | pending |
+| 3 | Before either operation resumes, OWNER revokes DEV_A, the issuer in both planned chains | `wire:I9_device_revoke_dev_a` | accept |  |
+| 4 | The first registration resumes: superseded, nothing is signed or proposed |  | done | superseded |
+| 5 | The re-certification resumes: superseded, nothing is signed or proposed |  | done | superseded |
+| 6 | Control: a re-certification of DEV_B by the root with [CERT_B2], which avoids DEV_A, is pending on I9 |  | done | pending |
+| 7 | … and committed-own once I10 is accepted | `wire:I10_recertify_dev_b` | accept | committed-own |
+
 ## F14_frontier_from_verified_set
 
 The final frontier comes from the rotator's verified accepted set, extra ranges included (LFCP-WIRE-01 §19, §19.1, §28.1; IDENTITY-PROFILE-01 §8.3; mode sequence)

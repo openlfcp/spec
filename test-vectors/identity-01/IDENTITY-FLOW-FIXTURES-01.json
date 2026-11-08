@@ -2400,6 +2400,168 @@
       ]
     },
     {
+      "id": "F13.issuer_revoked_before_resume",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "An issuer of the planned chain is revoked between planning and resuming: a first registration and a re-certification are superseded",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §9.2 (Register or re-certify)",
+        "text": "(R, D) revoked, or an issuer of c's chain revoked: superseded; the issuers are those of the planned chain c, not of the current binding."
+      },
+      "inputs": {
+        "mode": "sequence",
+        "steps": [
+          {
+            "action": "X at I8: a first registration of DEV_M2 with [CERT_M2, CERT_A] is planned (DEV_M2 is not bound in X)",
+            "case": "wire:I8_bridge_grant",
+            "phase_input": {
+              "phase": "register",
+              "state": "wire:I8_bridge_grant",
+              "root": "OWNER",
+              "device": "DEV_M2",
+              "certificate": "CERT_M2",
+              "chain": [
+                "CERT_M2",
+                "CERT_A"
+              ]
+            },
+            "n": 1
+          },
+          {
+            "action": "… and a re-certification of DEV_B with [CERT_B', CERT_A] (DEV_B's current leaf is CERT_B)",
+            "phase_input": {
+              "phase": "register",
+              "state": "wire:I8_bridge_grant",
+              "root": "OWNER",
+              "device": "DEV_B",
+              "certificate": "CERT_B'",
+              "chain": [
+                "CERT_B'",
+                "CERT_A"
+              ]
+            },
+            "n": 2
+          },
+          {
+            "action": "Before either operation resumes, OWNER revokes DEV_A, the issuer in both planned chains",
+            "case": "wire:I9_device_revoke_dev_a",
+            "n": 3
+          },
+          {
+            "action": "The first registration resumes: superseded, nothing is signed or proposed",
+            "phase_input": {
+              "phase": "register",
+              "state": "wire:I9_device_revoke_dev_a",
+              "root": "OWNER",
+              "device": "DEV_M2",
+              "certificate": "CERT_M2",
+              "chain": [
+                "CERT_M2",
+                "CERT_A"
+              ]
+            },
+            "n": 4
+          },
+          {
+            "action": "The re-certification resumes: superseded, nothing is signed or proposed",
+            "phase_input": {
+              "phase": "register",
+              "state": "wire:I9_device_revoke_dev_a",
+              "root": "OWNER",
+              "device": "DEV_B",
+              "certificate": "CERT_B'",
+              "chain": [
+                "CERT_B'",
+                "CERT_A"
+              ]
+            },
+            "n": 5
+          },
+          {
+            "action": "Control: a re-certification of DEV_B by the root with [CERT_B2], which avoids DEV_A, is pending on I9",
+            "phase_input": {
+              "phase": "register",
+              "state": "wire:I9_device_revoke_dev_a",
+              "root": "OWNER",
+              "device": "DEV_B",
+              "certificate": "CERT_B2",
+              "chain": [
+                "CERT_B2"
+              ]
+            },
+            "n": 6
+          },
+          {
+            "action": "… and committed-own once I10 is accepted",
+            "case": "wire:I10_recertify_dev_b",
+            "phase_input": {
+              "phase": "register",
+              "state": "wire:I10_recertify_dev_b",
+              "root": "OWNER",
+              "device": "DEV_B",
+              "certificate": "CERT_B2",
+              "chain": [
+                "CERT_B2"
+              ],
+              "own": true
+            },
+            "n": 7
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept",
+            "phase": "pending",
+            "DEV_M2_bound": false
+          },
+          {
+            "n": 2,
+            "outcome": "done",
+            "phase": "pending",
+            "DEV_B_leaf": "CERT_B"
+          },
+          {
+            "n": 3,
+            "outcome": "accept"
+          },
+          {
+            "n": 4,
+            "outcome": "done",
+            "phase": "superseded",
+            "proposes": false
+          },
+          {
+            "n": 5,
+            "outcome": "done",
+            "phase": "superseded",
+            "proposes": false
+          },
+          {
+            "n": 6,
+            "outcome": "done",
+            "phase": "pending"
+          },
+          {
+            "n": 7,
+            "outcome": "accept",
+            "phase": "committed-own"
+          }
+        ],
+        "final": {
+          "superseded": [
+            "DEV_M2 first registration",
+            "DEV_B re-certification through DEV_A"
+          ]
+        }
+      },
+      "assertions": [
+        "A phase is classified on the chain it would commit; the current binding of the device does not name the issuers of a chain not yet committed."
+      ]
+    },
+    {
       "id": "F14_frontier_from_verified_set",
       "type": "behavioral",
       "kind": "identity_flow",

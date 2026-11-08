@@ -547,6 +547,26 @@ def build() -> None:
           step('After a bounded wait a second rotator commits epoch 2 with a fresh DEK', 'wire:flow.f13_second_rotator_epoch_2', 'accept', branch='no package')],
          {}, ['No installation reconstructs a DEK it does not hold; journals hold no secrets (§9.8): the certificate payload is not a secret.'])
 
+    m2 = {'root': 'OWNER', 'device': 'DEV_M2', 'certificate': 'CERT_M2', 'chain': ['CERT_M2', 'CERT_A']}
+    b1 = {'root': 'OWNER', 'device': 'DEV_B', 'certificate': "CERT_B'", 'chain': ["CERT_B'", 'CERT_A']}
+    b2 = {'root': 'OWNER', 'device': 'DEV_B', 'certificate': 'CERT_B2', 'chain': ['CERT_B2']}
+    flow('F13.issuer_revoked_before_resume', "An issuer of the planned chain is revoked between planning and resuming: a first registration and a re-certification are superseded",
+         ('IDENTITY-PROFILE-01 §9.2 (Register or re-certify)', "(R, D) revoked, or an issuer of c's chain revoked: superseded; the issuers are those of the planned chain c, not of the current binding."),
+         [step('X at I8: a first registration of DEV_M2 with [CERT_M2, CERT_A] is planned (DEV_M2 is not bound in X)', 'wire:I8_bridge_grant', 'accept',
+               phase_of=('register', 'wire:I8_bridge_grant', m2, 'pending'), DEV_M2_bound='DEV_M2' in post('wire:I8_bridge_grant')['devices']),
+          step("… and a re-certification of DEV_B with [CERT_B', CERT_A] (DEV_B's current leaf is CERT_B)",
+               phase_of=('register', 'wire:I8_bridge_grant', b1, 'pending'), DEV_B_leaf=dev('wire:I8_bridge_grant', 'DEV_B')['leaf']),
+          step('Before either operation resumes, OWNER revokes DEV_A, the issuer in both planned chains', 'wire:I9_device_revoke_dev_a', 'accept'),
+          step('The first registration resumes: superseded, nothing is signed or proposed', phase_of=('register', 'wire:I9_device_revoke_dev_a', m2, 'superseded'),
+               proposes=False),
+          step('The re-certification resumes: superseded, nothing is signed or proposed', phase_of=('register', 'wire:I9_device_revoke_dev_a', b1, 'superseded'),
+               proposes=False),
+          step("Control: a re-certification of DEV_B by the root with [CERT_B2], which avoids DEV_A, is pending on I9",
+               phase_of=('register', 'wire:I9_device_revoke_dev_a', b2, 'pending')),
+          step('… and committed-own once I10 is accepted', 'wire:I10_recertify_dev_b', 'accept', phase_of=('register', 'wire:I10_recertify_dev_b', {**b2, 'own': True}, 'committed-own'))],
+         {'superseded': ['DEV_M2 first registration', 'DEV_B re-certification through DEV_A']},
+         ['A phase is classified on the chain it would commit; the current binding of the device does not name the issuers of a chain not yet committed.'])
+
     # 14.
     fr = case('wire:flow.y_key_epoch_1')['inputs']['body']['frontier']
     flow('F14_frontier_from_verified_set', "The final frontier comes from the rotator's verified accepted set, extra ranges included",
