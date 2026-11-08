@@ -266,7 +266,12 @@ A proposal `X` refuses (the limit of W §17.5 rule 5, the reconciler's authority
 
 **3. Keys.** For every device `D` active in the target whose root is `R` (service devices included; in `I`, every active personal and pairing device: every `P` with `holds(P, 1)`), except a device that is revoked in `I` or whose current chain in the target passes through a device revoked in `I` (step 1, an unpropagated pair): for every epoch of the target whose DEK the reconciler holds and for which its own ledger (§9.5) records no sent package to `D`: seal it to `D` at the current head and record it. This is unconditional: it needs no complaint, no `data/write` and no DEK of `I` on the recipient's side, so a Read device, a device registered in `I` whose approver crashed before its first package, and a device that never received its first package in any Resource are served by the next reconciling manager. `devices[p:<D>].missing_keys` is a hint only: a reconciler that reads it also re-seals the listed epochs even when its ledger shows a sent package (the package may be lost), and the device clears its hint when the packages arrive. A human MAY clear a managing device's ledger for one device ("Re-send keys") to force a full re-send.
 
-**4. Display data.** The reconciler restores `devices[p:<D>]` entries for devices it finds in `I`'s chain without a valid entry (labels default to the fingerprint).
+**4. Display data.** In `I`'s document, for devices of kind `0` and `1` only (a pairing device has no entry, §2.1):
+
+- for every device `D` bound in `I` (W §17.4 rule 9) with kind `0` or `1` and not in `I`'s `revoked`, without a valid entry `devices[p:<D>]` (§4): write `devices[p:<D>] = {label: <the fingerprint of D, §5.2>, kind: <D's kind in I>}`;
+- a **retired entry** is the entry `devices[p:<D>]` of such a device whose pair is in `I`'s `revoked`. When some value of its `revoked` is not `true`, or the field is absent, the reconciler writes `revoked = true` (§8.2); it writes nothing else into a retired entry, and creates no entry for a revoked device that has none (§10 then shows its fingerprint).
+
+The reconciler writes nothing for a pairing device, relabels nothing, and deletes no entry, valid or not (§4 rule 1: an invalid entry stays ignored). A second run on the same states therefore writes no change.
 
 Reconciliation is idempotent and conflicts only through compare-and-swap; it is the mechanism that carries revocations into Resources the revoking device could not reach, new Resources into every device, and missing keys to devices whose packages were lost. It is suspended while `I` or the target is in `CONTROL_CONFLICT` (§9.7).
 
