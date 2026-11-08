@@ -337,7 +337,11 @@
               "state": "wire:I1_device_grant_dev_a",
               "root": "OWNER",
               "device": "DEV_B",
-              "certificate": "CERT_B"
+              "certificate": "CERT_B",
+              "chain": [
+                "CERT_B",
+                "CERT_A"
+              ]
             },
             "n": 3
           },
@@ -354,6 +358,10 @@
               "root": "OWNER",
               "device": "DEV_B",
               "certificate": "CERT_B",
+              "chain": [
+                "CERT_B",
+                "CERT_A"
+              ],
               "own": false
             },
             "n": 5
@@ -546,6 +554,9 @@
               "root": "OWNER",
               "device": "DEV_A",
               "certificate": "CERT_A",
+              "chain": [
+                "CERT_A"
+              ],
               "own": false
             },
             "n": 6
@@ -1490,6 +1501,10 @@
               "root": "OWNER",
               "device": "BRIDGE_O",
               "certificate": "CERT_SO",
+              "chain": [
+                "CERT_SO",
+                "CERT_A"
+              ],
               "own": true
             },
             "n": 17
@@ -2155,7 +2170,11 @@
               "state": "wire:P3_consume_for_dev_b",
               "root": "OWNER",
               "device": "DEV_B",
-              "certificate": "CERT_B"
+              "certificate": "CERT_B",
+              "chain": [
+                "CERT_B",
+                "CERT_A"
+              ]
             },
             "journal": {
               "phase": "register",
@@ -2173,6 +2192,10 @@
               "root": "OWNER",
               "device": "DEV_B",
               "certificate": "CERT_B",
+              "chain": [
+                "CERT_B",
+                "CERT_A"
+              ],
               "own": true
             },
             "n": 5
@@ -2288,6 +2311,10 @@
             "outcome": "done",
             "phase": "pending",
             "signed_certificate": "CERT_B",
+            "chain": [
+              "CERT_B",
+              "CERT_A"
+            ],
             "certificate_payload_matches_journal": true
           },
           {

@@ -95,6 +95,17 @@ def chain_of(ref: str) -> tuple[str, list[str]]:
 # IDENTITY-PROFILE-01 §9.2, first match wins, on the post-state of a case.
 # ---------------------------------------------------------------------------
 
+def chain_issuers(root: str, device: str, cert: str, chain: list[str]) -> list[str]:
+    """The devices that issued inside a planned chain (leaf first), after checking that it is one chain for `root`."""
+    if not chain or chain[0] != cert or CERTS[cert]['device'] != device:
+        raise SystemExit(f'the planned chain {chain} does not start with {cert} for {device}')
+    for i, c in enumerate(chain):
+        signer = CERTS[chain[i + 1]]['device'] if i + 1 < len(chain) else root
+        if CERTS[c]['root'] != root or CERTS[c]['issuer'] != signer:
+            raise SystemExit(f'the planned chain {chain} is not a chain of {root}: {c} is issued by {CERTS[c]["issuer"]}, not {signer}')
+    return [CERTS[c]['device'] for c in chain[1:]]
+
+
 def phase(kind: str, state_ref: str, **a) -> str:
     ps = post(state_ref)
     rv = ps.get('revoked', {})
@@ -106,7 +117,9 @@ def phase(kind: str, state_ref: str, **a) -> str:
     if kind == 'register':
         d = ps.get('devices', {}).get(a['device'])
         cert = a['certificate']
-        issuers = [x for x in (d or {}).get('issuers', [])] if d and d.get('leaf') == cert else []
+        # The issuers of c's chain are those of the planned chain, whatever the current binding holds (none before a
+        # first registration, another leaf before a re-certification).
+        issuers = chain_issuers(a['root'], a['device'], cert, a['chain'])
         if f"{a['root']}/{a['device']}" in rv or any(f"{a['root']}/{e}" in rv for e in issuers):
             return 'superseded'
         if d and d.get('leaf') == cert:
@@ -301,10 +314,10 @@ def build() -> None:
          [step('The coordinator holds I1', 'wire:I1_device_grant_dev_a', 'accept'),
           step('DEV_B proposes its self-registration on J2 (a stale head)', expect='CONTROL_HEAD_MISMATCH', in_bytes_of='wire:flow.self_register_dev_b_on_j2',
                coordinator_head='I1_device_grant_dev_a'),
-          step('DEV_B synchronises: its register phase is pending on I1', phase_of=('register', 'wire:I1_device_grant_dev_a', {'root': 'OWNER', 'device': 'DEV_B', 'certificate': 'CERT_B'}, 'pending')),
+          step('DEV_B synchronises: its register phase is pending on I1', phase_of=('register', 'wire:I1_device_grant_dev_a', {'root': 'OWNER', 'device': 'DEV_B', 'certificate': 'CERT_B', 'chain': ['CERT_B', 'CERT_A']}, 'pending')),
           step('DEV_B proposes a fresh record on I1', 'wire:I2_device_grant_self_dev_b', 'accept'),
           step('A second installation with the same intent classifies it on I2', phase_of=('register', 'wire:I2_device_grant_self_dev_b',
-               {'root': 'OWNER', 'device': 'DEV_B', 'certificate': 'CERT_B', 'own': False}, 'complete'), proposes=False),
+               {'root': 'OWNER', 'device': 'DEV_B', 'certificate': 'CERT_B', 'chain': ['CERT_B', 'CERT_A'], 'own': False}, 'complete'), proposes=False),
           step('Had it proposed a fresh DEVICE_GRANT with the same leaf, rule 5 refuses it (shown for DEV_A on I1)', 'wire:device_grant_repeat_same_leaf_fresh',
                'AUTHORIZATION_FAILED', aside=True),
           step('The exact bytes of a committed record sent again', 'wire:device_grant_replay_exact_bytes', 'accept', aside=True, ack='same ACK', transition=False)],
@@ -331,11 +344,11 @@ def build() -> None:
           step("Step 1: I's revocation of (OWNER, PAIR_J), reason 3 propagated as 0", 'wire:flow.reconcile_revoke_pairing_in_x', 'accept', exposing=False),
           step("Step 2: DEV_A, bound only as an intermediate in X, is registered with I's chain; DEV_B has the same leaf certificate ID and needs nothing",
                'wire:flow.reconcile_register_dev_a', 'accept', DEV_A=dev('wire:flow.reconcile_register_dev_a', 'DEV_A'),
-               phase=phase('register', 'wire:flow.reconcile_register_dev_a', root='OWNER', device='DEV_A', certificate='CERT_A', own=True)),
+               phase=phase('register', 'wire:flow.reconcile_register_dev_a', root='OWNER', device='DEV_A', certificate='CERT_A', chain=['CERT_A'], own=True)),
           step('Step 3: the reconciler seals every epoch of X it holds to DEV_A and DEV_B unless its ledger records the package', expect='packages sent',
                in_ledger_before={'DEV_A': [], 'DEV_B': []}, ledger_after={'DEV_A': [0], 'DEV_B': [0]}),
           step('A second reconciler had proposed the same registration on the previous head: CONTROL_HEAD_MISMATCH; after synchronising its phase is',
-               phase_of=('register', 'wire:flow.reconcile_register_dev_a', {'root': 'OWNER', 'device': 'DEV_A', 'certificate': 'CERT_A', 'own': False}, 'complete')),
+               phase_of=('register', 'wire:flow.reconcile_register_dev_a', {'root': 'OWNER', 'device': 'DEV_A', 'certificate': 'CERT_A', 'chain': ['CERT_A'], 'own': False}, 'complete')),
           step('A second run of the reconciler', expect='nothing to propose', records=0, packages=0),
           step('The Identity Resource as its own target: steps 1 and 2 are vacuous, step 3 seals I\'s epochs to DEV_B', 'wire:flow.kp_dev_a_to_dev_b_in_i', 'accept'),
           step('A service device whose issuer I has revoked is never registered in X: the revocation reaches X first and X refuses the chain (shown at I9)',
@@ -391,7 +404,7 @@ def build() -> None:
                phase_of=('consume', f'wire:{d_jl}', {'root': 'OWNER', 'device': 'PAIR_L', 'digest': digest("CERT_B'")}, 'superseded'), signs=False),
           step('A phase-2 record with another digest is refused', 'wire:flow.pl_register_wrong_digest', 'AUTHORIZATION_FAILED'),
           step('Phase 2', 'wire:flow.pl_register_dev_b', 'accept', DEV_B=dev('wire:flow.pl_register_dev_b', 'DEV_B'),
-               phase=phase('register', 'wire:flow.pl_register_dev_b', root='OWNER', device='DEV_B', certificate='CERT_B', own=True)),
+               phase=phase('register', 'wire:flow.pl_register_dev_b', root='OWNER', device='DEV_B', certificate='CERT_B', chain=['CERT_B', 'CERT_A'], own=True)),
           step('Lost ACK of phase 2: the exact bytes are re-sent', expect='same ACK', in_bytes_of='wire:flow.pl_register_dev_b'),
           step('DEV_A seals the DEK of epoch 0 to DEV_B', 'wire:flow.pl_kp_epoch0_to_dev_b', 'accept'),
           step('DEV_A seals the DEK of epoch 1 to DEV_B', 'wire:flow.pl_kp_epoch1_to_dev_b', 'accept')],
@@ -445,7 +458,7 @@ def build() -> None:
                leaves=leaves_registered_for('BRIDGE_O', 'wire:flow.f09_x_register_cstar'), proven=proven('wire:flow.f09_x_register_cstar'), used=False, Y='never shown as granted'),
           step('B restarts: it resumes from its persisted candidates', expect='candidates resumed'),
           step('A crashes after the bind-only DEVICE_GRANT was accepted, before its ACK was persisted',
-               phase_of=('register', 'wire:P4s_bind_bridge_o', {'root': 'OWNER', 'device': 'BRIDGE_O', 'certificate': 'CERT_SO', 'own': True}, 'committed-own'), proposes=False)],
+               phase_of=('register', 'wire:P4s_bind_bridge_o', {'root': 'OWNER', 'device': 'BRIDGE_O', 'certificate': 'CERT_SO', 'chain': ['CERT_SO', 'CERT_A'], 'own': True}, 'committed-own'), proposes=False)],
          {'registered_in_I': False, 'approved_scope': ['X']},
          ['The first verified certificate decides: until B holds one, no candidate outcome is known; a candidate absent from the scope is not granted.'],
          pairing='PAIR_J')
@@ -508,11 +521,11 @@ def build() -> None:
                phase_of=('consume', 'wire:P3_consume_for_dev_b', {'root': 'OWNER', 'device': 'PAIR_J', 'digest': d_cert_b}, 'committed-own')),
           step('Its ACK was lost: the exact bytes of P3 are re-sent', expect='same ACK', in_bytes_of='wire:P3_consume_for_dev_b'),
           step('Phase 2 after the restart: the certificate is signed from the journaled payload (CERT_B, whose payload digest is the approval)',
-               phase_of=('register', 'wire:P3_consume_for_dev_b', {'root': 'OWNER', 'device': 'DEV_B', 'certificate': 'CERT_B'}, 'pending'),
+               phase_of=('register', 'wire:P3_consume_for_dev_b', {'root': 'OWNER', 'device': 'DEV_B', 'certificate': 'CERT_B', 'chain': ['CERT_B', 'CERT_A']}, 'pending'),
                in_journal={'phase': 'register', 'certificate_payload_cbor': payload_b, 'next_record': 'P4_register_dev_b_approved'},
-               signed_certificate='CERT_B', certificate_payload_matches_journal=CERTS['CERT_B']['payload_cbor']['hex'] == payload_b),
+               signed_certificate='CERT_B', chain=['CERT_B', 'CERT_A'], certificate_payload_matches_journal=CERTS['CERT_B']['payload_cbor']['hex'] == payload_b),
           step('Crash after the ACK of P4 and before it was persisted', 'wire:P4_register_dev_b_approved', 'accept',
-               phase_of=('register', 'wire:P4_register_dev_b_approved', {'root': 'OWNER', 'device': 'DEV_B', 'certificate': 'CERT_B', 'own': True}, 'committed-own')),
+               phase_of=('register', 'wire:P4_register_dev_b_approved', {'root': 'OWNER', 'device': 'DEV_B', 'certificate': 'CERT_B', 'chain': ['CERT_B', 'CERT_A'], 'own': True}, 'committed-own')),
           step('Exact-byte retry of P4', expect='same ACK', in_bytes_of='wire:P4_register_dev_b_approved'),
           step('Revoke journal in X: revoke (OWNER, DEV_A) with reason 1; the chain is at I8', 'wire:I8_bridge_grant', 'accept',
                phase_of=('revoke', 'wire:I8_bridge_grant', {'root': 'OWNER', 'device': 'DEV_A'}, 'pending')),
