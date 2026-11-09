@@ -5,11 +5,12 @@ full WIRE-01 conformance, documents remain Working Drafts.**
 
 This file answers one question: *what exactly do I implement against for
 MVP 0.4?* The answer is every file listed below, at the Git tag
-`mvp-0.4-baseline.4` of this repository.
+`mvp-0.4-baseline.5` of this repository.
 
 | Tag | Status |
 | --- | --- |
-| mvp-0.4-baseline.4 | **To be tagged.** `mvp-0.4-baseline.3` with the ten findings of its final review applied (task LFCP-04-415). IDENTITY-PROFILE-01 §7.1: reconciliation step 1 propagates a revoked pair of `I` only when it is relevant in the target (the device is bound there, or is of kind `0`, or of kind `1` with the target in its scope, or of unknown kind), so a pairing session no longer takes one of the `64` unbound revoked pairs of W §17.5 rule 5 in every Resource; a refused propagation is reported, kept unpropagated and proposed again, and step 3 seals nothing to such a device; step 4 restores display entries for kind `0` and `1` only and defines retired entries; §8.4 follows step 1. §3: AI2 does not protect an extension namespace value. Status texts and two references to W §17.4 rule 9 corrected. No wire rule changes. The reference checks of the profile and flow generators are corrected (map types, descriptor keys, field types, extension values, the issuers of a planned chain), and the three identity corpora gain the cases the review asked for. 28 published values change, all from finding 1 (`migrations/mvp-0.4-baseline.4/value-changes.json`). |
+| mvp-0.4-baseline.5 | **To be tagged.** `mvp-0.4-baseline.4` with the positions of admission rule AI3 stated (task LFCP-04-417, decision I27, from the cross-SDK review P2-1 and P3-1). IDENTITY-PROFILE-01 §3: AI3 checks value types only at the positions §2.1 defines (an entry, a named field of an entry map, a key of `devices[k].missing_keys`, an element of `endpoints`, `scope` or `missing_keys[X]`); a list element admits only an `ImmutableString`, a boolean or a uint, the other positions also a map or a list. A value of `extensions[ns]`, an unknown field and everything below a map or list held where §2.1 defines a scalar, or below a map held where it defines a list, are not type-checked; §4 judges the field. No wire rule changes. The profile generator's reference admission decides AI3 by position, and the profile corpus gains the AI3 position cases and the pairing-link endpoint cases (a loopback `ws://` and an upper-case scheme accepted on parse). No published value changes (`migrations/mvp-0.4-baseline.5/value-changes.json`). |
+| mvp-0.4-baseline.4 | Superseded by `mvp-0.4-baseline.5`, which states the positions of AI3 (task LFCP-04-417). Never moved. `mvp-0.4-baseline.3` with the ten findings of its final review applied (task LFCP-04-415). IDENTITY-PROFILE-01 §7.1: reconciliation step 1 propagates a revoked pair of `I` only when it is relevant in the target (the device is bound there, or is of kind `0`, or of kind `1` with the target in its scope, or of unknown kind), so a pairing session no longer takes one of the `64` unbound revoked pairs of W §17.5 rule 5 in every Resource; a refused propagation is reported, kept unpropagated and proposed again, and step 3 seals nothing to such a device; step 4 restores display entries for kind `0` and `1` only and defines retired entries; §8.4 follows step 1. §3: AI2 does not protect an extension namespace value. Status texts and two references to W §17.4 rule 9 corrected. No wire rule changes. The reference checks of the profile and flow generators are corrected (map types, descriptor keys, field types, extension values, the issuers of a planned chain), and the three identity corpora gain the cases the review asked for. 28 published values change, all from finding 1 (`migrations/mvp-0.4-baseline.4/value-changes.json`). |
 | mvp-0.4-baseline.3 | Superseded by `mvp-0.4-baseline.4`, which applies the final review of this tag (task LFCP-04-415). Never moved. `mvp-0.4-baseline.2` with the depth of admission rule AI2 clarified and vectors added (task LFCP-04-403d, from the SDK reviews sdk-rs#5 P2-1 and sdk-ts#16 P1). IDENTITY-PROFILE-01 §3: AI2 protects an entry map, and a list or map held in a field of an entry map, and nothing deeper. A list at an entry key is not an entry map. The rule is that of `mvp-0.4-baseline.2`. The profile corpus gains the cases of the depth boundary and of a change made beside an entry that is not a map. The generator's reference admission no longer refuses a scalar over a list held directly at an entry key, and no longer fails beside such an entry. No published value changes (`migrations/mvp-0.4-baseline.3/value-changes.json`). |
 | mvp-0.4-baseline.2 | Superseded by `mvp-0.4-baseline.3`, which clarifies AI2 and adds the depth vectors that two SDKs lacked. The rules are unchanged. Never moved. `mvp-0.4-baseline.1` with clarified identity rules and added vectors (tasks LFCP-04-403b and LFCP-04-403c): LFCP-WIRE-01 §19 and §62 (the new epoch number of a `KEY_EPOCH` is a chain placement check, class 2; decision I9), §39 and §41.1 (every new hosting row is keyed by the Genesis owner, with or without field `5`; rows recorded before keep their host; decision I12), §41 (the revoked-reader replies to `RESOURCE_OPEN`, `CONTROL_GET` and presence) and §62 (a rejected pairing link is client-local); IDENTITY-PROFILE-01 §3 (admission rule AI5: `missing_keys` is written only by its device, decision I8; AI2 and AI5 decided on the causal history, hidden values included) and §5.2. Three published values change: the description of IDENTITY-PROFILE-TEST-VECTORS-01, and `READY_identity_01`, which was not a `READY` message (`migrations/mvp-0.4-baseline.2/value-changes.json`). |
 | mvp-0.4-baseline.1 | Superseded by `mvp-0.4-baseline.2`, because the clarifications of LFCP-WIRE-01 §19, §39, §41 and IDENTITY-PROFILE-01 §3 change normative rules and `READY_identity_01` was not a `READY` message. Never moved. `mvp-0.2-baseline.12` plus multi-device root identity (ADR 0011, decisions I1 to I6): LFCP-WIRE-01 §7.1 to §7.3 (Root Identity, Device Principals, Device Certificates and certificate chains), §14 (Control Record types `9` `DEVICE_GRANT` and `10` `DEVICE_REVOKE`), §15 (Genesis field `5`), §17.1, §17.4 and §17.5, §23.3 (transfer commit field `2`), §25.2 (the same-root Key Package rule), §37 (the server extension `identity-01`), §41 (the Control read for a revoked reader), §62 (the ordering of the validation classes, normative for every Control Record), §79, §80.1 and §100.1; the profile IDENTITY-PROFILE-01 (`org.openlfcp.identity.v1`); and the three identity corpora of IDENTITY-PROFILE-01 §12 (task LFCP-04-403). One published value moves: `unknown_core_type_C1` uses the reserved type `31` instead of `9` (`migrations/mvp-0.4-baseline.1/value-changes.json`). |
@@ -30,13 +31,14 @@ MVP 0.4?* The answer is every file listed below, at the Git tag
 
 ## Pinning
 
-Implementations pin the tag `mvp-0.4-baseline.4` of `openlfcp/spec`, never
-a branch, in their `spec.lock`, and move to it from `mvp-0.4-baseline.3`,
-`mvp-0.4-baseline.2`, `mvp-0.4-baseline.1` or `mvp-0.2-baseline.12` deliberately
+Implementations pin the tag `mvp-0.4-baseline.5` of `openlfcp/spec`, never
+a branch, in their `spec.lock`, and move to it from `mvp-0.4-baseline.4`,
+`mvp-0.4-baseline.3`, `mvp-0.4-baseline.2`, `mvp-0.4-baseline.1` or
+`mvp-0.2-baseline.12` deliberately
 (IDENTITY-PROFILE-01 §11). An implementation pinned to an earlier tag answers the codes recorded there.
 
 A later approved Working Draft correction does not move the tag. It
-produces a new tag, such as `mvp-0.4-baseline.5`, with an updated copy of
+produces a new tag, such as `mvp-0.4-baseline.6`, with an updated copy of
 this file and a `migrations/mvp-0.4-baseline.N/` entry. Implementations
 move to it deliberately.
 
@@ -140,8 +142,9 @@ The checks are those of MVP-0.2-BASELINE.md, plus:
 
 - vector values against the previous baseline tag, from the newest
   `migrations/mvp-0.M-baseline.N/value-changes.json`: for this baseline,
-  `migrations/mvp-0.4-baseline.4/`, against `mvp-0.4-baseline.3`, every
-  suite listed (for `mvp-0.4-baseline.3`, against `mvp-0.4-baseline.2`; for
+  `migrations/mvp-0.4-baseline.5/`, against `mvp-0.4-baseline.4`, every
+  suite listed (for `mvp-0.4-baseline.4`, against `mvp-0.4-baseline.3`; for
+  `mvp-0.4-baseline.3`, against `mvp-0.4-baseline.2`; for
   `mvp-0.4-baseline.2`, against `mvp-0.4-baseline.1`; for
   `mvp-0.4-baseline.1`, against `mvp-0.2-baseline.12`, with the three
   identity suites new);
@@ -152,6 +155,15 @@ The checks are those of MVP-0.2-BASELINE.md, plus:
   for the generator of LFCP-TEST-VECTORS-01; CI installs it and sets
   `LFCP_REQUIRE_ALL_CORPORA`, so the suite is never skipped there);
 - this manifest's file list, as for MVP-0.1-BASELINE.md.
+
+## Changes from `mvp-0.4-baseline.4` (`mvp-0.4-baseline.5`)
+
+| Kind | Files |
+| --- | --- |
+| Changed, normative (clarification) | `profiles/IDENTITY-PROFILE-01.md` §3 (decision I27): the AI3 row and a new paragraph after the AI2 paragraph name the positions AI3 checks (an entry of `roster`, `devices` or `requests`; a named field of an entry map; a key of a map held in `devices[k].missing_keys`; an element of a list held in `roster[k].endpoints`, `requests[k].scope` or `devices[k].missing_keys[X]`), located by the creating operations of the causal history, and what each admits: a list element an `ImmutableString`, a boolean or a uint only; the other positions also a map or a list. A signed int, an f64, null or any other scalar, a table, and a map or list as a list element are `INVALID_FIELD_TYPE`. A value of `extensions[ns]`, an unknown field, an unknown root key and everything below a map or list held where §2.1 defines a scalar, or below a map held where it defines a list, are not type-checked; §4 judges the field. §2.1 refers to it. The text of `mvp-0.4-baseline.4` did not say whether a namespace value or a value below a defined field is checked, and the two reference SDKs answered differently |
+| Changed, editorial | `profiles/IDENTITY-PROFILE-01.md` §12.2 ID-05 names the new cases |
+| Changed, vectors | `test-vectors/identity-01/generate_identity_profile_vectors_01.mjs`: the reference admission decides AI3 by position (it refused a signed int, f64, counter or timestamp anywhere and accepted null and a map in a list field). `test-vectors/identity-01/IDENTITY-PROFILE-TEST-VECTORS-01.*` gain the AI3 position cases (admitted: a signed int, an f64 and null in `extensions[ns]`, a signed int in an unknown entry field, a signed int below a map in `name`, an f64 below a map in `endpoints`; refused: a map in `endpoints`, in `scope` and in `missing_keys[X]`, an f64 in `label`, null in `platform`; with `.entry` cases for §4) and four pairing-link endpoint cases of W §18.2 and §16 (`ws://127.0.0.1:8787` and `WSS://sync.example` accepted on parse, `https://` and `wss:` without authority rejected). No published value changes |
+| Added, migration | `migrations/mvp-0.4-baseline.5/` |
 
 ## Changes from `mvp-0.4-baseline.3` (`mvp-0.4-baseline.4`)
 
