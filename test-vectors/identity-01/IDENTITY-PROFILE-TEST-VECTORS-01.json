@@ -6081,6 +6081,637 @@
       }
     },
     {
+      "id": "identity_doc_extension_int_value",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "The root writes extensions[\"com.example.n\"] = 5 as a signed Automerge int: a namespace value is not type-checked (SOP §18), admitted",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §3 AI3",
+        "text": "AI3 checks only the positions §2.1 defines: an entry of roster, devices or requests, a named field of an entry map, a key of a map held in devices[k].missing_keys, and an element of a list held in roster[k].endpoints, requests[k].scope or devices[k].missing_keys[X]. An element admits an ImmutableString, a boolean or a uint; the other positions also admit a map or a list. A value of extensions[ns], an unknown field and everything below a map or list held where §2.1 defines a scalar or a list are not checked; §4 judges the field. Collaborative Text is refused everywhere."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "43034f6a9f66a315ac9f79ba41b011c9b85ff2190bca9c622091ebf22112c237",
+        "deps": [
+          "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+        ],
+        "automerge_change": {
+          "hex": "856f4a8343034f6a0173019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020202150f340142025602570170027f007f077f0d636f6d2e6578616d706c652e6e017f017f14057f00"
+        },
+        "framed_plaintext": {
+          "hex": "8201587d856f4a8343034f6a0173019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020202150f340142025602570170027f007f077f0d636f6d2e6578616d706c652e6e017f017f14057f00"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "identity_doc_extension_f64_value",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "The root writes extensions[\"com.example.f\"] = 1.5 as an Automerge f64: admitted",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §3 AI3",
+        "text": "AI3 checks only the positions §2.1 defines: an entry of roster, devices or requests, a named field of an entry map, a key of a map held in devices[k].missing_keys, and an element of a list held in roster[k].endpoints, requests[k].scope or devices[k].missing_keys[X]. An element admits an ImmutableString, a boolean or a uint; the other positions also admit a map or a list. A value of extensions[ns], an unknown field and everything below a map or list held where §2.1 defines a scalar or a list are not checked; §4 judges the field. Collaborative Text is refused everywhere."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "f480f9625ccb8cb8b2e20e04f77609dddf841d6dba8dbeaac6a09ec453023055",
+        "deps": [
+          "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+        ],
+        "automerge_change": {
+          "hex": "856f4a83f480f962017b019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020202150f340142025603570870027f007f077f0d636f6d2e6578616d706c652e66017f017f8501000000000000f83f7f00"
+        },
+        "framed_plaintext": {
+          "hex": "82015885856f4a83f480f962017b019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020202150f340142025603570870027f007f077f0d636f6d2e6578616d706c652e66017f017f8501000000000000f83f7f00"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "identity_doc_extension_null_value",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "The root writes extensions[\"com.example.z\"] = null: admitted",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §3 AI3",
+        "text": "AI3 checks only the positions §2.1 defines: an entry of roster, devices or requests, a named field of an entry map, a key of a map held in devices[k].missing_keys, and an element of a list held in roster[k].endpoints, requests[k].scope or devices[k].missing_keys[X]. An element admits an ImmutableString, a boolean or a uint; the other positions also admit a map or a list. A value of extensions[ns], an unknown field and everything below a map or list held where §2.1 defines a scalar or a list are not checked; §4 judges the field. Collaborative Text is refused everywhere."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "9ab6863211e5a2585f7f532906fc300272d5efbaf0989aca1e9920531a647f25",
+        "deps": [
+          "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+        ],
+        "automerge_change": {
+          "hex": "856f4a839ab686320170019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000701020202150f34014202560270027f007f077f0d636f6d2e6578616d706c652e7a017f017f007f00"
+        },
+        "framed_plaintext": {
+          "hex": "8201587a856f4a839ab686320170019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000701020202150f34014202560270027f007f077f0d636f6d2e6578616d706c652e7a017f017f007f00"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "identity_doc_map_in_endpoints",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "The root appends an empty map to the list roster[X].endpoints: an element of a list field admits only a scalar of §2.1",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §3 AI3",
+        "text": "AI3 checks only the positions §2.1 defines: an entry of roster, devices or requests, a named field of an entry map, a key of a map held in devices[k].missing_keys, and an element of a list held in roster[k].endpoints, requests[k].scope or devices[k].missing_keys[X]. An element admits an ImmutableString, a boolean or a uint; the other positions also admit a map or a list. A value of extensions[ns], an unknown field and everything below a map or list held where §2.1 defines a scalar or a list are not checked; §4 judges the field. Collaborative Text is refused everywhere."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "645d7ae3148e42ac51d32580f108e9e4b787a4bb62488c360f89f0b4ac7cec0e",
+        "deps": [
+          "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+        ],
+        "automerge_change": {
+          "hex": "856f4a83645d7ae30168019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a031700000008010202021102130234024202560270027f007f0a7f007f0d00017f007f007f00"
+        },
+        "framed_plaintext": {
+          "hex": "82015872856f4a83645d7ae30168019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a031700000008010202021102130234024202560270027f007f0a7f007f0d00017f007f007f00"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_FIELD_TYPE"
+        }
+      }
+    },
+    {
+      "id": "identity_doc_int_below_scalar_field",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "The root writes roster[X].name = {x: -1}, a map holding a signed Automerge int, into a field whose §2.1 type is a scalar string: nothing below the map is type-checked, admitted",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §3 AI3",
+        "text": "AI3 checks only the positions §2.1 defines: an entry of roster, devices or requests, a named field of an entry map, a key of a map held in devices[k].missing_keys, and an element of a list held in roster[k].endpoints, requests[k].scope or devices[k].missing_keys[X]. An element admits an ImmutableString, a boolean or a uint; the other positions also admit a map or a list. A value of extensions[ns], an unknown field and everything below a map or list held where §2.1 defines a scalar or a list are not checked; §4 judges the field. Collaborative Text is refused everywhere."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "e566f56b5e5103030c284f801e1eb873347b18e3153ce8f2fe4e457606c07ec8",
+        "deps": [
+          "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+        ],
+        "automerge_change": {
+          "hex": "856f4a83e566f56b0178019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000a010202031508340142035603570170037102730202007e08177e046e616d650178027e00017e00147f7e01007f007f0b"
+        },
+        "framed_plaintext": {
+          "hex": "82015882856f4a83e566f56b0178019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000a010202031508340142035603570170037102730202007e08177e046e616d650178027e00017e00147f7e01007f007f0b"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "identity_doc_int_below_scalar_field.entry",
+      "type": "validation",
+      "kind": "profile_entry",
+      "description": "The entry roster[X] after identity_doc_int_below_scalar_field: name is not a scalar string, so §4 marks the entry invalid",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §4",
+        "text": "Validation is per entry; the first diagnostic in table order is reported."
+      },
+      "inputs": {
+        "container": "roster",
+        "key": "f0JYSHk4JYCniN8tBZYYiaa6-HMUi3RuEUxJdUFKWnU",
+        "entry": {
+          "coordinator": "wss://sync-a.example.test/v1/ws",
+          "endpoints": [
+            "wss://sync-a.example.test/v1/ws"
+          ],
+          "name": {
+            "x": -1
+          },
+          "profile": "org.lfcp.test.raw.v1"
+        },
+        "snapshot": {
+          "b64url": "hW9Kg9MXU3wA-gQBIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKAeVm9WteUQMDDChPgB4euHM0exjjFTzo8v5ORXYGwH7IBwECAwITBCMCQARDA1YCDQEEAhQTCh3lASECIxo0BUIVViNfigGAAQaBAQKDAQIDAAMBfQcPAgMAfwACAX4AAQMHAAYSAAAGfwICBH8FBQh_CgQOfxACFH8XAA9_AAAEfwAAA23OUUuDUBQA4BbWVv2UIWir4XrTMRuOBiWW-hJX73G7XHeP3Xt0GkV_PQiil96_h4_GHDpRgrmEnkAZgcpMBAdFgoZxo7ESNUw0vLVgyJxrNATa0og0rZwoi9fyJsqWSmw9CvIsE4zN7fVDImZP7SrpI56EmxeVTI9oe7tn11kcGKU6XVaMFnHeBV4Rbtvde1_O3SzJh_J-8O3mLhyc7iidvWzd1B-AxTwt1OwVpWuC6FHe8q5oAnPtr_bOVYmouVCMUF-A4g0KRebUUuwAX7__k9HH_-6H_alPSwrFz2pWQD3qvwEYAHgFAnt_BX5_BQIGf3UCAXwMdQECBAF9A38DDwEEAQMDAH8BAgB_AQMAfAECAQADAX8CBgEDAH-GAwIAf9YFAwB79gMAlgEAxgIC9gN5AJYBxgL2AxN2FJ2NOxLCIBQAPYoX8BF0bNIloxZWOjaxcgg88yECw0OQyqs7egEd653dtb4D69BMV-lgUGjCEDJE7spdLmLSRa_vvKkyipNqWrO6WM2p3h_1WsXW1bSstn2RiErGKBu5EIAPcXMTQkAKLHKW6ODtiDLMG-s7-IzeDLxIEPkX98f0-Y_0bIOkg3XPFwwAfwELAH8AfxcC"
+        }
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_FIELD_TYPE"
+        }
+      }
+    },
+    {
+      "id": "identity_doc_unknown_field_int_value",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "The root writes the unknown field roster[X].note = -5 as a signed Automerge int: an unknown field is not type-checked, admitted",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §3 AI3",
+        "text": "AI3 checks only the positions §2.1 defines: an entry of roster, devices or requests, a named field of an entry map, a key of a map held in devices[k].missing_keys, and an element of a list held in roster[k].endpoints, requests[k].scope or devices[k].missing_keys[X]. An element admits an ImmutableString, a boolean or a uint; the other positions also admit a map or a list. A value of extensions[ns], an unknown field and everything below a map or list held where §2.1 defines a scalar or a list are not checked; §4 judges the field. Collaborative Text is refused everywhere."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "eeb62c1421362ca3b1be47cdeb4a8b4375143f64f1cc220d1e6cba6c9d2947c3",
+        "deps": [
+          "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+        ],
+        "automerge_change": {
+          "hex": "856f4a83eeb62c14016a019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a031700000008010202021506340142025602570170027f007f087f046e6f7465017f017f147b7f00"
+        },
+        "framed_plaintext": {
+          "hex": "82015874856f4a83eeb62c14016a019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a031700000008010202021506340142025602570170027f007f087f046e6f7465017f017f147b7f00"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "identity_doc_unknown_field_int_value.entry",
+      "type": "validation",
+      "kind": "profile_entry",
+      "description": "The entry roster[X] after identity_doc_unknown_field_int_value: the unknown field is preserved and the entry stays valid",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §4",
+        "text": "Validation is per entry; the first diagnostic in table order is reported."
+      },
+      "inputs": {
+        "container": "roster",
+        "key": "f0JYSHk4JYCniN8tBZYYiaa6-HMUi3RuEUxJdUFKWnU",
+        "entry": {
+          "coordinator": "wss://sync-a.example.test/v1/ws",
+          "endpoints": [
+            "wss://sync-a.example.test/v1/ws"
+          ],
+          "name": "Project X",
+          "note": -5,
+          "profile": "org.lfcp.test.raw.v1"
+        },
+        "snapshot": {
+          "b64url": "hW9Kg2IeELIA4gQBIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKAe62LBQhNiyjsb5HzetKi0N1FD9k8cwiDR5sumydKUfDBwECAwITBCMCQARDA1YCCwEEAhITCh3hASECIxk0BUITViJfigGAAQIDAAMBfQcPAQMAfwACAX4AAQMHAAYRAAAGfwICBH8FBQh_CgQOfxACFAAPfwAABH8AAAJ9z8FOg0AQAFBN0Fb9lIYErDbUGzTFBmMTJShwMQs7tBvoDN0dKBjjt3sy3ry_yztOJPSqBHMNAwMaRWimSgKy4nHSaqpUA1MNxw4Mm0tNhkFbmohnlRNl8aa-i7IVqq3HQZ5lSoiFvXlO1Py1WydDJJPw6R2T2Ylsb_fmOsuD4FSnq0rwMs77wCvCbbf7HMqFmyX5WD6Ovt0-hKPTn2pnX3du6o8gYpkWOP-g2jVB9FLfy75oA3Prr_fOTUmkpULBpK8AZUsK2VgoDmAhMfwWzs6__qF_6tuqFcqLRhTQ_AAXAHgFAnt_BX5_BQIGf3UCAXwMdQECBAF-A38PAQQBAgMAfwECAH8BAwB-AQIFAX8CBQEDAH-GAwIAf9YFAwB79gMAlgEUxgIC9gN6AJYBxgL2AxN2nY1LDsIgFAA9ihfwUTRuumujLlxp3NSVofDshwqEhyDx8kYvoHE9mRnrO7AOzXSVDgaFJgwhQ-Su3OUiJl30-s6bKqM4qaY1q4vVnOr9Ua9VbF1Ny2rbF4moZIyykQsB-BA3NyEEpMAiZ4kO3o4ow7x5Wt_B5_SG4EWCyL_IP7bPf6RnGyQdrHsBFwAC"
+        }
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "identity_doc_f64_in_named_field",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "The root writes devices[p:<OWNER>].label = 1.5 as an Automerge f64: a named field admits only a scalar of §2.1, a map or a list",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §3 AI3",
+        "text": "AI3 checks only the positions §2.1 defines: an entry of roster, devices or requests, a named field of an entry map, a key of a map held in devices[k].missing_keys, and an element of a list held in roster[k].endpoints, requests[k].scope or devices[k].missing_keys[X]. An element admits an ImmutableString, a boolean or a uint; the other positions also admit a map or a list. A value of extensions[ns], an unknown field and everything below a map or list held where §2.1 defines a scalar or a list are not checked; §4 judges the field. Collaborative Text is refused everywhere."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "23f419d926a86efa920bffaa8fc52cb44996497ae1b893e79cb3adf902470c3b",
+        "deps": [
+          "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+        ],
+        "automerge_change": {
+          "hex": "856f4a8323f419d9017b019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000a01020202150734014202560357087002710273027f007f147f056c6162656c017f017f8501000000000000f83f7f017f007f15"
+        },
+        "framed_plaintext": {
+          "hex": "82015885856f4a8323f419d9017b019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000a01020202150734014202560357087002710273027f007f147f056c6162656c017f017f8501000000000000f83f7f017f007f15"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_FIELD_TYPE"
+        }
+      }
+    },
+    {
+      "id": "identity_doc_null_in_named_field",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "The root writes devices[p:<OWNER>].platform = null: null is not a scalar of §2.1",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §3 AI3",
+        "text": "AI3 checks only the positions §2.1 defines: an entry of roster, devices or requests, a named field of an entry map, a key of a map held in devices[k].missing_keys, and an element of a list held in roster[k].endpoints, requests[k].scope or devices[k].missing_keys[X]. An element admits an ImmutableString, a boolean or a uint; the other positions also admit a map or a list. A value of extensions[ns], an unknown field and everything below a map or list held where §2.1 defines a scalar or a list are not checked; §4 judges the field. Collaborative Text is refused everywhere."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "34648237eeb80a2cdaf45869e1522ad7aaaa912ae57477b846fdc5281dcc8b68",
+        "deps": [
+          "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+        ],
+        "automerge_change": {
+          "hex": "856f4a8334648237016b019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000701020202150a34014202560270027f007f147f08706c6174666f726d017f017f007f00"
+        },
+        "framed_plaintext": {
+          "hex": "82015875856f4a8334648237016b019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000701020202150a34014202560270027f007f147f08706c6174666f726d017f017f007f00"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_FIELD_TYPE"
+        }
+      }
+    },
+    {
+      "id": "identity_doc_f64_below_map_in_list_field",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "The root replaces the list roster[X].endpoints with a map {a: 1.5} holding an Automerge f64: a map is admitted in a named field, and a key of a map is not a list element, so nothing below it is type-checked; admitted",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §3 AI3",
+        "text": "AI3 checks only the positions §2.1 defines: an entry of roster, devices or requests, a named field of an entry map, a key of a map held in devices[k].missing_keys, and an element of a list held in roster[k].endpoints, requests[k].scope or devices[k].missing_keys[X]. An element admits an ImmutableString, a boolean or a uint; the other positions also admit a map or a list. A value of extensions[ns], an unknown field and everything below a map or list held where §2.1 defines a scalar or a list are not checked; §4 judges the field. Collaborative Text is refused everywhere."
+      },
+      "inputs": {
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "d59bbf20a35223947c5973508e01b3dc36df785183e27c232f626d0c005a88fe",
+        "deps": [
+          "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+        ],
+        "automerge_change": {
+          "hex": "856f4a83d59bbf20018501019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000a01020203150d340142035604570870037102730202007e08177e09656e64706f696e74730161027e00017e008501000000000000f83f7e01007f007f0a"
+        },
+        "framed_plaintext": {
+          "hex": "82015890856f4a83d59bbf20018501019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000a01020203150d340142035604570870037102730202007e08177e09656e64706f696e74730161027e00017e008501000000000000f83f7e01007f007f0a"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "identity_doc_f64_below_map_in_list_field.entry",
+      "type": "validation",
+      "kind": "profile_entry",
+      "description": "The entry roster[X] after identity_doc_f64_below_map_in_list_field: endpoints is not a list of strings, so §4 marks the entry invalid",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §4",
+        "text": "Validation is per entry; the first diagnostic in table order is reported."
+      },
+      "inputs": {
+        "container": "roster",
+        "key": "f0JYSHk4JYCniN8tBZYYiaa6-HMUi3RuEUxJdUFKWnU",
+        "entry": {
+          "coordinator": "wss://sync-a.example.test/v1/ws",
+          "endpoints": {
+            "a": 1.5
+          },
+          "name": "Project X",
+          "profile": "org.lfcp.test.raw.v1"
+        },
+        "snapshot": {
+          "b64url": "hW9Kg8WIp9MA_gQBIDCzcL-rDWauXNCZmWOsxF3WV3TpM8Ak0wetb0yb6keKAdWbvyCjUiOUfFlzUI4Bs9w233hRg-J8Iy9ibQwAWoj-BwECAwITBCMCQARDA1YCDQEEAhQTCh3jASECIxo0BUIUViVfjwGAAQaBAQKDAQIDAAMBfQcPAgMAfwACAX4AAQMHAAYSAAAGfwICBH8FBQh_CgQOfxACFH8XAA9_AAAEfwAAA13OwU6DQBAAUGvQVv2UhgSsNtQbNMWGxiZKUOBiFnZoJ0t3cXegYNRv92Q03t_htWMOHZZgLqEnkAaVNBPkIAlpGDdaVVjDRMNbC4bMuVaGQFtaKZpWTpTFa3ETZUuJW4-CPMuQsbm9fkhw9tSukj7iSbh5kcn0qGxv9-w6iwOjVKfLitEizrvAK8Jtu3vvy7mbJflQ3g--3dyFg9MdhbMXrZv6A7CYp4WcvSrhmiB6FLe8K5rAXPurvXNVKqU5SkZKn16A5I1CSebLkuwAP_-T0cdf98v-qU9LoORnNSugHrFvGAB4BQJ7fwV-fwUCBnx1AQ10AgF_AgQBfQN_Aw8BBAEDAwB_AQIAfwEDAH0BAgAEAX8CBgEDAH-GAwIAf9YFAwB_9gMCAH6WAcYCAvYDeQCWAcYC9gMTdoUBnY2xDsIgFEX7Kf6Aj6Jx6WLaqIOTxgUnQ9tnW6lAeAjy547G_oDGu56cc43rwFjU47WxMLSo_eATBG6LXcpDVHmvHlyUCeWpFbVeXoziVO2PatWG2la0KLd9HokKxijpZi4Bn_JuRwSP5FngLNLBmRs2fiaM62A6-jBwMkLgX9wf0-c_0tkGSXljs2mv9RsLAH8BDAB_AH8XAg"
+        }
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_FIELD_TYPE"
+        }
+      }
+    },
+    {
+      "id": "identity_doc_map_in_scope",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "PAIR_J creates its own request requests[p:<BRIDGE_O>] of kind 1 whose scope holds X and an empty map: AI4 admits the writer, AI3 refuses the map in a list field",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §3 AI3",
+        "text": "AI3 checks only the positions §2.1 defines: an entry of roster, devices or requests, a named field of an entry map, a key of a map held in devices[k].missing_keys, and an element of a list held in roster[k].endpoints, requests[k].scope or devices[k].missing_keys[X]. An element admits an ImmutableString, a boolean or a uint; the other positions also admit a map or a list. A value of extensions[ns], an unknown field and everything below a map or list held where §2.1 defines a scalar or a list are not checked; §4 judges the field. Collaborative Text is refused everywhere."
+      },
+      "inputs": {
+        "writer": "PAIR_J",
+        "writer_class": "pairing",
+        "writer_ref": "p:5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk",
+        "automerge_actor": "c6751f87d0911fa8618fb9eda15ec9d8c20a9b4d35ee86b9ea9090a58dda9bed",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "control_ref": "P2_pairing_device",
+        "change_hash": "868e36530296ec23acf1ff18c00d990648cbd70174d867fe52a24e07cd72d92d",
+        "deps": [
+          "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+        ],
+        "automerge_change": {
+          "hex": "856f4a83868e3653018604019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b120c6751f87d0911fa8618fb9eda15ec9d8c20a9b4d35ee86b9ea9090a58dda9bed01170000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0a0104020611041305155e34024208560e57fd0170027f0108007f060617021d00087f0000077e001e792d703a3533496356596731455a70533743437467444957717758554e5a686f676b34734270335942646a4f5434670a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d0573636f7065000207027f0005017d0201007700e611d605f601137600b605006f774259494f6479484657494e5247615575776772594179467173463144575961494a4f4c416164324158597a6b2d4941566767334450354a455f4469446d59776179576c54717a2d5238437155416d4b526150434d397a5f316f33327830435743412d463832773068655455557253624950584b39546e4a4949485771347a37445079537433523761504b4467703a356348343479456f69546e796d475837396d664c6f57334d6574412d736e69365365387259596d46334c6b4252494447455f4f206c6170746f70016465736b746f7066304a5953486b344a59436e694e3874425a5959696161362d484d55693352754555784a6455464b576e550900"
+        },
+        "framed_plaintext": {
+          "hex": "8201590211856f4a83868e3653018604019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b120c6751f87d0911fa8618fb9eda15ec9d8c20a9b4d35ee86b9ea9090a58dda9bed01170000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0a0104020611041305155e34024208560e57fd0170027f0108007f060617021d00087f0000077e001e792d703a3533496356596731455a70533743437467444957717758554e5a686f676b34734270335942646a4f5434670a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d0573636f7065000207027f0005017d0201007700e611d605f601137600b605006f774259494f6479484657494e5247615575776772594179467173463144575961494a4f4c416164324158597a6b2d4941566767334450354a455f4469446d59776179576c54717a2d5238437155416d4b526150434d397a5f316f33327830435743412d463832773068655455557253624950584b39546e4a4949485771347a37445079537433523761504b4467703a356348343479456f69546e796d475837396d664c6f57334d6574412d736e69365365387259596d46334c6b4252494447455f4f206c6170746f70016465736b746f7066304a5953486b344a59436e694e3874425a5959696161362d484d55693352754555784a6455464b576e550900"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_FIELD_TYPE"
+        }
+      }
+    },
+    {
+      "id": "identity_doc_map_in_hint_list",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "DEV_B appends an empty map to its own list devices[p:<DEV_B>].missing_keys[X] (after missing_keys_device_writes_own): AI5 admits the writer, AI3 refuses the map in a list field",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §3 AI3",
+        "text": "AI3 checks only the positions §2.1 defines: an entry of roster, devices or requests, a named field of an entry map, a key of a map held in devices[k].missing_keys, and an element of a list held in roster[k].endpoints, requests[k].scope or devices[k].missing_keys[X]. An element admits an ImmutableString, a boolean or a uint; the other positions also admit a map or a list. A value of extensions[ns], an unknown field and everything below a map or list held where §2.1 defines a scalar or a list are not checked; §4 judges the field. Collaborative Text is refused everywhere."
+      },
+      "inputs": {
+        "writer": "DEV_B",
+        "writer_class": "personal",
+        "writer_ref": "p:3LcJU3p8ZrnXhcnemzHRzxki0J8iXhBHnCSzAs6z-fI",
+        "automerge_actor": "58fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9",
+        "automerge_seq": 2,
+        "unit_actor_seq": 2,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "0698ff058f2fff50d6c425c8c82a54c0a12750e64def6f6c509ab5b5318522e5",
+        "deps": [
+          "2892dbcf1b9a9a0893fd286b6383e0b1f357ea7eedd42cbb9f6f37ac6cb71792"
+        ],
+        "automerge_change": {
+          "hex": "856f4a830698ff050168012892dbcf1b9a9a0893fd286b6383e0b1f357ea7eedd42cbb9f6f37ac6cb717922058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9021f00000008010202021102130234024202560270027f007f1b7f007f1c00017f007f007f00"
+        },
+        "framed_plaintext": {
+          "hex": "82015872856f4a830698ff050168012892dbcf1b9a9a0893fd286b6383e0b1f357ea7eedd42cbb9f6f37ac6cb717922058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9021f00000008010202021102130234024202560270027f007f1b7f007f1c00017f007f007f00"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "change.C0_initial",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.C1_fill",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.M0_entry_dev_b",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          },
+          {
+            "case": "change.M1_dev_b_writes_hint",
+            "field": "automerge_change_hex",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "INVALID_FIELD_TYPE"
+        }
+      }
+    },
+    {
       "id": "identity_snapshot_equivalence",
       "type": "behavioral",
       "kind": "identity_document",
@@ -10509,6 +11140,314 @@
         },
         "sha256": {
           "hex": "d795c20dfe2d69ae1ab730ae168032856b4f23e2b6a8cf7e478a592e4871f3f2"
+        }
+      }
+    },
+    {
+      "id": "change.T1_root_extension_int",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change T1_root_extension_int by OWNER (unit actor sequence 3, control_ref P4_register_dev_b_approved)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a8343034f6a0173019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020202150f340142025602570170027f007f077f0d636f6d2e6578616d706c652e6e017f017f14057f00"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "43034f6a9f66a315ac9f79ba41b011c9b85ff2190bca9c622091ebf22112c237",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "8201587d856f4a8343034f6a0173019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020202150f340142025602570170027f007f077f0d636f6d2e6578616d706c652e6e017f017f14057f00"
+        },
+        "sha256": {
+          "hex": "27b54235a3bd863eae7facecc3a26f3448271af65954c698c51616ee3f2730c3"
+        }
+      }
+    },
+    {
+      "id": "change.T1_root_extension_f64",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change T1_root_extension_f64 by OWNER (unit actor sequence 3, control_ref P4_register_dev_b_approved)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83f480f962017b019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020202150f340142025603570870027f007f077f0d636f6d2e6578616d706c652e66017f017f8501000000000000f83f7f00"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "f480f9625ccb8cb8b2e20e04f77609dddf841d6dba8dbeaac6a09ec453023055",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015885856f4a83f480f962017b019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000801020202150f340142025603570870027f007f077f0d636f6d2e6578616d706c652e66017f017f8501000000000000f83f7f00"
+        },
+        "sha256": {
+          "hex": "ee3a9151e10555afa9e1704d1a3b8c45214f43ee8898a9e19e8d404e16e55f2b"
+        }
+      }
+    },
+    {
+      "id": "change.T1_root_extension_null",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change T1_root_extension_null by OWNER (unit actor sequence 3, control_ref P4_register_dev_b_approved)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a839ab686320170019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000701020202150f34014202560270027f007f077f0d636f6d2e6578616d706c652e7a017f017f007f00"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "9ab6863211e5a2585f7f532906fc300272d5efbaf0989aca1e9920531a647f25",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "8201587a856f4a839ab686320170019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000701020202150f34014202560270027f007f077f0d636f6d2e6578616d706c652e7a017f017f007f00"
+        },
+        "sha256": {
+          "hex": "0ac198987bf4c90680bda4f7b27b82573d054ebccd6bb864262abb34bf29eecd"
+        }
+      }
+    },
+    {
+      "id": "change.T1_root_map_in_endpoints",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change T1_root_map_in_endpoints by OWNER (unit actor sequence 3, control_ref P4_register_dev_b_approved)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83645d7ae30168019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a031700000008010202021102130234024202560270027f007f0a7f007f0d00017f007f007f00"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "645d7ae3148e42ac51d32580f108e9e4b787a4bb62488c360f89f0b4ac7cec0e",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015872856f4a83645d7ae30168019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a031700000008010202021102130234024202560270027f007f0a7f007f0d00017f007f007f00"
+        },
+        "sha256": {
+          "hex": "81d893ef5168eea7aea368efbc73ba8eced0d5cc269ef48282a39cafc794f3d7"
+        }
+      }
+    },
+    {
+      "id": "change.T1_root_int_below_name",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change T1_root_int_below_name by OWNER (unit actor sequence 3, control_ref P4_register_dev_b_approved)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83e566f56b0178019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000a010202031508340142035603570170037102730202007e08177e046e616d650178027e00017e00147f7e01007f007f0b"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "e566f56b5e5103030c284f801e1eb873347b18e3153ce8f2fe4e457606c07ec8",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015882856f4a83e566f56b0178019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000a010202031508340142035603570170037102730202007e08177e046e616d650178027e00017e00147f7e01007f007f0b"
+        },
+        "sha256": {
+          "hex": "4f562265d8ddadb5b1c590cdc436a8907c93e0c83754331e6a83642d5e968375"
+        }
+      }
+    },
+    {
+      "id": "change.T1_root_unknown_field_int",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change T1_root_unknown_field_int by OWNER (unit actor sequence 3, control_ref P4_register_dev_b_approved)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83eeb62c14016a019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a031700000008010202021506340142025602570170027f007f087f046e6f7465017f017f147b7f00"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "eeb62c1421362ca3b1be47cdeb4a8b4375143f64f1cc220d1e6cba6c9d2947c3",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015874856f4a83eeb62c14016a019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a031700000008010202021506340142025602570170027f007f087f046e6f7465017f017f147b7f00"
+        },
+        "sha256": {
+          "hex": "af93f6c314552318fcc357dbb2c0c5ec1015a3031c90bfd2c59f6e392d769327"
+        }
+      }
+    },
+    {
+      "id": "change.T1_root_f64_label",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change T1_root_f64_label by OWNER (unit actor sequence 3, control_ref P4_register_dev_b_approved)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a8323f419d9017b019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000a01020202150734014202560357087002710273027f007f147f056c6162656c017f017f8501000000000000f83f7f017f007f15"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "23f419d926a86efa920bffaa8fc52cb44996497ae1b893e79cb3adf902470c3b",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015885856f4a8323f419d9017b019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000a01020202150734014202560357087002710273027f007f147f056c6162656c017f017f8501000000000000f83f7f017f007f15"
+        },
+        "sha256": {
+          "hex": "35a2ff9a24839c205a1ea8a4fb11a0ef0a4cebcfea53bc5a87bb506ff180d97a"
+        }
+      }
+    },
+    {
+      "id": "change.T1_root_null_platform",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change T1_root_null_platform by OWNER (unit actor sequence 3, control_ref P4_register_dev_b_approved)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a8334648237016b019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000701020202150a34014202560270027f007f147f08706c6174666f726d017f017f007f00"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "34648237eeb80a2cdaf45869e1522ad7aaaa912ae57477b846fdc5281dcc8b68",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015875856f4a8334648237016b019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000701020202150a34014202560270027f007f147f08706c6174666f726d017f017f007f00"
+        },
+        "sha256": {
+          "hex": "b6c1689ad52ed1423428e1c998fa541c39b619069d875f05a3e6cbc5f2997002"
+        }
+      }
+    },
+    {
+      "id": "change.T1_root_map_for_endpoints",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change T1_root_map_for_endpoints by OWNER (unit actor sequence 3, control_ref P4_register_dev_b_approved)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83d59bbf20018501019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000a01020203150d340142035604570870037102730202007e08177e09656e64706f696e74730161027e00017e008501000000000000f83f7e01007f007f0a"
+        },
+        "writer": "OWNER",
+        "writer_class": "root",
+        "writer_ref": "p:Fy0vwk0hku1XAyeaSdXbn3_ok1sBJQk5dvbpBs2AEh0",
+        "automerge_actor": "30b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "d59bbf20a35223947c5973508e01b3dc36df785183e27c232f626d0c005a88fe",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015890856f4a83d59bbf20018501019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b12030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a03170000000a01020203150d340142035604570870037102730202007e08177e09656e64706f696e74730161027e00017e008501000000000000f83f7e01007f007f0a"
+        },
+        "sha256": {
+          "hex": "d50ba30d15be2feb78969cb13e6a7196ed12052ad27d46e345be7e8e4b0fd312"
+        }
+      }
+    },
+    {
+      "id": "change.T1_pair_j_map_in_scope",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change T1_pair_j_map_in_scope by PAIR_J (unit actor sequence 1, control_ref P2_pairing_device)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a83868e3653018604019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b120c6751f87d0911fa8618fb9eda15ec9d8c20a9b4d35ee86b9ea9090a58dda9bed01170000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0a0104020611041305155e34024208560e57fd0170027f0108007f060617021d00087f0000077e001e792d703a3533496356596731455a70533743437467444957717758554e5a686f676b34734270335942646a4f5434670a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d0573636f7065000207027f0005017d0201007700e611d605f601137600b605006f774259494f6479484657494e5247615575776772594179467173463144575961494a4f4c416164324158597a6b2d4941566767334450354a455f4469446d59776179576c54717a2d5238437155416d4b526150434d397a5f316f33327830435743412d463832773068655455557253624950584b39546e4a4949485771347a37445079537433523761504b4467703a356348343479456f69546e796d475837396d664c6f57334d6574412d736e69365365387259596d46334c6b4252494447455f4f206c6170746f70016465736b746f7066304a5953486b344a59436e694e3874425a5959696161362d484d55693352754555784a6455464b576e550900"
+        },
+        "writer": "PAIR_J",
+        "writer_class": "pairing",
+        "writer_ref": "p:5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk",
+        "automerge_actor": "c6751f87d0911fa8618fb9eda15ec9d8c20a9b4d35ee86b9ea9090a58dda9bed",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "control_ref": "P2_pairing_device",
+        "change_hash": "868e36530296ec23acf1ff18c00d990648cbd70174d867fe52a24e07cd72d92d",
+        "deps": "9246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b1"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "8201590211856f4a83868e3653018604019246cb767f1e7b739a6393883d0434c6ed657a9f6568e7b52b1c0215d8b399b120c6751f87d0911fa8618fb9eda15ec9d8c20a9b4d35ee86b9ea9090a58dda9bed01170000012030b370bfab0d66ae5cd0999963acc45dd65774e933c024d307ad6f4c9bea478a0a0104020611041305155e34024208560e57fd0170027f0108007f060617021d00087f0000077e001e792d703a3533496356596731455a70533743437467444957717758554e5a686f676b34734270335942646a4f5434670a64657363726970746f720770616972696e67056c6162656c046b696e6408706c6174666f726d0573636f7065000207027f0005017d0201007700e611d605f601137600b605006f774259494f6479484657494e5247615575776772594179467173463144575961494a4f4c416164324158597a6b2d4941566767334450354a455f4469446d59776179576c54717a2d5238437155416d4b526150434d397a5f316f33327830435743412d463832773068655455557253624950584b39546e4a4949485771347a37445079537433523761504b4467703a356348343479456f69546e796d475837396d664c6f57334d6574412d736e69365365387259596d46334c6b4252494447455f4f206c6170746f70016465736b746f7066304a5953486b344a59436e694e3874425a5959696161362d484d55693352754555784a6455464b576e550900"
+        },
+        "sha256": {
+          "hex": "2bb8a195f3b1ed5d1591b07322391d765e99fc0c50b233910ebfedcbe416f196"
+        }
+      }
+    },
+    {
+      "id": "change.T1_dev_b_map_in_own_hint",
+      "type": "bytes",
+      "kind": "profile_change_framing",
+      "description": "Automerge change T1_dev_b_map_in_own_hint by DEV_B (unit actor sequence 2, control_ref P4_register_dev_b_approved)",
+      "inputs": {
+        "automerge_change_hex": {
+          "hex": "856f4a830698ff050168012892dbcf1b9a9a0893fd286b6383e0b1f357ea7eedd42cbb9f6f37ac6cb717922058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9021f00000008010202021102130234024202560270027f007f1b7f007f1c00017f007f007f00"
+        },
+        "writer": "DEV_B",
+        "writer_class": "personal",
+        "writer_ref": "p:3LcJU3p8ZrnXhcnemzHRzxki0J8iXhBHnCSzAs6z-fI",
+        "automerge_actor": "58fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9",
+        "automerge_seq": 2,
+        "unit_actor_seq": 2,
+        "control_ref": "P4_register_dev_b_approved",
+        "change_hash": "0698ff058f2fff50d6c425c8c82a54c0a12750e64def6f6c509ab5b5318522e5",
+        "deps": "2892dbcf1b9a9a0893fd286b6383e0b1f357ea7eedd42cbb9f6f37ac6cb71792"
+      },
+      "expected": {
+        "framed_cbor": {
+          "hex": "82015872856f4a830698ff050168012892dbcf1b9a9a0893fd286b6383e0b1f357ea7eedd42cbb9f6f37ac6cb717922058fa43d1b0777e60661b5ec8c03a5e46fc25301823033a53ea225574447501e9021f00000008010202021102130234024202560270027f007f1b7f007f1c00017f007f007f00"
+        },
+        "sha256": {
+          "hex": "49145fa124b15d0c3a9a0f1e136f8930625680005d35022fcadc0f9d395202bb"
         }
       }
     }

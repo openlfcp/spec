@@ -133,6 +133,20 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `identity_doc_change_after_list_entry` | validation | valid | IDENTITY-PROFILE-01 §3 | OWNER relabels its own entry devices[p:<OWNER>] while devices[p:<DEV_X>] holds the list of identity_doc_list_at_entry_key_written: admitted |
 | `identity_doc_change_after_scalar_entry` | validation | valid | IDENTITY-PROFILE-01 §3 | OWNER relabels its own entry devices[p:<OWNER>] after identity_doc_scalar_over_list_at_entry_key, while devices[p:<DEV_X>] holds the string "s": admitted |
 | `identity_doc_change_after_scalar_entry.entry` | validation | valid | IDENTITY-PROFILE-01 §4 | The entry devices[p:<OWNER>] after identity_doc_change_after_scalar_entry: valid, with label "Renamed"; the entry devices[p:<DEV_X>] does not affect it (§4 rule 1) |
+| `identity_doc_extension_int_value` | validation | valid | IDENTITY-PROFILE-01 §3 AI3 | The root writes extensions["com.example.n"] = 5 as a signed Automerge int: a namespace value is not type-checked (SOP §18), admitted |
+| `identity_doc_extension_f64_value` | validation | valid | IDENTITY-PROFILE-01 §3 AI3 | The root writes extensions["com.example.f"] = 1.5 as an Automerge f64: admitted |
+| `identity_doc_extension_null_value` | validation | valid | IDENTITY-PROFILE-01 §3 AI3 | The root writes extensions["com.example.z"] = null: admitted |
+| `identity_doc_map_in_endpoints` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §3 AI3 | The root appends an empty map to the list roster[X].endpoints: an element of a list field admits only a scalar of §2.1 |
+| `identity_doc_int_below_scalar_field` | validation | valid | IDENTITY-PROFILE-01 §3 AI3 | The root writes roster[X].name = {x: -1}, a map holding a signed Automerge int, into a field whose §2.1 type is a scalar string: nothing below the map is type-checked, admitted |
+| `identity_doc_int_below_scalar_field.entry` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | The entry roster[X] after identity_doc_int_below_scalar_field: name is not a scalar string, so §4 marks the entry invalid |
+| `identity_doc_unknown_field_int_value` | validation | valid | IDENTITY-PROFILE-01 §3 AI3 | The root writes the unknown field roster[X].note = -5 as a signed Automerge int: an unknown field is not type-checked, admitted |
+| `identity_doc_unknown_field_int_value.entry` | validation | valid | IDENTITY-PROFILE-01 §4 | The entry roster[X] after identity_doc_unknown_field_int_value: the unknown field is preserved and the entry stays valid |
+| `identity_doc_f64_in_named_field` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §3 AI3 | The root writes devices[p:<OWNER>].label = 1.5 as an Automerge f64: a named field admits only a scalar of §2.1, a map or a list |
+| `identity_doc_null_in_named_field` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §3 AI3 | The root writes devices[p:<OWNER>].platform = null: null is not a scalar of §2.1 |
+| `identity_doc_f64_below_map_in_list_field` | validation | valid | IDENTITY-PROFILE-01 §3 AI3 | The root replaces the list roster[X].endpoints with a map {a: 1.5} holding an Automerge f64: a map is admitted in a named field, and a key of a map is not a list element, so nothing below it is type-checked; admitted |
+| `identity_doc_f64_below_map_in_list_field.entry` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §4 | The entry roster[X] after identity_doc_f64_below_map_in_list_field: endpoints is not a list of strings, so §4 marks the entry invalid |
+| `identity_doc_map_in_scope` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §3 AI3 | PAIR_J creates its own request requests[p:<BRIDGE_O>] of kind 1 whose scope holds X and an empty map: AI4 admits the writer, AI3 refuses the map in a list field |
+| `identity_doc_map_in_hint_list` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §3 AI3 | DEV_B appends an empty map to its own list devices[p:<DEV_B>].missing_keys[X] (after missing_keys_device_writes_own): AI5 admits the writer, AI3 refuses the map in a list field |
 | `identity_snapshot_equivalence` | behavioral | state | IDENTITY-PROFILE-01 §2, SHARED-OBJECTS-PROFILE-01 §14 | The same document from its four units and from a Snapshot |
 | `pair_uri_roundtrip` | bytes | exact bytes | IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2 | The pairing link of PAIR_J for I |
 | `pair_uri_pair_l` | bytes | exact bytes | IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2 | The pairing link of PAIR_L for I (flow F08), registered and active at flow.pl_pairing_device_l |
@@ -281,6 +295,17 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `D1_root_scalar_over_list_at_devices_key` | OWNER | 4 | P4_register_dev_b_approved | `bbb1e8310f769034…` |
 | `D1_root_relabels_beside_list_entry` | OWNER | 4 | P4_register_dev_b_approved | `e89a10c4a78bc5c8…` |
 | `D2_root_relabels_beside_scalar_entry` | OWNER | 5 | P4_register_dev_b_approved | `b5a17fef116cb33e…` |
+| `T1_root_extension_int` | OWNER | 3 | P4_register_dev_b_approved | `43034f6a9f66a315…` |
+| `T1_root_extension_f64` | OWNER | 3 | P4_register_dev_b_approved | `f480f9625ccb8cb8…` |
+| `T1_root_extension_null` | OWNER | 3 | P4_register_dev_b_approved | `9ab6863211e5a258…` |
+| `T1_root_map_in_endpoints` | OWNER | 3 | P4_register_dev_b_approved | `645d7ae3148e42ac…` |
+| `T1_root_int_below_name` | OWNER | 3 | P4_register_dev_b_approved | `e566f56b5e510303…` |
+| `T1_root_unknown_field_int` | OWNER | 3 | P4_register_dev_b_approved | `eeb62c1421362ca3…` |
+| `T1_root_f64_label` | OWNER | 3 | P4_register_dev_b_approved | `23f419d926a86efa…` |
+| `T1_root_null_platform` | OWNER | 3 | P4_register_dev_b_approved | `34648237eeb80a2c…` |
+| `T1_root_map_for_endpoints` | OWNER | 3 | P4_register_dev_b_approved | `d59bbf20a3522394…` |
+| `T1_pair_j_map_in_scope` | PAIR_J | 1 | P2_pairing_device | `868e36530296ec23…` |
+| `T1_dev_b_map_in_own_hint` | DEV_B | 2 | P4_register_dev_b_approved | `0698ff058f2fff50…` |
 
 Fingerprint of DEV_B: `bicr-ikmc-oec2-llzz`.
 

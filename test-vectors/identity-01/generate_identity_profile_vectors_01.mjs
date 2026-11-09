@@ -213,6 +213,39 @@ function initialContent(doc, rootLabel) {
   return CONTAINERS.every((k) => isMapAt(doc, k) && Object.keys(doc[k]).length === 0);
 }
 
+// AI3 (§3, decision I27): the positions §2.1 defines and the values they admit. An object's position is the path of
+// the operation that created it: map keys, and LIST for an element of a list.
+const LIST = Symbol("list element");
+const ENTRY_FIELDS = {
+  roster: new Set(["profile", "endpoints", "coordinator", "name", "archived"]),
+  devices: new Set(["label", "kind", "platform", "added_at", "revoked", "missing_keys"]),
+  requests: new Set(["descriptor", "pairing", "label", "kind", "scope", "platform", "requested_at"]),
+};
+function indexPosition(positions, op, id) {
+  if (!op.action.startsWith("make")) return;
+  const parent = op.obj === "_root" ? [] : positions.get(op.obj)?.path;
+  if (parent === undefined) throw new Error(`object ${op.obj} is not in the causal history`);
+  positions.set(id, { path: [...parent, op.elemId !== undefined ? LIST : op.key], type: op.action });
+}
+/** "entry", "field", "hint" or "element" for a position §2.1 defines, else null (decision I27). */
+function ai3Position(op, positions) {
+  const parent = op.obj === "_root" ? { path: [], type: "makeMap" } : positions.get(op.obj);
+  const inList = parent.type === "makeList";
+  const p = [...parent.path, inList ? LIST : op.key];
+  const [top, , field, hintKey] = p;
+  if (!Object.hasOwn(ENTRY_FIELDS, top)) return null;
+  if (p.length === 2) return "entry";
+  if (p.length === 3 && !inList && ENTRY_FIELDS[top].has(field)) return "field";
+  if (p.length === 4 && !inList && top === "devices" && field === "missing_keys") return "hint";
+  if (inList && p.length === 4 && ((top === "roster" && field === "endpoints") || (top === "requests" && field === "scope"))) return "element";
+  if (inList && p.length === 5 && top === "devices" && field === "missing_keys" && hintKey !== LIST) return "element";
+  return null;
+}
+/** A scalar of §2.1: an ImmutableString, a boolean or a uint. */
+const ai3Scalar = (op) =>
+  op.action === "set" &&
+  ((op.datatype === undefined && (typeof op.value === "string" || typeof op.value === "boolean")) || op.datatype === "uint");
+
 /**
  * The §3 diagnostic of change `r` (null when admitted), decided on its causal
  * history and its writer class at its control_ref. `held` means the
@@ -247,6 +280,9 @@ function admit(r, root = "OWNER") {
     if (op.action === "makeMap" && entryContainers.includes(op.obj)) entryMaps.add(id);
   };
   for (const d of history) d.ops.forEach((op, i) => index(op, `${d.startOp + i}@${d.actor}`));
+  // AI3 positions: every object of the causal history, hidden and deleted ones included, by the path of its creation.
+  const positions = new Map();
+  for (const d of history) d.ops.forEach((op, i) => indexPosition(positions, op, `${d.startOp + i}@${d.actor}`));
   // Objects of entries (and the lists inside them) in the history: object id -> [container, key]. Only an entry map
   // has fields: a list, a scalar or a Text at an entry key is not one, and the engine cannot be asked for its fields.
   const entryOf = new Map();
@@ -273,9 +309,13 @@ function admit(r, root = "OWNER") {
     if (entryMaps.has(op.obj) && replacesObject(op)) found.add("CONTAINER_REPLACED");
     if ((op.obj === "_root" && (op.key === "profile" || op.key === "identity")) || (identityOid && op.obj === identityOid)) found.add("IMMUTABLE_FIELD_MUTATED");
     if (op.action === "makeText") found.add("INVALID_FIELD_TYPE");
-    // §2.1: the profile's scalars are ImmutableString, boolean and uint; an int, float, counter or timestamp is not one (AI3).
-    if (op.action === "set" && ["int", "float64", "counter", "timestamp"].includes(op.datatype)) found.add("INVALID_FIELD_TYPE");
+    // AI3 (decision I27): at a position §2.1 defines, a scalar of §2.1; at an entry, a named field or a hint entry
+    // also a map or a list. Other positions are not checked; §4 judges a field that holds the wrong kind of value.
+    const at = ai3Position(op, positions);
+    if (at !== null && op.action !== "del" && !(ai3Scalar(op) || (at !== "element" && (op.action === "makeMap" || op.action === "makeList"))))
+      found.add("INVALID_FIELD_TYPE");
     index(op, idOf(i));
+    indexPosition(positions, op, idOf(i));
   });
   const cls = writerClass(r.writer, r.controlRef);
   if (cls === "pairing" || cls === "other") {
@@ -637,6 +677,7 @@ const RULES = {
   AI2_DEPTH: ["IDENTITY-PROFILE-01 §3 AI2", "AI2 protects an entry map of roster, devices or requests and a list or map held in a field of one, and nothing deeper: a scalar over a deeper list or map, or over a list held directly at an entry key, is admitted by AI2 and judged by §4."],
   AI2_EXT: ["IDENTITY-PROFILE-01 §3 AI2, §2.1; SHARED-OBJECTS-PROFILE-01 §18", "AI2 protects the extensions container, not a namespace value under it: a namespace value is not an entry map, and replacing it, a map by a scalar included, is admitted."],
   RESERVED: ["IDENTITY-PROFILE-01 §2.4", "Admission has no rule for the reserved root keys: a later change that writes them is admitted when §3 otherwise admits it; the value is preserved uninterpreted."],
+  AI3_POS: ["IDENTITY-PROFILE-01 §3 AI3", "AI3 checks only the positions §2.1 defines: an entry of roster, devices or requests, a named field of an entry map, a key of a map held in devices[k].missing_keys, and an element of a list held in roster[k].endpoints, requests[k].scope or devices[k].missing_keys[X]. An element admits an ImmutableString, a boolean or a uint; the other positions also admit a map or a list. A value of extensions[ns], an unknown field and everything below a map or list held where §2.1 defines a scalar or a list are not checked; §4 judges the field. Collaborative Text is refused everywhere."],
   OK: ["IDENTITY-PROFILE-01 §3", "The change passes the checks of its bytes, the sequence checks and AI0 to AI4."],
 };
 
@@ -1347,6 +1388,63 @@ function encodeTargeted(name, doc, writer, unitSeq, controlRef, makeOps) {
     "OWNER relabels its own entry devices[p:<OWNER>] after identity_doc_scalar_over_list_at_entry_key, while devices[p:<DEV_X>] holds the string \"s\": admitted", "OK");
   stateCase("identity_doc_change_after_scalar_entry.entry", after.doc, "devices", O, null,
     "The entry devices[p:<OWNER>] after identity_doc_change_after_scalar_entry: valid, with label \"Renamed\"; the entry devices[p:<DEV_X>] does not affect it (§4 rule 1)");
+}
+// AI3 positions (decision I27, from the cross-SDK review P2-1): the type check applies only where §2.1 defines a
+// position. A value of extensions[ns], an unknown field and anything below a map written into a scalar field are not
+// type-checked; a list element admits only a scalar of §2.1.
+{
+  const AT = "P4_register_dev_b_approved";
+  const B = pref("DEV_B"), X = rref("X"), O = pref("OWNER");
+  const ai3 = (id, r, want, description) => changeCase(id, r, want, description, { rule: "AI3_POS" });
+  const byRoot = (name, fn) => change(name, BASE, "OWNER", 3, AT, fn);
+  const datatypeOf = (r, key) => r.decoded.ops.find((op) => op.key === key)?.datatype ?? null;
+
+  const extInt = byRoot("T1_root_extension_int", (d) => { d.extensions["com.example.n"] = new A.Int(5); });
+  check("T1_root_extension_int.datatype", datatypeOf(extInt.r, "com.example.n"), "int");
+  ai3("identity_doc_extension_int_value", extInt.r, null,
+    "The root writes extensions[\"com.example.n\"] = 5 as a signed Automerge int: a namespace value is not type-checked (SOP §18), admitted");
+  const extF64 = byRoot("T1_root_extension_f64", (d) => { d.extensions["com.example.f"] = new A.Float64(1.5); });
+  check("T1_root_extension_f64.datatype", datatypeOf(extF64.r, "com.example.f"), "float64");
+  ai3("identity_doc_extension_f64_value", extF64.r, null,
+    "The root writes extensions[\"com.example.f\"] = 1.5 as an Automerge f64: admitted");
+  ai3("identity_doc_extension_null_value", byRoot("T1_root_extension_null", (d) => { d.extensions["com.example.z"] = null; }).r, null,
+    "The root writes extensions[\"com.example.z\"] = null: admitted");
+
+  ai3("identity_doc_map_in_endpoints", byRoot("T1_root_map_in_endpoints", (d) => { d.roster[X].endpoints.push({}); }).r, "INVALID_FIELD_TYPE",
+    "The root appends an empty map to the list roster[X].endpoints: an element of a list field admits only a scalar of §2.1");
+  const name = byRoot("T1_root_int_below_name", (d) => { d.roster[X].name = {}; d.roster[X].name.x = new A.Int(-1); });
+  check("T1_root_int_below_name.datatype", datatypeOf(name.r, "x"), "int");
+  ai3("identity_doc_int_below_scalar_field", name.r, null,
+    "The root writes roster[X].name = {x: -1}, a map holding a signed Automerge int, into a field whose §2.1 type is a scalar string: nothing below the map is type-checked, admitted");
+  stateCase("identity_doc_int_below_scalar_field.entry", name.doc, "roster", X, "INVALID_FIELD_TYPE",
+    "The entry roster[X] after identity_doc_int_below_scalar_field: name is not a scalar string, so §4 marks the entry invalid");
+  const unknown = byRoot("T1_root_unknown_field_int", (d) => { d.roster[X].note = new A.Int(-5); });
+  check("T1_root_unknown_field_int.datatype", datatypeOf(unknown.r, "note"), "int");
+  ai3("identity_doc_unknown_field_int_value", unknown.r, null,
+    "The root writes the unknown field roster[X].note = -5 as a signed Automerge int: an unknown field is not type-checked, admitted");
+  stateCase("identity_doc_unknown_field_int_value.entry", unknown.doc, "roster", X, null,
+    "The entry roster[X] after identity_doc_unknown_field_int_value: the unknown field is preserved and the entry stays valid");
+  const label = byRoot("T1_root_f64_label", (d) => { d.devices[O].label = new A.Float64(1.5); });
+  check("T1_root_f64_label.datatype", datatypeOf(label.r, "label"), "float64");
+  ai3("identity_doc_f64_in_named_field", label.r, "INVALID_FIELD_TYPE",
+    "The root writes devices[p:<OWNER>].label = 1.5 as an Automerge f64: a named field admits only a scalar of §2.1, a map or a list");
+  ai3("identity_doc_null_in_named_field", byRoot("T1_root_null_platform", (d) => { d.devices[O].platform = null; }).r, "INVALID_FIELD_TYPE",
+    "The root writes devices[p:<OWNER>].platform = null: null is not a scalar of §2.1");
+  const listAsMap = byRoot("T1_root_map_for_endpoints", (d) => { d.roster[X].endpoints = {}; d.roster[X].endpoints.a = new A.Float64(1.5); });
+  ai3("identity_doc_f64_below_map_in_list_field", listAsMap.r, null,
+    "The root replaces the list roster[X].endpoints with a map {a: 1.5} holding an Automerge f64: a map is admitted in a named field, and a key of a map is not a list element, so nothing below it is type-checked; admitted");
+  stateCase("identity_doc_f64_below_map_in_list_field.entry", listAsMap.doc, "roster", X, "INVALID_FIELD_TYPE",
+    "The entry roster[X] after identity_doc_f64_below_map_in_list_field: endpoints is not a list of strings, so §4 marks the entry invalid");
+
+  ai3("identity_doc_map_in_scope",
+    change("T1_pair_j_map_in_scope", BASE, "PAIR_J", 1, "P2_pairing_device", (d) => {
+      put(d.requests, pref("BRIDGE_O"), reqEntry("BRIDGE_O", "PAIR_J", { kind: 1, scope: [X, {}] }));
+    }).r, "INVALID_FIELD_TYPE",
+    "PAIR_J creates its own request requests[p:<BRIDGE_O>] of kind 1 whose scope holds X and an empty map: AI4 admits the writer, AI3 refuses the map in a list field");
+  const withHint = historyOf([CHANGES.get("M1_dev_b_writes_hint").hash]);
+  ai3("identity_doc_map_in_hint_list",
+    change("T1_dev_b_map_in_own_hint", withHint, "DEV_B", 2, AT, (d) => { d.devices[B].missing_keys[X].push({}); }).r, "INVALID_FIELD_TYPE",
+    "DEV_B appends an empty map to its own list devices[p:<DEV_B>].missing_keys[X] (after missing_keys_device_writes_own): AI5 admits the writer, AI3 refuses the map in a list field");
 }
 {
   const units = replay(["C0_initial", "C1_fill", "J1_own_request", "J2_continues_own"]).doc;
