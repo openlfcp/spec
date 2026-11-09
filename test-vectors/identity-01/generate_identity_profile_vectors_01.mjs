@@ -1490,7 +1490,7 @@ add({
 }
 const joinUri = legacy.cases.find((c) => c.id === "invite_uri").expected.uri;
 function parsePair(uri) {
-  const m = /^lfcp:\/\/pair\/([A-Za-z0-9_-]{43})\?([^#]*)#secret=([A-Za-z0-9_-]+)$/.exec(uri);
+  const m = /^lfcp:\/\/pair\/([A-Za-z0-9_-]{43})\?([^#]*)#secret=([A-Za-z0-9_-]+)$/.exec(uri.replace(/^lfcp:\/\/pair\//i, "lfcp://pair/"));
   if (!m) return "not a pairing link";
   const params = new URLSearchParams(m[2]);
   const device = params.get("device");
@@ -1535,6 +1535,16 @@ linkCase("pair_uri_device_mismatch", pairUri(principal("DEV_B").id), "pair", "A 
     "The link of PAIR_J for I with the endpoint wss:sync.example: the scheme is not followed by \"://\", rejected");
 }
 {
+  // §5.2 (decision I32): the scheme lfcp and the host pair are matched case-insensitively (RFC 3986 §3.1, §3.2.2).
+  const prefix = "LFCP://PAIR/";
+  const uri = prefix + pairUri().slice("lfcp://pair/".length);
+  check("pair_uri_prefix_upper_case.parse", [uri.startsWith("lfcp://pair/"), parsePair(uri)], [false, null]);
+  add({ id: "pair_uri_prefix_upper_case", type: "validation", kind: "pair_uri",
+    description: "The link of PAIR_J for I written with the prefix LFCP://PAIR/: the scheme and the host are case-insensitive, accepted on parse",
+    rule: { section: "IDENTITY-PROFILE-01 §5.2; RFC 3986 §3.1, §3.2.2", text: "A pairing parser matches the scheme lfcp and the host pair case-insensitively; the rest of the link is unchanged." },
+    inputs: { uri, parser: "pair", uri_prefix: prefix }, expected: { valid: true } });
+}
+{
   // §5.2: the receiving client recomputes J's descriptor from the secret and checks it against device, opens the Resource
   // as J, verifies its Genesis profile and that J is a registered, active kind-2 device of its owner, before any other use.
   const GENESIS = { I: "P0_genesis_i", Z: "link.z_genesis" };
@@ -1546,7 +1556,7 @@ linkCase("pair_uri_device_mismatch", pairUri(principal("DEV_B").id), "pair", "A 
   const rawPublic = (pkcs8Prefix, key) =>
     Buffer.from(createPublicKey(createPrivateKey({ key: Buffer.concat([Buffer.from(pkcs8Prefix, "hex"), key]), format: "der", type: "pkcs8" })).export({ format: "jwk" }).x, "base64url");
   function checkLink(uri, head) {
-    const m = /^lfcp:\/\/pair\/([A-Za-z0-9_-]{43})\?([^#]*)#secret=([A-Za-z0-9_-]+)$/.exec(uri);
+    const m = /^lfcp:\/\/pair\/([A-Za-z0-9_-]{43})\?([^#]*)#secret=([A-Za-z0-9_-]+)$/.exec(uri.replace(/^lfcp:\/\/pair\//i, "lfcp://pair/"));
     if (!m) return { detail: "not a pairing link" };
     const sec = Buffer.from(m[3], "base64url");
     if (sec.length !== 73 || sec[0] !== 0xa3 || sec[4] !== 0x58 || sec[38] !== 0x02 || sec[39] !== 0x58) return { detail: "the secret is not an invite-secret" };

@@ -7006,6 +7006,24 @@
       }
     },
     {
+      "id": "pair_uri_prefix_upper_case",
+      "type": "validation",
+      "kind": "pair_uri",
+      "description": "The link of PAIR_J for I written with the prefix LFCP://PAIR/: the scheme and the host are case-insensitive, accepted on parse",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §5.2; RFC 3986 §3.1, §3.2.2",
+        "text": "A pairing parser matches the scheme lfcp and the host pair case-insensitively; the rest of the link is unchanged."
+      },
+      "inputs": {
+        "uri": "LFCP://PAIR/s0mpI-CvMOY8lAmqfXBOyuKnSY9ZNiiaxj-SiybjLP0?endpoint=wss%3A%2F%2Fsync-a.example.test%2Fv1%2Fws&device=5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk#secret=owABAVggFPnMsdNuhnfMO8rhbUQUw1WOCLYA1Vb04p3mc_2NSdECWCB2AOH63_ga8G9L8FA3LNr7Tyct4h5B4qp77imkoEJslA",
+        "parser": "pair",
+        "uri_prefix": "LFCP://PAIR/"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
       "id": "pair_uri_checks_pass",
       "type": "validation",
       "kind": "pair_uri",

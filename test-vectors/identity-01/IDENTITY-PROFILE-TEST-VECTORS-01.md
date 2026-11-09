@@ -157,6 +157,7 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `pair_uri_endpoint_upper_case_scheme` | validation | valid | IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2, §16 | The link of PAIR_J for I with the endpoint WSS://sync.example: the scheme is compared case-insensitively, accepted on parse |
 | `pair_uri_endpoint_https` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2, §16 | The link of PAIR_J for I with the endpoint https://sync.example: not ws or wss, rejected |
 | `pair_uri_endpoint_without_authority` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2, §16 | The link of PAIR_J for I with the endpoint wss:sync.example: the scheme is not followed by "://", rejected |
+| `pair_uri_prefix_upper_case` | validation | valid | IDENTITY-PROFILE-01 §5.2; RFC 3986 §3.1, §3.2.2 | The link of PAIR_J for I written with the prefix LFCP://PAIR/: the scheme and the host are case-insensitive, accepted on parse |
 | `pair_uri_checks_pass` | validation | valid | IDENTITY-PROFILE-01 §5.2 | Control: the link of PAIR_J against I at P2: every check passes |
 | `pair_uri_genesis_not_identity` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2 | The link of PAIR_Z, a registered, active kind-2 device of OWNER in Z, whose Genesis profile is org.lfcp.test.raw.v1 |
 | `pair_uri_device_kind_0` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2 | A link carrying the keys of DEV_A, a registered, active kind-0 device of OWNER in I, with device = DEV_A |
