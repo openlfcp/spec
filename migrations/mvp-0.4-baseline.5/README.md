@@ -32,5 +32,7 @@ position; every published case keeps its verdict and its bytes.
   `pair_uri_endpoint_ws_loopback` and
   `pair_uri_endpoint_upper_case_scheme` (accepted on parse),
   `pair_uri_endpoint_https` and `pair_uri_endpoint_without_authority`
-  (`PAIRING_LINK_REJECTED`), and `pair_uri_prefix_upper_case` (the prefix
+  (`PAIRING_LINK_REJECTED`), `pair_uri_endpoint_at_in_path` and
+  `pair_uri_endpoint_at_in_query` (an `@` outside the authority, accepted
+  on parse), and `pair_uri_prefix_upper_case` (the prefix
   `LFCP://PAIR/`, accepted on parse; IDENTITY-PROFILE-01 §5.2, decision I32).

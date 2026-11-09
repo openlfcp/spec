@@ -7006,6 +7006,42 @@
       }
     },
     {
+      "id": "pair_uri_endpoint_at_in_path",
+      "type": "validation",
+      "kind": "pair_uri",
+      "description": "The link of PAIR_J for I with the endpoint wss://sync.example/users/@alice: an \"@\" in the path is not user information, accepted on parse",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2, §16",
+        "text": "A receiver rejects a pairing link whose endpoint value is invalid: its scheme, compared case-insensitively, is not ws or wss, or is not followed by \"://\". A sender uses wss, or ws for a loopback address."
+      },
+      "inputs": {
+        "uri": "lfcp://pair/s0mpI-CvMOY8lAmqfXBOyuKnSY9ZNiiaxj-SiybjLP0?endpoint=wss%3A%2F%2Fsync.example%2Fusers%2F%40alice&device=5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk#secret=owABAVggFPnMsdNuhnfMO8rhbUQUw1WOCLYA1Vb04p3mc_2NSdECWCB2AOH63_ga8G9L8FA3LNr7Tyct4h5B4qp77imkoEJslA",
+        "parser": "pair",
+        "endpoint": "wss://sync.example/users/@alice"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "pair_uri_endpoint_at_in_query",
+      "type": "validation",
+      "kind": "pair_uri",
+      "description": "The link of PAIR_J for I with the endpoint wss://sync.example?user=a@b: an \"@\" in the query is not user information, accepted on parse",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2, §16",
+        "text": "A receiver rejects a pairing link whose endpoint value is invalid: its scheme, compared case-insensitively, is not ws or wss, or is not followed by \"://\". A sender uses wss, or ws for a loopback address."
+      },
+      "inputs": {
+        "uri": "lfcp://pair/s0mpI-CvMOY8lAmqfXBOyuKnSY9ZNiiaxj-SiybjLP0?endpoint=wss%3A%2F%2Fsync.example%3Fuser%3Da%40b&device=5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk#secret=owABAVggFPnMsdNuhnfMO8rhbUQUw1WOCLYA1Vb04p3mc_2NSdECWCB2AOH63_ga8G9L8FA3LNr7Tyct4h5B4qp77imkoEJslA",
+        "parser": "pair",
+        "endpoint": "wss://sync.example?user=a@b"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
       "id": "pair_uri_prefix_upper_case",
       "type": "validation",
       "kind": "pair_uri",

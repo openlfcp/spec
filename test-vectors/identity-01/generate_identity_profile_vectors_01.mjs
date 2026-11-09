@@ -1533,6 +1533,10 @@ linkCase("pair_uri_device_mismatch", pairUri(principal("DEV_B").id), "pair", "A 
     "The link of PAIR_J for I with the endpoint https://sync.example: not ws or wss, rejected");
   endpointCase("pair_uri_endpoint_without_authority", "wss:sync.example",
     "The link of PAIR_J for I with the endpoint wss:sync.example: the scheme is not followed by \"://\", rejected");
+  endpointCase("pair_uri_endpoint_at_in_path", "wss://sync.example/users/@alice",
+    "The link of PAIR_J for I with the endpoint wss://sync.example/users/@alice: an \"@\" in the path is not user information, accepted on parse");
+  endpointCase("pair_uri_endpoint_at_in_query", "wss://sync.example?user=a@b",
+    "The link of PAIR_J for I with the endpoint wss://sync.example?user=a@b: an \"@\" in the query is not user information, accepted on parse");
 }
 {
   // §5.2 (decision I32): the scheme lfcp and the host pair are matched case-insensitively (RFC 3986 §3.1, §3.2.2).
