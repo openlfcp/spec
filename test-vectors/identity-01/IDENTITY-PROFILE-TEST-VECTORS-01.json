@@ -6926,6 +6926,86 @@
       }
     },
     {
+      "id": "pair_uri_endpoint_ws_loopback",
+      "type": "validation",
+      "kind": "pair_uri",
+      "description": "The link of PAIR_J for I with the endpoint ws://127.0.0.1:8787, what a sender writes for a loopback server: accepted on parse",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2, §16",
+        "text": "A receiver rejects a pairing link whose endpoint value is invalid: its scheme, compared case-insensitively, is not ws or wss, or is not followed by \"://\". A sender uses wss, or ws for a loopback address."
+      },
+      "inputs": {
+        "uri": "lfcp://pair/s0mpI-CvMOY8lAmqfXBOyuKnSY9ZNiiaxj-SiybjLP0?endpoint=ws%3A%2F%2F127.0.0.1%3A8787&device=5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk#secret=owABAVggFPnMsdNuhnfMO8rhbUQUw1WOCLYA1Vb04p3mc_2NSdECWCB2AOH63_ga8G9L8FA3LNr7Tyct4h5B4qp77imkoEJslA",
+        "parser": "pair",
+        "endpoint": "ws://127.0.0.1:8787"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "pair_uri_endpoint_upper_case_scheme",
+      "type": "validation",
+      "kind": "pair_uri",
+      "description": "The link of PAIR_J for I with the endpoint WSS://sync.example: the scheme is compared case-insensitively, accepted on parse",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2, §16",
+        "text": "A receiver rejects a pairing link whose endpoint value is invalid: its scheme, compared case-insensitively, is not ws or wss, or is not followed by \"://\". A sender uses wss, or ws for a loopback address."
+      },
+      "inputs": {
+        "uri": "lfcp://pair/s0mpI-CvMOY8lAmqfXBOyuKnSY9ZNiiaxj-SiybjLP0?endpoint=WSS%3A%2F%2Fsync.example&device=5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk#secret=owABAVggFPnMsdNuhnfMO8rhbUQUw1WOCLYA1Vb04p3mc_2NSdECWCB2AOH63_ga8G9L8FA3LNr7Tyct4h5B4qp77imkoEJslA",
+        "parser": "pair",
+        "endpoint": "WSS://sync.example"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "pair_uri_endpoint_https",
+      "type": "validation",
+      "kind": "pair_uri",
+      "description": "The link of PAIR_J for I with the endpoint https://sync.example: not ws or wss, rejected",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2, §16",
+        "text": "A receiver rejects a pairing link whose endpoint value is invalid: its scheme, compared case-insensitively, is not ws or wss, or is not followed by \"://\". A sender uses wss, or ws for a loopback address."
+      },
+      "inputs": {
+        "uri": "lfcp://pair/s0mpI-CvMOY8lAmqfXBOyuKnSY9ZNiiaxj-SiybjLP0?endpoint=https%3A%2F%2Fsync.example&device=5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk#secret=owABAVggFPnMsdNuhnfMO8rhbUQUw1WOCLYA1Vb04p3mc_2NSdECWCB2AOH63_ga8G9L8FA3LNr7Tyct4h5B4qp77imkoEJslA",
+        "parser": "pair",
+        "endpoint": "https://sync.example"
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PAIRING_LINK_REJECTED",
+          "detail": "endpoint: the scheme is not ws or wss"
+        }
+      }
+    },
+    {
+      "id": "pair_uri_endpoint_without_authority",
+      "type": "validation",
+      "kind": "pair_uri",
+      "description": "The link of PAIR_J for I with the endpoint wss:sync.example: the scheme is not followed by \"://\", rejected",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2, §16",
+        "text": "A receiver rejects a pairing link whose endpoint value is invalid: its scheme, compared case-insensitively, is not ws or wss, or is not followed by \"://\". A sender uses wss, or ws for a loopback address."
+      },
+      "inputs": {
+        "uri": "lfcp://pair/s0mpI-CvMOY8lAmqfXBOyuKnSY9ZNiiaxj-SiybjLP0?endpoint=wss%3Async.example&device=5cH44yEoiTnymGX79mfLoW3MetA-sni6Se8rYYmF3Lk#secret=owABAVggFPnMsdNuhnfMO8rhbUQUw1WOCLYA1Vb04p3mc_2NSdECWCB2AOH63_ga8G9L8FA3LNr7Tyct4h5B4qp77imkoEJslA",
+        "parser": "pair",
+        "endpoint": "wss:sync.example"
+      },
+      "expected": {
+        "valid": false,
+        "error": {
+          "code": "PAIRING_LINK_REJECTED",
+          "detail": "endpoint: no authority after the scheme"
+        }
+      }
+    },
+    {
       "id": "pair_uri_checks_pass",
       "type": "validation",
       "kind": "pair_uri",

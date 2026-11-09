@@ -153,6 +153,10 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `pair_uri_rejected_by_join_parser` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2 | An invitation parser receives the pairing link |
 | `join_uri_rejected_by_pair_parser` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2 | A pairing parser receives the invite_uri of LFCP-TEST-VECTORS-01 |
 | `pair_uri_device_mismatch` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2 | A pairing link whose device parameter is DEV_B while the secret is PAIR_J's |
+| `pair_uri_endpoint_ws_loopback` | validation | valid | IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2, §16 | The link of PAIR_J for I with the endpoint ws://127.0.0.1:8787, what a sender writes for a loopback server: accepted on parse |
+| `pair_uri_endpoint_upper_case_scheme` | validation | valid | IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2, §16 | The link of PAIR_J for I with the endpoint WSS://sync.example: the scheme is compared case-insensitively, accepted on parse |
+| `pair_uri_endpoint_https` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2, §16 | The link of PAIR_J for I with the endpoint https://sync.example: not ws or wss, rejected |
+| `pair_uri_endpoint_without_authority` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2, §16 | The link of PAIR_J for I with the endpoint wss:sync.example: the scheme is not followed by "://", rejected |
 | `pair_uri_checks_pass` | validation | valid | IDENTITY-PROFILE-01 §5.2 | Control: the link of PAIR_J against I at P2: every check passes |
 | `pair_uri_genesis_not_identity` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2 | The link of PAIR_Z, a registered, active kind-2 device of OWNER in Z, whose Genesis profile is org.lfcp.test.raw.v1 |
 | `pair_uri_device_kind_0` | validation | `PAIRING_LINK_REJECTED` | IDENTITY-PROFILE-01 §5.2 | A link carrying the keys of DEV_A, a registered, active kind-0 device of OWNER in I, with device = DEV_A |

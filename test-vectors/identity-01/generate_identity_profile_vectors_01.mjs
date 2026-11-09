@@ -1507,6 +1507,34 @@ linkCase("pair_uri_rejected_by_join_parser", pairUri(), "join", "An invitation p
 linkCase("join_uri_rejected_by_pair_parser", joinUri, "pair", "A pairing parser receives the invite_uri of LFCP-TEST-VECTORS-01", ["IDENTITY-PROFILE-01 §5.2", "A pairing parser rejects a lfcp://join/ link."]);
 linkCase("pair_uri_device_mismatch", pairUri(principal("DEV_B").id), "pair", "A pairing link whose device parameter is DEV_B while the secret is PAIR_J's", ["IDENTITY-PROFILE-01 §5.2", "The receiving client recomputes J's descriptor from the secret and verifies that its ID equals device before using the secret."]);
 {
+  // §5.2 applies W §18.2: a receiver rejects a link whose endpoint value is invalid, and W §16 says which are: a scheme
+  // other than ws or wss, compared case-insensitively, or one not followed by "://". A sender writes wss, or ws for a
+  // loopback address, so a link to a local server carries ws://127.0.0.1 and a receiver accepts it (cross-SDK review P3-1).
+  const ENDPOINT_RULE = ["IDENTITY-PROFILE-01 §5.2; LFCP-WIRE-01 §18.2, §16", "A receiver rejects a pairing link whose endpoint value is invalid: its scheme, compared case-insensitively, is not ws or wss, or is not followed by \"://\". A sender uses wss, or ws for a loopback address."];
+  const endpointError = (url) => {
+    const m = /^([A-Za-z][A-Za-z0-9+.-]*):(.*)$/s.exec(url);
+    if (!m || !["ws", "wss"].includes(m[1].toLowerCase())) return "endpoint: the scheme is not ws or wss";
+    if (!/^\/\/[^/?#]/.test(m[2])) return "endpoint: no authority after the scheme";
+    return null;
+  };
+  const endpointCase = (id, url, description) => {
+    const uri = pairUri().replace(`endpoint=${RFC3986(wire.fixtures.endpoint.url)}`, `endpoint=${RFC3986(url)}`);
+    check(`${id}.uri`, [uri !== pairUri(), parsePair(uri), new URLSearchParams(uri.split("?")[1].split("#")[0]).getAll("endpoint")], [true, null, [url]]);
+    const err = endpointError(url);
+    add({ id, type: "validation", kind: "pair_uri", description, rule: { section: ENDPOINT_RULE[0], text: ENDPOINT_RULE[1] },
+      inputs: { uri, parser: "pair", endpoint: url },
+      expected: err === null ? { valid: true } : { valid: false, error: { code: "PAIRING_LINK_REJECTED", detail: err } } });
+  };
+  endpointCase("pair_uri_endpoint_ws_loopback", "ws://127.0.0.1:8787",
+    "The link of PAIR_J for I with the endpoint ws://127.0.0.1:8787, what a sender writes for a loopback server: accepted on parse");
+  endpointCase("pair_uri_endpoint_upper_case_scheme", "WSS://sync.example",
+    "The link of PAIR_J for I with the endpoint WSS://sync.example: the scheme is compared case-insensitively, accepted on parse");
+  endpointCase("pair_uri_endpoint_https", "https://sync.example",
+    "The link of PAIR_J for I with the endpoint https://sync.example: not ws or wss, rejected");
+  endpointCase("pair_uri_endpoint_without_authority", "wss:sync.example",
+    "The link of PAIR_J for I with the endpoint wss:sync.example: the scheme is not followed by \"://\", rejected");
+}
+{
   // §5.2: the receiving client recomputes J's descriptor from the secret and checks it against device, opens the Resource
   // as J, verifies its Genesis profile and that J is a registered, active kind-2 device of its owner, before any other use.
   const GENESIS = { I: "P0_genesis_i", Z: "link.z_genesis" };
