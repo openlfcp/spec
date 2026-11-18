@@ -444,13 +444,14 @@ A section installation of a service with a control Resource C is approved withou
 | 8 | Phase A3: approvals[p:<BRIDGE_O>] in C, before registration |  | written |  |
 | 9 | Phase A4: BRIDGE_O registered in X (X) | `wire:flow.register_bridge_o_in_x` | accept |  |
 | 10 | Takeover: A crashed after A2; another managing client that implements the control profile reconciles X: it writes the same approval derived from the chains first (aside) |  | A3 repaired, then registered |  |
-| 11 | Takeover: while C is not synchronised, that client defers the registration of BRIDGE_O in X (aside) |  | deferred |  |
-| 12 | The descriptor in C differs from the request in I (aside) |  | cancelled: mismatch |  |
-| 13 | The request asks for scope [X, Y] (aside) |  | cancelled: mismatch |  |
-| 14 | The request asks for scope [Y] (aside) |  | cancelled: mismatch |  |
-| 15 | The request has pairing = p:<PAIR_J> but was signed by OWNER (request_service_valid, change S_service_valid) (aside) |  | request ignored (not signed by J); no consume, still waiting |  |
-| 16 | The pairing entry was not admitted from the service class (aside) |  | cancelled: mismatch |  |
-| 17 | The client did not create this pairing device (aside) |  | not approved; left to the client that created it |  |
-| 18 | The pairing device is already cancelled (aside) |  | not approved; already cancelled |  |
-| 19 | A personal request (kind 0) with an equal descriptor (aside) |  | cancelled: mismatch |  |
-| 20 | Their cancel: DEVICE_REVOKE {OWNER, PAIR_J, 0} (aside) | `wire:P3c_cancel_pairing` | accept |  |
+| 11 | Takeover: C's pairing[rid] names a kind-1 device of the same root with scope [X], bound through another consumed pairing device (not the J of requests[rid].args.link) (aside) |  | no approval written; not used for ordering |  |
+| 12 | Takeover: while C is not synchronised, that client defers the registration of BRIDGE_O in X (aside) |  | deferred |  |
+| 13 | The descriptor in C differs from the request in I (aside) |  | cancelled: mismatch |  |
+| 14 | The request asks for scope [X, Y] (aside) |  | cancelled: mismatch |  |
+| 15 | The request asks for scope [Y] (aside) |  | cancelled: mismatch |  |
+| 16 | The request has pairing = p:<PAIR_J> but was signed by OWNER (request_service_valid, change S_service_valid) (aside) |  | request ignored (not signed by J); no consume, still waiting |  |
+| 17 | The pairing entry was not admitted from the service class (aside) |  | cancelled: mismatch |  |
+| 18 | The client did not create this pairing device (aside) |  | not approved; left to the client that created it |  |
+| 19 | The pairing device is already cancelled (aside) |  | not approved; already cancelled |  |
+| 20 | A personal request (kind 0) with an equal descriptor (aside) |  | cancelled: mismatch |  |
+| 21 | Their cancel: DEVICE_REVOKE {OWNER, PAIR_J, 0} (aside) | `wire:P3c_cancel_pairing` | accept |  |

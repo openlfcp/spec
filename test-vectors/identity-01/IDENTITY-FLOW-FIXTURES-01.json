@@ -4022,55 +4022,60 @@
             "n": 10
           },
           {
-            "action": "Takeover: while C is not synchronised, that client defers the registration of BRIDGE_O in X",
+            "action": "Takeover: C's pairing[rid] names a kind-1 device of the same root with scope [X], bound through another consumed pairing device (not the J of requests[rid].args.link)",
             "aside": true,
             "n": 11
           },
           {
-            "action": "The descriptor in C differs from the request in I",
+            "action": "Takeover: while C is not synchronised, that client defers the registration of BRIDGE_O in X",
             "aside": true,
             "n": 12
           },
           {
-            "action": "The request asks for scope [X, Y]",
+            "action": "The descriptor in C differs from the request in I",
             "aside": true,
             "n": 13
           },
           {
-            "action": "The request asks for scope [Y]",
+            "action": "The request asks for scope [X, Y]",
             "aside": true,
             "n": 14
           },
           {
-            "action": "The request has pairing = p:<PAIR_J> but was signed by OWNER (request_service_valid, change S_service_valid)",
+            "action": "The request asks for scope [Y]",
             "aside": true,
             "n": 15
           },
           {
-            "action": "The pairing entry was not admitted from the service class",
+            "action": "The request has pairing = p:<PAIR_J> but was signed by OWNER (request_service_valid, change S_service_valid)",
             "aside": true,
             "n": 16
           },
           {
-            "action": "The client did not create this pairing device",
+            "action": "The pairing entry was not admitted from the service class",
             "aside": true,
             "n": 17
           },
           {
-            "action": "The pairing device is already cancelled",
+            "action": "The client did not create this pairing device",
             "aside": true,
             "n": 18
           },
           {
-            "action": "A personal request (kind 0) with an equal descriptor",
+            "action": "The pairing device is already cancelled",
             "aside": true,
             "n": 19
+          },
+          {
+            "action": "A personal request (kind 0) with an equal descriptor",
+            "aside": true,
+            "n": 20
           },
           {
             "action": "Their cancel: DEVICE_REVOKE {OWNER, PAIR_J, 0}",
             "case": "wire:P3c_cancel_pairing",
             "aside": true,
-            "n": 20
+            "n": 21
           }
         ]
       },
@@ -4157,17 +4162,19 @@
               "origin": "rid",
               "generation": "requests[rid].generation"
             },
+            "approval_written": true,
             "registers_before_approval": false
           },
           {
             "n": 11,
-            "outcome": "deferred"
+            "outcome": "no approval written; not used for ordering",
+            "approval_written": false,
+            "link_device": "PAIR_K",
+            "grant_pairing_device": "PAIR_J"
           },
           {
             "n": 12,
-            "outcome": "cancelled: mismatch",
-            "consume_proposed": false,
-            "cancel_reason": "mismatch"
+            "outcome": "deferred"
           },
           {
             "n": 13,
@@ -4183,36 +4190,42 @@
           },
           {
             "n": 15,
+            "outcome": "cancelled: mismatch",
+            "consume_proposed": false,
+            "cancel_reason": "mismatch"
+          },
+          {
+            "n": 16,
             "outcome": "request ignored (not signed by J); no consume, still waiting",
             "consume_proposed": false,
             "cancel_reason": null
           },
           {
-            "n": 16,
+            "n": 17,
             "outcome": "cancelled: mismatch",
             "consume_proposed": false,
             "cancel_reason": "mismatch"
           },
           {
-            "n": 17,
+            "n": 18,
             "outcome": "not approved; left to the client that created it",
             "consume_proposed": false,
             "cancel_reason": null
           },
           {
-            "n": 18,
+            "n": 19,
             "outcome": "not approved; already cancelled",
             "consume_proposed": false,
             "cancel_reason": null
           },
           {
-            "n": 19,
+            "n": 20,
             "outcome": "cancelled: mismatch",
             "consume_proposed": false,
             "cancel_reason": "mismatch"
           },
           {
-            "n": 20,
+            "n": 21,
             "outcome": "accept"
           }
         ],

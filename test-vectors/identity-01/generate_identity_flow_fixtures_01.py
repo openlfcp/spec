@@ -862,6 +862,23 @@ def build() -> None:
     assert pre_authorised(req, j_ref, pairing_c, session) == 'approve' and 'approve' not in verdicts and 'wait' not in verdicts
     assert pre_authorised(req, j_ref, None, session) == pre_authorised(None, None, pairing_c, session) == 'wait'
     d_so = digest('CERT_SO')
+
+    def repair_approval(link_device: str, consumed: dict, grant: dict, pairing_principal: str, x: str) -> bool:
+        """SERVICE-CONTROL-PROFILE-01 §7.4 Section: J from the trusted request's link, its consume with d, a grant with field 2 = J
+        binding a Service leaf of digest d and scope [x]; pairing[rid].principal is a consistency check only."""
+        d = consumed.get(link_device)
+        cert = CERTS[grant['chain'][0]]
+        return (d is not None and grant['pairing_device'] == link_device and digest(grant['chain'][0]) == d and cert['kind'] == 1
+                and cert['mask'] == [1, 2] and cert['scope'] == [x] and cert['root'] == grant['root'] and pairing_principal == cert['device'])
+
+    grant_j = case('wire:P4s_bind_bridge_o')['inputs']['body']
+    consume_j = case('wire:P3s_consume_for_bridge_o')['inputs']['body']
+    assert consume_j['device'] == grant_j['pairing_device'] == 'PAIR_J' and consume_j['reason'] == 3
+    consumed = {'PAIR_J': d_so, 'PAIR_K': d_so}
+    repaired = repair_approval('PAIR_J', consumed, grant_j, 'BRIDGE_O', 'X')
+    # The same device bound through another consumed pairing device of the same root, scope [X]: not this request's session.
+    foreign = repair_approval('PAIR_K', consumed, grant_j, 'BRIDGE_O', 'X')
+    assert repaired and not foreign
     b64 = lambda h: base64.urlsafe_b64encode(bytes.fromhex(h)).decode().rstrip('=')  # noqa: E731
     approval = {'role': 'section', 'resource': x_ref, 'principal': 'p:' + b64(SUITES['wire']['principal_bridge_o']['expected']['principal_id']['hex']),
                 'certDigest': b64(d_so), 'origin': 'rid', 'generation': 'requests[rid].generation'}
@@ -878,7 +895,9 @@ def build() -> None:
           step('Phase A3: approvals[p:<BRIDGE_O>] in C, before registration', expect='written', approval=approval),
           step('Phase A4: BRIDGE_O registered in X', 'wire:flow.register_bridge_o_in_x', 'accept', branch='X'),
           step('Takeover: A crashed after A2; another managing client that implements the control profile reconciles X: it writes the same approval derived from the chains first',
-               expect='A3 repaired, then registered', aside=True, approval=approval, registers_before_approval=False),
+               expect='A3 repaired, then registered', aside=True, approval=approval, approval_written=repaired, registers_before_approval=False),
+          step("Takeover: C's pairing[rid] names a kind-1 device of the same root with scope [X], bound through another consumed pairing device (not the J of requests[rid].args.link)",
+               expect='no approval written; not used for ordering', aside=True, approval_written=foreign, link_device='PAIR_K', grant_pairing_device=grant_j['pairing_device']),
           step('Takeover: while C is not synchronised, that client defers the registration of BRIDGE_O in X', expect='deferred', aside=True)]
          + [step(what, expect=outcome[v], aside=True, consume_proposed=False, cancel_reason=('mismatch' if v == 'mismatch' else None))
             for (what, *_), v in zip(variants, verdicts)]
