@@ -3959,6 +3959,209 @@
       "assertions": [
         "The ledger, not a complaint, drives the delivery."
       ]
+    },
+    {
+      "id": "F20_section_auto_approval",
+      "type": "behavioral",
+      "kind": "identity_flow",
+      "description": "A section installation of a service with a control Resource C is approved without the human when its request in I equals the pairing entry the service wrote in C",
+      "rule": {
+        "section": "IDENTITY-PROFILE-01 §5.3 step 4 (pre-authorised approval); SERVICE-CONTROL-PROFILE-01 §7.1, §8",
+        "text": "Only a kind-1 request of the client's own pairing device, scope exactly [X], whose descriptor equals byte for byte the pairing entry admitted from C's service class, with J not cancelled, is approved without the human; otherwise the session is cancelled and cancels{mismatch} written."
+      },
+      "inputs": {
+        "mode": "sequence",
+        "pairing_device": "PAIR_J",
+        "steps": [
+          {
+            "action": "DEV_A writes requests[rid] = pair-section X in C and creates PAIR_J",
+            "case": "wire:P2_pairing_device",
+            "n": 1
+          },
+          {
+            "action": "PAIR_J writes the kind-1 request of BRIDGE_O, scope [X]",
+            "case": "profile:request_service_valid",
+            "n": 2
+          },
+          {
+            "action": "The service class writes pairing[rid] with the same descriptor in C: every condition holds",
+            "n": 3
+          },
+          {
+            "action": "Phase A1: consume with digest(CERT_SO)",
+            "case": "wire:P3s_consume_for_bridge_o",
+            "n": 4
+          },
+          {
+            "action": "Phase A2: bind-only DEVICE_GRANT in I",
+            "case": "wire:P4s_bind_bridge_o",
+            "n": 5
+          },
+          {
+            "action": "Phase A3: approvals[p:<BRIDGE_O>] in C, before registration",
+            "n": 6
+          },
+          {
+            "action": "Phase A4: BRIDGE_O registered in X",
+            "case": "wire:flow.register_bridge_o_in_x",
+            "branch": "X",
+            "n": 7
+          },
+          {
+            "action": "The descriptor in C differs from the request in I",
+            "aside": true,
+            "n": 8
+          },
+          {
+            "action": "The request asks for scope [X, Y]",
+            "aside": true,
+            "n": 9
+          },
+          {
+            "action": "The request asks for scope [Y]",
+            "aside": true,
+            "n": 10
+          },
+          {
+            "action": "The pairing entry was not admitted from the service class",
+            "aside": true,
+            "n": 11
+          },
+          {
+            "action": "The client did not create this pairing device",
+            "aside": true,
+            "n": 12
+          },
+          {
+            "action": "The pairing device is already cancelled",
+            "aside": true,
+            "n": 13
+          },
+          {
+            "action": "A personal request (kind 0) with an equal descriptor",
+            "aside": true,
+            "n": 14
+          },
+          {
+            "action": "Their cancel: DEVICE_REVOKE {OWNER, PAIR_J, 0}",
+            "case": "wire:P3c_cancel_pairing",
+            "aside": true,
+            "n": 15
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "n": 1,
+            "outcome": "accept"
+          },
+          {
+            "n": 2,
+            "outcome": "accept"
+          },
+          {
+            "n": 3,
+            "outcome": "pre-authorised",
+            "human_comparison": false
+          },
+          {
+            "n": 4,
+            "outcome": "accept",
+            "approval": "257bfe55501cbe494398004e881120270ac92379ee641ce0324ab0097a87f3bb"
+          },
+          {
+            "n": 5,
+            "outcome": "accept",
+            "BRIDGE_O": {
+              "root": "OWNER",
+              "kind": 1,
+              "mask": [
+                1,
+                2
+              ],
+              "scope": [
+                "X"
+              ],
+              "registered": false,
+              "leaf": "CERT_SO",
+              "issuers": [
+                "DEV_A"
+              ],
+              "active": false,
+              "suspended": false,
+              "reads": false
+            }
+          },
+          {
+            "n": 6,
+            "outcome": "written",
+            "approval": {
+              "role": "section",
+              "resource": "f0JYSHk4JYCniN8tBZYYiaa6-HMUi3RuEUxJdUFKWnU",
+              "principal": "p:53IcVYg1EZpS7CCtgDIWqwXUNZhogk4sBp3YBdjOT4g",
+              "certDigest": "JXv-VVAcvklDmABOiBEgJwrJI3nuZBzgMkqwCXqH87s"
+            }
+          },
+          {
+            "n": 7,
+            "outcome": "accept"
+          },
+          {
+            "n": 8,
+            "outcome": "cancelled: mismatch",
+            "consume_proposed": false,
+            "cancel_reason": "mismatch"
+          },
+          {
+            "n": 9,
+            "outcome": "cancelled: mismatch",
+            "consume_proposed": false,
+            "cancel_reason": "mismatch"
+          },
+          {
+            "n": 10,
+            "outcome": "cancelled: mismatch",
+            "consume_proposed": false,
+            "cancel_reason": "mismatch"
+          },
+          {
+            "n": 11,
+            "outcome": "cancelled: mismatch",
+            "consume_proposed": false,
+            "cancel_reason": "mismatch"
+          },
+          {
+            "n": 12,
+            "outcome": "not approved; left to the client that created it",
+            "consume_proposed": false,
+            "cancel_reason": null
+          },
+          {
+            "n": 13,
+            "outcome": "not approved; already cancelled",
+            "consume_proposed": false,
+            "cancel_reason": null
+          },
+          {
+            "n": 14,
+            "outcome": "cancelled: mismatch",
+            "consume_proposed": false,
+            "cancel_reason": "mismatch"
+          },
+          {
+            "n": 15,
+            "outcome": "accept"
+          }
+        ],
+        "final": {
+          "approved_without_human": 1,
+          "cancelled_mismatch": 5
+        }
+      },
+      "assertions": [
+        "A personal request and the base installation are never pre-authorised; after the consume there is no cancellation."
+      ]
     }
   ]
 }
