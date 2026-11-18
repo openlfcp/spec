@@ -57,6 +57,7 @@ directory).
 | `profiles/SHARED-OBJECTS-PROFILE-01.md` | Shared Objects application profile `org.openlfcp.shared-objects.v1` (Working Draft) |
 | `profiles/SHARED-SECTIONS-PROFILE-01.md` | Shared sections application profile `org.openlfcp.shared-sections.v1` (Working Draft 0.3, ADR 0009) |
 | `profiles/IDENTITY-PROFILE-01.md` | Identity Resource profile `org.openlfcp.identity.v1` (Working Draft, ADR 0011): document, admission, pairing, reconciliation, revocation, durable operations, vectors |
+| `profiles/SERVICE-CONTROL-PROFILE-01.md` | Working Draft for MVP 0.6, not in this baseline: the control Resource profile `org.openlfcp.service-control.v1` of a service installation; listed because every file under `profiles/` is |
 | `integration/MARKDOWN-REFS-01.md` | Markdown projection reference grammar: inline and child-line placements (Working Draft) |
 | `integration/MARKDOWN-SECTIONS-01.md` | Markdown bindings of shared sections (Working Draft) |
 | `integration/SDK-SECTIONS-INTEGRATION-01.md` | SDK receipt, status and parser integration contracts for shared sections, `sections-integration/1` (Working Draft) |
