@@ -1060,6 +1060,8 @@ The receiving client MUST recompute the corresponding public Principal Descripto
 
 The fragment secret MUST NOT be logged, placed in analytics, stored in browser history by an LFCP web landing page, or transmitted to the synchronization server as an opaque URL.
 
+Carrying the URI inside the encrypted plaintext of a Data Unit is not such a transmission. A Data Profile MAY carry a bearer URI there only when it names the Resource's readers, who then hold the secret, and states that the URI stays in that Resource's history; it is still never logged (IDENTITY-PROFILE-01 §5.2, SERVICE-CONTROL-PROFILE-01 §8.3).
+
 A native LFCP client SHOULD register the `lfcp:` custom scheme. A QR code MAY contain the same URI.
 
 A web-based invite landing page requires additional care because page JavaScript can read URL fragments; such a flow is outside WIRE-01 and MUST NOT be assumed to preserve the secret from the web origin.
