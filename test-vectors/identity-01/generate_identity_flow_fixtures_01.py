@@ -820,6 +820,91 @@ def build() -> None:
           step('None of them wrote missing_keys', expect='served anyway')],
          {'I_is_a_target': True}, ['The ledger, not a complaint, drives the delivery.'], mode='independent')
 
+    # 20.
+    signed = case('profile:pairing_writes_own_service_request')
+    # The profile generator builds the entry of this signed change and of request_service_valid with the same reqEntry call.
+    req = case('profile:request_service_valid')['inputs']['entry']
+    x_ref, y_ref = (base64.urlsafe_b64encode(bytes.fromhex(WIRE['fixtures']['resources'][r]['id']['hex'])).decode().rstrip('=') for r in ('X', 'Y'))
+    assert signed['inputs']['writer'] == 'PAIR_J' and signed['inputs']['writer_class'] == 'pairing' and signed['expected']['valid']
+    assert req['scope'] == [x_ref] and req['kind'] == 1 and req['pairing'] == signed['inputs']['writer_ref']
+    by_root = case('profile:change.S_service_valid')['inputs']
+    assert by_root['writer'] == 'OWNER'
+    session = {'created_by_this_client': True, 'op': 'pair-section', 'binding': x_ref, 'pairing': req['pairing'], 'j_revoked': False}
+    pairing_c = {'descriptor': req['descriptor'], 'writer_class': 'service'}
+
+    def pre_authorised(r: dict | None, signer: str | None, p: dict | None, s: dict) -> str:
+        """IDENTITY-PROFILE-01 §5.3 step 4, pre-authorised approval: `approve`, `wait` (a record not delivered yet) or `mismatch`."""
+        if not s['created_by_this_client']:
+            return 'not this session'
+        if s['j_revoked']:
+            return 'cancelled'
+        if r is None or p is None:
+            return 'wait'
+        if signer != s['pairing']:
+            return 'ignored'
+        ok = (s['op'] == 'pair-section' and r['pairing'] == s['pairing'] and r['kind'] == 1
+              and r.get('scope') == [s['binding']] and p['writer_class'] == 'service' and p['descriptor'] == r['descriptor'])
+        return 'approve' if ok else 'mismatch'
+
+    j_ref = signed['inputs']['writer_ref']
+    other_desc = case('profile:request_valid')['inputs']['entry']
+    outcome = {'mismatch': 'cancelled: mismatch', 'not this session': 'not approved; left to the client that created it', 'cancelled': 'not approved; already cancelled',
+               'ignored': 'request ignored (not signed by J); no consume, still waiting'}
+    variants = [('The descriptor in C differs from the request in I', req, j_ref, {**pairing_c, 'descriptor': other_desc['descriptor']}, session),
+                ('The request asks for scope [X, Y]', {**req, 'scope': [x_ref, y_ref]}, j_ref, pairing_c, session),
+                ('The request asks for scope [Y]', {**req, 'scope': [y_ref]}, j_ref, pairing_c, session),
+                ('The request has pairing = p:<PAIR_J> but was signed by OWNER (request_service_valid, change S_service_valid)', req, 'p:OWNER', pairing_c, session),
+                ('The pairing entry was not admitted from the service class', req, j_ref, {**pairing_c, 'writer_class': 'other'}, session),
+                ('The client did not create this pairing device', req, j_ref, pairing_c, {**session, 'created_by_this_client': False}),
+                ('The pairing device is already cancelled', req, j_ref, pairing_c, {**session, 'j_revoked': True}),
+                ('A personal request (kind 0) with an equal descriptor', other_desc, j_ref, {**pairing_c, 'descriptor': other_desc['descriptor']}, session)]
+    verdicts = [pre_authorised(r, g, p, s) for _, r, g, p, s in variants]
+    assert pre_authorised(req, j_ref, pairing_c, session) == 'approve' and 'approve' not in verdicts and 'wait' not in verdicts
+    assert pre_authorised(req, j_ref, None, session) == pre_authorised(None, None, pairing_c, session) == 'wait'
+    d_so = digest('CERT_SO')
+
+    def repair_approval(link_device: str, consumed: dict, grant: dict, pairing_principal: str, x: str) -> bool:
+        """SERVICE-CONTROL-PROFILE-01 §7.4 Section: J from the trusted request's link, its consume with d, a grant with field 2 = J
+        binding a Service leaf of digest d and scope [x]; pairing[rid].principal is a consistency check only."""
+        d = consumed.get(link_device)
+        cert = CERTS[grant['chain'][0]]
+        return (d is not None and grant['pairing_device'] == link_device and digest(grant['chain'][0]) == d and cert['kind'] == 1
+                and cert['mask'] == [1, 2] and cert['scope'] == [x] and cert['root'] == grant['root'] and pairing_principal == cert['device'])
+
+    grant_j = case('wire:P4s_bind_bridge_o')['inputs']['body']
+    consume_j = case('wire:P3s_consume_for_bridge_o')['inputs']['body']
+    assert consume_j['device'] == grant_j['pairing_device'] == 'PAIR_J' and consume_j['reason'] == 3
+    consumed = {'PAIR_J': d_so, 'PAIR_K': d_so}
+    repaired = repair_approval('PAIR_J', consumed, grant_j, 'BRIDGE_O', 'X')
+    # The same device bound through another consumed pairing device of the same root, scope [X]: not this request's session.
+    foreign = repair_approval('PAIR_K', consumed, grant_j, 'BRIDGE_O', 'X')
+    assert repaired and not foreign
+    b64 = lambda h: base64.urlsafe_b64encode(bytes.fromhex(h)).decode().rstrip('=')  # noqa: E731
+    approval = {'role': 'section', 'resource': x_ref, 'principal': 'p:' + b64(SUITES['wire']['principal_bridge_o']['expected']['principal_id']['hex']),
+                'certDigest': b64(d_so), 'origin': 'rid', 'generation': 'requests[rid].generation'}
+    flow('F20_section_auto_approval', 'A section installation of a service with a control Resource C is approved without the human when its request in I equals the pairing entry the service wrote in C',
+         ('IDENTITY-PROFILE-01 §5.3 step 4 (pre-authorised approval), §7.1 step 2; SERVICE-CONTROL-PROFILE-01 §7, §8',
+          'Only a kind-1 request signed by the client\'s own pairing device, scope exactly [X], whose descriptor equals byte for byte the pairing entry admitted from C\'s service class, with J not cancelled, is approved without the human; a record not delivered yet is awaited; an established mismatch cancels the session with cancels{mismatch}. A3 precedes every registration by a client that implements the control profile.'),
+         [step('DEV_A writes requests[rid] = pair-section X in C and creates PAIR_J', 'wire:P2_pairing_device', 'accept'),
+          step('PAIR_J signs and writes the kind-1 request of BRIDGE_O, scope [X]', 'profile:pairing_writes_own_service_request', 'accept'),
+          step("Order 1: the push of I arrives first, C's pairing[rid] is not delivered yet", expect='waiting', decision=pre_authorised(req, j_ref, None, session), cancel=False),
+          step("… then pairing[rid] arrives from the service class with the same descriptor", expect='pre-authorised', decision=pre_authorised(req, j_ref, pairing_c, session), human_comparison=False),
+          step("Order 2: pairing[rid] arrives first, the request in I is not delivered yet", expect='waiting', aside=True, decision=pre_authorised(None, None, pairing_c, session), cancel=False),
+          step('Phase A1: consume with digest(CERT_SO)', 'wire:P3s_consume_for_bridge_o', 'accept', approval=d_so),
+          step('Phase A2: bind-only DEVICE_GRANT in I', 'wire:P4s_bind_bridge_o', 'accept', BRIDGE_O=dev('wire:P4s_bind_bridge_o', 'BRIDGE_O')),
+          step('Phase A3: approvals[p:<BRIDGE_O>] in C, before registration', expect='written', approval=approval),
+          step('Phase A4: BRIDGE_O registered in X', 'wire:flow.register_bridge_o_in_x', 'accept', branch='X'),
+          step('Takeover: A crashed after A2; another managing client that implements the control profile reconciles X: it writes the same approval derived from the chains first',
+               expect='A3 repaired, then registered', aside=True, approval=approval, approval_written=repaired, registers_before_approval=False),
+          step("Takeover: C's pairing[rid] names a kind-1 device of the same root with scope [X], bound through another consumed pairing device (not the J of requests[rid].args.link)",
+               expect='no approval written; not used for ordering', aside=True, approval_written=foreign, link_device='PAIR_K', grant_pairing_device=grant_j['pairing_device']),
+          step('Takeover: while C is not synchronised, that client defers the registration of BRIDGE_O in X', expect='deferred', aside=True)]
+         + [step(what, expect=outcome[v], aside=True, consume_proposed=False, cancel_reason=('mismatch' if v == 'mismatch' else None))
+            for (what, *_), v in zip(variants, verdicts)]
+         + [step('Their cancel: DEVICE_REVOKE {OWNER, PAIR_J, 0}', 'wire:P3c_cancel_pairing', 'accept', aside=True)],
+         {'approved_without_human': 1, 'cancelled_mismatch': verdicts.count('mismatch')},
+         ['A personal request and the base installation are never pre-authorised; a missing record is awaited, never a mismatch; after the consume there is no cancellation.'],
+         pairing='PAIR_J')
 
 def suite() -> dict:
     return {

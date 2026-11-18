@@ -62,6 +62,7 @@ directory).
 | `profiles/SHARED-OBJECTS-PROFILE-01.md` | Shared Objects application profile `org.openlfcp.shared-objects.v1` (Working Draft) |
 | `profiles/SHARED-SECTIONS-PROFILE-01.md` | Working Draft for MVP 0.2, in `mvp-0.2-baseline.2` (MVP-0.2-BASELINE.md), not in this baseline: the shared sections profile `org.openlfcp.shared-sections.v1` (ADR 0009); listed because every file under `profiles/` is |
 | `profiles/IDENTITY-PROFILE-01.md` | Working Draft for MVP 0.4, not in this baseline: the Identity Resource profile `org.openlfcp.identity.v1` and device flows (ADR 0011), to enter `mvp-0.4-baseline.1`; listed because every file under `profiles/` is |
+| `profiles/SERVICE-CONTROL-PROFILE-01.md` | Working Draft for MVP 0.6, not in this baseline: the control Resource profile `org.openlfcp.service-control.v1` of a service installation; listed because every file under `profiles/` is |
 | `integration/MARKDOWN-REFS-01.md` | Markdown projection reference grammar: inline and child-line placements (Working Draft) |
 | `integration/MARKDOWN-SECTIONS-01.md` | Working Draft for MVP 0.2, in `mvp-0.2-baseline.2` (MVP-0.2-BASELINE.md), not in this baseline: Markdown bindings of shared sections; listed because every file under `integration/` is |
 | `integration/SDK-SECTIONS-INTEGRATION-01.md` | Working Draft for MVP 0.2, in `mvp-0.2-baseline.2` (MVP-0.2-BASELINE.md), not in this baseline: SDK receipt, status and parser integration contracts for shared sections; listed because every file under `integration/` is |

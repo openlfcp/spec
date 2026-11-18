@@ -34,6 +34,7 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `identity_doc_text_field` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §3 AI3 | A change by the root writing devices[p:OWNER].label as collaborative Text |
 | `identity_doc_int_value` | validation | `INVALID_FIELD_TYPE` | IDENTITY-PROFILE-01 §3 AI3 | A change by the root writing devices[p:OWNER].kind as an Automerge int, not a uint (§2.1) |
 | `pairing_writes_own_request` | validation | valid | IDENTITY-PROFILE-01 §3 | PAIR_J (control_ref P2) creates requests[p:<DEV_B>] with pairing = p:<PAIR_J> |
+| `pairing_writes_own_service_request` | validation | valid | IDENTITY-PROFILE-01 §3 | PAIR_J (control_ref P2) creates the kind-1 request requests[p:<BRIDGE_O>] with scope [X] and pairing = p:<PAIR_J> |
 | `pairing_writes_roster` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §3 AI4 | PAIR_J writes roster[X].name |
 | `pairing_deletes_roster` | validation | `UNAUTHORIZED_WRITER` | IDENTITY-PROFILE-01 §3 AI4 | PAIR_J deletes the roster entry of Y |
 | `pairing_deletes_roster.container` | validation | `CONTAINER_REPLACED` | IDENTITY-PROFILE-01 §3 AI2 | PAIR_J deletes the roster container itself: AI2 is reported before AI4 |
@@ -200,6 +201,7 @@ Machine-readable values are in `IDENTITY-PROFILE-TEST-VECTORS-01.json` (`lfcp-ve
 | `C2_text_label` | OWNER | 3 | P0_genesis_i | `0936dc3136437e97…` |
 | `C2_int_kind` | OWNER | 3 | P0_genesis_i | `09ec6878dc4b1a95…` |
 | `J1_own_request` | PAIR_J | 1 | P2_pairing_device | `06bbd835e6191451…` |
+| `J1_own_service_request` | PAIR_J | 1 | P2_pairing_device | `f146d962d5c7086e…` |
 | `J1_writes_roster` | PAIR_J | 1 | P2_pairing_device | `cf27419f8ccb1270…` |
 | `J1_deletes_roster_entry` | PAIR_J | 1 | P2_pairing_device | `78c0bfc53eacb92a…` |
 | `J1_deletes_roster_container` | PAIR_J | 1 | P2_pairing_device | `983b12fe650b378c…` |
