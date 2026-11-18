@@ -61,7 +61,7 @@ Binding   = { state: string, generation: uint, list: string, filter: string, las
              needsAttention?: { code: string }, lifecycle?: string }
 PairingDescriptor = { descriptor: string, principal: PrincipalRef, fp: string }
 Question  = { binding: ResourceRef, generation: uint, kind: string, anomalyId: string, snapshotHash: string,
-             items: list<Example> (0–5), counts: map<string, uint>, actor?: string, options: list<string> (1–8), at: timestamp,
+             items: list<Example> (0–5), counts: map<string, uint>, actor?: string, options: list<string>, at: timestamp,
              resolved?: { answerId: Uuid, choice: string, at: timestamp }, superseded?: { by: string } }
 Request   = { op: Op, binding?: ResourceRef, generation?: uint, args: map, client: { app: string, protocol: uint }, at: timestamp }
 Answer    = { qid: Uuid, snapshotHash: string, choice: string, at: timestamp }
@@ -120,7 +120,7 @@ Each row lists the only mutations admitted at its position; every other operatio
 |  | `service` | delete when `questions[qid]` (its `qid`) is absent or holds `resolved` or `superseded` |
 | `cancels[rid]` | `root`, `personal` | create when `rid` never held a value and `requests[rid]` is present |
 |  | `service` | delete when `requests[rid]` is absent after the change |
-| `events[id]` | `service` | create when `id` never held a value and `requests[id]` or `answers[id]` is present; write `state` only forward (§6.2) together with `code`, `detail` and `at`; nothing once the event is final; delete when final and `requests[id]` and `answers[id]` are absent after the change |
+| `events[id]` | `service` | create when `id` never held a value and `requests[id]` or `answers[id]` is present; write `state` to the same or a later value of §6.2, together with `code`, `detail` and `at`; nothing once the event is final; delete when final and `requests[id]` and `answers[id]` are absent after the change |
 
 An entry is **created** by one change as a whole map: the change that creates `approvals[P]`, `requests[rid]`, `answers[aid]`, `cancels[rid]`, `pairing[rid]`, `questions[qid]` or `events[id]` writes all its fields; later changes write only what the row allows. The root key and its container are never replaced or deleted (SC2).
 
@@ -164,7 +164,7 @@ A change that breaks a rule is `PROFILE_INVALID` with that diagnostic, is not me
 
 Rules:
 
-1. Validation is per entry; an invalid entry is ignored by readers (never shown, never executed, never used as an approval) and the rest stays usable. An invalid root is `INVALID_ROOT` and `C` is unusable.
+1. Validation is per entry; an invalid entry is ignored by readers (never shown, never executed, never used as an approval) and the rest stays usable. An invalid root is `INVALID_ROOT` and `C` is unusable. An empty `service`, `status` or `lifecycle` (as the initial change creates them) is valid and means "not reported yet"; the service's first write fills every required field of `service` and `status` in one change (§4 SC4).
 2. Open-set strings are not validated against a list: `service.kind`, `status.state`, `bindings[X].state`, `needsAttention.code`, `questions[q].kind`, `choice`, `options[]`, `events.code`, `events.detail`, `requests.op` within `Op` (§11).
 3. Concurrent values (SOP §45): an entry created by `root` or `personal` (`approvals` except `revoked`, `requests`, `answers`, `cancels`) with two concurrent maps under one key, or a conflicted field, is invalid; concurrent `revoked` values mean revoked. In entries written by `service`, a display field MAY be shown with any value; `events.state` is read as its highest value in the order of §6.2, and two distinct final values make the event invalid but **final** for §3 and §4; `questions` with both `resolved` and `superseded` is read as resolved.
 4. Nothing in `C` confers authority. Principals are taken only from `approvals` written by `root` or `personal` (§7), never from a field written by `service` (`pairing`, `lifecycle`, `service`).
@@ -258,7 +258,7 @@ The link in `args.link` lets its holder read `I` as `J_X` until `I` is rotated (
 - **Heartbeat.** The service writes `status.heartbeatAt` at least every 30 minutes, and state transitions at once but at most once a minute per binding. Clients display "last heard" from `heartbeatAt`. A binding is "Up to date" only when `lastCompleteCheckAt` is at most 75 minutes old, `pending.toApple`, `pending.toLfcp`, `refused` and `unconfirmed` are `0`, and `needsAttention` is absent.
 - **Readers** (*informative* summary of §1): the personal devices of `R` that hold `C`, and the base installation. Content: the Mac's status and versions, section and list names, at most five task titles per question or preview, and section pairing links (§8.3).
 - **Deletion for display.** The service SHOULD delete a final request with its `events`, `cancels` and `pairing`, an answered question and its answers, 7 days after they became final. Deletion removes nothing from history (SOP §56) and is never the service's deduplication boundary (§10).
-- **Snapshots.** Any personal device with `1` and `2` in `C` MAY publish a Snapshot (SOP §13); the service does not.
+- **Snapshots** follow SOP §13 and are published by the human's clients; the service does not publish them.
 
 ---
 
