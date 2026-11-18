@@ -244,7 +244,7 @@ Two valid base approvals without `revoked` mean no `service` class (§2.3): the 
 
 1. `A` checks capacity, creates the pairing device `J_X` in `I` (IDENTITY §5.3 step 1) and writes `requests[rid] = {op: "pair-section", binding: X, args: {link: <link of J_X>}, …}`.
 2. The service executes it only when the request's author is `root` or `personal` (§2.4): it creates `D_X`, writes the pairing request into `I` as `J_X` with kind `1` and scope exactly `[X]` (IDENTITY §5.3 steps 2 and 3), then writes `pairing[rid] = {descriptor, principal: p:<D_X>, fp}` with `descriptor` the exact string it wrote in `I`, and `events[rid] = request-ready`.
-3. `A` approves without a human comparison only under the conditions of IDENTITY §5.3 *pre-authorised approval*; otherwise it cancels `J_X` and writes `cancels[rid] = {reason: "mismatch"}`.
+3. `A` approves without a human comparison only under the conditions of IDENTITY §5.3 *pre-authorised approval*. While the request in `I` or `pairing[rid]` in `C` has not reached `A`'s replicas, `A` waits and re-checks on each push or open of `I` and `C`; it cancels `J_X` and writes `cancels[rid] = {reason: "mismatch"}` only on an established mismatch, and `{reason: "expired"}` when its local deadline passes.
 4. Phases A1 to A4 (§7.1); the service writes `events[rid] = ready`, then `applied` once the section is bound.
 
 ### 8.2 One session
