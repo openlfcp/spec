@@ -430,22 +430,27 @@ Devices that never received their first packages get every epoch from the next r
 
 ## F20_section_auto_approval
 
-A section installation of a service with a control Resource C is approved without the human when its request in I equals the pairing entry the service wrote in C (IDENTITY-PROFILE-01 §5.3 step 4 (pre-authorised approval); SERVICE-CONTROL-PROFILE-01 §7.1, §8; mode sequence)
+A section installation of a service with a control Resource C is approved without the human when its request in I equals the pairing entry the service wrote in C (IDENTITY-PROFILE-01 §5.3 step 4 (pre-authorised approval), §7.1 step 2; SERVICE-CONTROL-PROFILE-01 §7, §8; mode sequence)
 
 | # | Step | Case | Outcome | Phase |
 |---|---|---|---|---|
 | 1 | DEV_A writes requests[rid] = pair-section X in C and creates PAIR_J | `wire:P2_pairing_device` | accept |  |
-| 2 | PAIR_J writes the kind-1 request of BRIDGE_O, scope [X] | `profile:request_service_valid` | accept |  |
-| 3 | The service class writes pairing[rid] with the same descriptor in C: every condition holds |  | pre-authorised |  |
-| 4 | Phase A1: consume with digest(CERT_SO) | `wire:P3s_consume_for_bridge_o` | accept |  |
-| 5 | Phase A2: bind-only DEVICE_GRANT in I | `wire:P4s_bind_bridge_o` | accept |  |
-| 6 | Phase A3: approvals[p:<BRIDGE_O>] in C, before registration |  | written |  |
-| 7 | Phase A4: BRIDGE_O registered in X (X) | `wire:flow.register_bridge_o_in_x` | accept |  |
-| 8 | The descriptor in C differs from the request in I (aside) |  | cancelled: mismatch |  |
-| 9 | The request asks for scope [X, Y] (aside) |  | cancelled: mismatch |  |
-| 10 | The request asks for scope [Y] (aside) |  | cancelled: mismatch |  |
-| 11 | The pairing entry was not admitted from the service class (aside) |  | cancelled: mismatch |  |
-| 12 | The client did not create this pairing device (aside) |  | not approved; left to the client that created it |  |
-| 13 | The pairing device is already cancelled (aside) |  | not approved; already cancelled |  |
-| 14 | A personal request (kind 0) with an equal descriptor (aside) |  | cancelled: mismatch |  |
-| 15 | Their cancel: DEVICE_REVOKE {OWNER, PAIR_J, 0} (aside) | `wire:P3c_cancel_pairing` | accept |  |
+| 2 | PAIR_J signs and writes the kind-1 request of BRIDGE_O, scope [X] | `profile:pairing_writes_own_service_request` | accept |  |
+| 3 | Order 1: the push of I arrives first, C's pairing[rid] is not delivered yet |  | waiting |  |
+| 4 | … then pairing[rid] arrives from the service class with the same descriptor |  | pre-authorised |  |
+| 5 | Order 2: pairing[rid] arrives first, the request in I is not delivered yet (aside) |  | waiting |  |
+| 6 | Phase A1: consume with digest(CERT_SO) | `wire:P3s_consume_for_bridge_o` | accept |  |
+| 7 | Phase A2: bind-only DEVICE_GRANT in I | `wire:P4s_bind_bridge_o` | accept |  |
+| 8 | Phase A3: approvals[p:<BRIDGE_O>] in C, before registration |  | written |  |
+| 9 | Phase A4: BRIDGE_O registered in X (X) | `wire:flow.register_bridge_o_in_x` | accept |  |
+| 10 | Takeover: A crashed after A2; another managing client that implements the control profile reconciles X: it writes the same approval derived from the chains first (aside) |  | A3 repaired, then registered |  |
+| 11 | Takeover: while C is not synchronised, that client defers the registration of BRIDGE_O in X (aside) |  | deferred |  |
+| 12 | The descriptor in C differs from the request in I (aside) |  | cancelled: mismatch |  |
+| 13 | The request asks for scope [X, Y] (aside) |  | cancelled: mismatch |  |
+| 14 | The request asks for scope [Y] (aside) |  | cancelled: mismatch |  |
+| 15 | The request has pairing = p:<PAIR_J> but was signed by OWNER (request_service_valid, change S_service_valid) (aside) |  | request ignored (not signed by J); no consume, still waiting |  |
+| 16 | The pairing entry was not admitted from the service class (aside) |  | cancelled: mismatch |  |
+| 17 | The client did not create this pairing device (aside) |  | not approved; left to the client that created it |  |
+| 18 | The pairing device is already cancelled (aside) |  | not approved; already cancelled |  |
+| 19 | A personal request (kind 0) with an equal descriptor (aside) |  | cancelled: mismatch |  |
+| 20 | Their cancel: DEVICE_REVOKE {OWNER, PAIR_J, 0} (aside) | `wire:P3c_cancel_pairing` | accept |  |

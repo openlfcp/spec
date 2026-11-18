@@ -866,6 +866,9 @@ function scenario(id, description, rule, inputs, expected, assertions) {
 const asJ = (name, doc, unitSeq, fn, controlRef = "P2_pairing_device") => change(name, doc, "PAIR_J", unitSeq, controlRef, fn);
 const own = asJ("J1_own_request", BASE, 1, (d) => { put(d.requests, pref("DEV_B"), reqEntry("DEV_B", "PAIR_J")); });
 changeCase("pairing_writes_own_request", own.r, null, "PAIR_J (control_ref P2) creates requests[p:<DEV_B>] with pairing = p:<PAIR_J>");
+changeCase("pairing_writes_own_service_request",
+  asJ("J1_own_service_request", BASE, 1, (d) => { put(d.requests, pref("BRIDGE_O"), reqEntry("BRIDGE_O", "PAIR_J", { kind: 1, scope: [S(rref("X"))] })); }).r, null,
+  "PAIR_J (control_ref P2) creates the kind-1 request requests[p:<BRIDGE_O>] with scope [X] and pairing = p:<PAIR_J>");
 changeCase("pairing_writes_roster", asJ("J1_writes_roster", BASE, 1, (d) => { d.roster[rref("X")].name = S("Renamed"); }).r, "UNAUTHORIZED_WRITER", "PAIR_J writes roster[X].name");
 changeCase("pairing_deletes_roster", asJ("J1_deletes_roster_entry", BASE, 1, (d) => { delete d.roster[rref("Y")]; }).r, "UNAUTHORIZED_WRITER", "PAIR_J deletes the roster entry of Y");
 changeCase("pairing_deletes_roster.container", asJ("J1_deletes_roster_container", BASE, 1, (d) => { delete d.roster; }).r, "CONTAINER_REPLACED",
