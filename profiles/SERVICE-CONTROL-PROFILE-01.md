@@ -91,7 +91,7 @@ Admission (§4) takes, besides the change and its signer, the signer's **class**
 
 - `root`: the signer is the Genesis owner `R`;
 - `personal`: the signer is bound in `C` with kind `0` and its chain's root is `R`;
-- `service`: the signer `P` is bound and active in `C` with kind `1` and root `R`, **and** in the change's causal history `approvals` holds exactly one entry with `role = "base"` that is valid (§5) and has no `revoked`, and that entry's key is `p:<P>`. Two such entries give the class `service` to nobody until `root` or `personal` revokes one (the conflict is shown to the human, §7.3);
+- `service`: the signer `P` is bound and active in `C` with kind `1` and root `R`, **and** in the change's **pre-state** (§3) `approvals` holds exactly one entry with `role = "base"` that is valid (§5) and has no `revoked`, and that entry's key is `p:<P>`. Two such entries give the class `service` to nobody until `root` or `personal` revokes one (the conflict is shown to the human, §7.3);
 - `other`: anything else — a service device without that approval, a section installation of the same service, a pairing device (kind `2`), another root's Principal, a non-device member.
 
 A change by `other` is refused whole (§4 SC5). The class is taken at `control_ref` and on the causal history, never at the current head or the merged state, so a later revocation does not change a decision already made.
@@ -104,11 +104,13 @@ No field records who wrote an entry. The author of an entry is the signer of the
 
 ## 3. The mutation table
 
-Each row lists the only mutations admitted at its position; every other operation at that position is refused (§4 SC5 for a writer outside the row, SC6 for a mutation the row does not allow). "Present", "absent" and "final" are evaluated in the change's causal history, the change itself included; "never held a value" means no operation in that history ever set the key, deleted values included.
+Each row lists the only mutations admitted at its position; every other operation at that position is refused (§4 SC5 for a writer outside the row, SC6 for a mutation the row does not allow).
+
+**Pre-state and post-state.** The **pre-state** of a change is the document of its causal history **without** the change (its dependencies and their history); the **post-state** is that document with the change applied. Every condition of a row — "present", "absent", "final", "holds neither", "without any `revoked` value", "never held a value" (no operation of that history ever set the key, deleted values included) — is evaluated on the pre-state, except the conditions marked "after the change", which are evaluated on the post-state; SC4 and SC7 of §4 are also post-state checks. One change MAY contain several operations, at several positions: each operation is judged against the same pre-state, an operation that writes into an entry the same change creates is part of that creation (it is not "a write into an existing entry"), and a change that creates and deletes the same entry, or creates one key twice, is refused (SC6). For example, the service deletes `requests[rid]`, `events[rid]`, `cancels[rid]` and `pairing[rid]` in one change: `events[rid]` is final in the pre-state, and `requests[rid]` is absent in the post-state.
 
 | Position | Writer | Admitted mutations |
 |---|---|---|
-| `profile`, `meta` and below | — | none after the initial change (SC1) |
+| the root keys of §2.1, `profile`, `meta` and below | the Genesis signer, in the initial change | exactly the creations of §2.2, checked by SC0; nothing after the initial change (SC1, SC2) |
 | `approvals[P]` | `root`, `personal` | create the entry when `P` never held a value; create `revoked` = `{at}` in an entry without any `revoked` value. Nothing else; never deleted |
 | `service`, `status`, `lifecycle` (below the root key) | `service` | any write or deletion of fields and of values below them |
 | `bindings[X]` | `service` | create, write into, delete |
@@ -142,6 +144,8 @@ As IDENTITY §3: when a change arrives, the checks of its bytes alone, then, onc
 | SC7 | leaves, after the change in its causal history, an entry larger than its limit, an `Example` longer than 80 Unicode scalar values or more than 5 `items`, more than 32 open requests, or more than one open `pair-section` request | `LIMIT_EXCEEDED` |
 
 **Sizes.** The size of an entry (and of `service`, `status`, `lifecycle` as wholes) is the sum, over every value present in it after the change in its causal history (concurrent values of a field included), of: the UTF-8 length of every map key and every string, and 8 bytes for every other scalar. The limit is 4096 bytes, and 8192 for a `pairing` entry. A request is **open** when it is present and `events[rid]` is absent or not final; a `pair-section` request likewise.
+
+**The initial change.** A change that SC0 identifies as the initial change and admits is exempt from SC1, SC5 and SC6: its writer is the Genesis signer, whatever its class at `control_ref`, and it is the only change that creates root keys or writes `profile` and `meta`. Any other change that creates a root key of §2.1 breaks SC2 (it replaces a container), and one that creates another root key breaks SC3.
 
 A change that breaks a rule is `PROFILE_INVALID` with that diagnostic, is not merged, and blocks its dependants (SOP §14.1). When several apply, the first in the order `INVALID_AUTOMERGE_BYTES`, `CHANGE_ACTOR_MISMATCH`, `INVALID_ROOT`, `CONTAINER_REPLACED`, `IMMUTABLE_FIELD_MUTATED`, `UNKNOWN_ROOT_KEY`, `UNAUTHORIZED_WRITER`, `FORBIDDEN_MUTATION`, `INVALID_FIELD_TYPE` (and the other §5 diagnostics), `LIMIT_EXCEEDED` is reported. A client whose own change would be refused does not send it; it shows "Couldn't send" (§11). An unknown `op` is **not** refused (§6.1).
 
