@@ -67,11 +67,13 @@ const fp = (label) => {
 // C's Control states at the control_ref of the cases: who is bound in C, with which kind, root and scope (W §80.1).
 const dev = (kind, root, scope, active = true) => ({ kind, root, ...(scope ? { scope } : {}), bound_in_c: kind !== 2 && (!scope || scope.includes("C")), active });
 const LIVE = {
-  owner: "R", members: { BOB: "non-device member of C, root of BOB_D" },
+  owner: "R", genesis_signer: "R", members: { BOB: "non-device member of C, root of BOB_D" },
   devices: { A: dev(0, "R"), B: dev(1, "R", ["C"]), B2: dev(1, "R", ["C"]), D_X: dev(1, "R", ["X"]), J_X: dev(2, "R"), BOB_D: dev(0, "BOB") },
 };
 const CONTROL = {
-  CS0_genesis: { owner: "R", members: {}, devices: {} },
+  CS0_genesis: { owner: "R", genesis_signer: "R", members: {}, devices: {} },
+  // Genesis field 5 (W §15): C's Genesis signed by the personal device A of R.
+  CS0_genesis_by_personal: { owner: "R", genesis_signer: "A", members: {}, devices: { A: dev(0, "R") } },
   CS1_live: LIVE,
   CS2_b_revoked: { ...LIVE, devices: { ...LIVE.devices, B: dev(1, "R", ["C"], false) } },
 };
@@ -192,7 +194,12 @@ function historyOf(deps) {
 }
 const values = (obj, key) => {
   if (obj == null) return [];
-  const c = A.getConflicts(obj, key);
+  let c;
+  try {
+    c = A.getConflicts(obj, key);
+  } catch {
+    c = undefined; // a detached value of a conflict set: no nested conflicts to read
+  }
   return c ? Object.values(c) : obj[key] === undefined ? [] : [obj[key]];
 };
 const eventState = (doc, id) => values(doc.events?.[id] ?? null, "state").map(str).sort((a, b) => EVENT_STATES.indexOf(b) - EVENT_STATES.indexOf(a))[0];
@@ -205,6 +212,24 @@ function size(v) {
   return 8;
 }
 
+/**
+ * §5 rule 3: the one approval read from approvals[k], or null when it is invalid. Concurrent maps are one approval
+ * when every one is valid and role, resource, principal, certDigest, certId and generation are equal; any revoked
+ * value in any of them means revoked.
+ */
+const IDENTITY_FIELDS = ["role", "resource", "principal", "certDigest", "certId", "generation"];
+function approvalOf(doc, k) {
+  // A value of a conflict set is detached and reads an ImmutableString as a plain string; an admitted history holds no
+  // Text (SC4 refuses every makeText), so every string there is an ImmutableString.
+  const attach = (v) => (typeof v === "string" ? S(v) : Array.isArray(v) ? v.map(attach) : isMap(v) ? Object.fromEntries(Object.entries(v).map(([f, x]) => [f, attach(x)])) : v);
+  const all = values(doc.approvals, k);
+  const maps = all.length > 1 ? all.map(attach) : all;
+  if (maps.length === 0 || maps.some((v) => entryDiagnostic("approvals", k, v) !== null)) return null;
+  const sig = (v) => json(IDENTITY_FIELDS.map((f) => v[f]));
+  if (maps.some((v) => sig(v) !== sig(maps[0]))) return null;
+  return { role: str(maps[0].role), revoked: maps.some((v) => values(v, "revoked").length > 0) };
+}
+
 /** §2.3: the class of `label` at `controlRef`, and for a kind-1 device the approvals of the pre-state. */
 function writerClass(label, controlRef, pre) {
   const ctl = CONTROL[controlRef];
@@ -214,8 +239,8 @@ function writerClass(label, controlRef, pre) {
   if (d.kind === 0) return "personal";
   if (d.kind !== 1) return "other";
   const bases = Object.keys(pre.approvals ?? {}).filter((k) => {
-    const v = pre.approvals[k];
-    return values(pre.approvals, k).length === 1 && entryDiagnostic("approvals", k, v) === null && str(v.role) === "base" && v.revoked === undefined;
+    const a = approvalOf(pre, k);
+    return a !== null && a.role === "base" && !a.revoked;
   });
   return bases.length === 1 && bases[0] === P[label].ref ? "service" : "other";
 }
@@ -228,12 +253,12 @@ function admit(r) {
   if (r.deps.length === 0) {
     if (d.seq !== 1) return { diag: "INVALID_AUTOMERGE_BYTES", cls: null };
     r.tops = new Set(["profile, meta"]);
-    if (r.writer !== CONTROL[r.controlRef].owner || r.unitSeq !== 1) return { diag: "INVALID_ROOT", cls: writerClass(r.writer, r.controlRef, {}) };
+    if (r.writer !== CONTROL[r.controlRef].genesis_signer || r.unitSeq !== 1) return { diag: "INVALID_ROOT", cls: writerClass(r.writer, r.controlRef, {}) };
     const [doc] = A.applyChanges(A.init(), [r.bytes]);
     const ok = JSON.stringify(Object.keys(doc).sort()) === JSON.stringify([...ROOT_KEYS].sort()) && str(doc.profile) === PROFILE &&
       isMap(doc.meta) && JSON.stringify(Object.keys(doc.meta).sort()) === '["attemptId","createdAt"]' &&
       ROOT_KEYS.slice(2).every((k) => isMap(doc[k]) && Object.keys(doc[k]).length === 0);
-    return { diag: ok ? null : "INVALID_ROOT", cls: "root" };
+    return { diag: ok ? null : "INVALID_ROOT", cls: writerClass(r.writer, r.controlRef, {}) };
   }
   const pre = historyOf(r.deps);
   const [post] = A.applyChanges(A.clone(pre), [r.bytes]);
@@ -398,6 +423,7 @@ const initial = (extra = (d) => d) => (d) => {
 const EMPTY = { doc: A.init() };
 const M0 = emit(change("init", EMPTY.doc, "R", "CS0_genesis", initial()), null, "§2.2, §4 SC0", "The initial change of C by its Genesis owner R: profile, meta and eleven empty maps");
 emit(change("init_by_personal", EMPTY.doc, "A", "CS1_live", initial()), "INVALID_ROOT", "§2.2, §4 SC0", "The same content written without dependencies by the personal device A");
+emit(change("init_by_personal_genesis_signer", EMPTY.doc, "A", "CS0_genesis_by_personal", initial((d) => put(d.meta, "attemptId", "attempt-a"))), null, "§2.2, §4 SC0", "The initial change of a C whose Genesis the personal device A signed (Genesis field 5), written by A");
 emit(change("init_missing_lifecycle", EMPTY.doc, "R", "CS0_genesis", initial((d) => delete d.lifecycle)), "INVALID_ROOT", "§2.2, §4 SC0", "An initial change without the root key lifecycle");
 emit(change("init_requests_not_empty", EMPTY.doc, "R", "CS0_genesis", initial((d) => put(d.requests, RID.r1, request("check")))), "INVALID_ROOT", "§2.2, §4 SC0", "An initial change whose requests map is not empty");
 no("profile_rewritten", M0, "R", "IMMUTABLE_FIELD_MUTATED", "§4 SC1", "R writes profile = org.openlfcp.service-control.v2 after the initial change", (d) => put(d, "profile", "org.openlfcp.service-control.v2"));
@@ -433,6 +459,14 @@ no("revoked_twice", T2, "R", "FORBIDDEN_MUTATION", "§3 approvals, §4 SC6", "R 
 const T3 = ok("revoke_base_b", M2, "A", "§3 approvals, §7.2", "A revokes the base approval of B", (d) => put(d.approvals[P.B.ref], "revoked", { at: T0 }));
 const Rc = ok("service_concurrent_with_revocation", M2, "B", "§2.3", "B writes status.message concurrently with revoke_base_b: its pre-state holds the approval unrevoked", (d) => put(d.status, "message", "syncing"));
 no("service_after_revocation", merged(Rc, T3), "B", "UNAUTHORIZED_WRITER", "§2.3", "B, having received revoke_base_b, writes status.message on both heads", (d) => put(d.status, "message", "stopped"));
+
+// Equivalent concurrent approvals (§5 rule 3, §7.1, §7.4): two clients write the same A3 without seeing each other.
+const E2 = ok("base_approval_repeated_by_root", M0, "R", "§3 approvals, §5 rule 3, §7.4", "R writes the same base approval of B as base_approval, concurrently with it (a repair of a missing A3)", (d) => put(d.approvals, P.B.ref, approval("B", "base", RES.C, 0, "attempt-1")));
+const E3 = ok("service_on_equivalent_approvals", merged(M1, E2), "B", "§2.3, §5 rule 3", "B fills service and status on both approvals: two equal concurrent maps are one valid base approval", (d) => { for (const [k, v] of Object.entries(SERVICE)) put(d.service, k, v); for (const [k, v] of Object.entries(STATUS)) put(d.status, k, v); });
+const E4 = ok("base_approval_conflicting_by_root", M0, "R", "§3 approvals, §5 rule 3", "R writes a base approval of B with another certDigest, concurrently with base_approval", (d) => put(d.approvals, P.B.ref, { ...approval("B", "base", RES.C, 0, "attempt-1"), certDigest: b64u(sha("LFCP-TV-SC-DIGEST-OTHER")) }));
+no("service_on_conflicting_approvals", merged(M1, E4), "B", "UNAUTHORIZED_WRITER", "§2.3, §5 rule 3", "B writes status on two concurrent approvals of B whose certDigest differs: the entry is invalid, so there is no base approval", (d) => { for (const [k, v] of Object.entries(STATUS)) put(d.status, k, v); });
+const E5 = ok("revoke_one_of_equivalent_approvals", E3, "A", "§3 approvals, §5 rule 3", "A creates revoked in the approval of B that it sees, one of the two equal maps", (d) => put(d.approvals[P.B.ref], "revoked", { at: T0 }));
+no("service_after_revoking_one_equivalent_map", E5, "B", "UNAUTHORIZED_WRITER", "§2.3, §5 rule 3", "B writes status.heartbeatAt after the revocation: a revoked value in either map means revoked", (d) => put(d.status, "heartbeatAt", "2026-11-19T10:30:00Z"));
 
 // ---- service, status, lifecycle, bindings (§3) ----
 no("status_by_personal", M2, "A", "UNAUTHORIZED_WRITER", "§3 status, §4 SC5", "A writes status.state", (d) => put(d.status, "state", "paused"));
@@ -481,6 +515,7 @@ const U2 = ok("unknown_op_rejected", U1, "B", "§6.1, §11", "B writes events[r2
 
 // ---- Cancellation (§6.3) ----
 const K1 = ok("request_turn_on", M2, "A", "§3 requests", "A creates requests[r4] = turn-on", (d) => put(d.requests, RID.r4, request("turn-on", { args: { previewId: "pv-1", planHash: "ph-1" } })));
+ok("cancel_by_root", K1, "R", "§3 cancels, §6.3", "R creates cancels[r4] = {user}", (d) => put(d.cancels, RID.r4, { reason: "user", at: T0 }));
 const K2 = ok("cancel_created", K1, "A", "§3 cancels, §6.3", "A creates cancels[r4] = {user}", (d) => put(d.cancels, RID.r4, { reason: "user", at: T0 }));
 no("cancel_without_request", M2, "A", "FORBIDDEN_MUTATION", "§3 cancels, §4 SC6", "A cancels a rid that has no request", (d) => put(d.cancels, RID.none, { reason: "user", at: T0 }));
 no("cancel_by_service", K1, "B", "FORBIDDEN_MUTATION", "§3 cancels, §4 SC6", "B creates cancels[r4]", (d) => put(d.cancels, RID.r4, { reason: "user", at: T0 }));
@@ -513,6 +548,12 @@ const Q3 = ok("question_resolved", merged(Q2, Q2b), "B", "§3 questions, events,
 });
 no("question_superseded_after_resolved", Q3, "B", "FORBIDDEN_MUTATION", "§3 questions, §4 SC6", "B writes superseded into a resolved question", (d) => put(d.questions[RID.q1], "superseded", { by: "an-2" }));
 ok("answered_question_deleted", Q3, "B", "§3 questions, answers, events, §9", "B deletes questions[q1], both answers and their events", (d) => { delete d.questions[RID.q1]; for (const id of [RID.a1, RID.a2]) { delete d.answers[id]; delete d.events[id]; } });
+// Concurrent resolved and superseded through a change of base approval (§3 questions, §5 rule 3): B resolves q1 while
+// A revokes B and approves B2; B2, not having seen the resolution, supersedes q1. Two actors, no equivocation.
+const Bz1 = ok("switch_resolved_by_b", Q2, "B", "§3 questions, §10", "B writes questions[q1].resolved with a1 and events[a1] = applied", (d) => { put(d.events, RID.a1, { state: "applied", at: T0 }); put(d.questions[RID.q1], "resolved", { answerId: RID.a1, choice: "restore", at: T0 }); });
+const Bz2 = ok("switch_base_to_b2", Q2, "A", "§3 approvals, §7.2, §7.3", "A, concurrently, revokes B's base approval and writes the base approval of B2 in one change", (d) => { put(d.approvals[P.B.ref], "revoked", { at: T0 }); put(d.approvals, P.B2.ref, approval("B2", "base", RES.C, 0, "attempt-2")); });
+ok("switch_superseded_by_b2", Bz2, "B2", "§2.3, §3 questions", "B2, the only base in its pre-state, writes questions[q1].superseded: the pre-state holds neither marker", (d) => put(d.questions[RID.q1], "superseded", { by: "an-2" }));
+
 const Qs = ok("question_superseded", Q1, "B", "§3 questions", "B writes questions[q1].superseded (the anomaly changed) concurrently with answer_created", (d) => put(d.questions[RID.q1], "superseded", { by: "an-2" }));
 const Qs2 = ok("answer_to_superseded_rejected", merged(Qs, Q2), "B", "§3 events, §6.2, §10", "B, having received answer_created after superseding q1, writes events[a1] = rejected{snapshot_changed}", (d) => put(d.events, RID.a1, { state: "rejected", code: "snapshot_changed", at: T0 }));
 no("question_resolved_after_superseded", merged(Qs, Q2), "B", "FORBIDDEN_MUTATION", "§3 questions, §4 SC6", "B writes resolved into a superseded question", (d) => put(d.questions[RID.q1], "resolved", { answerId: RID.a1, choice: "restore", at: T0 }));
@@ -620,7 +661,7 @@ behavioral("answer_concurrent_with_superseded", "§3 questions, answers, events,
   "question_superseded and answer_created, each made on question_created, delivered in both orders, then the service's rejection",
   [sup, [...sup.filter((n) => n !== "question_superseded" && n !== "answer_to_superseded_rejected"), "question_superseded", "answer_to_superseded_rejected"].filter((n, i, a) => a.indexOf(n) === i)],
   { admitted: sup, state: { question: "superseded", event_a1: "rejected{snapshot_changed}", event_a2: "absent" } }, readQ,
-  ["Both delivery orders give the same document.", "question_resolved_after_superseded (refused) shows that a superseded question is never resolved: resolved and superseded are exclusive."]);
+  ["Both delivery orders give the same document.", "question_resolved_after_superseded (refused) shows that a later change never adds resolved to a superseded question; concurrent markers are concurrent_resolved_superseded."]);
 const two = ancestry("question_resolved");
 behavioral("two_concurrent_answers", "§3 questions, answers, §10", "Two answers to one question are made concurrently and both admitted; the service accepts the first it executes and rejects the other with already_answered.",
   "answer_created (A) and answer_concurrent (R), each made on question_created, delivered in both orders, then question_resolved",
@@ -628,6 +669,20 @@ behavioral("two_concurrent_answers", "§3 questions, answers, §10", "Two answer
   { admitted: two, state: { question: `resolved by ${RID.a1}`, event_a1: "applied", event_a2: "rejected{already_answered}" } }, readQ,
   ["Both delivery orders give the same document."]);
 
+const sw = ancestry("switch_resolved_by_b", "switch_superseded_by_b2");
+const readBoth = (doc) => ({ ...readQ(doc), holds_resolved: doc.questions[RID.q1].resolved !== undefined, holds_superseded: doc.questions[RID.q1].superseded !== undefined });
+behavioral("concurrent_resolved_superseded", "§3 questions, §5 rule 3", "Each marker is created on a pre-state that holds neither, by the service class of its own causal history, so both are admitted; a question holding both is read as resolved.",
+  "switch_resolved_by_b (B) and switch_superseded_by_b2 (B2 after the change of base), each made on answer_created, delivered in both orders",
+  [sw, [...sw.filter((n) => n !== "switch_resolved_by_b"), "switch_resolved_by_b"]],
+  { admitted: sw, state: { question: `resolved by ${RID.a1}`, event_a1: "applied", event_a2: "absent", holds_resolved: true, holds_superseded: true } }, readBoth,
+  ["Both delivery orders give the same document.", "The two markers are made by different actors; neither change is an ancestor of the other."]);
+const eq = ancestry("base_approval_repeated_by_root", "service_on_equivalent_approvals");
+behavioral("equivalent_concurrent_approvals", "§2.3, §5 rule 3, §7.4", "Two concurrent maps of approvals[p:<B>] with equal role, resource, principal, certDigest, certId and generation are one valid base approval: B keeps the class service.",
+  "base_approval (A) and base_approval_repeated_by_root (R), each made on init, delivered in both orders, then B's first write",
+  [eq, [...eq.filter((n) => n !== "base_approval"), "base_approval"].filter((n) => n !== "service_on_equivalent_approvals").concat("service_on_equivalent_approvals")],
+  { admitted: eq, state: { approval_maps: 2, status_state: "running" } },
+  (doc) => ({ approval_maps: values(doc.approvals, P.B.ref).length, status_state: str(doc.status.state) }),
+  ["service_on_conflicting_approvals (refused): maps that differ make the entry invalid.", "service_after_revoking_one_equivalent_map (refused): a revoked value in one map revokes the approval."]);
 const twoBase = ancestry("second_base_approval", "two_bases_other_refused", "revoke_second_base", "one_base_after_revocation");
 behavioral("two_base_approvals", "§2.3, §7.3", "Two valid base approvals without revoked give the class service to nobody; after root or personal revokes one, the other device's changes are admitted again.",
   "A second base approval, B2's refused heartbeat, the revocation of B2's approval and B's admitted heartbeat",
@@ -665,11 +720,12 @@ const doc = {
   suite: {
     id: SUITE_ID, version: "01",
     specification: { id: SPEC, profile: PROFILE, revision: "working-draft" },
-    description: "Control Resource profile vectors (SERVICE-CONTROL-PROFILE-01 §12): the initial change, admission SC0 to SC7 for every cell of the mutation table of §3 and every writer class of §2.3, state validation of written entries, and replica transitions (a superseded question concurrent with an answer, two concurrent answers, two base approvals, revocation, an unknown op, deletion of a request).",
+    description: "Control Resource profile vectors (SERVICE-CONTROL-PROFILE-01 §12): the initial change, admission SC0 to SC7 for every cell of the mutation table of §3 and every writer class of §2.3, state validation of written entries, and replica transitions (concurrent resolved and superseded through a change of base, a superseded question concurrent with an answer, two concurrent answers, equivalent concurrent approvals, two base approvals, revocation, an unknown op, deletion of a request).",
     depends_on: [SPEC, "IDENTITY-PROFILE-01", "SHARED-OBJECTS-PROFILE-01", "LFCP-WIRE-01"],
     conventions: {
       engine_package: "@automerge/automerge", engine_version: "3.5.0",
       changes: "Every change is made with time 0 and no message by the SHARED-OBJECTS-PROFILE-01 §8 actor of its writer in C (fixtures.resources.C); each change is carried by its writer's Data Unit whose actor sequence equals the change's Automerge sequence. A validation case gives the change and its causal history (context.history, in delivery order).",
+      genesis: "fixtures.control_states[*].genesis_signer is the Principal that signed C's Genesis (R, or a device of R through Genesis field 5, W §15); only it writes the initial change (§2.2).",
       control: "inputs.control_ref names a fixtures.control_states entry: C's Control state at the Data Unit's control_ref. inputs.writer_class is the class of §2.3 derived from it and, for a kind-1 device, from the approvals of the change's pre-state; an implementation derives it itself.",
       principals: "Principal keys are h('LFCP-TV-SC-' + label + '-ED25519') and h('LFCP-TV-SC-' + label + '-X25519') as Ed25519 and X25519 seeds; Resource IDs are h('LFCP-TV-SC-RESOURCE-' + name). Only descriptors and IDs are published.",
       diagnostics: "A refused change is PROFILE_INVALID with the first diagnostic in the order of §4; an admitted change is valid.",

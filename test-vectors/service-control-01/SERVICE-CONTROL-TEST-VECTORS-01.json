@@ -8,7 +8,7 @@
       "profile": "org.openlfcp.service-control.v1",
       "revision": "working-draft"
     },
-    "description": "Control Resource profile vectors (SERVICE-CONTROL-PROFILE-01 §12): the initial change, admission SC0 to SC7 for every cell of the mutation table of §3 and every writer class of §2.3, state validation of written entries, and replica transitions (a superseded question concurrent with an answer, two concurrent answers, two base approvals, revocation, an unknown op, deletion of a request).",
+    "description": "Control Resource profile vectors (SERVICE-CONTROL-PROFILE-01 §12): the initial change, admission SC0 to SC7 for every cell of the mutation table of §3 and every writer class of §2.3, state validation of written entries, and replica transitions (concurrent resolved and superseded through a change of base, a superseded question concurrent with an answer, two concurrent answers, equivalent concurrent approvals, two base approvals, revocation, an unknown op, deletion of a request).",
     "depends_on": [
       "SERVICE-CONTROL-PROFILE-01",
       "IDENTITY-PROFILE-01",
@@ -19,6 +19,7 @@
       "engine_package": "@automerge/automerge",
       "engine_version": "3.5.0",
       "changes": "Every change is made with time 0 and no message by the SHARED-OBJECTS-PROFILE-01 §8 actor of its writer in C (fixtures.resources.C); each change is carried by its writer's Data Unit whose actor sequence equals the change's Automerge sequence. A validation case gives the change and its causal history (context.history, in delivery order).",
+      "genesis": "fixtures.control_states[*].genesis_signer is the Principal that signed C's Genesis (R, or a device of R through Genesis field 5, W §15); only it writes the initial change (§2.2).",
       "control": "inputs.control_ref names a fixtures.control_states entry: C's Control state at the Data Unit's control_ref. inputs.writer_class is the class of §2.3 derived from it and, for a kind-1 device, from the approvals of the change's pre-state; an implementation derives it itself.",
       "principals": "Principal keys are h('LFCP-TV-SC-' + label + '-ED25519') and h('LFCP-TV-SC-' + label + '-X25519') as Ed25519 and X25519 seeds; Resource IDs are h('LFCP-TV-SC-RESOURCE-' + name). Only descriptors and IDs are published.",
       "diagnostics": "A refused change is PROFILE_INVALID with the first diagnostic in the order of §4; an admitted change is valid.",
@@ -93,11 +94,26 @@
     "control_states": {
       "CS0_genesis": {
         "owner": "R",
+        "genesis_signer": "R",
         "members": {},
         "devices": {}
       },
+      "CS0_genesis_by_personal": {
+        "owner": "R",
+        "genesis_signer": "A",
+        "members": {},
+        "devices": {
+          "A": {
+            "kind": 0,
+            "root": "R",
+            "bound_in_c": true,
+            "active": true
+          }
+        }
+      },
       "CS1_live": {
         "owner": "R",
+        "genesis_signer": "R",
         "members": {
           "BOB": "non-device member of C, root of BOB_D"
         },
@@ -151,6 +167,7 @@
       },
       "CS2_b_revoked": {
         "owner": "R",
+        "genesis_signer": "R",
         "members": {
           "BOB": "non-device member of C, root of BOB_D"
         },
@@ -268,6 +285,36 @@
           "code": "PROFILE_INVALID",
           "diagnostic": "INVALID_ROOT"
         }
+      }
+    },
+    {
+      "id": "init_by_personal_genesis_signer",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "The initial change of a C whose Genesis the personal device A signed (Genesis field 5), written by A",
+      "rule": {
+        "section": "SERVICE-CONTROL-PROFILE-01 §2.2, §4 SC0",
+        "text": "Admitted: every operation is one its row of §3 admits for the writer's class, and the entries it writes are valid (§5)."
+      },
+      "inputs": {
+        "writer": "A",
+        "writer_ref": "p:HbMX07fxI5w5h-Y3s1tyD7_mtoWjGICvyvYX1-jOB6Y",
+        "writer_class": "personal",
+        "control_ref": "CS0_genesis_by_personal",
+        "automerge_actor": "66ba67b9254affc11c5e26d8b6150157f2ad110d6c9b05a993006cc59c825922",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "change_hash": "f16f21d11d153a73defb1f273c8fc29d050d0bf811240414b774e9ed4d6b6311",
+        "deps": [],
+        "automerge_change": {
+          "hex": "856f4a83f16f21d101bb02002066ba67b9254affc11c5e26d8b6150157f2ad110d6c9b05a993006cc59c82592201010000000a01080208158a0134014209560d574570047102730200020200000b7f0000020202000b7f02700770726f66696c65046d65746109617474656d707449640963726561746564417409617070726f76616c730773657276696365067374617475730862696e64696e67730770616972696e67097175657374696f6e7308726571756573747307616e73776572730763616e63656c73066576656e7473096c6966656379636c6509617474656d70744964107e010002010b007f017cf603009601c6020b007f96016f72672e6f70656e6c6663702e736572766963652d636f6e74726f6c2e7631617474656d70742d31323032362d31312d31395431303a30303a30305a617474656d70742d610f007f017f007f03"
+        }
+      },
+      "context": {
+        "history": []
+      },
+      "expected": {
+        "valid": true
       }
     },
     {
@@ -1737,6 +1784,303 @@
           },
           {
             "case": "service_concurrent_with_revocation",
+            "field": "automerge_change",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "UNAUTHORIZED_WRITER"
+        }
+      }
+    },
+    {
+      "id": "base_approval_repeated_by_root",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "R writes the same base approval of B as base_approval, concurrently with it (a repair of a missing A3)",
+      "rule": {
+        "section": "SERVICE-CONTROL-PROFILE-01 §3 approvals, §5 rule 3, §7.4",
+        "text": "Admitted: every operation is one its row of §3 admits for the writer's class, and the entries it writes are valid (§5)."
+      },
+      "inputs": {
+        "writer": "R",
+        "writer_ref": "p:3aQ6b2-saLXgZUuyIXd_3nZ17UGMIbTsy19Gh5Y6xTw",
+        "writer_class": "root",
+        "control_ref": "CS1_live",
+        "automerge_actor": "42a00c8f2714bde0ed4208750b456f22a1cdfe7588583ba287f7c7fe9779a24b",
+        "automerge_seq": 2,
+        "unit_actor_seq": 2,
+        "change_hash": "568d4f69a6db55b5f079f537a3bb1759123a901a52fa1eb15e772302aeb22ed4",
+        "deps": [
+          "749cf5af5b66df60f08d8e0105887b0323fea4e5edc55aea32844fa2001dea9f"
+        ],
+        "automerge_change": {
+          "hex": "856f4a83568d4f6901b40301749cf5af5b66df60f08d8e0105887b0323fea4e5edc55aea32844fa2001dea9f2042a00c8f2714bde0ed4208750b456f22a1cdfe7588583ba287f7c7fe9779a24b02100000000801020204156e34014204561057d001700209007f050810772d703a61544555593036767a6567624f7a7969335f6535526a67764a355636395a51785f4e7279576855454c373404726f6c65087265736f75726365097072696e636970616c0a63657274446967657374066365727449640a67656e65726174696f6e066f726967696e026174097f0008017c0046b605d60502b6057d139601c602626173655164346d7a334d73457a4a763552714933714964556d544845417078373033614751556977664769436d6b703a61544555593036767a6567624f7a7969335f6535526a67764a355636395a51785f4e7279576855454c373442654d5a4a6634726372686c504e6c56753051632d4d75637a704c3541687a6c75355735387a5a2d4e4b346f6a6c516951464c527867462d3875333762373179356c6942314469476b474e55594d7550582d77624e6300617474656d70742d31323032362d31312d31395431303a30303a30305a0900"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "init",
+            "field": "automerge_change",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "service_on_equivalent_approvals",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "B fills service and status on both approvals: two equal concurrent maps are one valid base approval",
+      "rule": {
+        "section": "SERVICE-CONTROL-PROFILE-01 §2.3, §5 rule 3",
+        "text": "Admitted: every operation is one its row of §3 admits for the writer's class, and the entries it writes are valid (§5)."
+      },
+      "inputs": {
+        "writer": "B",
+        "writer_ref": "p:aTEUY06vzegbOzyi3_e5RjgvJ5V69ZQx_NryWhUEL74",
+        "writer_class": "service",
+        "control_ref": "CS1_live",
+        "automerge_actor": "8f2e3580c1fe3f07babf99786304199be9602a1a23ca555aa9cdc8eacadc0045",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "change_hash": "0d19f5da39d85b60efec6850724f8b8a0f6d7e909b0548ead534fbc52ebc3f04",
+        "deps": [
+          "3af1fc8cafafd723b9f93ab9c3155df6886111a1c53430dc0826c1393836808b",
+          "568d4f69a6db55b5f079f537a3bb1759123a901a52fa1eb15e772302aeb22ed4"
+        ],
+        "automerge_change": {
+          "hex": "856f4a830d19f5da01a105023af1fc8cafafd723b9f93ab9c3155df6886111a1c53430dc0826c1393836808b568d4f69a6db55b5f079f537a3bb1759123a901a52fa1eb15e772302aeb22ed4208f2e3580c1fe3f07babf99786304199be9602a1a23ca555aa9cdc8eacadc004501190000012042a00c8f2714bde0ed4208750b456f22a1cdfe7588583ba287f7c7fe9779a24b0a010e02131106130d15b90134054214562d57cd01700206010e00030103007f01030003010606021e0a207e1e2b0306032f7f060333030700090900000f00087e0021080100017f57000d7808696e7374616e6365046b696e64056c6162656c08706c6174666f726d036170700870726f746f636f6c0176036f7073000a7f0d7175657374696f6e4b696e64730001730f6172746966616374536c6963654964056d61636f7304636572740573746174650b6d616e69666573745365710c63657274546573744d6f64650863617061636974790873656374696f6e73036d61780b64657669636573467265650573746174650573696e63650b6865617274626561744174080a01010d05017d0001020a017f0203017f0003017f0006017d66f601b60102567d00130002766f8601e60166c601566656c60100b601564600960113010003137f7602c602696e73742d316170706c652d72656d696e646572734d6163426f6f6b204169726d61636f73302e362e3001707265766965777475726e2d6f6e7475726e2d6f6666726573756d652d62696e64696e6772656d6f766572657472792d68656c7065727061757365726573756d65636865636b706169722d73656374696f6e6d6173732d64656c65746561726d363431352e316365727469666965640101081472756e6e696e67323032362d31312d31395431303a30303a30305a323032362d31312d31395431303a30303a30305a2100"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "init",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "base_approval",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "base_approval_repeated_by_root",
+            "field": "automerge_change",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "base_approval_conflicting_by_root",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "R writes a base approval of B with another certDigest, concurrently with base_approval",
+      "rule": {
+        "section": "SERVICE-CONTROL-PROFILE-01 §3 approvals, §5 rule 3",
+        "text": "Admitted: every operation is one its row of §3 admits for the writer's class, and the entries it writes are valid (§5)."
+      },
+      "inputs": {
+        "writer": "R",
+        "writer_ref": "p:3aQ6b2-saLXgZUuyIXd_3nZ17UGMIbTsy19Gh5Y6xTw",
+        "writer_class": "root",
+        "control_ref": "CS1_live",
+        "automerge_actor": "42a00c8f2714bde0ed4208750b456f22a1cdfe7588583ba287f7c7fe9779a24b",
+        "automerge_seq": 2,
+        "unit_actor_seq": 2,
+        "change_hash": "dff55b36be4ce41506a9f8aa40db34d98d93d32e6eaf90cf84678ec34c837dd9",
+        "deps": [
+          "749cf5af5b66df60f08d8e0105887b0323fea4e5edc55aea32844fa2001dea9f"
+        ],
+        "automerge_change": {
+          "hex": "856f4a83dff55b3601b40301749cf5af5b66df60f08d8e0105887b0323fea4e5edc55aea32844fa2001dea9f2042a00c8f2714bde0ed4208750b456f22a1cdfe7588583ba287f7c7fe9779a24b02100000000801020204156e34014204561057d001700209007f050810772d703a61544555593036767a6567624f7a7969335f6535526a67764a355636395a51785f4e7279576855454c373404726f6c65087265736f75726365097072696e636970616c0a63657274446967657374066365727449640a67656e65726174696f6e066f726967696e026174097f0008017c0046b605d60502b6057d139601c602626173655164346d7a334d73457a4a763552714933714964556d544845417078373033614751556977664769436d6b703a61544555593036767a6567624f7a7969335f6535526a67764a355636395a51785f4e7279576855454c37346e796b50597935776e447558446a38616b474878397876643751473966594e5a4256797350414a387973456f6a6c516951464c527867462d3875333762373179356c6942314469476b474e55594d7550582d77624e6300617474656d70742d31323032362d31312d31395431303a30303a30305a0900"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "init",
+            "field": "automerge_change",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "service_on_conflicting_approvals",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "B writes status on two concurrent approvals of B whose certDigest differs: the entry is invalid, so there is no base approval",
+      "rule": {
+        "section": "SERVICE-CONTROL-PROFILE-01 §2.3, §5 rule 3",
+        "text": "Refused whole as PROFILE_INVALID; the first diagnostic in the order of §4 is UNAUTHORIZED_WRITER."
+      },
+      "inputs": {
+        "writer": "B",
+        "writer_ref": "p:aTEUY06vzegbOzyi3_e5RjgvJ5V69ZQx_NryWhUEL74",
+        "writer_class": "other",
+        "control_ref": "CS1_live",
+        "automerge_actor": "8f2e3580c1fe3f07babf99786304199be9602a1a23ca555aa9cdc8eacadc0045",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "change_hash": "d2c13604fb2efc7d7c7a444e5336bedcd168a90af7923e06c9fabdee8e9cbb06",
+        "deps": [
+          "3af1fc8cafafd723b9f93ab9c3155df6886111a1c53430dc0826c1393836808b",
+          "dff55b36be4ce41506a9f8aa40db34d98d93d32e6eaf90cf84678ec34c837dd9"
+        ],
+        "automerge_change": {
+          "hex": "856f4a83d2c1360401ef01023af1fc8cafafd723b9f93ab9c3155df6886111a1c53430dc0826c1393836808bdff55b36be4ce41506a9f8aa40db34d98d93d32e6eaf90cf84678ec34c837dd9208f2e3580c1fe3f07babf99786304199be9602a1a23ca555aa9cdc8eacadc004501190000012042a00c8f2714bde0ed4208750b456f22a1cdfe7588583ba287f7c7fe9779a24b08010202021519340142025605572f7002030103077d0573746174650573696e63650b68656172746265617441740303017f7602c60272756e6e696e67323032362d31312d31395431303a30303a30305a323032362d31312d31395431303a30303a30305a0300"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "init",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "base_approval",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "base_approval_conflicting_by_root",
+            "field": "automerge_change",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": false,
+        "disposition": "reject",
+        "error": {
+          "code": "PROFILE_INVALID",
+          "diagnostic": "UNAUTHORIZED_WRITER"
+        }
+      }
+    },
+    {
+      "id": "revoke_one_of_equivalent_approvals",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "A creates revoked in the approval of B that it sees, one of the two equal maps",
+      "rule": {
+        "section": "SERVICE-CONTROL-PROFILE-01 §3 approvals, §5 rule 3",
+        "text": "Admitted: every operation is one its row of §3 admits for the writer's class, and the entries it writes are valid (§5)."
+      },
+      "inputs": {
+        "writer": "A",
+        "writer_ref": "p:HbMX07fxI5w5h-Y3s1tyD7_mtoWjGICvyvYX1-jOB6Y",
+        "writer_class": "personal",
+        "control_ref": "CS1_live",
+        "automerge_actor": "66ba67b9254affc11c5e26d8b6150157f2ad110d6c9b05a993006cc59c825922",
+        "automerge_seq": 2,
+        "unit_actor_seq": 2,
+        "change_hash": "ef66f75f3433c2f71724fa970fec5c96abbcff3e46c43890e82920449dc5350d",
+        "deps": [
+          "0d19f5da39d85b60efec6850724f8b8a0f6d7e909b0548ead534fbc52ebc3f04",
+          "3af1fc8cafafd723b9f93ab9c3155df6886111a1c53430dc0826c1393836808b"
+        ],
+        "automerge_change": {
+          "hex": "856f4a83ef66f75f01a701020d19f5da39d85b60efec6850724f8b8a0f6d7e909b0548ead534fbc52ebc3f043af1fc8cafafd723b9f93ab9c3155df6886111a1c53430dc0826c1393836808b2066ba67b9254affc11c5e26d8b6150157f2ad110d6c9b05a993006cc59c825922023a0000000801020203150c3401420356045714700202007e103a7e077265766f6b6564026174027e00017e00c602323032362d31312d31395431303a30303a30305a0200"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "init",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "base_approval",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "base_approval_repeated_by_root",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "service_on_equivalent_approvals",
+            "field": "automerge_change",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "service_after_revoking_one_equivalent_map",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "B writes status.heartbeatAt after the revocation: a revoked value in either map means revoked",
+      "rule": {
+        "section": "SERVICE-CONTROL-PROFILE-01 §2.3, §5 rule 3",
+        "text": "Refused whole as PROFILE_INVALID; the first diagnostic in the order of §4 is UNAUTHORIZED_WRITER."
+      },
+      "inputs": {
+        "writer": "B",
+        "writer_ref": "p:aTEUY06vzegbOzyi3_e5RjgvJ5V69ZQx_NryWhUEL74",
+        "writer_class": "other",
+        "control_ref": "CS1_live",
+        "automerge_actor": "8f2e3580c1fe3f07babf99786304199be9602a1a23ca555aa9cdc8eacadc0045",
+        "automerge_seq": 2,
+        "unit_actor_seq": 2,
+        "change_hash": "0138f24a0571a8506c223539424b7b07c5e2e0ca6216b05e5491b921b8cc5326",
+        "deps": [
+          "0d19f5da39d85b60efec6850724f8b8a0f6d7e909b0548ead534fbc52ebc3f04",
+          "ef66f75f3433c2f71724fa970fec5c96abbcff3e46c43890e82920449dc5350d"
+        ],
+        "automerge_change": {
+          "hex": "856f4a830138f24a01ce01020d19f5da39d85b60efec6850724f8b8a0f6d7e909b0548ead534fbc52ebc3f04ef66f75f3433c2f71724fa970fec5c96abbcff3e46c43890e82920449dc5350d208f2e3580c1fe3f07babf99786304199be9602a1a23ca555aa9cdc8eacadc0045023c0000012042a00c8f2714bde0ed4208750b456f22a1cdfe7588583ba287f7c7fe9779a24b0a01020202150d34014202560357147002710273027f017f077f0b6865617274626561744174017f017fc602323032362d31312d31395431303a33303a30305a7f017f007f39"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "init",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "base_approval",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "base_approval_repeated_by_root",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "service_on_equivalent_approvals",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "revoke_one_of_equivalent_approvals",
             "field": "automerge_change",
             "in": "inputs"
           }
@@ -4171,6 +4515,60 @@
       }
     },
     {
+      "id": "cancel_by_root",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "R creates cancels[r4] = {user}",
+      "rule": {
+        "section": "SERVICE-CONTROL-PROFILE-01 §3 cancels, §6.3",
+        "text": "Admitted: every operation is one its row of §3 admits for the writer's class, and the entries it writes are valid (§5)."
+      },
+      "inputs": {
+        "writer": "R",
+        "writer_ref": "p:3aQ6b2-saLXgZUuyIXd_3nZ17UGMIbTsy19Gh5Y6xTw",
+        "writer_class": "root",
+        "control_ref": "CS1_live",
+        "automerge_actor": "42a00c8f2714bde0ed4208750b456f22a1cdfe7588583ba287f7c7fe9779a24b",
+        "automerge_seq": 2,
+        "unit_actor_seq": 2,
+        "change_hash": "067c8565ea4908d2b38893353df1b186fc70198b16902125830b08259123fab9",
+        "deps": [
+          "0c0e594ce8833d027722d821878b2693379ebc758ca7719ceefddebda6f6590a",
+          "749cf5af5b66df60f08d8e0105887b0323fea4e5edc55aea32844fa2001dea9f"
+        ],
+        "automerge_change": {
+          "hex": "856f4a83067c856501d201020c0e594ce8833d027722d821878b2693379ebc758ca7719ceefddebda6f6590a749cf5af5b66df60f08d8e0105887b0323fea4e5edc55aea32844fa2001dea9f2042a00c8f2714bde0ed4208750b456f22a1cdfe7588583ba287f7c7fe9779a24b024f000000080102020415303401420456055718700203007f0d024f7d2430313936663261302d303030302d373030302d383030302d30303030303030303030303406726561736f6e026174037f0002017d0046c60275736572323032362d31312d31395431303a30303a30305a0300"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "init",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "base_approval",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "service_fill",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "request_turn_on",
+            "field": "automerge_change",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
       "id": "cancel_created",
       "type": "validation",
       "kind": "profile_change",
@@ -5622,6 +6020,186 @@
           },
           {
             "case": "question_resolved",
+            "field": "automerge_change",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "switch_resolved_by_b",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "B writes questions[q1].resolved with a1 and events[a1] = applied",
+      "rule": {
+        "section": "SERVICE-CONTROL-PROFILE-01 §3 questions, §10",
+        "text": "Admitted: every operation is one its row of §3 admits for the writer's class, and the entries it writes are valid (§5)."
+      },
+      "inputs": {
+        "writer": "B",
+        "writer_ref": "p:aTEUY06vzegbOzyi3_e5RjgvJ5V69ZQx_NryWhUEL74",
+        "writer_class": "service",
+        "control_ref": "CS1_live",
+        "automerge_actor": "8f2e3580c1fe3f07babf99786304199be9602a1a23ca555aa9cdc8eacadc0045",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "change_hash": "b6f9dc1ff90a6558619f9d79175fb1c3ecaeb9ec69b9b69dd15c670da6bdc7ae",
+        "deps": [
+          "0bc85ce1affcaee65468afbb3792da19673d5947a2a4b451e2bd507ad7bc1b0f",
+          "d3dfca2fe67cd2bd2519c837c1b3f3b6dd836f27e01d3a7cd24efee10fe54974"
+        ],
+        "automerge_change": {
+          "hex": "856f4a83b6f9dc1f01e002020bc85ce1affcaee65468afbb3792da19673d5947a2a4b451e2bd507ad7bc1b0fd3dfca2fe67cd2bd2519c837c1b3f3b6dd836f27e01d3a7cd24efee10fe54974208f2e3580c1fe3f07babf99786304199be9602a1a23ca555aa9cdc8eacadc004503580000012042a00c8f2714bde0ed4208750b456f22a1cdfe7588583ba287f7c7fe9779a24b0801040208154b34014208560b575a70027f0106007f0e02587f44035b792430313936663261302d303030302d373030302d383030302d303030303030303030303231057374617465026174087265736f6c76656408616e7377657249640663686f696365026174077f0002017f000301790076c60200c60476c6026170706c696564323032362d31312d31395431303a30303a30305a30313936663261302d303030302d373030302d383030302d303030303030303030303231726573746f7265323032362d31312d31395431303a30303a30305a0700"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "init",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "base_approval",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "service_fill",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "question_created",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "answer_created",
+            "field": "automerge_change",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "switch_base_to_b2",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "A, concurrently, revokes B's base approval and writes the base approval of B2 in one change",
+      "rule": {
+        "section": "SERVICE-CONTROL-PROFILE-01 §3 approvals, §7.2, §7.3",
+        "text": "Admitted: every operation is one its row of §3 admits for the writer's class, and the entries it writes are valid (§5)."
+      },
+      "inputs": {
+        "writer": "A",
+        "writer_ref": "p:HbMX07fxI5w5h-Y3s1tyD7_mtoWjGICvyvYX1-jOB6Y",
+        "writer_class": "personal",
+        "control_ref": "CS1_live",
+        "automerge_actor": "66ba67b9254affc11c5e26d8b6150157f2ad110d6c9b05a993006cc59c825922",
+        "automerge_seq": 3,
+        "unit_actor_seq": 3,
+        "change_hash": "60262c6087391b9b05b38be77a84e475d765eef53acf6c5efb6de716e45f260b",
+        "deps": [
+          "d3dfca2fe67cd2bd2519c837c1b3f3b6dd836f27e01d3a7cd24efee10fe54974"
+        ],
+        "automerge_change": {
+          "hex": "856f4a8360262c6001ff0301d3dfca2fe67cd2bd2519c837c1b3f3b6dd836f27e01d3a7cd24efee10fe549742066ba67b9254affc11c5e26d8b6150157f2ad110d6c9b05a993006cc59c82592203580000012042a00c8f2714bde0ed4208750b456f22a1cdfe7588583ba287f7c7fe9779a24b0801060206157934014206561357e401700202007f0108007d105805085a75077265766f6b65640261742d703a39716251676d757755675437524a687a583472784e724e2d45514c577638696e5968345341776568694f7704726f6c65087265736f75726365097072696e636970616c0a63657274446967657374066365727449640a67656e65726174696f6e066f726967696e0261740b7d00010008017a00c6020046b605d60502b6057d139601c602323032362d31312d31395431303a30303a30305a626173655164346d7a334d73457a4a763552714933714964556d544845417078373033614751556977664769436d6b703a39716251676d757755675437524a687a583472784e724e2d45514c577638696e5968345341776568694f7772356831663167485f5154414571416b5032316f4e31366a64783556336b2d55306c516b514a63457679414958744147444275524b354e716733646642636a78666b6b6d4d6e314d63756239447046376d57525a6a6300617474656d70742d32323032362d31312d31395431303a30303a30305a0b00"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "init",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "base_approval",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "service_fill",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "question_created",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "answer_created",
+            "field": "automerge_change",
+            "in": "inputs"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "switch_superseded_by_b2",
+      "type": "validation",
+      "kind": "profile_change",
+      "description": "B2, the only base in its pre-state, writes questions[q1].superseded: the pre-state holds neither marker",
+      "rule": {
+        "section": "SERVICE-CONTROL-PROFILE-01 §2.3, §3 questions",
+        "text": "Admitted: every operation is one its row of §3 admits for the writer's class, and the entries it writes are valid (§5)."
+      },
+      "inputs": {
+        "writer": "B2",
+        "writer_ref": "p:9qbQgmuwUgT7RJhzX4rxNrN-EQLWv8inYh4SAwehiOw",
+        "writer_class": "service",
+        "control_ref": "CS1_live",
+        "automerge_actor": "e390d5bcf97fea6071b5da0790ef6d91d358b65c3343e5fdc6f9b630fc8760b5",
+        "automerge_seq": 1,
+        "unit_actor_seq": 1,
+        "change_hash": "042a8e46537bfcdb09cb4a7614bdac5e3fa986ab5c40c5075e11a845cd640057",
+        "deps": [
+          "60262c6087391b9b05b38be77a84e475d765eef53acf6c5efb6de716e45f260b"
+        ],
+        "automerge_change": {
+          "hex": "856f4a83042a8e46019b010160262c6087391b9b05b38be77a84e475d765eef53acf6c5efb6de716e45f260b20e390d5bcf97fea6071b5da0790ef6d91d358b65c3343e5fdc6f9b630fc8760b50163000001208f2e3580c1fe3f07babf99786304199be9602a1a23ca555aa9cdc8eacadc00450801030203150f340142035603570470027e01007e44637e0a73757065727365646564026279027e00017e0046616e2d320200"
+        }
+      },
+      "context": {
+        "history": [
+          {
+            "case": "init",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "base_approval",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "service_fill",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "question_created",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "answer_created",
+            "field": "automerge_change",
+            "in": "inputs"
+          },
+          {
+            "case": "switch_base_to_b2",
             "field": "automerge_change",
             "in": "inputs"
           }
@@ -8332,7 +8910,7 @@
       },
       "assertions": [
         "Both delivery orders give the same document.",
-        "question_resolved_after_superseded (refused) shows that a superseded question is never resolved: resolved and superseded are exclusive."
+        "question_resolved_after_superseded (refused) shows that a later change never adds resolved to a superseded question; concurrent markers are concurrent_resolved_superseded."
       ]
     },
     {
@@ -8413,6 +8991,155 @@
       },
       "assertions": [
         "Both delivery orders give the same document."
+      ]
+    },
+    {
+      "id": "concurrent_resolved_superseded",
+      "type": "behavioral",
+      "kind": "control_document",
+      "description": "switch_resolved_by_b (B) and switch_superseded_by_b2 (B2 after the change of base), each made on answer_created, delivered in both orders",
+      "rule": {
+        "section": "SERVICE-CONTROL-PROFILE-01 §3 questions, §5 rule 3",
+        "text": "Each marker is created on a pre-state that holds neither, by the service class of its own causal history, so both are admitted; a question holding both is read as resolved."
+      },
+      "inputs": {
+        "orders": [
+          [
+            {
+              "case": "init"
+            },
+            {
+              "case": "base_approval"
+            },
+            {
+              "case": "service_fill"
+            },
+            {
+              "case": "question_created"
+            },
+            {
+              "case": "answer_created"
+            },
+            {
+              "case": "switch_resolved_by_b"
+            },
+            {
+              "case": "switch_base_to_b2"
+            },
+            {
+              "case": "switch_superseded_by_b2"
+            }
+          ],
+          [
+            {
+              "case": "init"
+            },
+            {
+              "case": "base_approval"
+            },
+            {
+              "case": "service_fill"
+            },
+            {
+              "case": "question_created"
+            },
+            {
+              "case": "answer_created"
+            },
+            {
+              "case": "switch_base_to_b2"
+            },
+            {
+              "case": "switch_superseded_by_b2"
+            },
+            {
+              "case": "switch_resolved_by_b"
+            }
+          ]
+        ]
+      },
+      "expected": {
+        "admitted": [
+          "init",
+          "base_approval",
+          "service_fill",
+          "question_created",
+          "answer_created",
+          "switch_resolved_by_b",
+          "switch_base_to_b2",
+          "switch_superseded_by_b2"
+        ],
+        "refused": {},
+        "state": {
+          "question": "resolved by 0196f2a0-0000-7000-8000-000000000021",
+          "event_a1": "applied",
+          "event_a2": "absent",
+          "holds_resolved": true,
+          "holds_superseded": true
+        }
+      },
+      "assertions": [
+        "Both delivery orders give the same document.",
+        "The two markers are made by different actors; neither change is an ancestor of the other."
+      ]
+    },
+    {
+      "id": "equivalent_concurrent_approvals",
+      "type": "behavioral",
+      "kind": "control_document",
+      "description": "base_approval (A) and base_approval_repeated_by_root (R), each made on init, delivered in both orders, then B's first write",
+      "rule": {
+        "section": "SERVICE-CONTROL-PROFILE-01 §2.3, §5 rule 3, §7.4",
+        "text": "Two concurrent maps of approvals[p:<B>] with equal role, resource, principal, certDigest, certId and generation are one valid base approval: B keeps the class service."
+      },
+      "inputs": {
+        "orders": [
+          [
+            {
+              "case": "init"
+            },
+            {
+              "case": "base_approval"
+            },
+            {
+              "case": "base_approval_repeated_by_root"
+            },
+            {
+              "case": "service_on_equivalent_approvals"
+            }
+          ],
+          [
+            {
+              "case": "init"
+            },
+            {
+              "case": "base_approval_repeated_by_root"
+            },
+            {
+              "case": "base_approval"
+            },
+            {
+              "case": "service_on_equivalent_approvals"
+            }
+          ]
+        ]
+      },
+      "expected": {
+        "admitted": [
+          "init",
+          "base_approval",
+          "base_approval_repeated_by_root",
+          "service_on_equivalent_approvals"
+        ],
+        "refused": {},
+        "state": {
+          "approval_maps": 2,
+          "status_state": "running"
+        }
+      },
+      "assertions": [
+        "service_on_conflicting_approvals (refused): maps that differ make the entry invalid.",
+        "service_after_revoking_one_equivalent_map (refused): a revoked value in one map revokes the approval."
       ]
     },
     {
