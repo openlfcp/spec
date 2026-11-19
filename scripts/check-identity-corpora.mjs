@@ -8,6 +8,9 @@
 //   @automerge/automerge;
 // - test-vectors/identity-01/IDENTITY-FLOW-FIXTURES-01.{json,md}, by
 //   generate_identity_flow_fixtures_01.py (Python standard library only);
+// - test-vectors/service-control-01/SERVICE-CONTROL-TEST-VECTORS-01.{json,md}
+//   (SERVICE-CONTROL-PROFILE-01 §12), by generate_service_control_vectors_01.mjs
+//   with the pinned @automerge/automerge;
 // - test-vectors/lfcp-wire-01/LFCP-IDENTITY-TEST-VECTORS-01.{json,md}, by
 //   generate_lfcp_identity_test_vectors_01.py, when the Python module
 //   `cryptography` is available (as for LFCP-TEST-VECTORS-01, the generator
@@ -35,6 +38,7 @@ const corpora = [
   { dir: "test-vectors/lfcp-wire-01", base: "LFCP-IDENTITY-TEST-VECTORS-01", cmd: [python, "generate_lfcp_identity_test_vectors_01.py"], needs: "cryptography" },
   { dir: "test-vectors/identity-01", base: "IDENTITY-PROFILE-TEST-VECTORS-01", cmd: ["node", "generate_identity_profile_vectors_01.mjs"] },
   { dir: "test-vectors/identity-01", base: "IDENTITY-FLOW-FIXTURES-01", cmd: [python, "generate_identity_flow_fixtures_01.py"] },
+  { dir: "test-vectors/service-control-01", base: "SERVICE-CONTROL-TEST-VECTORS-01", cmd: ["node", "generate_service_control_vectors_01.mjs"] },
 ];
 
 let failed = false;

@@ -5,7 +5,7 @@
 **Date:** 2026-11-19  
 **Profile identifier:** `org.openlfcp.service-control.v1`  
 **Dependencies:** LFCP-WIRE-01 (this repository, same revision); SHARED-OBJECTS-PROFILE-01 §§7–14 at `mvp-0.2-baseline.12`; IDENTITY-PROFILE-01 (this repository, same revision), in particular §2.3, §5.2, §5.3, §7.1, §8, §9 and §10  
-**Companions:** `SERVICE-CONTROL-TEST-VECTORS-01` (admission and replica transitions, §12), to be published with the next MVP 0.6 tag
+**Companions:** `test-vectors/service-control-01/SERVICE-CONTROL-TEST-VECTORS-01.{md,json}` (admission and replica transitions, §12)
 
 > This document defines the **control Resource** `C`: the end-to-end encrypted channel through which the devices of one human manage one service installation (a bridge) that works for that human: status, section bindings, questions and answers, requests and their events, approval records, and section pairing. The server does not interpret it. Nothing in this document confers authority: every authority decision is made by `C`'s own Control Chain under LFCP-WIRE-01 §80.1; the writer classes of §2.3 only restrict which admitted writers may change which parts of the document.
 
@@ -122,7 +122,7 @@ Each row lists the only mutations admitted at its position; every other operatio
 |  | `service` | delete when `questions[qid]` (its `qid`) is absent or holds `resolved` or `superseded` |
 | `cancels[rid]` | `root`, `personal` | create when `rid` never held a value and `requests[rid]` is present |
 |  | `service` | delete when `requests[rid]` is absent after the change |
-| `events[id]` | `service` | create when `id` never held a value and `requests[id]` or `answers[id]` is present; write `state` to the same or a later value of §6.2, together with `code`, `detail` and `at`; nothing once the event is final; delete when final and `requests[id]` and `answers[id]` are absent after the change |
+| `events[id]` | `service` | create when `id` never held a value and `requests[id]` or `answers[id]` is present; write `state` to the same or a later value of §6.2, together with `code`, `detail` and `at`, and delete `code` or `detail` (a retryable code does not outlive its state); nothing once the event is final; delete when final and `requests[id]` and `answers[id]` are absent after the change |
 
 An entry is **created** by one change as a whole map: the change that creates `approvals[P]`, `requests[rid]`, `answers[aid]`, `cancels[rid]`, `pairing[rid]`, `questions[qid]` or `events[id]` writes all its fields; later changes write only what the row allows. The root key and its container are never replaced or deleted (SC2).
 
@@ -141,9 +141,9 @@ As IDENTITY §3: when a change arrives, the checks of its bytes alone, then, onc
 | SC4 | creates collaborative Text anywhere; or leaves an entry it creates or writes (or `service`, `status`, `lifecycle`) invalid by §5 in the state of its causal history and the change, conflicts aside | `INVALID_FIELD_TYPE` (or the §5 diagnostic) |
 | SC5 | is signed by a writer of class `other`; or contains an operation at a position whose row in §3 does not name the writer's class | `UNAUTHORIZED_WRITER` |
 | SC6 | contains an operation the row of its position does not admit for that writer: a second creation, a write into an entry other than the one the row allows, a deletion before its condition holds, a backward or post-final `events` write | `FORBIDDEN_MUTATION` |
-| SC7 | leaves, after the change in its causal history, an entry larger than its limit, an `Example` longer than 80 Unicode scalar values or more than 5 `items`, more than 32 open requests, or more than one open `pair-section` request | `LIMIT_EXCEEDED` |
+| SC7 | leaves, after the change in its causal history, an entry it creates or writes (or `service`, `status`, `lifecycle`) larger than its limit, with an `Example` longer than 80 Unicode scalar values or with more than 5 `items`; or creates a request and leaves more than 32 open requests, or more than one open `pair-section` request | `LIMIT_EXCEEDED` |
 
-**Sizes.** The size of an entry (and of `service`, `status`, `lifecycle` as wholes) is the sum, over every value present in it after the change in its causal history (concurrent values of a field included), of: the UTF-8 length of every map key and every string, and 8 bytes for every other scalar. The limit is 4096 bytes, and 8192 for a `pairing` entry. A request is **open** when it is present and `events[rid]` is absent or not final; a `pair-section` request likewise.
+**Sizes.** The size of an entry (and of `service`, `status`, `lifecycle` as wholes) is the sum, over every value present in it after the change in its causal history (concurrent values of a field included), of: the UTF-8 length of every map key and every string, and 8 bytes for every other scalar. The limit is 4096 bytes, and 8192 for a `pairing` entry. A request is **open** when it is present and `events[rid]` is absent or not final; a `pair-section` request likewise. Concurrent creations can exceed the counts; a change that creates no request is never refused for them, so the service can still write its events and heartbeat, and the clients can still cancel.
 
 **The initial change.** A change that SC0 identifies as the initial change and admits is exempt from SC1, SC5 and SC6: its writer is the Genesis signer, whatever its class at `control_ref`, and it is the only change that creates root keys or writes `profile` and `meta`. Any other change that creates a root key of §2.1 breaks SC2 (it replaces a container), and one that creates another root key breaks SC3.
 
@@ -159,12 +159,13 @@ A change that breaks a rule is `PROFILE_INVALID` with that diagnostic, is not me
 |---|---|
 | `INVALID_ROOT` | `profile` differs, a root key is missing or not of its §2.1 kind |
 | `MISSING_REQUIRED_FIELD` | a required field of §2.1 is absent |
-| `INVALID_FIELD_TYPE` | a field has the wrong type; a list too long; an `Example` too long |
+| `INVALID_FIELD_TYPE` | a field has the wrong type |
 | `INVALID_RESOURCE_REF`, `INVALID_PRINCIPAL_REF` | as IDENTITY §4 |
 | `INVALID_KEY` | a key of `pairing`, `questions`, `requests`, `answers`, `cancels` or `events` is not a `Uuid`; a key of `approvals` differs from `principal` |
 | `INVALID_ENUM_VALUE` | `role`, `cancels.reason`, `lifecycle.op` or `events.state` is not a value of §2.1; `op` does not match `Op`; `approvals.role = "base"` with `resource` other than `C` |
 | `INVALID_TIMESTAMP` | a timestamp is not RFC 3339 UTC (SOP §28) |
 | `INVALID_DESCRIPTOR` | `pairing[rid].descriptor` is not the base64url of a valid W §7 descriptor whose ID is `principal`, or `fp` is not its fingerprint (IDENTITY §5.2) |
+| `LIMIT_EXCEEDED` | an `Example` longer than 80 Unicode scalar values; more than 5 `items`; an entry larger than its limit (§4 Sizes) |
 
 Rules:
 
@@ -232,6 +233,10 @@ A client revokes a service Principal `P` (IDENTITY §8) because of `C` only when
 
 Never: a Principal read from a field written by `service`; a device of kind `0` or `2`; an approval of another control Resource; a `generation` mismatch; another root. After the revocation the client writes `approvals[P].revoked` and rotates as IDENTITY §8.4 says. A service device of `R` without an approval in any `C` is revoked only by the human's explicit choice (IDENTITY §8).
 
+### 7.3 Two base approvals
+
+Two valid base approvals without `revoked` mean no `service` class (§2.3): the service's writes are refused until `root` or `personal` revokes one, and clients show the conflict with the two installations' labels and fingerprints.
+
 ### 7.4 Repair and reconciliation
 
 The approval record is derivable from public state, so any client of class `root` or `personal` in `C` that implements this profile and holds `I`'s verified chain MAY write a missing A3 (a takeover, IDENTITY §9.6); it writes nothing that the chains do not prove:
@@ -246,10 +251,6 @@ The approval record is derivable from public state, so any client of class `root
 **Reconciliation order (IDENTITY §7.1 step 2).** A control Resource `C` **names** a kind-1 device `P` only when conditions 1 to 3 of the Section rule prove `P` for some `requests[rid]` of `C`, or when `P`'s scope is exactly `[C]`. A `pairing[rid]` whose `principal` is not so proven is ignored for this purpose: it neither defers the registration of `P` nor produces an approval, and a client MAY show it as an error of that `C`'s service. A reconciler that implements this profile registers a kind-1 device `P` in a Resource `X` only after it has synchronised every control Resource of the roster, and, when one of them names `P`, only once `approvals[P]` is present there, writing it by the rules above first when it is missing. While a control Resource is unreachable, it defers the registrations of kind-1 devices and retries on its next run.
 
 *Informative.* A client that does not implement this profile (one that does not open `C`, §11) reconciles as IDENTITY §7.1 says and may register such a `P` before A3. This follows from §11 and from IDENTITY §7.1 as already deployed, not from an exception to the order of §7.1: the rights of `P` in `C` still come only from the approval record (§2.3), and a section installation does not read `C`. The window closes when the approving client repeats A3 from its journal (§7.1), or when a client that implements this profile repairs it as above. Until then `P` has no `service` class (a base) and §7.2 offers no revocation through `C`: a Remove waits for the repair and is shown as "Finishing connection…", while the human can still revoke `P` explicitly (IDENTITY §8).
-
-### 7.3 Two base approvals
-
-Two valid base approvals without `revoked` mean no `service` class (§2.3): the service's writes are refused until `root` or `personal` revokes one, and clients show the conflict with the two installations' labels and fingerprints.
 
 ---
 
@@ -315,4 +316,4 @@ A change of the root keys, of the mutation table or of the meaning of an existin
 
 ## 12. Test vectors
 
-`SERVICE-CONTROL-TEST-VECTORS-01` (in `lfcp-vector-format/1`, the conventions of the identity profile corpus, IDENTITY §12.1) covers at least one admitted and one refused case for each cell of §3 — `root`, `personal`, `service` by approval, a section installation, a pairing device, another root —, insertion, rewrite and deletion; `events` only forward; concurrent `resolved` and `superseded`; deletion of a request before and after its final event; two base approvals; a service change without the approval in its causal history; the limits of §4; and an unknown `op`: admitted, `rejected{unsupported_op}`, no effect. Until it is published, claim "implements Working Draft SERVICE-CONTROL-PROFILE-01 at revision …", not interoperability.
+`SERVICE-CONTROL-TEST-VECTORS-01` (`test-vectors/service-control-01/`, in `lfcp-vector-format/1`, the conventions of the identity profile corpus, IDENTITY §12.1; generated with its reference admission by `generate_service_control_vectors_01.mjs`) covers at least one admitted and one refused case for each cell of §3 — `root`, `personal`, `service` by approval, a section installation, a pairing device, another root —, insertion, rewrite and deletion; `events` only forward; concurrent `resolved` and `superseded` (made by two base installations across a change of base approval), a `superseded` concurrent with an answer, two concurrent answers; deletion of a request before and after its final event; two base approvals; two equal concurrent maps of one approval (§5 rule 3); a service change without the approval in its causal history; the limits of §4; and an unknown `op`: admitted, `rejected{unsupported_op}`, no effect. Until it enters a baseline, claim "implements Working Draft SERVICE-CONTROL-PROFILE-01 at revision …", not interoperability.
