@@ -79,6 +79,7 @@ directory).
 | `test-vectors/lfcp-wire-01/generate_lfcp_identity_test_vectors_01.py` | Working Draft corpus for MVP 0.4, not in this baseline: the generator of the wire identity vectors, to enter `mvp-0.4-baseline.1`; listed because every file under `test-vectors/` is |
 | `test-vectors/lfcp-wire-01/identity_model.py` | Working Draft corpus for MVP 0.4, not in this baseline: the identity generator's reference model, to enter `mvp-0.4-baseline.1`; listed because every file under `test-vectors/` is |
 | `test-vectors/identity-01/` | Working Draft corpus for MVP 0.4, not in this baseline: the identity profile corpus, the identity flow fixtures and their generators, to enter `mvp-0.4-baseline.1`; listed because every file under `test-vectors/` is |
+| `test-vectors/service-control-01/` | Working Draft corpus for MVP 0.6, not in this baseline: SERVICE-CONTROL-TEST-VECTORS-01 (SERVICE-CONTROL-PROFILE-01 §12) with its generator; listed because every file under `test-vectors/` is |
 | `test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.json` | Shared Objects vectors, machine-readable: deterministic, validation and behavioral cases |
 | `test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.md` | Shared Objects vectors, human-readable |
 | `test-vectors/shared-objects-01/generate_shared_objects_test_vectors_01.py` | Generator; reproduces both Shared Objects vector files byte for byte |

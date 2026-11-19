@@ -5,7 +5,7 @@
 **Date:** 2026-11-19  
 **Profile identifier:** `org.openlfcp.service-control.v1`  
 **Dependencies:** LFCP-WIRE-01 (this repository, same revision); SHARED-OBJECTS-PROFILE-01 §§7–14 at `mvp-0.2-baseline.12`; IDENTITY-PROFILE-01 (this repository, same revision), in particular §2.3, §5.2, §5.3, §7.1, §8, §9 and §10  
-**Companions:** `SERVICE-CONTROL-TEST-VECTORS-01` (admission and replica transitions, §12), to be published with the next MVP 0.6 tag
+**Companions:** `test-vectors/service-control-01/SERVICE-CONTROL-TEST-VECTORS-01.{md,json}` (admission and replica transitions, §12)
 
 > This document defines the **control Resource** `C`: the end-to-end encrypted channel through which the devices of one human manage one service installation (a bridge) that works for that human: status, section bindings, questions and answers, requests and their events, approval records, and section pairing. The server does not interpret it. Nothing in this document confers authority: every authority decision is made by `C`'s own Control Chain under LFCP-WIRE-01 §80.1; the writer classes of §2.3 only restrict which admitted writers may change which parts of the document.
 
@@ -316,4 +316,4 @@ A change of the root keys, of the mutation table or of the meaning of an existin
 
 ## 12. Test vectors
 
-`SERVICE-CONTROL-TEST-VECTORS-01` (in `lfcp-vector-format/1`, the conventions of the identity profile corpus, IDENTITY §12.1) covers at least one admitted and one refused case for each cell of §3 — `root`, `personal`, `service` by approval, a section installation, a pairing device, another root —, insertion, rewrite and deletion; `events` only forward; concurrent `resolved` and `superseded`; deletion of a request before and after its final event; two base approvals; a service change without the approval in its causal history; the limits of §4; and an unknown `op`: admitted, `rejected{unsupported_op}`, no effect. Until it is published, claim "implements Working Draft SERVICE-CONTROL-PROFILE-01 at revision …", not interoperability.
+`SERVICE-CONTROL-TEST-VECTORS-01` (`test-vectors/service-control-01/`, in `lfcp-vector-format/1`, the conventions of the identity profile corpus, IDENTITY §12.1; generated with its reference admission by `generate_service_control_vectors_01.mjs`) covers at least one admitted and one refused case for each cell of §3 — `root`, `personal`, `service` by approval, a section installation, a pairing device, another root —, insertion, rewrite and deletion; `events` only forward; `resolved` and `superseded` exclusive, a `superseded` concurrent with an answer, two concurrent answers; deletion of a request before and after its final event; two base approvals; a service change without the approval in its causal history; the limits of §4; and an unknown `op`: admitted, `rejected{unsupported_op}`, no effect. Until it enters a baseline, claim "implements Working Draft SERVICE-CONTROL-PROFILE-01 at revision …", not interoperability.

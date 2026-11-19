@@ -79,6 +79,7 @@ directory).
 | `test-vectors/identity-01/IDENTITY-FLOW-FIXTURES-01.json` | Flow fixtures (§12.3; LFCP-WIRE-01 §107 style), machine-readable: 28 state-machine and durable-operation fixtures (the 19 of §12.3; F05 in three parts, F07 in two, F08 in six, F13 in two) whose steps name the cases of the two identity suites and form one Control history per Resource and branch |
 | `test-vectors/identity-01/IDENTITY-FLOW-FIXTURES-01.md` | Flow fixtures, human-readable |
 | `test-vectors/identity-01/generate_identity_flow_fixtures_01.py` | Fixture generator (Python standard library); reproduces both files byte for byte and checks every step outcome against the case it names |
+| `test-vectors/service-control-01/` | Working Draft corpus for MVP 0.6, not in this baseline: SERVICE-CONTROL-TEST-VECTORS-01 (SERVICE-CONTROL-PROFILE-01 §12) with its generator; listed because every file under `test-vectors/` is |
 | `test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.json` | Shared Objects vectors, machine-readable: deterministic, validation and behavioral cases |
 | `test-vectors/shared-objects-01/SHARED-OBJECTS-TEST-VECTORS-01.md` | Shared Objects vectors, human-readable |
 | `test-vectors/shared-objects-01/generate_shared_objects_test_vectors_01.py` | Generator; reproduces both Shared Objects vector files byte for byte |
