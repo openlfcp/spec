@@ -233,6 +233,10 @@ A client revokes a service Principal `P` (IDENTITY §8) because of `C` only when
 
 Never: a Principal read from a field written by `service`; a device of kind `0` or `2`; an approval of another control Resource; a `generation` mismatch; another root. After the revocation the client writes `approvals[P].revoked` and rotates as IDENTITY §8.4 says. A service device of `R` without an approval in any `C` is revoked only by the human's explicit choice (IDENTITY §8).
 
+### 7.3 Two base approvals
+
+Two valid base approvals without `revoked` mean no `service` class (§2.3): the service's writes are refused until `root` or `personal` revokes one, and clients show the conflict with the two installations' labels and fingerprints.
+
 ### 7.4 Repair and reconciliation
 
 The approval record is derivable from public state, so any client of class `root` or `personal` in `C` that implements this profile and holds `I`'s verified chain MAY write a missing A3 (a takeover, IDENTITY §9.6); it writes nothing that the chains do not prove:
@@ -247,10 +251,6 @@ The approval record is derivable from public state, so any client of class `root
 **Reconciliation order (IDENTITY §7.1 step 2).** A control Resource `C` **names** a kind-1 device `P` only when conditions 1 to 3 of the Section rule prove `P` for some `requests[rid]` of `C`, or when `P`'s scope is exactly `[C]`. A `pairing[rid]` whose `principal` is not so proven is ignored for this purpose: it neither defers the registration of `P` nor produces an approval, and a client MAY show it as an error of that `C`'s service. A reconciler that implements this profile registers a kind-1 device `P` in a Resource `X` only after it has synchronised every control Resource of the roster, and, when one of them names `P`, only once `approvals[P]` is present there, writing it by the rules above first when it is missing. While a control Resource is unreachable, it defers the registrations of kind-1 devices and retries on its next run.
 
 *Informative.* A client that does not implement this profile (one that does not open `C`, §11) reconciles as IDENTITY §7.1 says and may register such a `P` before A3. This follows from §11 and from IDENTITY §7.1 as already deployed, not from an exception to the order of §7.1: the rights of `P` in `C` still come only from the approval record (§2.3), and a section installation does not read `C`. The window closes when the approving client repeats A3 from its journal (§7.1), or when a client that implements this profile repairs it as above. Until then `P` has no `service` class (a base) and §7.2 offers no revocation through `C`: a Remove waits for the repair and is shown as "Finishing connection…", while the human can still revoke `P` explicitly (IDENTITY §8).
-
-### 7.3 Two base approvals
-
-Two valid base approvals without `revoked` mean no `service` class (§2.3): the service's writes are refused until `root` or `personal` revokes one, and clients show the conflict with the two installations' labels and fingerprints.
 
 ---
 
