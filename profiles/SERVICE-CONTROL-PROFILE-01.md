@@ -122,7 +122,7 @@ Each row lists the only mutations admitted at its position; every other operatio
 |  | `service` | delete when `questions[qid]` (its `qid`) is absent or holds `resolved` or `superseded` |
 | `cancels[rid]` | `root`, `personal` | create when `rid` never held a value and `requests[rid]` is present |
 |  | `service` | delete when `requests[rid]` is absent after the change |
-| `events[id]` | `service` | create when `id` never held a value and `requests[id]` or `answers[id]` is present; write `state` to the same or a later value of §6.2, together with `code`, `detail` and `at`; nothing once the event is final; delete when final and `requests[id]` and `answers[id]` are absent after the change |
+| `events[id]` | `service` | create when `id` never held a value and `requests[id]` or `answers[id]` is present; write `state` to the same or a later value of §6.2, together with `code`, `detail` and `at`, and delete `code` or `detail` (a retryable code does not outlive its state); nothing once the event is final; delete when final and `requests[id]` and `answers[id]` are absent after the change |
 
 An entry is **created** by one change as a whole map: the change that creates `approvals[P]`, `requests[rid]`, `answers[aid]`, `cancels[rid]`, `pairing[rid]`, `questions[qid]` or `events[id]` writes all its fields; later changes write only what the row allows. The root key and its container are never replaced or deleted (SC2).
 
