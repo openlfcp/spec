@@ -159,12 +159,13 @@ A change that breaks a rule is `PROFILE_INVALID` with that diagnostic, is not me
 |---|---|
 | `INVALID_ROOT` | `profile` differs, a root key is missing or not of its §2.1 kind |
 | `MISSING_REQUIRED_FIELD` | a required field of §2.1 is absent |
-| `INVALID_FIELD_TYPE` | a field has the wrong type; a list too long; an `Example` too long |
+| `INVALID_FIELD_TYPE` | a field has the wrong type |
 | `INVALID_RESOURCE_REF`, `INVALID_PRINCIPAL_REF` | as IDENTITY §4 |
 | `INVALID_KEY` | a key of `pairing`, `questions`, `requests`, `answers`, `cancels` or `events` is not a `Uuid`; a key of `approvals` differs from `principal` |
 | `INVALID_ENUM_VALUE` | `role`, `cancels.reason`, `lifecycle.op` or `events.state` is not a value of §2.1; `op` does not match `Op`; `approvals.role = "base"` with `resource` other than `C` |
 | `INVALID_TIMESTAMP` | a timestamp is not RFC 3339 UTC (SOP §28) |
 | `INVALID_DESCRIPTOR` | `pairing[rid].descriptor` is not the base64url of a valid W §7 descriptor whose ID is `principal`, or `fp` is not its fingerprint (IDENTITY §5.2) |
+| `LIMIT_EXCEEDED` | an `Example` longer than 80 Unicode scalar values; more than 5 `items`; an entry larger than its limit (§4 Sizes) |
 
 Rules:
 
