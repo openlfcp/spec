@@ -451,6 +451,8 @@ A client loads the second element using the corresponding Automerge full-documen
 
 After loading a Snapshot, the client applies all LFCP Data Units beyond the Snapshot frontier.
 
+A profile MAY require a reader to admit the changes a Snapshot covers before it uses the loaded state (SERVICE-CONTROL-PROFILE-01 §2.5); a Snapshot that fails that admission is rejected and the reader falls back to the units, as for a rejected Snapshot (Section 13.1). It never truncates history (Section 56).
+
 ### 13.1 Snapshot expansion limits
 
 A document chunk's columns are run-length encoded and MAY also be deflated (the deflate bit of the column specification), so a small Snapshot can expand far beyond its size. A receiver MUST check a Snapshot against its local limits BEFORE its Automerge engine loads it. The counts are those of Section 11.1, read from the document chunk's structure:
