@@ -83,7 +83,7 @@ Every value is an Automerge scalar (`ImmutableString`, boolean, uint), a map or 
 
 ### 2.2 The initial change
 
-The initial change is identified as in IDENTITY §2.2, with "the root" read as **the Principal that signed `C`'s Genesis** (`R`, or the device whose chain is Genesis field `5`, W §15): the change without dependencies authored by that Principal's actor, its Automerge sequence `1`, carried by that Principal's Data Unit with actor sequence `1`. It MUST create exactly the thirteen root keys of §2.1: `profile` with its value; `meta` as a map with `attemptId` and `createdAt`; the other eleven as **empty** maps. Every rule of IDENTITY §2.2 on one accepted initial change, Snapshots and delivery order applies unchanged.
+The initial change is identified as in IDENTITY §2.2, with "the root" read as **the Principal that signed `C`'s Genesis** (`R`, or the device whose chain is Genesis field `5`, W §15): the change without dependencies authored by that Principal's actor, its Automerge sequence `1`, carried by that Principal's Data Unit with actor sequence `1`. It MUST create exactly the thirteen root keys of §2.1: `profile` with its value; `meta` as a map with `attemptId` and `createdAt`; the other eleven as **empty** maps. Every rule of IDENTITY §2.2 on one accepted initial change, Snapshots and delivery order applies unchanged; §2.5 adds what a reader of `C` must do before it uses a Snapshot's state.
 
 ### 2.3 Writer classes
 
@@ -99,6 +99,29 @@ A change by `other` is refused whole (§4 SC5). The class is taken at `control_r
 ### 2.4 Attribution
 
 No field records who wrote an entry. The author of an entry is the signer of the change that created it (`personal` and `root` are displayed as the human by `rootOf`, IDENTITY §10; `service` as the service's label). A reader that needs the author — the service executing a request (§10), a client checking an approval (§7.2) — takes it from the change, never from a field.
+
+### 2.5 Loading a Snapshot of `C`
+
+A reader of `C` (§9) MAY load a received Snapshot (SOP §13) and then replay only the Data Units beyond its frontier (W §29.3, SOP §13), **after admitting every change the Snapshot covers**. The Snapshot's state is never used on trust: a Snapshot is a Data Plane optimisation and establishes no authorship, class or approval (W §29.2). A reader that does not admit the Snapshot replays all units; it MUST NOT treat a Snapshot as a replacement for them.
+
+**What the Snapshot carries.** Its document is one complete Automerge save with the whole change history of the units its frontier (W §29, field `5`) covers: every change of those units, none omitted, compacted or rewritten, so that the changes the loaded document hands out (SOP §11.4) are exactly the covered changes. A publisher of `C` MUST NOT publish a Snapshot that omits history; a reader treats one that does as failing admission. Nothing else is added to the Snapshot: authorship and class are taken from the Data Units and `C`'s Control state, which the reader checks itself.
+
+**Admission of the covered changes.** Before it uses the Snapshot's state the reader MUST:
+
+1. verify the Snapshot as W §29 and SOP §13, §13.1 require, and hold the Control state `C`'s Control Head names;
+2. obtain every Data Unit the frontier covers (W §29.3 allows fetching them), verify each unit's signature, epoch and `control_ref`, and decrypt it. It need not apply the change to an engine nor check the unit's `previous` link (W §26.2);
+3. match the changes of the loaded document to those units one to one by change hash. A change with no covered unit, or a covered unit whose change the document lacks, fails admission;
+4. take the changes in causal order and apply to each the checks of §4 exactly as for a received unit: the bytes checks of SOP §11, §11.1, §11.3, `CHANGE_ACTOR_MISMATCH`, the checks of SOP §11.2, §11.4 and §14.1 (a taken `(actor, sequence)` is held), and SC0 to SC7, with the writer class of §2.3 taken at the carrying unit's `control_ref` and the pre-state of the change's causal history. The initial change is identified by §2.2 and IDENTITY §2.2, so it needs the Genesis signer's unit with actor sequence `1`, which step 2 has fetched.
+
+A change that fails a check fails the Snapshot, as it would be refused as a unit. So the author of every `requests`, `answers` and `approvals` entry, and with it every proof the service relies on (§2.4, §10), is exactly what replay yields.
+
+**Failure.** When any step fails, or the reader cannot complete it (a covered unit unavailable, or in `KEY_BLOCKED`, W §65), the reader does not merge the Snapshot: it discards the loaded document, reports `PROFILE_INVALID` with the diagnostic of the failed check (for an omitted or mismatched change, `INVALID_AUTOMERGE_BYTES`) when the Snapshot itself is wrong, and **falls back to full replay** of the units, as SOP §13.1 does for a rejected Snapshot. A failed admission is local: it excludes no unit and ends no writer's standing, and a later Snapshot is admitted afresh. A Snapshot that fails admission because a covered change is itself refused is not evidence against the units: those are judged as units.
+
+**History is not truncated.** Loading a Snapshot never deletes, rewrites or hides a unit or a change (SOP §56): the units stay accepted and available, and a reader MAY fetch and replay any of them. A later Key Epoch Record that moves a covered unit beyond its cutoff discards the Snapshot-derived state and rebuilds from accepted units (W §29.3).
+
+*Informative.* This is what lets a new personal device reach the current state of `C` in a "Snapshot + tail" time (ARCHITECTURE §3.5) without trusting the publisher of the Snapshot: the cost of a reader is the fetch and decryption of covered units, the admission checks, and one load, not a replay through the engine.
+
+---
 
 ---
 
@@ -278,7 +301,7 @@ The link in `args.link` lets its holder read `I` as `J_X` until `I` is rotated (
 - **Heartbeat.** The service writes `status.heartbeatAt` at least every 30 minutes, and state transitions at once but at most once a minute per binding. Clients display "last heard" from `heartbeatAt`. A binding is "Up to date" only when `lastCompleteCheckAt` is at most 75 minutes old, `pending.toApple`, `pending.toLfcp`, `refused` and `unconfirmed` are `0`, and `needsAttention` is absent.
 - **Readers** (*informative* summary of §1): the personal devices of `R` that hold `C`, and the base installation. Content: the Mac's status and versions, section and list names, at most five task titles per question or preview, and section pairing links (§8.3).
 - **Deletion for display.** The service SHOULD delete a final request with its `events`, `cancels` and `pairing`, an answered question and its answers, 7 days after they became final. Deletion removes nothing from history (SOP §56) and is never the service's deduplication boundary (§10).
-- **Snapshots** follow SOP §13 and are published by the human's clients; the service does not publish them.
+- **Snapshots** follow SOP §13 and are published by the human's clients; the service does not publish them. A reader loads one only with the admission of §2.5.
 
 ---
 
